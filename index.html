@@ -722,24 +722,50 @@
             btn.classList.add('active');
             applyFilters();
         }
+function applyFilters() {
+    const searchInput = document.getElementById('searchBar').value.toLowerCase();
+    const cards = document.getElementsByClassName('quiz-card');
+    const weaknessUrls = new Set();
 
-        function applyFilters() {
-            const searchInput = document.getElementById('searchBar').value.toLowerCase();
-            const cards = document.getElementsByClassName('quiz-card');
-            for (let card of cards) {
-                const text = card.innerText.toLowerCase();
-                const isChecked = card.querySelector('.check-box').classList.contains('checked');
-                let matchesSearch = text.indexOf(searchInput) > -1;
-                let matchesFilter = true;
-                if (currentFilter === 'todo' && isChecked) matchesFilter = false;
-                if (currentFilter === 'done' && !isChecked) matchesFilter = false;
-                card.style.display = (matchesSearch && matchesFilter) ? "flex" : "none";
-            }
-            document.querySelectorAll('.category-section').forEach(section => {
-                const visible = section.querySelectorAll('.quiz-card[style="display: flex;"]').length > 0;
-                if(!section.classList.contains('collapsed')) section.style.display = visible ? 'block' : 'none';
-            });
+    // 1. If 'weakness' filter is active, build a list of weak subject URLs
+    if (currentFilter === 'weak') {
+        document.getElementById('grid-weakness').querySelectorAll('.quiz-card').forEach(card => {
+            weaknessUrls.add(card.getAttribute('data-url'));
+        });
+    }
+
+    for (let card of cards) {
+        const text = card.innerText.toLowerCase();
+        const isChecked = card.querySelector('.check-box').classList.contains('checked');
+        const cardUrl = card.getAttribute('data-url'); // Get the URL for weakness check
+
+        let matchesSearch = text.indexOf(searchInput) > -1;
+        let matchesFilter = true;
+
+        if (currentFilter === 'todo' && isChecked) matchesFilter = false;
+        if (currentFilter === 'done' && !isChecked) matchesFilter = false;
+
+        // 2. NEW LOGIC: Check if the card belongs to a weak subject
+        if (currentFilter === 'weak') {
+            // Only show cards whose URL is in the weaknessUrls set
+            matchesFilter = weaknessUrls.has(cardUrl);
         }
+
+        card.style.display = (matchesSearch && matchesFilter) ? "flex" : "none";
+    }
+
+    // 3. Update category section visibility
+    document.querySelectorAll('.category-section').forEach(section => {
+        const visible = section.querySelectorAll('.quiz-card[style="display: flex;"]').length > 0;
+        // Ensure the Weakness section itself is only visible if it contains cards AND the filter isn't active
+        if (section.id === 'cat-weakness') {
+             section.style.display = (visible && currentFilter === 'weak') ? 'block' : 'none';
+        } else {
+             // For all other sections, hide them if the weakness filter is active, UNLESS it's the weakness section itself
+             section.style.display = (visible && currentFilter !== 'weak') ? 'block' : 'none';
+        }
+    });
+}
 
         function toggleAccordion(id) { document.getElementById(id).classList.toggle('collapsed'); }
 
