@@ -1,58 +1,88 @@
 import re
+import os
 
 TARGET_FILE = "index.html"
 
-def fix_links():
-    print("--- FIXING HOME PAGE LINKS ---")
-    
-    try:
-        with open(TARGET_FILE, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        # 1. Fix Study Resources (Look for Book Icon 📚)
-        # Forces it to go to resources.html
-        content = re.sub(
-            r'<a href="[^"]*"\s+class="menu-card">\s*<div class="icon">📚</div>', 
-            r'<a href="resources.html" class="menu-card">\n            <div class="icon">📚</div>', 
-            content
-        )
-        print("✅ Study Resources (📚) -> Linked to resources.html")
-
-        # 2. Fix Analytics (Look for Chart Icon 📊)
-        # Forces it to go to analytics.html
-        content = re.sub(
-            r'<a href="[^"]*"\s+class="menu-card">\s*<div class="icon">📊</div>', 
-            r'<a href="analytics.html" class="menu-card">\n            <div class="icon">📊</div>', 
-            content
-        )
-        print("✅ Analytics (📊) -> Linked to analytics.html")
-
-        # 3. Fix Q-Banks (Look for Stethoscope Icon 🩺)
-        # Forces it to go to qbanks.html
-        content = re.sub(
-            r'<a href="[^"]*"\s+class="menu-card">\s*<div class="icon">🩺</div>', 
-            r'<a href="qbanks.html" class="menu-card">\n            <div class="icon">🩺</div>', 
-            content
-        )
-        print("✅ Q-Banks (🩺) -> Linked to qbanks.html")
+# The Perfect 4-Button Grid
+NEW_MENU_HTML = """
+    <div class="main-container">
         
-        # 4. Fix Spaced Revision (Look for Brain Icon 🧠)
-        # Forces it to go to revision.html
-        content = re.sub(
-            r'<a href="[^"]*"\s+class="menu-card">\s*<div class="icon">🧠</div>', 
-            r'<a href="revision.html" class="menu-card">\n            <div class="icon">🧠</div>', 
-            content
-        )
-        print("✅ Smart Revision (🧠) -> Linked to revision.html")
+        <!-- 1. Q-BANKS (Library) -->
+        <a href="qbanks.html" class="menu-card">
+            <div class="icon">🩺</div>
+            <div class="card-title">Q-Bank Archive</div>
+            <p class="card-desc">Access the full library of 170+ topic-wise question banks.</p>
+        </a>
 
-        with open(TARGET_FILE, "w", encoding="utf-8") as f:
-            f.write(content)
+        <!-- 2. STUDY RESOURCES (Notes) -->
+        <a href="resources.html" class="menu-card">
+            <div class="icon">📚</div>
+            <div class="card-title">Study Resources</div>
+            <p class="card-desc">High-yield notes, PDFs, and quick revision charts.</p>
+        </a>
+
+        <!-- 3. ANALYTICS (Stats) -->
+        <a href="analytics.html" class="menu-card">
+            <div class="icon">📊</div>
+            <div class="card-title">My Analytics</div>
+            <p class="card-desc">Track your progress and completion stats.</p>
+        </a>
+
+        <!-- 4. ACTIVE RECALL (Flashcards) -->
+        <a href="revision.html" class="menu-card">
+            <div class="icon">🧠</div>
+            <div class="card-title">Active Recall</div>
+            <p class="card-desc">Spaced repetition flashcards from your missed questions.</p>
+        </a>
+
+    </div>
+"""
+
+def restore_menu():
+    print("--- RESTORING MAIN MENU ---")
+    
+    if not os.path.exists(TARGET_FILE):
+        print(f"❌ Error: {TARGET_FILE} not found.")
+        return
+
+    with open(TARGET_FILE, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # Find the main container block and replace it entirely
+    # Matches <div class="main-container"> ... </div>
+    # We use DOTALL to match across newlines
+    pattern = r'<div class="main-container">.*?</div>'
+    
+    # Safety check: Does the file have a main container?
+    if '<div class="main-container">' in content:
+        # Replace the old/broken grid with the new perfect grid
+        # We use a non-greedy match (.*?) to find the closing div
+        # NOTE: This simple regex assumes the main-container doesn't have nested divs that end with </div> immediately. 
+        # Since our menu structure is simple, this usually works. 
+        # A safer way is to replace the whole body content between header and footer if needed, 
+        # but let's try the container replacement first.
+        
+        # Actually, a safer regex for nested content is hard. 
+        # Let's just find the START of the container and the START of the footer, and replace everything in between.
+        
+        start_marker = '<div class="main-container">'
+        end_marker = '<footer>'
+        
+        start_idx = content.find(start_marker)
+        end_idx = content.find(end_marker)
+        
+        if start_idx != -1 and end_idx != -1:
+            before = content[:start_idx]
+            after = content[end_idx:]
+            new_content = before + NEW_MENU_HTML + "\n\n    " + after
             
-        print("-" * 30)
-        print("🎉 All links repaired successfully!")
-
-    except Exception as e:
-        print(f"❌ Error: {e}")
+            with open(TARGET_FILE, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            print("✅ Menu restored successfully with all 4 buttons.")
+        else:
+            print("❌ Could not find the menu container markers. Check file structure.")
+    else:
+        print("❌ 'main-container' div not found.")
 
 if __name__ == "__main__":
-    fix_links()
+    restore_menu()
