@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+html_content = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -193,3 +193,9 @@
 
 </body>
 </html>
+"""
+
+with open("resources.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print("✅ Layout Fixed! Now run update_resources.py to fill it with content.")

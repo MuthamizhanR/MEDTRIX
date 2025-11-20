@@ -34,7 +34,7 @@ def generate_card(filename, icon, tag):
     return f"""
     <div class="resource-card">
         <div class="check-circle" data-id="{unique_id}" onclick="toggleRead(this, '{unique_id}')"></div>
-        <a href="{MATERIALS_FOLDER}/{filename}" target="_blank" style="text-decoration: none; color: inherit; display: flex; flex-grow: 1; align-items: center; gap: 15px;">
+        <a href="{MATERIALS_FOLDER}/{filename}#toolbar=0&navpanes=0" target="_blank" style="text-decoration: none; color: inherit; display: flex; flex-grow: 1; align-items: center; gap: 15px;">
             <div class="icon-box">{icon}</div>
             <div class="card-info">
                 <div class="card-title">{display_name}</div>
