@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+# THIS SCRIPT BUILDS A PROFESSIONAL PDF.JS VIEWER
+HTML_CONTENT = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -223,3 +224,9 @@
 </script>
 </body>
 </html>
+"""
+
+with open("viewer.html", "w", encoding="utf-8") as f:
+    f.write(HTML_CONTENT)
+
+print("✅ PDF.js Viewer Built Successfully!")
