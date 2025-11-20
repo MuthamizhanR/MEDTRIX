@@ -1,0 +1,209 @@
+import os
+
+OUTPUT_FILE = "analytics.html"
+
+HTML_CONTENT = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEDTRIX | Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary: #0056b3; --accent: #00a8cc; --bg: #f4f7f6; --card-bg: #ffffff; --text: #333; }
+        [data-theme="dark"] { --primary: #bb86fc; --accent: #03dac6; --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; }
+
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        /* HEADER */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        h1 { margin: 0; font-size: 1.8rem; }
+        .back-btn { text-decoration: none; color: var(--text); font-weight: bold; border: 1px solid var(--text); padding: 8px 15px; border-radius: 20px; }
+
+        /* OVERVIEW CARDS */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .stat-card {
+            background: var(--card-bg); padding: 25px; border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center;
+        }
+        .stat-num { font-size: 2.5rem; font-weight: bold; color: var(--accent); margin: 10px 0; }
+        .stat-label { font-size: 0.9rem; opacity: 0.7; }
+
+        /* CHART SECTION */
+        .chart-container {
+            background: var(--card-bg); padding: 25px; border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px;
+            height: 400px; position: relative;
+        }
+
+        /* PROGRESS BARS */
+        .subject-list { background: var(--card-bg); padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .subject-row { margin-bottom: 20px; }
+        .row-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: 600; }
+        .bar-track { width: 100%; height: 10px; background: rgba(128,128,128,0.1); border-radius: 5px; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--primary); width: 0%; transition: width 1s ease; }
+        
+        /* Empty State */
+        #no-data { text-align: center; padding: 50px; opacity: 0.6; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <a href="index.html" class="back-btn">← Home</a>
+        <h1>My Progress</h1>
+    </header>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Resources Read</div>
+            <div class="stat-num" id="totalRead">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Quizzes Completed</div>
+            <div class="stat-num" id="totalQuizzes">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Overall Completion</div>
+            <div class="stat-num" id="totalPercent">0%</div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <div class="subject-list" id="subjectBreakdown">
+        <h3>Subject Breakdown</h3>
+        </div>
+    
+    <div id="no-data">
+        <h3>No data found yet!</h3>
+        <p>Start reading notes or taking quizzes to see your stats here.</p>
+    </div>
+</div>
+
+<script>
+    // 1. THEME SETUP
+    if(localStorage.getItem('medtrix-theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        Chart.defaults.color = '#e0e0e0';
+        Chart.defaults.borderColor = '#333';
+    }
+
+    // 2. DATA MINING (Reading LocalStorage)
+    function analyzeData() {
+        let readCount = 0;
+        let quizCount = 0;
+        
+        // Subject Map (To categorize files based on names)
+        const subjects = {};
+        
+        // Scan LocalStorage
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            const val = localStorage.getItem(key);
+            
+            // Count Read Notes (Keys start with "read_")
+            if (key.startsWith('read_') && val === 'true') {
+                readCount++;
+                // Extract subject from filename (e.g., "read_neuro_stroke.pdf")
+                let name = key.replace('read_', '').toLowerCase();
+                let subj = detectSubject(name);
+                subjects[subj] = (subjects[subj] || 0) + 1;
+            }
+            
+            // Count Quizzes (Keys generally end with .html or exclude 'read_', 'fav_')
+            // Simplified logic: If it's a known quiz key
+            if (key.endsWith('.html') && val === 'true') {
+                quizCount++;
+            }
+        }
+
+        // Update Top Cards
+        document.getElementById('totalRead').innerText = readCount;
+        document.getElementById('totalQuizzes').innerText = quizCount;
+        
+        // Estimate Total Percent (Assuming ~200 total items for now)
+        let totalItems = 200; 
+        let percent = Math.round(((readCount + quizCount) / totalItems) * 100);
+        document.getElementById('totalPercent').innerText = percent + "%";
+
+        if(readCount + quizCount === 0) {
+            document.getElementById('no-data').style.display = 'block';
+            return;
+        }
+
+        // Render Chart
+        renderChart(subjects);
+        renderList(subjects);
+    }
+
+    // Helper: Guess subject from filename
+    function detectSubject(name) {
+        if(name.includes('neuro')) return 'Neuroanatomy';
+        if(name.includes('cardio')) return 'Cardiology';
+        if(name.includes('ortho')) return 'Orthopedics';
+        if(name.includes('surg')) return 'Surgery';
+        if(name.includes('derma')) return 'Dermatology';
+        if(name.includes('pedia')) return 'Pediatrics';
+        if(name.includes('obs') || name.includes('gyn')) return 'OBG';
+        return 'General / Other';
+    }
+
+    function renderChart(data) {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(data),
+                datasets: [{
+                    label: 'Completed Items',
+                    data: Object.values(data),
+                    backgroundColor: '#00a8cc',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+
+    function renderList(data) {
+        let html = '<h3>Subject Breakdown</h3>';
+        for (const [subj, count] of Object.entries(data)) {
+            // Arbitrary max per subject to calculate a "bar" visual
+            let max = 20; 
+            let width = Math.min((count / max) * 100, 100);
+            
+            html += `
+            <div class="subject-row">
+                <div class="row-header">
+                    <span>${subj}</span>
+                    <span>${count} items</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width: ${width}%"></div>
+                </div>
+            </div>`;
+        }
+        document.getElementById('subjectBreakdown').innerHTML = html;
+    }
+
+    // RUN
+    analyzeData();
+</script>
+</body>
+</html>
+"""
+
+with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+    f.write(HTML_CONTENT)
+
+print(f"✅ Created {OUTPUT_FILE}. Link this to your home page now.")
