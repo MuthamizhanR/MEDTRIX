@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEDTRIX | Smart Reader</title>
+    <style>
+        :root { --primary: #0056b3; --bg: #f4f7f6; --text: #333; --sidebar-width: 300px; }
+        [data-theme="dark"] { --primary: #bb86fc; --bg: #121212; --text: #e0e0e0; }
+        
+        body { margin: 0; display: flex; height: 100vh; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+        
+        /* SIDEBAR (TOC) */
+        #sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg);
+            border-right: 1px solid #ccc;
+            display: flex; flex-direction: column;
+            transition: 0.3s;
+        }
+        .sidebar-header { padding: 15px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
+        .home-btn { text-decoration: none; color: var(--primary); font-weight: bold; }
+        
+        #toc-list { overflow-y: auto; flex-grow: 1; padding: 10px; }
+        
+        .toc-item {
+            padding: 10px; cursor: pointer; border-radius: 5px; margin-bottom: 5px; font-size: 0.9rem;
+            display: flex; justify-content: space-between;
+        }
+        .toc-item:hover { background: rgba(0,0,0,0.05); }
+        .toc-item.active { background: var(--primary); color: white; }
+        .page-num { opacity: 0.7; font-size: 0.8rem; }
+
+        /* PDF AREA */
+        #pdf-container { flex-grow: 1; height: 100%; }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* BOOKMARK CONTROLS */
+        .controls { padding: 15px; border-top: 1px solid #ccc; text-align: center; }
+        .bm-btn { 
+            background: var(--primary); color: white; border: none; 
+            padding: 8px 15px; border-radius: 20px; cursor: pointer; 
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <div class="sidebar-header">
+        <a href="resources.html" class="home-btn">← Back</a>
+        <span style="font-size:0.8rem">Smart Reader</span>
+    </div>
+    
+    <div id="toc-list">
+        <div style="padding:20px; text-align:center; opacity:0.6">Loading Index...</div>
+    </div>
+
+    <div class="controls">
+        <button class="bm-btn" onclick="saveBookmark()">🔖 Bookmark Page</button>
+        <div id="last-read" style="margin-top:5px; font-size:0.8rem; opacity:0.7"></div>
+    </div>
+</div>
+
+<div id="pdf-container">
+    <iframe id="pdf-frame" src=""></iframe>
+</div>
+
+<script>
+    // 1. Get File from URL (e.g., viewer.html?file=neuro.pdf)
+    const params = new URLSearchParams(window.location.search);
+    const filename = params.get('file');
+    const materialPath = 'materials/' + filename;
+    
+    // 2. Load Index Data
+    fetch('pdf_data.json')
+        .then(response => response.json())
+        .then(data => {
+            const toc = document.getElementById('toc-list');
+            toc.innerHTML = ""; // Clear loading text
+            
+            if (data[filename]) {
+                // Generate Sidebar Items
+                data[filename].forEach(entry => {
+                    const div = document.createElement('div');
+                    div.className = 'toc-item';
+                    div.innerHTML = `<span>${entry.title}</span> <span class="page-num">Pg ${entry.page}</span>`;
+                    div.onclick = () => loadPage(entry.page);
+                    toc.appendChild(div);
+                });
+            } else {
+                toc.innerHTML = "<div style='padding:20px'>No index found for this file.</div>";
+            }
+            
+            // Check for saved bookmark
+            const savedPage = localStorage.getItem('bm_' + filename);
+            if(savedPage) {
+                document.getElementById('last-read').innerText = "Last saved: Page " + savedPage;
+                loadPage(savedPage); // Auto-load bookmark
+            } else {
+                loadPage(1); // Default to page 1
+            }
+        });
+
+    function loadPage(pageNum) {
+        // Update PDF Frame (using #page=X feature)
+        // #toolbar=0 hides the download/print bar for cleaner look
+        const viewerUrl = `${materialPath}#page=${pageNum}&toolbar=0&navpanes=0`;
+        document.getElementById('pdf-frame').src = viewerUrl;
+        
+        // Update active UI
+        document.querySelectorAll('.toc-item').forEach(item => item.classList.remove('active'));
+    }
+
+    function saveBookmark() {
+        // Since we can't easily query the iframe current page due to security,
+        // We ask the user or save the last CLICKED chapter.
+        // For now, let's save the current URL hash
+        const currentSrc = document.getElementById('pdf-frame').src;
+        const match = currentSrc.match(/page=(\d+)/);
+        if(match) {
+            const page = match[1];
+            localStorage.setItem('bm_' + filename, page);
+            document.getElementById('last-read').innerText = "Saved: Page " + page;
+            alert("Bookmark saved at page " + page);
+        }
+    }
+</script>
+
+</body>
+</html>
