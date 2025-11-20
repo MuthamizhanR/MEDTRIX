@@ -1,5 +1,5 @@
 import os
-import traceback
+import urllib.parse # <--- This fixes the 404 errors
 
 # --- CONFIGURATION ---
 HTML_FILE = "resources.html"
@@ -31,14 +31,17 @@ def generate_card(filename, icon, tag):
     display_name = filename.replace(".pdf", "").replace("_", " ").title()
     unique_id = filename.replace(" ", "_").replace(".", "_")
     
+    # FIX: URL Encode the filename (Changes "My File.pdf" to "My%20File.pdf")
+    safe_filename = urllib.parse.quote(filename)
+    
     return f"""
     <div class="resource-card">
-        <div class="check-circle" data-id="{unique_id}" onclick="toggleRead(this, '{unique_id}')"></div>
-        <a href="viewer.html?file={filename}" target="_blank" style="text-decoration: none; color: inherit; display: flex; flex-grow: 1; align-items: center; gap: 15px;">
+        <div class="check-circle" data-id="{unique_id}" onclick="toggleRead(this, '{unique_id}', event)"></div>
+        <a href="viewer.html?file={safe_filename}" target="_blank" style="text-decoration: none; color: inherit; display: flex; flex-grow: 1; align-items: center; gap: 15px;">
             <div class="icon-box">{icon}</div>
             <div class="card-info">
                 <div class="card-title">{display_name}</div>
-                <div class="card-desc">Click to open resource.</div>
+                <div class="card-desc">Open in Smart Reader</div>
                 <span class="tag">{tag}</span>
             </div>
         </a>
@@ -46,18 +49,16 @@ def generate_card(filename, icon, tag):
     """
 
 def update_resources():
-    print("--- MEDTRIX RESOURCE UPDATER (v2) ---")
+    print("--- RESOURCE LINK FIXER ---")
     
     if not os.path.exists(MATERIALS_FOLDER):
         print(f"Error: '{MATERIALS_FOLDER}' folder missing!")
         return
 
-    # 1. Scan Files
     files = [f for f in os.listdir(MATERIALS_FOLDER) if f.lower().endswith('.pdf')]
     files.sort()
-    print(f"Scanning {len(files)} files...")
+    print(f"Processing {len(files)} files...")
 
-    # 2. Categorize
     grouped_files = {}
     for f in files:
         lower_name = f.lower()
@@ -75,54 +76,46 @@ def update_resources():
             if subject not in grouped_files: grouped_files[subject] = {"icon": DEFAULT_CAT['icon'], "files": []}
             grouped_files[subject]["files"].append(f)
 
-    # 3. Build HTML Content
     new_html_content = ""
     for subject in sorted(grouped_files.keys()):
         data = grouped_files[subject]
         icon = data['icon']
-        # Header
         new_html_content += f"""
-    <div style="grid-column: 1 / -1; margin-top: 30px; border-bottom: 2px solid var(--border); padding-bottom: 10px; color: var(--accent); font-weight: bold; font-size: 1.2rem; display: flex; align-items: center; gap: 10px;">
-        <span>{icon}</span> {subject}
-    </div>
+    <div class="subject-group">
+        <div class="subject-header" onclick="toggleSection(this)">
+            <div class="icon-box">{icon}</div>
+            <div class="subject-title">{subject} <span style="font-size:0.8rem; opacity:0.6">({len(data['files'])})</span></div>
+            <div class="toggle-icon">▼</div>
+        </div>
+        <div class="resource-grid">
     """
-        # Cards
         for filename in data['files']:
-            short_tag = subject.split()[0]
+            short_tag = subject.split()[0] 
             new_html_content += generate_card(filename, icon, short_tag)
+        new_html_content += "</div></div>"
 
-    # 4. Inject into File (Safer Method)
     try:
         with open(HTML_FILE, "r", encoding="utf-8") as f:
             full_html = f.read()
-            
+        
         start_marker = ""
         end_marker = ""
-        
-        # Use find() instead of split() to avoid "empty separator" errors
         start_idx = full_html.find(start_marker)
         end_idx = full_html.find(end_marker)
         
         if start_idx == -1 or end_idx == -1:
-            print("❌ ERROR: Markers not found in HTML file!")
-            print(f"Please paste these markers inside {HTML_FILE}:")
-            print(f"{start_marker}\n{end_marker}")
+            print("❌ ERROR: Landing markers not found in HTML.")
             return
 
-        # Slice the string safely
-        before = full_html[:start_idx + len(start_marker)]
-        after = full_html[end_idx:]
-        
-        updated_html = before + "\n" + new_html_content + "\n    " + after
+        updated_html = full_html[:start_idx + len(start_marker)] + "\n" + new_html_content + "\n    " + full_html[end_idx:]
         
         with open(HTML_FILE, "w", encoding="utf-8") as f:
             f.write(updated_html)
             
-        print(f"✅ Success! Resources updated.")
+        print("✅ Links updated with URL encoding (No more 404s).")
         
-    except Exception:
-        print("❌ CRITICAL ERROR:")
-        traceback.print_exc()
+    except Exception as e:
+        print(f"❌ Error: {e}")
 
 if __name__ == "__main__":
     update_resources()
