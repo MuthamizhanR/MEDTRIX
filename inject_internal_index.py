@@ -1,160 +1,141 @@
 import os
 import re
-from glob import glob
+import glob
 
-INDEX_TEMPLATE = """
-<!-- INTERNAL INDEX PAGE ADDED -->
-<div id="internal-index" class="min-h-screen flex flex-col items-center justify-start p-6 bg-gray-100 dark:bg-gray-900">
-  <h1 class="text-3xl font-bold text-gray-800 dark:text-white mt-10 mb-6">📘 Combined Test Index</h1>
-  <div class="w-full max-w-xl space-y-4">
-    {BUTTONS_HERE}
-  </div>
-</div>
-
-<style>
-  .lift:hover { transform: translateY(-3px); }
-</style>
-"""
-
-# --- MODIFIED: Back button moved to top-left (top-4 left-4) ---
-BACK_BUTTON = """
-<button id="back-to-index"
-  class="fixed top-4 left-4 z-50 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition">
-  ⬅ Back
-</button>
-
-<script>
-document.getElementById("back-to-index").onclick = function() {
-    document.getElementById("internal-index").style.display = "block";
-    document.getElementById("tests-area").style.display = "none";
-    window.scrollTo(0,0);
-};
-</script>
-"""
-
-SHOWTEST_PATCH = """
-<script>
-if (typeof showTest === 'function') {
-    const originalShowTest = showTest;
-    showTest = function(id) {
-        document.getElementById("internal-index").style.display = "none";
-        document.getElementById("tests-area").style.display = "block";
-        originalShowTest(id);
-    };
-}
-</script>
-"""
-
-WRAP_TESTS_AREA_START = '<div id="tests-area" style="display:none;">'
-WRAP_TESTS_AREA_END = '</div>'
-
-def extract_nav_buttons(html):
-    block_match = re.search(r'(<div[^>]+class="[^"]*nav-buttons[^"]*"[\s\S]*?</div>)', html)
-    if not block_match:
-        return None, None
+def fix_single_file(file_path):
+    print(f"Processing: {file_path}...")
     
-    block = block_match.group(1)
-    buttons = []
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
     
-    for btn in re.findall(r'<button[^>]*onclick="showTest\(\'(.*?)\'\)"[^>]*>(.*?)</button>', block, re.DOTALL):
-        test_id = btn[0]
-        label = re.sub(r'\s+', ' ', re.sub(r'<[^>]*>', '', btn[1])).strip()
-        buttons.append((test_id, label))
-    
-    return block, buttons
-
-
-def build_tailwind_buttons(buttons):
-    out = ""
-    for test_id, label in buttons:
-        out += f"""
-        <button onclick="showTest('{test_id}')"
-          class="w-full lift transition bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-5 py-4 rounded-xl shadow hover:shadow-xl">
-          {label}
-        </button>
-        """
-    return out
-
-
-def process_file(path):
-    with open(path, "r", encoding="utf-8") as f:
-        html = f.read()
-
-    nav_block, buttons = extract_nav_buttons(html)
-    if not buttons:
-        print(f"❌ No nav-buttons found in {path}")
+    # --- SKIP IF ALREADY FIXED (Optional check to prevent double-patching) ---
+    if "min-h-screen flex flex-col justify-center" in content and "bg-green-50" in content:
+        print(f"   -> Skipping {file_path} (Already optimized).")
         return
+
+    # ============================================================
+    # STEP 1: FIX INDEX LAYOUT (Responsive Grid)
+    # ============================================================
+    # Remove old mobile CSS
+    content = re.sub(r'@media \(max-width: 768px\) \{[^}]+\.nav-buttons[^}]+\}', '', content, flags=re.DOTALL)
+
+    # Optimize Index Container (Center vertically)
+    # Looks for <div id="internal-index" ... class="...">
+    content = re.sub(
+        r'(<div id="internal-index"[^>]*class=")([^"]*)(")', 
+        r'\1\2 min-h-screen flex flex-col justify-center\3', 
+        content
+    )
+
+    # Optimize Buttons (Make them chunky and grid-based)
+    btn_container_pattern = r'(<div[^>]*max-w-xl space-y-4[^>]*>)'
+    new_container_class = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl mx-auto p-4">'
     
-    print(f"✔ Processing {path} – {len(buttons)} buttons found.")
-
-    # backup
-    bak = path + ".bak"
-    if not os.path.exists(bak):
-        with open(bak, "w", encoding="utf-8") as bf:
-            bf.write(html)
-
-    # Remove nav block
-    html = html.replace(nav_block, "")
-
-    # Insert Tailwind index page
-    button_html = build_tailwind_buttons(buttons)
-    internal_index = INDEX_TEMPLATE.replace("{BUTTONS_HERE}", button_html)
-
-    # Wrap all test containers
-    html = re.sub(r'(</div>\s*</body>)', WRAP_TESTS_AREA_END + r"\1", html, 1)
-    
-    # Insert start of tests-area
-    if WRAP_TESTS_AREA_START not in html:
-        html = html.replace("<hr/>", "<hr/>\n" + WRAP_TESTS_AREA_START, 1)
-
-    # Insert index at top of body
-    if "<body>" in html:
-        html = html.replace("<body>", "<body>\n" + internal_index, 1)
-
-    # Add back button and showTest patch
-    if "</body" in html:
-        final_injection = BACK_BUTTON + SHOWTEST_PATCH + "\n"
-        html = html.replace("</body>", final_injection + "</body>", 1)
+    if re.search(btn_container_pattern, content):
+        content = re.sub(btn_container_pattern, new_container_class, content)
         
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(html)
+    # Enlarge Button Styling
+    btn_regex = r'(<button[^>]*onclick="showTest[^>]*class=")([^"]*)(")'
+    new_btn_style = "w-full lift transition bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-6 py-5 text-lg font-medium rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 my-2"
+    content = re.sub(btn_regex, f'\\1{new_btn_style}\\3', content)
 
-    print(f"   → ✔ Transformed successfully.\n")
+    # ============================================================
+    # STEP 2: FIX IFRAME SCROLLING & HEIGHT
+    # ============================================================
+    # Remove fixed height="2000px"
+    content = content.replace('height="2000px"', 'class="w-full min-h-screen" style="height: 100vh;"')
+    
+    # Allow body scrolling in srcdoc
+    content = content.replace(
+        '&lt;body class=&quot;bg-gray-100 font-sans transition-colors duration-300&quot;&gt;',
+        '&lt;body class=&quot;bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto&quot;&gt;'
+    )
 
-# --- NEW FUNCTION: Deletes .bak files ---
-def delete_backup_files():
-    folder = os.getcwd()
-    bak_files = glob(os.path.join(folder, "*.html.bak"))
-    if not bak_files:
-        print("ℹ No .bak files found to delete.")
+    # ============================================================
+    # STEP 3: OPTIMIZE QUIZ LAYOUT (Mobile Full Screen)
+    # ============================================================
+    # Expand Card to Full Screen on Mobile
+    card_regex = r'(class=&quot;)([^&]*bg-white rounded-lg shadow-md[^&]*)(&quot;)'
+    
+    def fix_card(match):
+        old_class = match.group(2)
+        new_class = old_class + " min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between"
+        new_class = re.sub(r'p-\d+', 'p-5 md:p-8', new_class)
+        return f'{match.group(1)}{new_class}{match.group(3)}'
+
+    content = re.sub(card_regex, fix_card, content)
+
+    # Increase Question Font Sizes
+    qtext_regex = r'(id=&quot;question-text&quot; class=&quot;)([^&]*)(&quot;)'
+    content = re.sub(qtext_regex, r'\1\2 text-lg md:text-xl leading-relaxed font-medium\3', content)
+
+    # Increase Option Button Sizes
+    opt_regex = r'(class=&quot;option-btn)([^&]*)(&quot;)'
+    def enlarge_opt(match):
+        cls = match.group(2)
+        cls = re.sub(r'p-\d', 'p-4', cls)
+        cls = cls + " text-base md:text-sm font-medium my-3"
+        return f'{match.group(1)}{cls}{match.group(3)}'
+    content = re.sub(opt_regex, enlarge_opt, content)
+
+    # ============================================================
+    # STEP 4: RESTORE & IMPROVE RESULT OPTIONS (High Contrast)
+    # ============================================================
+    search_anchor = "&lt;p&gt;&lt;strong&gt;Your Answer:&lt;/strong&gt;"
+
+    # High Contrast Colors Logic
+    options_logic = (
+        "&lt;div class=&quot;my-4 space-y-3&quot;&gt;"
+        "${q.options.map(opt =&gt; `"
+        "&lt;div class=&quot;p-4 rounded-lg border text-base flex justify-between items-start ${"
+        "opt.correct ? &quot;bg-green-100 border-green-600 text-green-900 dark:bg-green-900 dark:border-green-500 dark:text-green-50&quot; : "
+        "(userAnswer === opt.label ? &quot;bg-red-100 border-red-600 text-red-900 dark:bg-red-900 dark:border-red-500 dark:text-red-50&quot; : "
+        "&quot;bg-white border-gray-300 text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200&quot;)}&quot;&gt;"
+        "&lt;div&gt;&lt;span class=&quot;font-bold mr-2&quot;&gt;${opt.label}.&lt;/span&gt; ${opt.text}&lt;/div&gt;"
+        "&lt;div&gt;${opt.correct ? &quot;✅&quot; : (userAnswer === opt.label ? &quot;❌&quot; : &quot;&quot;)}&lt;/div&gt;"
+        "&lt;/div&gt;`).join(&quot;&quot;)}"
+        "&lt;/div&gt;"
+    )
+
+    # Clean previous injections if re-running
+    clean_pattern = r'(&lt;div class=&quot;my-4.*?&quot;&gt;.*?&lt;/div&gt;)(\s*' + re.escape(search_anchor) + ')'
+    content = re.sub(clean_pattern, r'\2', content)
+
+    # Inject Logic
+    content = content.replace(search_anchor, options_logic + search_anchor)
+
+    # ============================================================
+    # STEP 5: WRITE FILE
+    # ============================================================
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    print(f"   ✅ Fixed.")
+
+def process_all_html_files():
+    # Find all .html files in the current directory
+    html_files = glob.glob("*.html")
+    
+    # Exclude backup files if any exist
+    html_files = [f for f in html_files if "_backup" not in f]
+    
+    if not html_files:
+        print("❌ No HTML files found in this folder.")
         return
 
-    print(f"\n🧹 Cleaning up {len(bak_files)} backup file(s)...")
-    for bak_file in bak_files:
+    print(f"🔍 Found {len(html_files)} HTML files. Starting batch fix...")
+    print("-" * 40)
+
+    count = 0
+    for file_path in html_files:
         try:
-            os.remove(bak_file)
-            print(f"   → Deleted: {os.path.basename(bak_file)}")
-        except OSError as e:
-            print(f"   → Error deleting {os.path.basename(bak_file)}: {e}")
-    print("Cleanup complete.")
+            fix_single_file(file_path)
+            count += 1
+        except Exception as e:
+            print(f"   ❌ Failed to process {file_path}: {e}")
 
-# MAIN
-folder = os.getcwd()
-files = glob(os.path.join(folder, "*.html"))
+    print("-" * 40)
+    print(f"🎉 Batch Complete! Processed {count} files.")
+    print("   You can now upload these to GitHub.")
 
-print(f"\n📂 Found {len(files)} HTML files.\n")
-
-for f in files:
-    if f.endswith(".bak"):
-        continue
-    process_file(f)
-
-# --- NEW STEP: Check if cleanup should run ---
-# The user wants a script to delete the files, so we make it optional 
-# and prompt them to confirm before deleting them permanently.
-confirm_deletion = input("\n✅ HTML transformation successful. Do you want to delete all .html.bak backup files now? (yes/no): ")
-
-if confirm_deletion.lower() == 'yes':
-    delete_backup_files()
-
-print("\n🎉 ALL FILES PROCESSED!\n")
+if __name__ == "__main__":
+    process_all_html_files()
