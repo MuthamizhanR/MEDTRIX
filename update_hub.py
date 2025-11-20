@@ -5,7 +5,7 @@ import re
 # This is the file providing the design (The one you renamed)
 TEMPLATE_FILE = "template.html"
 # This is the file that will be generated
-OUTPUT_FILE = "index.html"
+OUTPUT_FILE = "qbanks.html"
 # ---------------------
 
 def update_hub():
@@ -63,7 +63,7 @@ def update_hub():
     print("------------------------------------------------")
     print(f"SUCCESS! Generated {OUTPUT_FILE} based on {TEMPLATE_FILE}.")
     print(f"It now contains links to {len(quiz_files)} quizzes.")
-    print("You can now open index.html to see your site.")
+    print("You can now open qbanks.html to see your site.")
 
 if __name__ == "__main__":
     update_hub()
