@@ -1,52 +1,45 @@
 import os
+import re
 
-OUTPUT_FILE = "analytics.html"
-
-HTML_CONTENT = """<!DOCTYPE html>
+# --- PART 1: THE DASHBOARD HTML ---
+ANALYTICS_HTML = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEDTRIX | Analytics</title>
+    <title>MEDTRIX | My Stats</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #0056b3; --accent: #00a8cc; --bg: #f4f7f6; --card-bg: #ffffff; --text: #333; }
         [data-theme="dark"] { --primary: #bb86fc; --accent: #03dac6; --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; }
 
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; padding-bottom: 50px; }
 
-        .container { max-width: 1000px; margin: 0 auto; }
-        
         /* HEADER */
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        h1 { margin: 0; font-size: 1.8rem; }
-        .back-btn { text-decoration: none; color: var(--text); font-weight: bold; border: 1px solid var(--text); padding: 8px 15px; border-radius: 20px; }
+        h1 { margin: 0; font-size: 1.8rem; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--text); font-weight: bold; border: 1px solid var(--text); padding: 8px 15px; border-radius: 20px; transition: 0.2s; }
+        .back-btn:hover { background: var(--text); color: var(--bg); }
 
-        /* OVERVIEW CARDS */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
-        .stat-card {
-            background: var(--card-bg); padding: 25px; border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center;
-        }
-        .stat-num { font-size: 2.5rem; font-weight: bold; color: var(--accent); margin: 10px 0; }
-        .stat-label { font-size: 0.9rem; opacity: 0.7; }
+        /* CARDS */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--card-bg); padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; }
+        .stat-num { font-size: 3rem; font-weight: bold; color: var(--primary); margin: 5px 0; }
+        .stat-label { font-size: 0.9rem; opacity: 0.7; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* CHART SECTION */
-        .chart-container {
-            background: var(--card-bg); padding: 25px; border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px;
-            height: 400px; position: relative;
-        }
+        /* CHART */
+        .chart-section { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; height: 350px; position: relative; }
 
-        /* PROGRESS BARS */
-        .subject-list { background: var(--card-bg); padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .subject-row { margin-bottom: 20px; }
-        .row-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: 600; }
-        .bar-track { width: 100%; height: 10px; background: rgba(128,128,128,0.1); border-radius: 5px; overflow: hidden; }
-        .bar-fill { height: 100%; background: var(--primary); width: 0%; transition: width 1s ease; }
-        
-        /* Empty State */
-        #no-data { text-align: center; padding: 50px; opacity: 0.6; display: none; }
+        /* LIST */
+        .list-section { background: var(--card-bg); padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid rgba(128,128,128,0.1); }
+        .list-item:last-child { border-bottom: none; }
+        .item-name { font-weight: 600; font-size: 1.1rem; }
+        .item-bar-container { flex-grow: 1; margin: 0 20px; background: rgba(128,128,128,0.1); height: 8px; border-radius: 4px; overflow: hidden; }
+        .item-bar { height: 100%; background: var(--accent); border-radius: 4px; }
+        .item-count { font-weight: bold; color: var(--accent); min-width: 80px; text-align: right; }
+
     </style>
 </head>
 <body>
@@ -54,156 +47,195 @@ HTML_CONTENT = """<!DOCTYPE html>
 <div class="container">
     <header>
         <a href="index.html" class="back-btn">← Home</a>
-        <h1>My Progress</h1>
+        <h1>📊 Performance Report</h1>
     </header>
 
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-label">Total Resources Read</div>
-            <div class="stat-num" id="totalRead">0</div>
+            <div class="stat-label">Notes Read</div>
+            <div class="stat-num" id="notesCount">0</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Quizzes Completed</div>
-            <div class="stat-num" id="totalQuizzes">0</div>
+            <div class="stat-label">Quizzes Solved</div>
+            <div class="stat-num" id="quizCount">0</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Overall Completion</div>
+            <div class="stat-label">Completion</div>
             <div class="stat-num" id="totalPercent">0%</div>
         </div>
     </div>
 
-    <div class="chart-container">
-        <canvas id="myChart"></canvas>
+    <div class="chart-section">
+        <canvas id="mainChart"></canvas>
     </div>
 
-    <div class="subject-list" id="subjectBreakdown">
-        <h3>Subject Breakdown</h3>
-        </div>
-    
-    <div id="no-data">
-        <h3>No data found yet!</h3>
-        <p>Start reading notes or taking quizzes to see your stats here.</p>
+    <div class="list-section">
+        <h3 style="margin-top:0">Subject Breakdown</h3>
+        <div id="breakdownList"></div>
     </div>
 </div>
 
 <script>
-    // 1. THEME SETUP
+    // DARK MODE
     if(localStorage.getItem('medtrix-theme') === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
-        Chart.defaults.color = '#e0e0e0';
-        Chart.defaults.borderColor = '#333';
+        Chart.defaults.color = '#bbb';
+        Chart.defaults.borderColor = '#444';
     }
 
-    // 2. DATA MINING (Reading LocalStorage)
-    function analyzeData() {
-        let readCount = 0;
-        let quizCount = 0;
-        
-        // Subject Map (To categorize files based on names)
-        const subjects = {};
-        
-        // Scan LocalStorage
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            const val = localStorage.getItem(key);
-            
-            // Count Read Notes (Keys start with "read_")
-            if (key.startsWith('read_') && val === 'true') {
-                readCount++;
-                // Extract subject from filename (e.g., "read_neuro_stroke.pdf")
-                let name = key.replace('read_', '').toLowerCase();
-                let subj = detectSubject(name);
-                subjects[subj] = (subjects[subj] || 0) + 1;
-            }
-            
-            // Count Quizzes (Keys generally end with .html or exclude 'read_', 'fav_')
-            // Simplified logic: If it's a known quiz key
-            if (key.endsWith('.html') && val === 'true') {
-                quizCount++;
-            }
-        }
+    // DATA LOGIC
+    const subjects = {};
+    let totalNotes = 0;
+    let totalQuizzes = 0;
 
-        // Update Top Cards
-        document.getElementById('totalRead').innerText = readCount;
-        document.getElementById('totalQuizzes').innerText = quizCount;
-        
-        // Estimate Total Percent (Assuming ~200 total items for now)
-        let totalItems = 200; 
-        let percent = Math.round(((readCount + quizCount) / totalItems) * 100);
-        document.getElementById('totalPercent').innerText = percent + "%";
-
-        if(readCount + quizCount === 0) {
-            document.getElementById('no-data').style.display = 'block';
-            return;
-        }
-
-        // Render Chart
-        renderChart(subjects);
-        renderList(subjects);
-    }
-
-    // Helper: Guess subject from filename
     function detectSubject(name) {
+        name = name.toLowerCase();
         if(name.includes('neuro')) return 'Neuroanatomy';
         if(name.includes('cardio')) return 'Cardiology';
+        if(name.includes('renal') || name.includes('kidney')) return 'Renal';
         if(name.includes('ortho')) return 'Orthopedics';
         if(name.includes('surg')) return 'Surgery';
         if(name.includes('derma')) return 'Dermatology';
         if(name.includes('pedia')) return 'Pediatrics';
         if(name.includes('obs') || name.includes('gyn')) return 'OBG';
-        return 'General / Other';
+        if(name.includes('prep')) return 'Prepladder'; 
+        if(name.includes('cereb')) return 'Cerebellum';
+        if(name.includes('dams')) return 'DAMS';
+        return 'General';
     }
 
-    function renderChart(data) {
-        const ctx = document.getElementById('myChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(data),
-                datasets: [{
-                    label: 'Completed Items',
-                    data: Object.values(data),
-                    backgroundColor: '#00a8cc',
-                    borderRadius: 5
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    }
+    // SCAN LOCAL STORAGE
+    for(let i=0; i<localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const val = localStorage.getItem(key);
+        
+        if(val !== 'true') continue;
 
-    function renderList(data) {
-        let html = '<h3>Subject Breakdown</h3>';
-        for (const [subj, count] of Object.entries(data)) {
-            // Arbitrary max per subject to calculate a "bar" visual
-            let max = 20; 
-            let width = Math.min((count / max) * 100, 100);
-            
-            html += `
-            <div class="subject-row">
-                <div class="row-header">
-                    <span>${subj}</span>
-                    <span>${count} items</span>
-                </div>
-                <div class="bar-track">
-                    <div class="bar-fill" style="width: ${width}%"></div>
-                </div>
-            </div>`;
+        // 1. NOTES (Keys start with read_)
+        if(key.startsWith('read_')) {
+            totalNotes++;
+            let subj = detectSubject(key.replace('read_',''));
+            subjects[subj] = (subjects[subj] || 0) + 1;
         }
-        document.getElementById('subjectBreakdown').innerHTML = html;
+        // 2. QUIZZES (HTML files)
+        else if(key.endsWith('.html')) {
+            totalQuizzes++;
+            let subj = detectSubject(key);
+            subjects[subj] = (subjects[subj] || 0) + 1;
+        }
     }
 
-    // RUN
-    analyzeData();
+    // UPDATE UI
+    document.getElementById('notesCount').innerText = totalNotes;
+    document.getElementById('quizCount').innerText = totalQuizzes;
+    
+    // Assuming ~200 total items for percentage calc
+    let completion = Math.min(100, Math.round(((totalNotes + totalQuizzes) / 200) * 100));
+    document.getElementById('totalPercent').innerText = completion + "%";
+
+    // RENDER LIST
+    let listHtml = "";
+    for(const [subj, count] of Object.entries(subjects)) {
+        // Arbitrary scale for visual bar
+        let width = Math.min(100, (count / 20) * 100); 
+        listHtml += `
+        <div class="list-item">
+            <div class="item-name">${subj}</div>
+            <div class="item-bar-container">
+                <div class="item-bar" style="width:${width}%"></div>
+            </div>
+            <div class="item-count">${count} done</div>
+        </div>`;
+    }
+    if(listHtml === "") listHtml = "<div style='text-align:center; opacity:0.6; padding:20px'>No activity recorded yet.</div>";
+    document.getElementById('breakdownList').innerHTML = listHtml;
+
+    // RENDER CHART
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(subjects),
+            datasets: [{
+                data: Object.values(subjects),
+                backgroundColor: [
+                    '#0056b3', '#00a8cc', '#ff9800', '#e91e63', '#4caf50', '#9c27b0'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' }
+            }
+        }
+    });
+
 </script>
 </body>
 </html>
 """
 
-with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-    f.write(HTML_CONTENT)
+# --- PART 2: THE BUILDER SCRIPT ---
+def setup_analytics():
+    print("--- BUILDING ANALYTICS DASHBOARD ---")
+    
+    # 1. Write the Dashboard File
+    with open("analytics.html", "w", encoding="utf-8") as f:
+        f.write(ANALYTICS_HTML)
+    print("✅ Created analytics.html")
 
-print(f"✅ Created {OUTPUT_FILE}. Link this to your home page now.")
+    # 2. Link it in Home Page
+    if not os.path.exists("index.html"):
+        print("❌ Error: index.html not found")
+        return
+    
+    with open("index.html", "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # Find the Analytics Card
+    # We look for the icon 📊 and fix the link surrounding it
+    
+    # Pattern: Find the link that contains the analytics icon
+    pattern = r'(<a href="[^"]*" class="menu-card"[^>]*>)(\s*<div class="icon">📊</div>)'
+    
+    # Replacement: New link, no onclick alert
+    replacement = r'<a href="analytics.html" class="menu-card">\2'
+    
+    new_content = re.sub(pattern, replacement, content)
+    
+    # Remove "Coming Soon" specifically near the analytics icon
+    # We do a rough check: if we find the badge near the icon in the new content
+    # (This part is tricky with regex, so we'll just remove the specific badge string globally if it exists inside the analytics block)
+    
+    # Actually, simpler approach:
+    # Just find the badge string and remove it? No, user said "forget the mock", we should leave mock alone.
+    # Let's do a precise replacement for the Analytics Card content.
+    
+    # Find the specific block for Analytics including the badge and replace it cleanly
+    card_regex = r'<a href="[^"]*" class="menu-card"[^>]*>\s*<div class="icon">📊</div>\s*<div class="card-title">My Analytics</div>\s*<p class="card-desc">.*?</p>\s*<span class="badge">COMING SOON</span>\s*</a>'
+    
+    new_card_html = """
+    <a href="analytics.html" class="menu-card">
+        <div class="icon">📊</div>
+        <div class="card-title">My Analytics</div>
+        <p class="card-desc">Deep dive into your weak subjects and track improvement over time.</p>
+    </a>
+    """
+    
+    # Try to replace the whole card block if it matches the standard "Coming Soon" structure
+    if re.search(card_regex, new_content, re.DOTALL):
+        new_content = re.sub(card_regex, new_card_html.strip(), new_content, flags=re.DOTALL)
+        print("✅ Removed 'Coming Soon' from Analytics card.")
+    else:
+        # If the regex is too strict, just force the link update we did above
+        print("ℹ️  Analytics link updated (Badge might have already been removed).")
+
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(new_content)
+    print("✅ Home Page updated.")
+
+if __name__ == "__main__":
+    setup_analytics()
