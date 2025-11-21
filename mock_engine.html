@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEDTRIX | Grand Mock Engine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #0056b3; --accent: #00a8cc; --bg: #f4f7f6;
+            --card-bg: #ffffff; --text: #333; --brand-color: #00e5ff;
+            --success: #28a745; --error: #dc3545;
+        }
+        [data-theme="dark"] {
+            --primary: #1a1a1a; --accent: #bb86fc; --bg: #121212;
+            --card-bg: #1e1e1e; --text: #e0e0e0; --brand-color: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { 
+            background: var(--bg); color: var(--text); padding: 20px; 
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* UI STYLES */
+        .engine-container {
+            width: 100%; max-width: 900px;
+            background: var(--card-bg); border-radius: 25px;
+            padding: 40px; margin-top: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            position: relative; overflow: hidden;
+        }
+
+        h2 { font-weight: 800; color: var(--accent); text-transform: uppercase; }
+        
+        .start-btn {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white; border: none; padding: 20px 50px; font-size: 1.2rem;
+            border-radius: 50px; cursor: pointer; font-weight: bold;
+            box-shadow: 0 5px 20px rgba(0, 168, 204, 0.4); margin-top: 20px;
+            width: 100%; transition: transform 0.2s;
+        }
+        .start-btn:hover { transform: scale(1.02); }
+
+        /* QUIZ UI */
+        #quiz-interface { display: none; }
+        .question-box { font-size: 1.2rem; font-weight: 600; margin-bottom: 25px; line-height: 1.5; }
+        .option-btn {
+            width: 100%; padding: 15px; margin-bottom: 10px; text-align: left;
+            background: var(--bg); border: 2px solid rgba(0,0,0,0.1);
+            border-radius: 12px; cursor: pointer; color: var(--text);
+        }
+        .option-btn:hover { border-color: var(--accent); }
+        .option-btn.selected { background: var(--primary); color: white; }
+        .option-btn.correct { background: var(--success); color: white; }
+        .option-btn.wrong { background: var(--error); color: white; }
+
+        #loader { display: none; text-align: center; padding: 40px; }
+        .log-text { font-family: monospace; font-size: 0.8rem; color: var(--accent); margin-top: 10px; }
+
+        .timer { float: right; font-weight: bold; color: var(--error); font-size: 1.2rem; }
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 20px; }
+        .nav-btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; background: var(--accent); color: white; }
+
+    </style>
+</head>
+<body>
+
+    <div class="engine-container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="index.html" style="text-decoration: none; font-size: 1.5rem;">🔙</a>
+            <h2>NEET PG Mock Engine</h2>
+        </div>
+
+        <!-- START SCREEN -->
+        <div id="start-screen">
+            <div style="background: rgba(0,0,0,0.03); padding: 20px; border-radius: 15px; margin-top: 20px;">
+                <p><strong>Pattern:</strong> 200 MCQs | 210 Minutes</p>
+                <p><strong>Source:</strong> quiz_data folder (5000+ Files)</p>
+                <p><strong>Algorithm:</strong> High-Yield Weightage (Patho 12%, OBGYN 10%...)</p>
+            </div>
+            <button class="start-btn" onclick="initializeMock()">Start Full Mock Exam</button>
+        </div>
+
+        <!-- LOADER -->
+        <div id="loader">
+            <h3>Building Exam...</h3>
+            <div class="spinner" style="font-size: 3rem;">⚙️</div>
+            <p id="loading-log" class="log-text">Reading manifest...</p>
+        </div>
+
+        <!-- QUIZ UI -->
+        <div id="quiz-interface">
+            <div>
+                <span id="q-progress">Q 1/200</span>
+                <span id="subject-badge" style="margin-left: 10px; background: var(--accent); color:white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">Sub</span>
+                <span class="timer" id="timer">03:30:00</span>
+            </div>
+            <hr style="margin: 15px 0; opacity: 0.2;">
+            
+            <div class="question-box" id="question-text"></div>
+            <div id="options-container"></div>
+            
+            <div class="nav-buttons">
+                <button class="nav-btn" style="background: #777;" onclick="prevQuestion()">Prev</button>
+                <button class="nav-btn" onclick="nextQuestion()">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WEIGHTAGE = {
+            "Pathology": 0.13, "Obstetrics": 0.11, "Medicine": 0.10, "Surgery": 0.10,
+            "Community": 0.09, "Pharmacology": 0.08, "Microbiology": 0.07, "Anatomy": 0.06,
+            "Physiology": 0.05, "Biochemistry": 0.05, "Pediatrics": 0.05, "Ophthalmology": 0.04,
+            "ENT": 0.04, "Orthopedics": 0.04, "Forensic": 0.03, "Dermatology": 0.03,
+            "Psychiatry": 0.03, "Radiology": 0.03, "Anesthesia": 0.03
+        };
+
+        let examQuestions = [];
+        let currentQIndex = 0;
+        let userAnswers = {};
+        let timerInterval;
+
+        // Helper to update loading text
+        function log(msg) { document.getElementById('loading-log').innerText = msg; }
+
+        async function initializeMock() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
+
+            try {
+                // 1. GET LIST OF FILES
+                log("Fetching File Manifest...");
+                const manifestRes = await fetch('quiz_manifest.json');
+                if(!manifestRes.ok) throw new Error("Run 'python3 generate_index.py' first!");
+                const fileList = await manifestRes.json();
+
+                // 2. SORT FILES INTO BUCKETS
+                log("Indexing 5000+ files...");
+                let fileBuckets = {};
+                for(let key in WEIGHTAGE) fileBuckets[key] = [];
+
+                fileList.forEach(filename => {
+                    // Simple keyword matching in filename
+                    for(let subject in WEIGHTAGE) {
+                        // Check if filename contains subject (case insensitive)
+                        // e.g. "272_Pathology..." contains "Pathology"
+                        // Mapping Logic: handle simple variations
+                        let searchKey = subject;
+                        if(subject === "Obstetrics") searchKey = "Gynaec"; // Handle OBGYN
+                        if(subject === "Community") searchKey = "PSM";
+                        
+                        if(filename.toLowerCase().includes(searchKey.toLowerCase()) || 
+                           filename.toLowerCase().includes(subject.toLowerCase())) {
+                            fileBuckets[subject].push(filename);
+                            break;
+                        }
+                    }
+                });
+
+                // 3. FETCH QUESTIONS PER SUBJECT
+                let compiledQuestions = [];
+                const TotalQs = 200;
+
+                for (let [subject, percent] of Object.entries(WEIGHTAGE)) {
+                    const countNeeded = Math.round(TotalQs * percent);
+                    const availableFiles = fileBuckets[subject];
+
+                    log(`Fetching ${countNeeded} Qs for ${subject}...`);
+
+                    if (!availableFiles || availableFiles.length === 0) {
+                        console.warn(`No files found for ${subject}`);
+                        continue;
+                    }
+
+                    // Shuffle files to get random sources
+                    availableFiles.sort(() => 0.5 - Math.random());
+
+                    let questionsForSubject = [];
+                    let fileIndex = 0;
+
+                    // Keep fetching files until we have enough questions for this subject
+                    while(questionsForSubject.length < countNeeded && fileIndex < availableFiles.length) {
+                        try {
+                            let fName = availableFiles[fileIndex];
+                            let res = await fetch(`quiz_data/${fName}`);
+                            let json = await res.json();
+                            
+                            // Handle different JSON structures (Array vs Object)
+                            let qs = Array.isArray(json) ? json : (json.questions || []);
+                            
+                            // Tag them with subject
+                            qs.forEach(q => q.subjectTag = subject);
+                            
+                            questionsForSubject = questionsForSubject.concat(qs);
+                        } catch (e) { console.error("Error loading file", e); }
+                        fileIndex++;
+                    }
+
+                    // Trim to exact needed amount and add to exam
+                    compiledQuestions = compiledQuestions.concat(questionsForSubject.slice(0, countNeeded));
+                }
+
+                // 4. FINAL SHUFFLE
+                examQuestions = compiledQuestions.sort(() => 0.5 - Math.random()).slice(0, 200);
+                
+                if(examQuestions.length === 0) throw new Error("No questions loaded. Check quiz_data folder.");
+
+                startQuiz();
+
+            } catch (err) {
+                alert("Error: " + err.message);
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('start-screen').style.display = 'block';
+            }
+        }
+
+        function startQuiz() {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('quiz-interface').style.display = 'block';
+            
+            // Timer Logic (210 mins)
+            let time = 210 * 60;
+            timerInterval = setInterval(() => {
+                let h = Math.floor(time/3600);
+                let m = Math.floor((time%3600)/60);
+                let s = time%60;
+                document.getElementById('timer').innerText = `${h}:${m<10?'0':''}${m}:${s<10?'0':''}${s}`;
+                time--;
+                if(time < 0) clearInterval(timerInterval);
+            }, 1000);
+
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = examQuestions[currentQIndex];
+            document.getElementById('q-progress').innerText = `Q ${currentQIndex+1}/${examQuestions.length}`;
+            document.getElementById('subject-badge').innerText = q.subjectTag || "General";
+            
+            // Check data structure (some JSONs use 'question_text' or 'question')
+            const qText = q.question || q.question_text || "Question text missing";
+            document.getElementById('question-text').innerText = qText;
+
+            const optsDiv = document.getElementById('options-container');
+            optsDiv.innerHTML = '';
+
+            // Detect options structure (Array vs Object)
+            let options = q.options || [];
+            if(!Array.isArray(options)) {
+                // If options are object {"a": "...", "b": "..."}
+                options = Object.values(options);
+            }
+
+            options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                if(userAnswers[currentQIndex] === idx) btn.classList.add('selected');
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    userAnswers[currentQIndex] = idx;
+                    renderQuestion();
+                };
+                optsDiv.appendChild(btn);
+            });
+        }
+
+        function nextQuestion() {
+            if(currentQIndex < examQuestions.length - 1) {
+                currentQIndex++;
+                renderQuestion();
+            }
+        }
+        function prevQuestion() {
+            if(currentQIndex > 0) {
+                currentQIndex--;
+                renderQuestion();
+            }
+        }
+    </script>
+</body>
+</html>
