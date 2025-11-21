@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+# THIS SCRIPT BUILDS THE "MEDTRIX GLASS" PDF VIEWER WITH CUTE CAT LOADER
+HTML_CONTENT = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -279,3 +280,9 @@
 </script>
 </body>
 </html>
+"""
+
+with open("viewer.html", "w", encoding="utf-8") as f:
+    f.write(HTML_CONTENT)
+
+print("✅ PDF.js Viewer Updated with CUTE CAT Loader!")
