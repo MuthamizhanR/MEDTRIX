@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Physiology Special First Year Class Test</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Physiology Special First Year Class Test</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                100 Questions | 400 Total Marks | 110 min Duration | ~66.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 100 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 110 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 100</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Physiology Special First Year Class Test - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 100</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 100 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Changes in which of the following does not affect respiration?", "options": [{"label": "A", "text": "Arterial H + concentration", "correct": false}, {"label": "B", "text": "Arterial Na + concentration", "correct": true}, {"label": "C", "text": "Arterial HCO 3 - concentration", "correct": false}, {"label": "D", "text": "Arterial PCO2", "correct": false}], "correct_answer": "B. Arterial Na + concentration", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following events occur in the carotid bodies on exposure to hypoxia are listed in random order: (1) release of dopamine (2) excitation of afferent fibres of ninth nerve (3) depolarization of glomus cells (4) decreased potassium conductance through O2 sensitive potassium channels on glomus cells (5) opening of voltage gated calcium channels and calcium influx What is the correct sequence in which the above occur on exposure to hypoxia?", "options": [{"label": "A", "text": "1, 2, 3, 4, 5", "correct": false}, {"label": "B", "text": "2, 1, 3, 4, 5", "correct": false}, {"label": "C", "text": "4, 3, 5, 1, 2", "correct": true}, {"label": "D", "text": "4, 3, 5, 2, 1", "correct": false}], "correct_answer": "C. 4, 3, 5, 1, 2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Acclimatization to high altitude includes all of the following except", "options": [{"label": "A", "text": "Increased urinary excretion of bicarbonates", "correct": false}, {"label": "B", "text": "Shift of OHDC to the right", "correct": false}, {"label": "C", "text": "Increased secretion of erythropoietin", "correct": false}, {"label": "D", "text": "Decrease in the number of mitochondria", "correct": true}], "correct_answer": "D. Decrease in the number of mitochondria", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following will cause the OHDC to shift to the left?", "options": [{"label": "A", "text": "High altitude", "correct": false}, {"label": "B", "text": "Hemolytic anemia", "correct": false}, {"label": "C", "text": "Exercise", "correct": false}, {"label": "D", "text": "CO poisoning", "correct": true}], "correct_answer": "D. CO poisoning", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Shown below is an electron microscopic picture of a sarcomere. Which of the following represent the H-zone?", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": true}], "correct_answer": "D. D", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q5(1).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "TF/ P (tubular fluid/ plasma) ratio at the end of PCT will be maximum for which of the following?", "options": [{"label": "A", "text": "Glucose", "correct": false}, {"label": "B", "text": "Sodium", "correct": false}, {"label": "C", "text": "Urea", "correct": false}, {"label": "D", "text": "Inulin", "correct": true}], "correct_answer": "D. Inulin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the least susceptible to local anaesthetics?", "options": [{"label": "A", "text": "Type A alpha", "correct": false}, {"label": "B", "text": "Type A gamma", "correct": false}, {"label": "C", "text": "Type B", "correct": false}, {"label": "D", "text": "Type C", "correct": true}], "correct_answer": "D. Type C", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most important buffer in the interstitial fluid is", "options": [{"label": "A", "text": "Proteins", "correct": false}, {"label": "B", "text": "Hb", "correct": false}, {"label": "C", "text": "Phosphates", "correct": false}, {"label": "D", "text": "Bicarbonate", "correct": true}], "correct_answer": "D. Bicarbonate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Parathormone increases calcium reabsorption in which of the following segments of the nephron?", "options": [{"label": "A", "text": "PCT", "correct": false}, {"label": "B", "text": "TAL", "correct": false}, {"label": "C", "text": "DCT", "correct": true}, {"label": "D", "text": "CD", "correct": false}], "correct_answer": "C. DCT", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The receptors responsible for rapid, shallow breathing are", "options": [{"label": "A", "text": "Pulmonary stretch receptors", "correct": false}, {"label": "B", "text": "J receptors", "correct": true}, {"label": "C", "text": "Chemoreceptors", "correct": false}, {"label": "D", "text": "Muscle spindles in diaphragm", "correct": false}], "correct_answer": "B. J receptors", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Simple diffusion and facilitated diffusion share which of the following characteristics?", "options": [{"label": "A", "text": "Require transport proteins", "correct": false}, {"label": "B", "text": "Do not require ATP", "correct": true}, {"label": "C", "text": "Saturation kinetics", "correct": false}, {"label": "D", "text": "Can be blocked by specific transporters", "correct": false}], "correct_answer": "B. Do not require ATP", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The receptors for the Hering- Breur reflex are located in which of the following?", "options": [{"label": "A", "text": "Carotid arteries", "correct": false}, {"label": "B", "text": "Alveoli", "correct": false}, {"label": "C", "text": "External intercostals", "correct": false}, {"label": "D", "text": "Bronchi and bronchioles", "correct": true}], "correct_answer": "D. Bronchi and bronchioles", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following mechanisms for transport across the luminal cell membrane of an enterocyte is present in newborns and infants but not in adults?", "options": [{"label": "A", "text": "Endocytosis", "correct": true}, {"label": "B", "text": "Facilitated diffusion", "correct": false}, {"label": "C", "text": "Simple diffusion", "correct": false}, {"label": "D", "text": "Secondary active transport", "correct": false}], "correct_answer": "A. Endocytosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following has an intranuclear receptor?", "options": [{"label": "A", "text": "Insulin", "correct": false}, {"label": "B", "text": "Estrogen", "correct": true}, {"label": "C", "text": "Progesterone", "correct": false}, {"label": "D", "text": "Cortisol", "correct": false}], "correct_answer": "B. Estrogen", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Hyperbaric oxygen causes all of the following except?", "options": [{"label": "A", "text": "Increased dissolved oxygen", "correct": false}, {"label": "B", "text": "Increased tissue P O2", "correct": false}, {"label": "C", "text": "Increased arterial P CO2", "correct": true}, {"label": "D", "text": "No change in arterial pH", "correct": false}], "correct_answer": "C. Increased arterial P CO2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most abundant anion in the ICF is", "options": [{"label": "A", "text": "Miscellaneous phosphates", "correct": true}, {"label": "B", "text": "Proteins", "correct": false}, {"label": "C", "text": "Bicarbonate", "correct": false}, {"label": "D", "text": "Chloride", "correct": false}], "correct_answer": "A. Miscellaneous phosphates", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The most important factor which determines the movement of a permeant substance across the cell membrane is", "options": [{"label": "A", "text": "Lipid solubility", "correct": true}, {"label": "B", "text": "Molecular size", "correct": false}, {"label": "C", "text": "Molecular diameter", "correct": false}, {"label": "D", "text": "Molecular weight", "correct": false}], "correct_answer": "A. Lipid solubility", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The equation which is used to calculate the magnitude of the equilibrium potential of a freely diffusible ion is which of the following?", "options": [{"label": "A", "text": "Gibbs Donnan Equation", "correct": false}, {"label": "B", "text": "Nernst Equation", "correct": true}, {"label": "C", "text": "Goldmann Hodgkin Katz Equation", "correct": false}, {"label": "D", "text": "Henderson Hasselbach Equation", "correct": false}], "correct_answer": "B. Nernst Equation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The most important function of Na + K + ATPase is which of the following", "options": [{"label": "A", "text": "Cell volume regulation", "correct": true}, {"label": "B", "text": "Maintenance of cell surface charge", "correct": false}, {"label": "C", "text": "Genesis of RMP", "correct": false}, {"label": "D", "text": "Restoration of ionic balance after an action potential", "correct": false}], "correct_answer": "A. Cell volume regulation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Equilibrium potential for Na+ is", "options": [{"label": "A", "text": "-90mV", "correct": false}, {"label": "B", "text": "-70mV", "correct": false}, {"label": "C", "text": "+60mV", "correct": true}, {"label": "D", "text": "+125mV", "correct": false}], "correct_answer": "C. +60mV", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are true about molecular motors except", "options": [{"label": "A", "text": "They are 100- 500 kDa ATPases", "correct": false}, {"label": "B", "text": "They move proteins, organelles, etc from one part of the cell to another", "correct": false}, {"label": "C", "text": "There are three super families of molecular motors: kinesin, dynein and myosin", "correct": false}, {"label": "D", "text": "Kinesins move their cargo towards the ‘-‘ end or ‘disassembly’ end of the microtubules.", "correct": true}], "correct_answer": "D. Kinesins move their cargo towards the ‘-‘ end or ‘disassembly’ end of the microtubules.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Depolarization phase of the action potential is due Ca 2+ influx in which of the following?", "options": [{"label": "A", "text": "Paraspinal muscle", "correct": false}, {"label": "B", "text": "Cardiac muscle", "correct": false}, {"label": "C", "text": "Extraocular muscle", "correct": false}, {"label": "D", "text": "Vascular muscle", "correct": true}], "correct_answer": "D. Vascular muscle", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Normal mean systemic filling pressure is", "options": [{"label": "A", "text": "7 mm Hg", "correct": true}, {"label": "B", "text": "17 mm Hg", "correct": false}, {"label": "C", "text": "27 mm Hg", "correct": false}, {"label": "D", "text": "37 mm Hg", "correct": false}], "correct_answer": "A. 7 mm Hg", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Maximum percentage of cardiac output is to which of the following organs?", "options": [{"label": "A", "text": "liver", "correct": false}, {"label": "B", "text": "heart", "correct": false}, {"label": "C", "text": "kidney", "correct": true}, {"label": "D", "text": "brain", "correct": false}], "correct_answer": "C. kidney", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is true about pulmonary vascular resistance during exercise?", "options": [{"label": "A", "text": "increases", "correct": false}, {"label": "B", "text": "decreases", "correct": false}, {"label": "C", "text": "increases and then decreases", "correct": true}, {"label": "D", "text": "decreases and then increases", "correct": false}], "correct_answer": "C. increases and then decreases", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following are present in the type I glomus cells?", "options": [{"label": "A", "text": "O 2 -sensitive K + channels", "correct": true}, {"label": "B", "text": "O 2 -dependent K + channels", "correct": false}, {"label": "C", "text": "O 2 -sensitive Na + channels", "correct": false}, {"label": "D", "text": "O 2 -dependent Na + channels", "correct": false}], "correct_answer": "A. O 2 -sensitive K + channels", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The lung volume at the end of a maximum inspiration is", "options": [{"label": "A", "text": "inspiratory capacity", "correct": false}, {"label": "B", "text": "forced vital capacity", "correct": false}, {"label": "C", "text": "functional residual capacity", "correct": false}, {"label": "D", "text": "total lung capacity", "correct": true}], "correct_answer": "D. total lung capacity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are effects of hyperventilation except", "options": [{"label": "A", "text": "Arterial Pco 2 may fall as low as 15 mm Hg", "correct": false}, {"label": "B", "text": "Alveolar Po 2 increases to 120-140 mm Hg", "correct": false}, {"label": "C", "text": "Cerebral blood flow reduces by 30% or more", "correct": false}, {"label": "D", "text": "Blood pH decreases to 7.3 or 7.2", "correct": true}], "correct_answer": "D. Blood pH decreases to 7.3 or 7.2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Cardiac index is which of the following?", "options": [{"label": "A", "text": "Cardiac output per kg body weight", "correct": false}, {"label": "B", "text": "Cardiac output per meter height", "correct": false}, {"label": "C", "text": "Cardiac output per sq m of body surface area", "correct": true}, {"label": "D", "text": "Cardiac output per unit mass", "correct": false}], "correct_answer": "C. Cardiac output per sq m of body surface area", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Decrease in ECF sodium has which of the following effects?", "options": [{"label": "A", "text": "Increases the amplitude of the action potential", "correct": false}, {"label": "B", "text": "Decreases the amplitude of the action potential", "correct": true}, {"label": "C", "text": "Resting membrane potential becomes more negative", "correct": false}, {"label": "D", "text": "Resting membrane potential becomes more positive", "correct": false}], "correct_answer": "B. Decreases the amplitude of the action potential", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Given below is the myogram of a single muscle twitch. What is the tetanizing frequency?", "options": [{"label": "A", "text": "20-25 Hz", "correct": false}, {"label": "B", "text": "25- 30 Hz", "correct": false}, {"label": "C", "text": "30- 35 Hz", "correct": false}, {"label": "D", "text": "35-40 Hz", "correct": true}], "correct_answer": "D. 35-40 Hz", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q31.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Increase in sympathetic stimulation causes all of the following except", "options": [{"label": "A", "text": "Increase in heart rate", "correct": false}, {"label": "B", "text": "Increase in force of contraction of the heart", "correct": false}, {"label": "C", "text": "Increase in peripheral vascular resistance", "correct": false}, {"label": "D", "text": "Increase in venous compliance", "correct": true}], "correct_answer": "D. Increase in venous compliance", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is incorrect for La Place’s law? (T is wall tension, P is distending pressure, r is radius and w is the wall thickness)", "options": [{"label": "A", "text": "T = Pr/w", "correct": false}, {"label": "B", "text": "T = Pr/2", "correct": false}, {"label": "C", "text": "P = 2T/r", "correct": false}, {"label": "D", "text": "P = 2r/T", "correct": true}], "correct_answer": "D. P = 2r/T", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The duration of nodal delay in the human heart is", "options": [{"label": "A", "text": "72 msec", "correct": false}, {"label": "B", "text": "82 msec", "correct": false}, {"label": "C", "text": "92 msec", "correct": true}, {"label": "D", "text": "102 msec", "correct": false}], "correct_answer": "C. 92 msec", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "If the radius of a vessel is increased by 50% flow increases by", "options": [{"label": "A", "text": "5 times", "correct": true}, {"label": "B", "text": "8 times", "correct": false}, {"label": "C", "text": "10 times", "correct": false}, {"label": "D", "text": "16 times", "correct": false}], "correct_answer": "A. 5 times", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "At optimum length all are maximum except", "options": [{"label": "A", "text": "Total tension", "correct": false}, {"label": "B", "text": "Active tension", "correct": false}, {"label": "C", "text": "Passive tension", "correct": true}, {"label": "D", "text": "Total number of actin myosin cross bridges", "correct": false}], "correct_answer": "C. Passive tension", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The circuit shown below has an inflow pressure of 120 mm Hg and an outflow pressure of 40 mm Hg. Resistance in each of the four vessels is 2 mm Hg/mL/min. What is the total peripheral resistance of the circuit?", "options": [{"label": "A", "text": "8 mm Hg/mL/min", "correct": false}, {"label": "B", "text": "4 mm Hg/mL/min", "correct": false}, {"label": "C", "text": "2 mm Hg/mL/min", "correct": false}, {"label": "D", "text": "0.5 mm Hg/mL/min", "correct": true}], "correct_answer": "D. 0.5 mm Hg/mL/min", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q37(3).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Shown below is ‘chloride shift’ in RBC. What is the name of the carrier protein involved in this shift?", "options": [{"label": "A", "text": "AE-1", "correct": true}, {"label": "B", "text": "AE-2", "correct": false}, {"label": "C", "text": "AE-3", "correct": false}, {"label": "D", "text": "AE-4", "correct": false}], "correct_answer": "A. AE-1", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q38(1).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "If an artery is partially occluded by an embolus such that its radius becomes one- half the pre-occlusion value, which of the following parameters will decrease by a factor of 16?", "options": [{"label": "A", "text": "Blood flow", "correct": true}, {"label": "B", "text": "Resistance", "correct": false}, {"label": "C", "text": "Pressure gradient", "correct": false}, {"label": "D", "text": "Capacitance", "correct": false}], "correct_answer": "A. Blood flow", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Least conduction velocity is seen in which of the following?", "options": [{"label": "A", "text": "Pre-ganglionic autonomic", "correct": true}, {"label": "B", "text": "Sensory fiber from golgi tendon organ", "correct": false}, {"label": "C", "text": "Motor fiber to muscle spindle", "correct": false}, {"label": "D", "text": "Sensory fiber from Pacinian corpuscle", "correct": false}], "correct_answer": "A. Pre-ganglionic autonomic", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "FRC is the lung volume after which of the following?", "options": [{"label": "A", "text": "Normal inspiration", "correct": false}, {"label": "B", "text": "Forceful inspiration", "correct": false}, {"label": "C", "text": "Normal expiration", "correct": true}, {"label": "D", "text": "Forceful expiration", "correct": false}], "correct_answer": "C. Normal expiration", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following measurements are obtained in a 30-year-old male patient: Systemic arterial O 2 : 0.19mL O 2 /mL Pulmonary artery O 2 : 0.14mL O 2 /mL Whole body oxygen consumption: 250mL/min What is the patient’s cardiac output?", "options": [{"label": "A", "text": "1.65L/min", "correct": false}, {"label": "B", "text": "4.55L/min", "correct": false}, {"label": "C", "text": "5.00L/min", "correct": true}, {"label": "D", "text": "6.25L/min", "correct": false}], "correct_answer": "C. 5.00L/min", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Regional variations in ventilation (V) and perfusion (Q) are measured in healthy individuals when they stand in the upright position. The results are graphed with x-axis denoting the position along the lung from the base to the apex. Which of the curves is most likely to be observed?", "options": [{"label": "A", "text": "A", "correct": true}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "A. A", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q43(1).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with respiratory volume of 500 ml. The intrapleural pressure measured is -4 cm of H 2 O before inspiration and -8cm of H 2 O at the end of inspiration. The pulmonary compliance of the patient is", "options": [{"label": "A", "text": "50 ml/cm H 2 0", "correct": false}, {"label": "B", "text": "62.5 ml/cm H 2 0", "correct": false}, {"label": "C", "text": "125 ml/cm H 2 0", "correct": true}, {"label": "D", "text": "150 ml/cm H 2 0", "correct": false}], "correct_answer": "C. 125 ml/cm H 2 0", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The oxygen carrying capacity of a 18-years-old boy with hemoglobin of 14g/dl is", "options": [{"label": "A", "text": "14mL/dL", "correct": false}, {"label": "B", "text": "16mL/dL", "correct": false}, {"label": "C", "text": "18mL/dL", "correct": true}, {"label": "D", "text": "22mL/dL", "correct": false}], "correct_answer": "C. 18mL/dL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Calculate FEV1 from the below spirometry reading", "options": [{"label": "A", "text": "60%", "correct": false}, {"label": "B", "text": "70%", "correct": false}, {"label": "C", "text": "80%", "correct": true}, {"label": "D", "text": "90%", "correct": false}], "correct_answer": "C. 80%", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Qid%20103391.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following graph shows the transport kinetics of a solute transferredacross cell membrane. What is the likely nature of the solute?", "options": [{"label": "A", "text": "CO 2", "correct": false}, {"label": "B", "text": "O 2", "correct": false}, {"label": "C", "text": "Na+", "correct": false}, {"label": "D", "text": "Glucose", "correct": true}], "correct_answer": "D. Glucose", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q47.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the best way to maintain blood flow to a tissue?", "options": [{"label": "A", "text": "Increase Arterial pressure", "correct": false}, {"label": "B", "text": "Increase Venous pressure", "correct": false}, {"label": "C", "text": "Increase vessel diameter", "correct": true}, {"label": "D", "text": "Decrease Viscosity", "correct": false}], "correct_answer": "C. Increase vessel diameter", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Acetylcholine receptors at the neuro-muscular junctions are", "options": [{"label": "A", "text": "Voltage gated sodium channels", "correct": false}, {"label": "B", "text": "Ligand gated sodium channles", "correct": false}, {"label": "C", "text": "Voltage gated sodium and potassium channels", "correct": false}, {"label": "D", "text": "Ligand gated sodium and potassium channels", "correct": true}], "correct_answer": "D. Ligand gated sodium and potassium channels", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the correct sequence of the spread of depolarization in the ventricles", "options": [{"label": "A", "text": "Septum, endocardium, epicardium", "correct": true}, {"label": "B", "text": "Septum, epicardium, endocardium", "correct": false}, {"label": "C", "text": "Endocardium, septum, epicardium", "correct": false}, {"label": "D", "text": "Endocardium, epicardium, septum", "correct": false}], "correct_answer": "A. Septum, endocardium, epicardium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following best describes surfactant lining the alveoli?", "options": [{"label": "A", "text": "Helps prevent alveolar collapse.", "correct": true}, {"label": "B", "text": "It is produced in alveolar type I cells and secreted into the alveolus.", "correct": false}, {"label": "C", "text": "It is increased in the lungs of heavy smokers.", "correct": false}, {"label": "D", "text": "It is a glycolipid complex.", "correct": false}], "correct_answer": "A. Helps prevent alveolar collapse.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the ions A and B respectively from the conductance graph of a neuron shown below:", "options": [{"label": "A", "text": "Na + , K +", "correct": true}, {"label": "B", "text": "K + , Na +", "correct": false}, {"label": "C", "text": "Na + , Ca ++", "correct": false}, {"label": "D", "text": "Ca ++ , Na +", "correct": false}], "correct_answer": "A. Na + , K +", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q52.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/A52(1).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Baroreceptor is which type of feedback?", "options": [{"label": "A", "text": "Negative feedback", "correct": true}, {"label": "B", "text": "Positive feedback", "correct": false}, {"label": "C", "text": "Both negative and positive", "correct": false}, {"label": "D", "text": "Feed forward control", "correct": false}], "correct_answer": "A. Negative feedback", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is responsible for BezoldJarish Reflex?", "options": [{"label": "A", "text": "Serotonin", "correct": true}, {"label": "B", "text": "Histamine", "correct": false}, {"label": "C", "text": "Prostaglandin", "correct": false}, {"label": "D", "text": "Angiotensin", "correct": false}], "correct_answer": "A. Serotonin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Respiratory rhythm generation centeris locatedinwhich of the following?", "options": [{"label": "A", "text": "Pre-Bottzingercomplex", "correct": true}, {"label": "B", "text": "Dorsal respiratory group", "correct": false}, {"label": "C", "text": "Ventral respiratory neurons", "correct": false}, {"label": "D", "text": "Pneumotaxiccenter", "correct": false}], "correct_answer": "A. Pre-Bottzingercomplex", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In the relaxed state, chest wall recoil and lung recoil are equal and opposite at which of the following?", "options": [{"label": "A", "text": "Minute volume", "correct": false}, {"label": "B", "text": "FRC", "correct": true}, {"label": "C", "text": "TLC", "correct": false}, {"label": "D", "text": "Residual volume", "correct": false}], "correct_answer": "B. FRC", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "On standing from sitting position a person has a fall in BP of 10mm Hg.After correction, the baroreceptor mechanism corrects the bp by8mm Hg with anerror of 2mm Hg. What is gain of the baroreceptor system?", "options": [{"label": "A", "text": "2", "correct": false}, {"label": "B", "text": "4", "correct": true}, {"label": "C", "text": "6", "correct": false}, {"label": "D", "text": "8", "correct": false}], "correct_answer": "B. 4", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is a midbrain reflex?", "options": [{"label": "A", "text": "Head-on-body righting reflex", "correct": true}, {"label": "B", "text": "Hopping and placement reactions", "correct": false}, {"label": "C", "text": "Flexor withdrawal response", "correct": false}, {"label": "D", "text": "Labyrinthine reflex", "correct": false}], "correct_answer": "A. Head-on-body righting reflex", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Thirst is stimulated by which of the following?", "options": [{"label": "A", "text": "Decrease in plasma osmolality, decrease in blood volume", "correct": false}, {"label": "B", "text": "Increase in plasma osmolality, increase in blood volume", "correct": false}, {"label": "C", "text": "Increase in plasma osmolality, decrease in blood volume", "correct": true}, {"label": "D", "text": "Decrease in plasma osmolality, increase in blood volume", "correct": false}], "correct_answer": "C. Increase in plasma osmolality, decrease in blood volume", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is a correct description of connections involving cerebellar neurons?", "options": [{"label": "A", "text": "Basket cells release glutamate to activate Purkinje cells.", "correct": false}, {"label": "B", "text": "Climbing fiber inputs exert a strong excitatory effect on Purkinje cells, and mossy fiber inputs exert a strong inhibitory effect on Purkinje cells.", "correct": false}, {"label": "C", "text": "Granule cells release glutamate to excite basket cells and stellate cells.", "correct": true}, {"label": "D", "text": "The axons of Purkinje cells are the sole output of the cerebellar cortex, and they release glutamate to excite the deep cerebellar nuclei.", "correct": false}], "correct_answer": "C. Granule cells release glutamate to excite basket cells and stellate cells.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "After a road traffic accident, a young man is foundto have partial loss of voluntary movement on the right side of his body and loss of pain and temperature sensation on the left side below the midthoracic region. He is likely to have which of the following lesions?", "options": [{"label": "A", "text": "Transection of left half of the spinal cord in the upper thoracic region.", "correct": false}, {"label": "B", "text": "Transection of sensory and motor pathways on the right side of the pons.", "correct": false}, {"label": "C", "text": "Transection of the right half of the spinal cord in the upper thoracic region.", "correct": true}, {"label": "D", "text": "Transection of the dorsal half of the spinal cord in the upper thoracic region.", "correct": false}], "correct_answer": "C. Transection of the right half of the spinal cord in the upper thoracic region.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Late slow EPSP in autonomic ganglia is due to action on which of the following receptors?", "options": [{"label": "A", "text": "Nicotinic receptors", "correct": false}, {"label": "B", "text": "M 1 receptors", "correct": false}, {"label": "C", "text": "M 2 receptors", "correct": false}, {"label": "D", "text": "Peptide receptors", "correct": true}], "correct_answer": "D. Peptide receptors", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are seen in REM sleep except?", "options": [{"label": "A", "text": "↓Nor epinephrine", "correct": false}, {"label": "B", "text": "↓Serotonin", "correct": false}, {"label": "C", "text": "­­↑Acetylcholine", "correct": false}, {"label": "D", "text": "↑GABA", "correct": true}], "correct_answer": "D. ↑GABA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is filtration fraction?", "options": [{"label": "A", "text": "GFR/ RBF", "correct": false}, {"label": "B", "text": "GFR/ RPF", "correct": true}, {"label": "C", "text": "RBF/ GFR", "correct": false}, {"label": "D", "text": "RPF/ GFR", "correct": false}], "correct_answer": "B. GFR/ RPF", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Shown below is the time taken for adaptation by four different receptors. Which line most closely represents the Pacinian corpuscle?", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": true}], "correct_answer": "D. D", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q65.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following component of the basal ganglia secretes excitatory neurotransmitter Glutamate?", "options": [{"label": "A", "text": "Striatum", "correct": false}, {"label": "B", "text": "Globus Pallidus", "correct": false}, {"label": "C", "text": "Subthalamic nucleus", "correct": true}, {"label": "D", "text": "Substantia Nigra", "correct": false}], "correct_answer": "C. Subthalamic nucleus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are true about circadian rhythm except?", "options": [{"label": "A", "text": "Suprachiasmatic nucleus of the hypothalamus is involved", "correct": false}, {"label": "B", "text": "SCN receives information about the light-dark cycles via the retinohypothalamic fibers", "correct": false}, {"label": "C", "text": "Daylight causes an increase in secretion of melatonin from the pineal gland", "correct": true}, {"label": "D", "text": "Diurnal change in melatonin secretion from the pineal gland functions as timing signal to coordinate events with the light-dark cycle, including the sleep-wake cycle.", "correct": false}], "correct_answer": "C. Daylight causes an increase in secretion of melatonin from the pineal gland", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following cause a decrease in the frequency of the alpha rhythm except?", "options": [{"label": "A", "text": "Hypoglycemia", "correct": false}, {"label": "B", "text": "Hypothermia", "correct": false}, {"label": "C", "text": "Hypocarbia", "correct": true}, {"label": "D", "text": "Hypocortisolism", "correct": false}], "correct_answer": "C. Hypocarbia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The PepT1 mechanism for absorption of di and tri-peptides requires which of the following?", "options": [{"label": "A", "text": "Na +", "correct": false}, {"label": "B", "text": "K +", "correct": false}, {"label": "C", "text": "H +", "correct": true}, {"label": "D", "text": "Glucose", "correct": false}], "correct_answer": "C. H +", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Complete transection of the spinal cord at the level of T1 would most likely result in", "options": [{"label": "A", "text": "Temporary loss of stretch reflexes below the lesion", "correct": true}, {"label": "B", "text": "Temporary loss of proprioception below the level of lesion", "correct": false}, {"label": "C", "text": "Permanent loss of movement above the level of lesion", "correct": false}, {"label": "D", "text": "Permanent loss of consciousness above the lesion", "correct": false}], "correct_answer": "A. Temporary loss of stretch reflexes below the lesion", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Sensory receptor potentials arebest described by which of the following?", "options": [{"label": "A", "text": "Action potentials", "correct": false}, {"label": "B", "text": "Graded responses depending on the stimulus intensity", "correct": true}, {"label": "C", "text": "All-or-none responses", "correct": false}, {"label": "D", "text": "Always bring the membrane potential of a receptor cell toward the threshold", "correct": false}], "correct_answer": "B. Graded responses depending on the stimulus intensity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is a characteristic of nuclear chain fibers?", "options": [{"label": "A", "text": "They area type of extrafusal muscle fibers", "correct": false}, {"label": "B", "text": "They detect steady muscle length", "correct": true}, {"label": "C", "text": "They give rise to group Ib afferents", "correct": false}, {"label": "D", "text": "They are innervated by Aα- motor neurons", "correct": false}], "correct_answer": "B. They detect steady muscle length", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which reflex is responsible for monosynaptic excitation of ipsilateral homonymous muscle?", "options": [{"label": "A", "text": "Myotactic reflex", "correct": true}, {"label": "B", "text": "Inverse myotactic reflex", "correct": false}, {"label": "C", "text": "Flexor withdrawal response", "correct": false}, {"label": "D", "text": "Subliminal occlusion reflex", "correct": false}], "correct_answer": "A. Myotactic reflex", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Maximum calcium reabsorption occurs in which part of the nephron?", "options": [{"label": "A", "text": "PCT", "correct": true}, {"label": "B", "text": "TAL", "correct": false}, {"label": "C", "text": "DCT", "correct": false}, {"label": "D", "text": "CD", "correct": false}], "correct_answer": "A. PCT", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following innervate the extensor alpha motor neuron?", "options": [{"label": "A", "text": "Reticulospinal tract", "correct": false}, {"label": "B", "text": "Lateral corticospinal tract", "correct": false}, {"label": "C", "text": "Rubrospinal tract", "correct": false}, {"label": "D", "text": "Vestibulospinal tract", "correct": true}], "correct_answer": "D. Vestibulospinal tract", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are true about short chain fatty acids except", "options": [{"label": "A", "text": "SCFAs are produced in colon by the action of colonic bacteria on complex carbohydrates, resistant starches and dietary fiber", "correct": false}, {"label": "B", "text": "60% of total is acetate", "correct": false}, {"label": "C", "text": "SCFAs are absorbed in the colon", "correct": false}, {"label": "D", "text": "SCFAs are absorbed by Na-SCFA co transport", "correct": true}], "correct_answer": "D. SCFAs are absorbed by Na-SCFA co transport", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is k/a the physiologic b - cell stimulating hormone of GI tract?", "options": [{"label": "A", "text": "GIP", "correct": false}, {"label": "B", "text": "GLP-1", "correct": true}, {"label": "C", "text": "Somatostatin", "correct": false}, {"label": "D", "text": "Ghrelin", "correct": false}], "correct_answer": "B. GLP-1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Water is absorbed in the jejunum, ileum, and colon and excreted in the feces. Arrange these in order of the amount of water absorbed from greatest to smallest.", "options": [{"label": "A", "text": "Colon, jejunum, ileum", "correct": false}, {"label": "B", "text": "Colon, ileum, jejunum", "correct": false}, {"label": "C", "text": "Jejunum, ileum, colon", "correct": true}, {"label": "D", "text": "Ileum, colon, jejunum", "correct": false}], "correct_answer": "C. Jejunum, ileum, colon", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following segments of the nephron is freely permeable to urea?", "options": [{"label": "A", "text": "TAL", "correct": false}, {"label": "B", "text": "DCT", "correct": false}, {"label": "C", "text": "Cortical CD", "correct": false}, {"label": "D", "text": "Medullary CD", "correct": true}], "correct_answer": "D. Medullary CD", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/A79.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the most alkaline?", "options": [{"label": "A", "text": "Saliva", "correct": false}, {"label": "B", "text": "Gastric secretion", "correct": false}, {"label": "C", "text": "Pancreatic", "correct": false}, {"label": "D", "text": "Brunner’s gland secretion", "correct": true}], "correct_answer": "D. Brunner’s gland secretion", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Maximum daily secretion is which of the following?", "options": [{"label": "A", "text": "Salivary", "correct": false}, {"label": "B", "text": "Gastric", "correct": true}, {"label": "C", "text": "Pancreatic", "correct": false}, {"label": "D", "text": "Intestinal", "correct": false}], "correct_answer": "B. Gastric", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Maximum frequency of BER is in which of the following segments of the GI tract?", "options": [{"label": "A", "text": "Stomach", "correct": false}, {"label": "B", "text": "Duodenum", "correct": true}, {"label": "C", "text": "Jejunum", "correct": false}, {"label": "D", "text": "Cecum", "correct": false}], "correct_answer": "B. Duodenum", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In infants, defecation often follows a meal. The cause of colonic contractions in this situation is", "options": [{"label": "A", "text": "Histamine", "correct": false}, {"label": "B", "text": "Increased circulating levels of CCK", "correct": false}, {"label": "C", "text": "Gastrocolic reflex", "correct": true}, {"label": "D", "text": "Enterogastric reflex", "correct": false}], "correct_answer": "C. Gastrocolic reflex", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the most important choleretic?", "options": [{"label": "A", "text": "Vagus", "correct": false}, {"label": "B", "text": "Secretin", "correct": false}, {"label": "C", "text": "CCK", "correct": false}, {"label": "D", "text": "Bile acids", "correct": true}], "correct_answer": "D. Bile acids", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Shown below is the graph of plasma concentration (mg/mL) and clearance (mL/min). Which of the following represents PAHA?", "options": [{"label": "A", "text": "A", "correct": true}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "A. A", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q85(1).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Increase in which hormone will produce a change in urine osmolality and urine flow rate as shown in the following diagram?", "options": [{"label": "A", "text": "ADH", "correct": true}, {"label": "B", "text": "Aldosterone", "correct": false}, {"label": "C", "text": "Progesterone", "correct": false}, {"label": "D", "text": "ANP", "correct": false}], "correct_answer": "A. ADH", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q86(1).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following shows a pattern of secretion as depicted in the adjacent diagram?", "options": [{"label": "A", "text": "Testosterone in males", "correct": true}, {"label": "B", "text": "Insulin in males", "correct": false}, {"label": "C", "text": "Thyroid hormones in females", "correct": false}, {"label": "D", "text": "Parathormone in females", "correct": false}], "correct_answer": "A. Testosterone in males", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q87.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Normally, T 3 > RT 3 . Which of the following dietary modification will cause RT 3 to become more than T 3 ?", "options": [{"label": "A", "text": "starvation", "correct": true}, {"label": "B", "text": "excess intake of carbohydrates", "correct": false}, {"label": "C", "text": "protein rich diet", "correct": false}, {"label": "D", "text": "diet lacking in essential fatty acids", "correct": false}], "correct_answer": "A. starvation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Given in the diagram are movements of the GI tract occurring at regular intervals during fasting and completely inhibited by a meal. These are", "options": [{"label": "A", "text": "Peristalsis", "correct": false}, {"label": "B", "text": "Segmentation contractions", "correct": false}, {"label": "C", "text": "Mass action contractions", "correct": false}, {"label": "D", "text": "Migrating motor complexes", "correct": true}], "correct_answer": "D. Migrating motor complexes", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q89(2).jpg"], "explanation_images": [], "explanation": "<p><strong>Correct Answer (D)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Change in sex hormone binding globulin will most affect levels of which of these hormones?", "options": [{"label": "A", "text": "Testosterone", "correct": true}, {"label": "B", "text": "Cortisol", "correct": false}, {"label": "C", "text": "Progesterone", "correct": false}, {"label": "D", "text": "DHEA", "correct": false}], "correct_answer": "A. Testosterone", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Countercurrent mechanism is not seen in which of the following?", "options": [{"label": "A", "text": "Kidney", "correct": false}, {"label": "B", "text": "Testes", "correct": false}, {"label": "C", "text": "Eye", "correct": true}, {"label": "D", "text": "Intestine", "correct": false}], "correct_answer": "C. Eye", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "During voluntary movements Golgi tendon organ continuously relays which of the following to the efferent neurons:", "options": [{"label": "A", "text": "Change in angle of joint during motion", "correct": false}, {"label": "B", "text": "Length of the muscle at rest", "correct": false}, {"label": "C", "text": "Tension in the muscle", "correct": true}, {"label": "D", "text": "Change in length of muscle before and after the movement", "correct": false}], "correct_answer": "C. Tension in the muscle", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In the formula for urea clearance, C= U x V/P, U denotes", "options": [{"label": "A", "text": "Urinary concentration of urea in g/24 hr", "correct": false}, {"label": "B", "text": "Urinary concentration of urea in mg/ ml", "correct": true}, {"label": "C", "text": "Urine osmolarity", "correct": false}, {"label": "D", "text": "Urine volume per minute", "correct": false}], "correct_answer": "B. Urinary concentration of urea in mg/ ml", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Maximum area of representation in a homunculus signifies?", "options": [{"label": "A", "text": "Low control and skilled movements", "correct": false}, {"label": "B", "text": "High control and less skilled movements", "correct": false}, {"label": "C", "text": "Increased precise nature of movements", "correct": true}, {"label": "D", "text": "More muscle fiber units present in the movement", "correct": false}], "correct_answer": "C. Increased precise nature of movements", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is k/a diluting segment of kidney?", "options": [{"label": "A", "text": "PCT", "correct": false}, {"label": "B", "text": "Collecting duct", "correct": false}, {"label": "C", "text": "Thick ascending limb of loop of Henle", "correct": true}, {"label": "D", "text": "Descending loop of Henle", "correct": false}], "correct_answer": "C. Thick ascending limb of loop of Henle", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which extrapyramidal tract functions like the pyramidal tract?", "options": [{"label": "A", "text": "Anterior corticospinal", "correct": false}, {"label": "B", "text": "Tectospinal", "correct": false}, {"label": "C", "text": "Rubrospinal", "correct": true}, {"label": "D", "text": "Vestibulospinal", "correct": false}], "correct_answer": "C. Rubrospinal", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Weber Fechner law states that the sensation felt is proportional to which of the following?", "options": [{"label": "A", "text": "log of intensity of stimulus", "correct": true}, {"label": "B", "text": "log of frequency of stimulation", "correct": false}, {"label": "C", "text": "power function of intensity", "correct": false}, {"label": "D", "text": "Number of nerves stimulated", "correct": false}], "correct_answer": "A. log of intensity of stimulus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The thalamic relay nucleus for taste is", "options": [{"label": "A", "text": "Ventroposteromedial", "correct": true}, {"label": "B", "text": "Ventroposterolateral", "correct": false}, {"label": "C", "text": "Dorsomedial", "correct": false}, {"label": "D", "text": "Intralaminar", "correct": false}], "correct_answer": "A. Ventroposteromedial", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Calcitonin is secreted by", "options": [{"label": "A", "text": "Thyroid gland", "correct": true}, {"label": "B", "text": "Parathyroid gland", "correct": false}, {"label": "C", "text": "Thymus", "correct": false}, {"label": "D", "text": "Adrenal gland", "correct": false}], "correct_answer": "A. Thyroid gland", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Gastric lipase is secreted by which of the following cells?", "options": [{"label": "A", "text": "Ebner’s glands", "correct": false}, {"label": "B", "text": "Oxyntic cells", "correct": false}, {"label": "C", "text": "Chief cells", "correct": true}, {"label": "D", "text": "Parietal cells", "correct": false}], "correct_answer": "C. Chief cells", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

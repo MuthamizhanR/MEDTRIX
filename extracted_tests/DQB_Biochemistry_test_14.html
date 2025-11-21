@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Glycolysis And Pyruvate Dehydrogenase Complex</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Glycolysis And Pyruvate Dehydrogenase Complex</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                38 Questions | 200 Total Marks | 48 min Duration | ~75.79 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 38 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 48 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 38</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Glycolysis And Pyruvate Dehydrogenase Complex - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 38</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 38 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "All of the following enzymes of glycolysis catalyze irrreversible reaction except (AI 2015)", "options": [{"label": "A", "text": "PFK-1", "correct": false}, {"label": "B", "text": "Enolase", "correct": true}, {"label": "C", "text": "Pyruvate kinase", "correct": false}, {"label": "D", "text": "Hexokinase", "correct": false}], "correct_answer": "B. Enolase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/28823081703839052/28823081703839052.m3u8"}, {"text": "All of the following are regulalatory steps of glycolysis except (PGMEE .)", "options": [{"label": "A", "text": "Glucokinase", "correct": false}, {"label": "B", "text": "Phosphofructokinase", "correct": false}, {"label": "C", "text": "Enolase", "correct": true}, {"label": "D", "text": "Pyruvate kinase", "correct": false}], "correct_answer": "C. Enolase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9666291703839073/9666291703839073.m3u8"}, {"text": "First commited step of glycolysis (. 97)", "options": [{"label": "A", "text": "Hexokinase", "correct": false}, {"label": "B", "text": "Phosphofructokinase", "correct": true}, {"label": "C", "text": "Pyruvate kinase", "correct": false}, {"label": "D", "text": "Glyceraldehyde 3 phosphate dehydrogenase", "correct": false}], "correct_answer": "B. Phosphofructokinase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77069421703839479/77069421703839479.m3u8"}, {"text": "Rate limiting step in glycolysis is catalyzed by (AI 2000)", "options": [{"label": "A", "text": "Phosphofructokinase", "correct": true}, {"label": "B", "text": "Glucokinase", "correct": false}, {"label": "C", "text": "Pyruvate kinase", "correct": false}, {"label": "D", "text": "Glucose 6 dehydrogenase", "correct": false}], "correct_answer": "A. Phosphofructokinase", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (B) Glucokinase: Glucokinase (or hexokinase) catalyzes the phosphorylation of glucose to glucose-6-phosphate, which is the first step of glycolysis. While this step is irreversible and regulated, it is not the rate-limiting step. Glucokinase serves more to regulate glucose entry into the cell and its availability for glycolysis or other pathways, rather than controlling the overall rate of glycolysis.</li><li>• (C) Pyruvate kinase: Pyruvate kinase catalyzes the final step of glycolysis, converting phosphoenolpyruvate (PEP) to pyruvate while generating ATP. Although this step is irreversible and regulated by factors like ATP (inhibitor) and fructose-1,6-bisphosphate (activator), it occurs downstream of PFK-1 and does not control the overall rate of glycolysis.</li><li>• (D) Glucose-6-phosphate dehydrogenase (G6PD): G6PD is not an enzyme of glycolysis. It catalyzes the first step of the pentose phosphate pathway, converting glucose-6-phosphate to 6-phosphoglucono-δ-lactone. This pathway is important for generating NADPH and ribose-5-phosphate but does not influence the glycolytic pathway.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/73562601703839499/73562601703839499.m3u8"}, {"text": "Which ion play important role in glycolysis (PGMEE 2009)", "options": [{"label": "A", "text": "Calcium (Ca)", "correct": false}, {"label": "B", "text": "Magnesium (Mg)", "correct": true}, {"label": "C", "text": "Copper (Cu)", "correct": false}, {"label": "D", "text": "Zinc (Zn)", "correct": false}], "correct_answer": "B. Magnesium (Mg)", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (C) Copper (Cu): Copper ions (Cu 2+ ) are not involved in glycolysis. Copper is primarily associated with redox reactions, such as those occurring in the electron transport chain and oxidative enzymes like cytochrome c oxidase. However, these processes are unrelated to glycolysis.</li><li>• (D) Zinc (Zn): Zinc ions (Zn 2+ ) do not play a direct role in glycolysis. Zinc is an important cofactor for several enzymes, especially those involved in DNA synthesis and repair, as well as alcohol dehydrogenase and carbonic anhydrase, but it is not required for glycolytic enzymes.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53087241703839527/53087241703839527.m3u8"}, {"text": "ATP used in which of the following reation of glycolysis (. .)", "options": [{"label": "A", "text": "Hexokinase", "correct": true}, {"label": "B", "text": "Enolase", "correct": false}, {"label": "C", "text": "Isomerase", "correct": false}, {"label": "D", "text": "Pyruvate kinase", "correct": false}], "correct_answer": "A. Hexokinase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64049151703839542/64049151703839542.m3u8"}, {"text": "All of the followings are true for anaerobic glycolysis except (. .)", "options": [{"label": "A", "text": "1 glucose molecule produce 2 ATPs", "correct": false}, {"label": "B", "text": "Pyruvate dehydrogenase is required", "correct": true}, {"label": "C", "text": "Aldolase is required", "correct": false}, {"label": "D", "text": "1 glucose molecule produce 2 latic acid", "correct": false}], "correct_answer": "B. Pyruvate dehydrogenase is required", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (C) Aldolase is required: This statement is true. Aldolase is an essential enzyme in glycolysis, catalyzing the cleavage of fructose-1,6-bisphosphate into two 3-carbon intermediates: glyceraldehyde-3-phosphate and dihydroxyacetone phosphate. This step is critical for the continuation of glycolysis.</li><li>• (D) 1 glucose molecule produces 2 lactic acid: This statement is true. In anaerobic glycolysis, pyruvate is reduced to lactate by lactate dehydrogenase. For each molecule of glucose, 2 pyruvate molecules are formed, which are then converted into 2 molecules of lactic acid. This helps regenerate NAD + , allowing glycolysis to continue in the absence of oxygen.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/30578271703839560/30578271703839560.m3u8"}, {"text": "Which of the following are immediate metabolic products forms during conversion of fructose 1,6 bisphosphate to two molecules of pyruvate (PGMEE 2015)", "options": [{"label": "A", "text": "Glyceraldehyde-3-phosphate and dihydroxy acetone phosphate", "correct": true}, {"label": "B", "text": "Glyceraldehyde 3 phosphate & 1,3 bisphosphoglycerate", "correct": false}, {"label": "C", "text": "1,3 bisphosphoglycerate & 3-phosphoglycerate", "correct": false}, {"label": "D", "text": "Dihydroxya.one phosphate & xya.one phosphate", "correct": false}], "correct_answer": "A. Glyceraldehyde-3-phosphate and dihydroxy acetone phosphate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52212001703839576/52212001703839576.m3u8"}, {"text": "Main purpose of extra step in anaerobic glycolysis is (.)", "options": [{"label": "A", "text": "Production of 1 molecule of lactate", "correct": false}, {"label": "B", "text": "Replenishment of NAD +", "correct": true}, {"label": "C", "text": "Production of 2 molecules of lactate", "correct": false}, {"label": "D", "text": "Replenishment of NADH + H +", "correct": false}], "correct_answer": "B. Replenishment of NAD +", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (A) Production of 1 molecule of lactate: While lactate is a byproduct of this reaction, its production is not the primary purpose of the extra step. The main goal is to regenerate NAD + , which is essential for sustaining glycolysis. Lactate is simply a result of the reduction of pyruvate, allowing NAD + to be replenished.</li><li>• (C) Production of 2 molecules of lactate: Similar to option (A), the production of lactate is not the main purpose of anaerobic glycolysis. Although 1 glucose molecule produces 2 pyruvate molecules, which can be converted to 2 lactate molecules, this is secondary to the critical role of regenerating NAD + to maintain glycolysis.</li><li>• (D) Replenishment of NADH + H + : This option is incorrect because NADH + H + is already produced earlier in glycolysis during the oxidation of glyceraldehyde-3-phosphate. The purpose of the extra step is to oxidize NADH back to NAD + , not to replenish NADH.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/58247991703839590/58247991703839590.m3u8"}, {"text": "Which of the following statment is not true (PGMEE 2009)", "options": [{"label": "A", "text": "Hexokinase is found in all cells", "correct": false}, {"label": "B", "text": "Hexokinase is specific for glucose", "correct": true}, {"label": "C", "text": "Glucokinase has high Km value", "correct": false}, {"label": "D", "text": "Glucokinase is induced by insulin", "correct": false}], "correct_answer": "B. Hexokinase is specific for glucose", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77864571703839611/77864571703839611.m3u8"}, {"text": "Which of the following enzyme take part in post parandial utilization of glucose", "options": [{"label": "A", "text": "Glucokinase", "correct": true}, {"label": "B", "text": "Hexokinase", "correct": false}, {"label": "C", "text": "Fructokinase", "correct": false}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "A. Glucokinase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "ATP produced by substrate level phosphorylation in glycolysis", "options": [{"label": "A", "text": "3", "correct": false}, {"label": "B", "text": "4", "correct": true}, {"label": "C", "text": "5", "correct": false}, {"label": "D", "text": "6", "correct": false}], "correct_answer": "B. 4", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/2497511703839916/2497511703839916.m3u8"}, {"text": "Which of the following products are formed in glycolysis", "options": [{"label": "A", "text": "Fructose 1, 6 bisphosphate", "correct": false}, {"label": "B", "text": "Fructose 2, 6 bisphosphate", "correct": false}, {"label": "C", "text": "Glyceraldehyde 3 phoshpahte", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14004841703839932/14004841703839932.m3u8"}, {"text": "Glucose predominantly converts into lactate in all of the followig tissues except", "options": [{"label": "A", "text": "RBCs", "correct": false}, {"label": "B", "text": "Cornea", "correct": false}, {"label": "C", "text": "Lens", "correct": false}, {"label": "D", "text": "Brain", "correct": true}], "correct_answer": "D. Brain", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15172541703839957/15172541703839957.m3u8"}, {"text": "Reducing equivalants produced in glycolysis are transported from cytoplasm to mitochondrial matrix by which of the following", "options": [{"label": "A", "text": "Creatine", "correct": false}, {"label": "B", "text": "Malate shuttle", "correct": true}, {"label": "C", "text": "Glutamate shuttle", "correct": false}, {"label": "D", "text": "Carnitine", "correct": false}], "correct_answer": "B. Malate shuttle", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34560461703839972/34560461703839972.m3u8"}, {"text": "Following pathways used lactate that is produced in anerobic glycolysis", "options": [{"label": "A", "text": "Cori’s cycle and gluconeogenesis", "correct": true}, {"label": "B", "text": "Only by cori’s cycle", "correct": false}, {"label": "C", "text": "Only by gluconeogenesis", "correct": false}, {"label": "D", "text": "Glycogenolysis and TCA cycle", "correct": false}], "correct_answer": "A. Cori’s cycle and gluconeogenesis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14916201703839991/14916201703839991.m3u8"}, {"text": "How many ATPs are produced in RBCs during aerobic condition", "options": [{"label": "A", "text": "7", "correct": false}, {"label": "B", "text": "6", "correct": false}, {"label": "C", "text": "4", "correct": false}, {"label": "D", "text": "2", "correct": true}], "correct_answer": "D. 2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29387241703840008/29387241703840008.m3u8"}, {"text": "Which of the following vitamin require for oxidation of lactate to pyruvate", "options": [{"label": "A", "text": "Biotin", "correct": false}, {"label": "B", "text": "Riboflavin", "correct": false}, {"label": "C", "text": "Niacin", "correct": true}, {"label": "D", "text": "Folic acid", "correct": false}], "correct_answer": "C. Niacin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (A) Biotin: Biotin (vitamin B7) is important for carboxylation reactions, such as the conversion of pyruvate to oxaloacetate in the TCA cycle. However, it is not involved in the oxidation of lactate to pyruvate, making it incorrect for this question.</li><li>• (B) Riboflavin: Riboflavin (vitamin B2) is essential for the production of FAD (flavin adenine dinucleotide), which is involved in redox reactions in processes like the electron transport chain. However, riboflavin is not directly involved in the oxidation of lactate to pyruvate, as this process requires NAD + from niacin, not FAD.</li><li>• (D) Folic acid: Folic acid (vitamin B9) plays a critical role in one-carbon metabolism and the synthesis of nucleic acids but is not involved in the oxidation of lactate to pyruvate. Therefore, it is not the correct answer for this pathway.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12207321703840027/12207321703840027.m3u8"}, {"text": "Important role of 2,3 BPG in RBCs is", "options": [{"label": "A", "text": "Binding to oxygen", "correct": false}, {"label": "B", "text": "Rlease of oxygen", "correct": true}, {"label": "C", "text": "Reversal of glycolysis", "correct": false}, {"label": "D", "text": "Acid base balance", "correct": false}], "correct_answer": "B. Rlease of oxygen", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12451101703840041/12451101703840041.m3u8"}, {"text": "Which of the following is most potent activator of PFK-1", "options": [{"label": "A", "text": "Citrate", "correct": false}, {"label": "B", "text": "Low pH", "correct": false}, {"label": "C", "text": "Fructose 2,6 bisphosphate", "correct": true}, {"label": "D", "text": "ATP", "correct": false}], "correct_answer": "C. Fructose 2,6 bisphosphate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34552211703840059/34552211703840059.m3u8"}, {"text": "Which of the following is activator of kinases in glycolysis", "options": [{"label": "A", "text": "cAMP", "correct": false}, {"label": "B", "text": "Glucagon", "correct": false}, {"label": "C", "text": "Insulin", "correct": true}, {"label": "D", "text": "ATP", "correct": false}], "correct_answer": "C. Insulin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/8916341703840077/8916341703840077.m3u8"}, {"text": "On decrease in blood glucose level, all of the following occurs except", "options": [{"label": "A", "text": "Activation of fructose 2, 6 bisphosphatase", "correct": false}, {"label": "B", "text": "Increase in glucagon", "correct": false}, {"label": "C", "text": "Inhibition of PFK-2", "correct": false}, {"label": "D", "text": "Increase in fructose 2, 6 bisphosphate", "correct": true}], "correct_answer": "D. Increase in fructose 2, 6 bisphosphate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4718491703840091/4718491703840091.m3u8"}, {"text": "Which of the following enzymes involved in feed forward activation of glycolysis", "options": [{"label": "A", "text": "PFK-1 and PFK-2", "correct": false}, {"label": "B", "text": "PFK-1 and Enolase", "correct": false}, {"label": "C", "text": "Hexokinase and PFK-1", "correct": false}, {"label": "D", "text": "PFK-1 and Pyruvate kinase", "correct": true}], "correct_answer": "D. PFK-1 and Pyruvate kinase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/18073041703840106/18073041703840106.m3u8"}, {"text": "Insulin act on which enzyme of the glycolysis", "options": [{"label": "A", "text": "Hexokinase", "correct": false}, {"label": "B", "text": "Glucokinase", "correct": true}, {"label": "C", "text": "Adenylate kinase", "correct": false}, {"label": "D", "text": "Glucose 6 phosphatase", "correct": false}], "correct_answer": "B. Glucokinase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3759041703840121/3759041703840121.m3u8"}, {"text": "Which of the following enzyme of glycolysis is inhibit by sodium fluroride", "options": [{"label": "A", "text": "Hexokinase", "correct": false}, {"label": "B", "text": "PFK-1", "correct": false}, {"label": "C", "text": "Enolase", "correct": true}, {"label": "D", "text": "Acontinase", "correct": false}], "correct_answer": "C. Enolase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/45153031703840141/45153031703840141.m3u8"}, {"text": "Which of the following anticoagulant used in vaccutainer for estimation of blood glucose from sample sent from PHC", "options": [{"label": "A", "text": "Sodium citrate", "correct": false}, {"label": "B", "text": "EDTA", "correct": false}, {"label": "C", "text": "Calcium oxalate", "correct": false}, {"label": "D", "text": "Potassium oxalate + NaF", "correct": true}], "correct_answer": "D. Potassium oxalate + NaF", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/38776561703840155/38776561703840155.m3u8"}, {"text": "Increased O2 concentration inhibits glycolysis is known as", "options": [{"label": "A", "text": "Pasteur effect", "correct": true}, {"label": "B", "text": "Lewis effect", "correct": false}, {"label": "C", "text": "Carbtree effect", "correct": false}, {"label": "D", "text": "Warburg Effect", "correct": false}], "correct_answer": "A. Pasteur effect", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/11574301703840169/11574301703840169.m3u8"}, {"text": "Cancer cell get nutrition from", "options": [{"label": "A", "text": "Aerobic glycolysis", "correct": true}, {"label": "B", "text": "Anaerobic glycolysis", "correct": false}, {"label": "C", "text": "Increase in number of mitochondria", "correct": false}, {"label": "D", "text": "Oxidative phosphorylation", "correct": false}], "correct_answer": "A. Aerobic glycolysis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54413851703840185/54413851703840185.m3u8"}, {"text": "Which of the following supplement used in focal segmental glomerulosclerosis (FSGS)", "options": [{"label": "A", "text": "Glucose", "correct": false}, {"label": "B", "text": "Galactose", "correct": true}, {"label": "C", "text": "Fructose", "correct": false}, {"label": "D", "text": "Mannose", "correct": false}], "correct_answer": "B. Galactose", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/44683961703840202/44683961703840202.m3u8"}, {"text": "Pyruvate can be converted directly into all of the following except", "options": [{"label": "A", "text": "Alanine", "correct": false}, {"label": "B", "text": "Acyl CoA", "correct": false}, {"label": "C", "text": "Lactate", "correct": false}, {"label": "D", "text": "Phosphoenol pyruvate", "correct": true}], "correct_answer": "D. Phosphoenol pyruvate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the followings statement is correct for link reaction", "options": [{"label": "A", "text": "Oxidative decarboxylation of acyl CoA", "correct": false}, {"label": "B", "text": "It requires four B complec vitamin and lipoic acid", "correct": true}, {"label": "C", "text": "Oxidative deamination of pyruvate", "correct": false}, {"label": "D", "text": "It links TCA and ETC cycle", "correct": false}], "correct_answer": "B. It requires four B complec vitamin and lipoic acid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/47369071703840232/47369071703840232.m3u8"}, {"text": "Which of the following is major source of acyl CoA", "options": [{"label": "A", "text": "Alanine", "correct": false}, {"label": "B", "text": "Pyruvate", "correct": false}, {"label": "C", "text": "Triacyl glycerol", "correct": false}, {"label": "D", "text": "Fatty acid", "correct": true}], "correct_answer": "D. Fatty acid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/46278931703840247/46278931703840247.m3u8"}, {"text": "All of the following vitamins help in oxidative decarboxylation of pyruvate to actyl CoA except", "options": [{"label": "A", "text": "Biotin", "correct": true}, {"label": "B", "text": "Thamine", "correct": false}, {"label": "C", "text": "Niacin", "correct": false}, {"label": "D", "text": "Riboflavin", "correct": false}], "correct_answer": "A. Biotin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77407981703840262/77407981703840262.m3u8"}, {"text": "Thaimine deficiency lead to decreased energy production because", "options": [{"label": "A", "text": "Thiamine (TPP) interfere with energy production from amino acids", "correct": false}, {"label": "B", "text": "TPP interfere with transketolase activity", "correct": false}, {"label": "C", "text": "TPP interfere with alcohol metabolism", "correct": false}, {"label": "D", "text": "Thiamine act as cofactor for phyruvate dehydrogenase and alpha ketoglutrate dehydrogenase", "correct": true}], "correct_answer": "D. Thiamine act as cofactor for phyruvate dehydrogenase and alpha ketoglutrate dehydrogenase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/57613841703840276/57613841703840276.m3u8"}, {"text": "All of the following reactions are irreversible except", "options": [{"label": "A", "text": "Hexokinase", "correct": false}, {"label": "B", "text": "Pyruvate dehydrogenase", "correct": false}, {"label": "C", "text": "Pyruvate kinase", "correct": false}, {"label": "D", "text": "Lactate dehydrogenase", "correct": true}], "correct_answer": "D. Lactate dehydrogenase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/50924201703840293/50924201703840293.m3u8"}, {"text": "Baby present with hypotonia, seizure, microcephaly, blindness, lactic acidosis and fibroblasts unble to convert pyruvate into acyl CoA. Which of the following administration improve the condition", "options": [{"label": "A", "text": "Pyridoxine", "correct": false}, {"label": "B", "text": "Pyruvate", "correct": false}, {"label": "C", "text": "Thiamine", "correct": true}, {"label": "D", "text": "Riboflavin", "correct": false}], "correct_answer": "C. Thiamine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67608541703840308/67608541703840308.m3u8"}, {"text": "Deficinecy of which of the following enzyme cause congenital lactic acidosis", "options": [{"label": "A", "text": "Transketolase", "correct": false}, {"label": "B", "text": "Pyruvate dehydrogenase", "correct": true}, {"label": "C", "text": "Pyruvate carboxylase", "correct": false}, {"label": "D", "text": "Pyruvate decarboxylase", "correct": false}], "correct_answer": "B. Pyruvate dehydrogenase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/38202521703840322/38202521703840322.m3u8"}, {"text": "Arsenic inhibit all of the followings enzymes except", "options": [{"label": "A", "text": "Enolase", "correct": true}, {"label": "B", "text": "PDH complex", "correct": false}, {"label": "C", "text": "Alpha keto glutaret dehydrogenase", "correct": false}, {"label": "D", "text": "Lipoic acid", "correct": false}], "correct_answer": "A. Enolase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6765051703840341/6765051703840341.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

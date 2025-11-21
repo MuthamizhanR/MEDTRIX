@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Anatomy - INI CET NOV 2021</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Anatomy - INI CET NOV 2021</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                14 Questions | 14 Total Marks | 24 min Duration | ~102.86 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 14 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 24 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 14</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Anatomy - INI CET NOV 2021 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 14</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 14 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which of the following are branches of anterior division of the internal iliac artery? Superior gluteal artery Inferior gluteal artery Superior vesical artery Middle rectal artery Inferior vesical artery Vaginal artery Select the correct answer from the given below code:", "options": [{"label": "A", "text": "1,4,5,6", "correct": false}, {"label": "B", "text": "2,3,4,5,6", "correct": true}, {"label": "C", "text": "2,3,4,6", "correct": false}, {"label": "D", "text": "1,2,3,5", "correct": false}], "correct_answer": "B. 2,3,4,5,6", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>2,3,4,5,6 The nine branches of the anterior division of the internal iliac artery may be more easily remembered in these divisions: \"three urinary\": umbilical artery, superior vesical artery, inferior vesical artery \"three visceral\": uterine artery, vaginal artery, middle rectal artery \"three parietal\": obturator artery, internal pudendal artery, inferior gluteal artery Branches of Posterior division Iliolumbar artery Lateral sacral arteries Superior gluteal artery</p>\n<p><strong>Highyeild:</strong></p><p>The internal iliac artery arises at the bifurcation of the common iliac artery, opposite the lumbosacral articulation, and, passing downward to the upper margin of the greater sciatic foramen, divides into two large trunks, an anterior and a posterior. It is posterior to the ureter, anterior to the internal iliac vein,anterior to the lumbosacral trunk, and anterior to the piriformis muscle. Near its origin, it is medial to the external iliac vein, which lies between it and the psoas major muscle. It is above the obturator nerve.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- A. 1,4,5,6 C. 2,3,4,6 D. 1,2,3,5 Superior gluteal artery is a branch of the posterior division of the internal iliac artery.</p>\n<p><strong>Extraedge:</strong></p><p>The following are the branches of internal iliac artery: Division Type Branch Sub-branches To/through Anterior Vesical Superior vesical artery (usually from the umbilical artery ) Sometimes middle vesicular upper urinary bladder and ureters Umbilical artery Artery to vas deferens (male) and Superior vesical artery (usually, but sometimes it branches directly from anterior trunk) medial umbilical ligament Inferior vesical artery (male) - lower urinary bladder and ureters Visceral Middle rectal artery - lower rectum Vaginal artery (female) the artery usually takes the place of the inferior vesical artery present in the male - vagina Uterine artery (female) vaginal branch uterus and cervix Parietal Obturator artery (occasionally from the inferior epigastric artery ) - obturator canal Internal pudendal artery many branches greater sciatic foramen and lesser sciatic foramen to perineum Inferior gluteal artery - greater sciatic foramen (inferior to piriformis muscle ) and gluteus maximus muscle Posterior Parietal Iliolumbar artery lumbar and iliac branches psoas major muscle , quadratus lumborum muscle , iliacus muscle Lateral sacral artery superior and inferior branches anterior sacral foramina Superior gluteal artery - gluteus maximus muscle</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a subclavian artery block at the outer border of 1st rib, which of the following arteries help in maintaining the circulation to the upper limb? Suprascapular artery Superior thoracic artery Thyrocervical trunk Subscapular artery Select the correct answer from the given below code:", "options": [{"label": "A", "text": "1,2,3 and 4", "correct": false}, {"label": "B", "text": "1,3 and 4", "correct": true}, {"label": "C", "text": "1 and 3", "correct": false}, {"label": "D", "text": "1, 2 and 3", "correct": false}], "correct_answer": "B. 1,3 and 4", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>1,3 and 4 A rich anastomosis exists around the scapula between branches of the subclavian artery (first part) and the axillary artery (third part). This anastomosis provides a collateral circulation through which blood can flow to the limb when the distal part of subclavian artery or the proximal part of axillary artery is blocked.</p>\n<p><strong>Highyeild:</strong></p><p>Scapular anastomosis between branches of proximal subclavian and distal axillary artery: Branches of Subclavian artery: Thyrocervical trunk, Suprascapular and Deep branch of Transverse cervical artery. Branches of Axillary artery: Subscapular, Posterior circumflex humeral and Thoracoacromial arteries. Scapular anastomosis</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- A. 1,2,3 and 4 C. 1 and 3 D. 1, 2 and 3 Superior thoracic artery does not contribute to scapular anastomosis.</p>\n<p><strong>Extraedge:</strong></p><p>Anastomosis Over the Acromion Process It is formed by: The acromial branch of the thoracoacromial artery (2nd part of axillary). The acromial branch of the suprascapular artery (1st part of subclavian) The acromial branch of the posterior circumflex humeral artery (3rd part of axillary).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most specific complication if the central line is inserted below this bone?", "options": [{"label": "A", "text": "Empyema", "correct": false}, {"label": "B", "text": "Thrombophlebitis", "correct": false}, {"label": "C", "text": "Chylothorax", "correct": false}, {"label": "D", "text": "Arterial injury", "correct": true}], "correct_answer": "D. Arterial injury", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1694593001280-QTDAPYQ102IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Arterial injury Left clavicle is shown in the image. Arterial puncture/injury is the most common while cardiac tamponade is the most fatal complication of central venous catheterization.</p>\n<p><strong>Highyeild:</strong></p><p>Complications for central venous catheterization apart from failure to place the catheter include arterial puncture, cardiac tamponade, catheter malposition, pneumothorax (Injury to the parietal pleura )/chylothorax (Venous congestion or injury to lymphatics mainly in left sided insertion), infections, Thromboembolism, subcutaneous hematoma, hemothorax, nerve injury (recurrent laryngeal nerve MCly, also sympathetic chain, brachial plexus, and phrenic nerve) and cardiac arrest. Among these, arterial puncture/injury is the most common while cardiac tamponade is the most fatal complication. Arterial puncture is often easily recognized secondary to pulsatile flow, but recognition may be difficult in a hypotensive and critically-ill patient. Arterial injury occurs most commonly in femoral catheter placement and least commonly in subclavian placement.</p>\n<p><strong>Extraedge:</strong></p><p>There are three main access sites for the placement of central venous catheters, namely internal jugular, common femoral, and subclavian veins. These are the preferred sites for temporary prominent venous catheter placement. Additionally, for mid-term and long-term central venous access, the basilic and brachial veins are utilized for peripherally inserted central catheters (PICCs).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A male patient who has already taken the first dose for COVID vaccine comes for the second dose. The health worker then noticed that his shoulder was flat, flabby and looked asymmetrical due to loss of contour. Which of these structures would have been injured to lead to this scenario?", "options": [{"label": "A", "text": "Deltoid", "correct": true}, {"label": "B", "text": "Rotator cuff", "correct": false}, {"label": "C", "text": "Lateral cutaneous nerve of arm", "correct": false}, {"label": "D", "text": "Posterior circumflex artery", "correct": false}], "correct_answer": "A. Deltoid", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Deltoid Given scenario is typical for shoulder dislocation. On examination , there is often an asymmetry with the contralateral side. Often there is a loss of shoulder contours (from a ‘flattened deltoid’) and an anterior bulge from the head of the humerus may also be seen. It is important to assess the neurovascular status of the arm, which can become compromised in some cases, especially the axillary and suprascapular nerves.</p>\n<p><strong>Highyeild:</strong></p><p>Associated Injuries of shoulder Bony: Bony Bankart lesions are fractures of the anterior inferior glenoid bone, most commonly present in those with recurrent dislocations Hill-Sachs defects are impaction injuries to the chondral surface of the posterior and superior portions of the humeral head, present in approximately 80% of traumatic dislocations Fractures of the greater tuberosity and the surgical neck of the humerus can also occur. Hill-sachs and Bankart shoulder injury Labral, ligamentous, and rotator cuff: (Soft) Bankart lesions are avulsions of the anterior labrum and inferior glenohumeral ligament Glenohumeral ligament avulsion Rotator cuff injuries occur frequently in anterior dislocations; in younger patients, around a third have at least one tear</p>\n<p><strong>Extraedge:</strong></p><p>The deltoid muscle is large and triangular in shape, with its base attached to the scapula and clavicle and its apex attached to the humerus. It originates along a continuous U-shaped line of attachment to the clavicle and the scapula, mirroring the adjacent insertion sites of the trapezius muscle. It inserts into the deltoid tuberosity on the lateral surface of the shaft of the humerus. The major function of the deltoid muscle is abduction of the arm beyond the initial 1 5 ° accomplished by the supraspinatus muscle.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A neonate develops RDS. Which of the following areas have problems?", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": true}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "C. C", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1694593001283-QTDAPYQ104IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>C Given image shows an electron microscopic view of alveolus and its structures. Respiratory distress syndrome is caused due to abnormality of type II pneumocytes. Given image shows an electron microscopic view of alveolus and its structures. The interstitium at is tissue between two layers of alveolar epithelial cells containing elastic and collagen fibers produced by fibroblasts (also known as septal cells). There is no connective tissue over the capillaries.</p>\n<p><strong>Highyeild:</strong></p><p>Type II pneumocytes protruding into alveolar lumen is seen in this image. Arrows indicate lamellar bodies containing the phospholipids that when released spread over the alveolar surface where they combine with other carbohydrate- and protein-containing secretory products (some of which are derived from Clara cells) to overcome the effects of surface tension which would otherwise cause the alveolar walls to adhere. This allows for normal inflation of the alveoli at birth and for the reinflation of alveoli which collapse after airway obstruction. Rough endoplasmic reticulum (RER), Golgi (G), reticular fibers (RF). Note the microvilli of the type II cell and junctional complexes (JC) with type I cell.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- A- Nucleus of endothelial cells B- Cytoplasmic extensions of Type I alveolar cells D- endothelial cells Respiratory distress syndrome is caused due to abnormality of type II pneumocytes, therefore Option A, B and D are incorrect answers.</p>\n<p><strong>Extraedge:</strong></p><p>Respiratory distress syndrome (RDS) occurs in babies born early (premature) whose lungs are not fully developed. The earlier the infant is born, the more likely it is for them to have RDS and need extra oxygen and help breathing. RDS is caused by the baby not having enough surfactant in the lungs.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with a fall from a height was treated with a cast. After removal of the cast, he was not able to walk properly, unable to lift his leg and was dragging his right leg while walking. Which of the following marked structures is involved?", "options": [{"label": "A", "text": "A", "correct": true}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "A. A", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1694593001345-QTDAPYQ105IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>A Here, the case scenario points to a possible injury to gluteus medius which is causing lurching gait and dragging of feet in the patient. Dissected right gluteal region has been shown in the image. PM: piriformis muscle; SN: sciatic nerve; GM: gluteus medius; SGN: superior gluteal nerve; *: additional belly of piriformis muscle Abductors of hip are – Gluteus medius and minimus (main) Tensor fascia lata and sartorius (accessory) The left gluteal region after reflecting gluteus maximus muscle Figure: The left gluteal region after reflecting gluteus maximus muscle; CFn — common fibular nerve; Tn — tibial nerve; IGv — inferior gluteal vessels; Pfm — piriformis muscle; GM — gluteus medius; QF — quadratus femoris muscle; GMx — gluteus maximus muscle; Sn — sciatic nerve.</p>\n<p><strong>Highyeild:</strong></p><p>Normally when the body weight is supported on one limb, the glutei (medius and minimus) of the supported side contract and raise the opposite and unsupported side of pelvis, if the abductor mechanism is defective the unsupported side of pelvis drops and lurching gait is seen (as positive Trendelenburg’s test).</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B- Superior gluteal nerve Option C- Piriformis Option D- Sciatic nerve Here, the case scenario points to a possible injury to gluteus medius which is causing lurching gait and dragging of feet in the patient, therefore option B,C and D are incorrect answers.</p>\n<p><strong>Extraedge:</strong></p><p>The Trendelenburg Position —patient supine on a table tilted 45° downwards with legs and feet over the edge of the table—was the 

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>National Health Programmes</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">National Health Programmes</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                50 Questions | 236 Total Marks | 60 min Duration | ~72.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 50 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 60 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 50</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">National Health Programmes - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 50</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 50 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 25-yr old female has been diagnosed to be suffering from tuberculosis categorized as drug sensitive previously treated. The new treatment regimen recommended is:", "options": [{"label": "A", "text": "2 (HRZE) + 4 (HRE)", "correct": true}, {"label": "B", "text": "2 (HRSZE) + 1 (HRZE) + 5(HRE)", "correct": false}, {"label": "C", "text": "3 (HRZE) + (HRZE) + 2 (HRE) + 4 (HR)", "correct": false}, {"label": "D", "text": "3(HRSZE) + 1 (HRZE) + 6(HRE)", "correct": false}], "correct_answer": "A. 2 (HRZE) + 4 (HRE)", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41243241699341927/41243241699341927.m3u8"}, {"text": "According to RNTCP, sputum sample for testing of TB are packed in two containers which are labelled as :", "options": [{"label": "A", "text": "Alpha & beta", "correct": false}, {"label": "B", "text": "1 & 2", "correct": false}, {"label": "C", "text": "A & B", "correct": true}, {"label": "D", "text": "Y & Z", "correct": false}], "correct_answer": "C. A & B", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/75082351699341947/75082351699341947.m3u8"}, {"text": "A 26 years old male has symptom suggestive of TB. At DOTS clinic, he underwent 2 sputum examination. Only one of the sputum smears turns out to be positive. Next step of management will be:", "options": [{"label": "A", "text": "He is declared a sputum smear + ve case: started with DOTS drug sensitive new case", "correct": true}, {"label": "B", "text": "He is declared a sputum smear -ve case", "correct": false}, {"label": "C", "text": "He will undergo sputum smear examinations after 12 months again", "correct": false}, {"label": "D", "text": "Drug resistant TB", "correct": false}], "correct_answer": "A. He is declared a sputum smear + ve case: started with DOTS drug sensitive new case", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64978291699345354/64978291699345354.m3u8"}, {"text": "Schedule for sputum examination for drug sensitive new patients is:", "options": [{"label": "A", "text": "2, 3 and 5 months", "correct": false}, {"label": "B", "text": "2 & 6 months", "correct": true}, {"label": "C", "text": "1, 3 & 5 months", "correct": false}, {"label": "D", "text": "2, 5 & 7 months", "correct": false}], "correct_answer": "B. 2 & 6 months", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/43177131699345377/43177131699345377.m3u8"}, {"text": "Best indicator trend of TB affected by current control measures is:", "options": [{"label": "A", "text": "Annual risk of TB infection", "correct": true}, {"label": "B", "text": "Prevalence of TB infection", "correct": false}, {"label": "C", "text": "% of primary drug resistance", "correct": false}, {"label": "D", "text": "% of Multidrug resistance", "correct": false}], "correct_answer": "A. Annual risk of TB infection", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77560251699345407/77560251699345407.m3u8"}, {"text": "A adult male presented in OPD with complains of cough & fever for 3 weeks & sputum +ve. On probing it was found that he had already received RHZE for 2 weeks but had discontinued. How will you manage the patient?", "options": [{"label": "A", "text": "As drug sensitive new case", "correct": true}, {"label": "B", "text": "As drug sensitive previously treated", "correct": false}, {"label": "C", "text": "As drug resistant", "correct": false}, {"label": "D", "text": "Investigate again", "correct": false}], "correct_answer": "A. As drug sensitive new case", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36311431699345428/36311431699345428.m3u8"}, {"text": "A person with tuberculosis on domiciliary treatment is expected to do all except::", "options": [{"label": "A", "text": "Dispose sputum safely", "correct": false}, {"label": "B", "text": "Use separate vessels", "correct": true}, {"label": "C", "text": "Collect drugs regularly", "correct": false}, {"label": "D", "text": "Report to PHC if new symptoms arise", "correct": false}], "correct_answer": "B. Use separate vessels", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56477591699345463/56477591699345463.m3u8"}, {"text": "Pulse polio immunization is administration of OPV to :", "options": [{"label": "A", "text": "All children between 0-5 years of age on a single day irrespective of their previous immunization status :", "correct": true}, {"label": "B", "text": "Children in the age group 0-1 year only who have not been immunized", "correct": false}, {"label": "C", "text": "Children in the age group of 12-24 months only as the booster dose", "correct": false}, {"label": "D", "text": "All children between 0-5 years of age, wherever there is outbreak", "correct": false}], "correct_answer": "A. All children between 0-5 years of age on a single day irrespective of their previous immunization status :", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/17132181699345479/17132181699345479.m3u8"}, {"text": "All are true regarding AFP surveillance except:", "options": [{"label": "A", "text": "WHO recommends it for age less than 15 years", "correct": false}, {"label": "B", "text": "Two stool sample are collected per case", "correct": false}, {"label": "C", "text": "Non-polio AFP rate should be > 2 per 100000 among < 15 yrs old", "correct": false}, {"label": "D", "text": "Adequate stool specimens should be taken from 100% AFP", "correct": true}], "correct_answer": "D. Adequate stool specimens should be taken from 100% AFP", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In acute flaccid paralysis surveillance evaluation for residual paralysis should be done after:", "options": [{"label": "A", "text": "30 days", "correct": false}, {"label": "B", "text": "60 days", "correct": true}, {"label": "C", "text": "90 days", "correct": false}, {"label": "D", "text": "120 days", "correct": false}], "correct_answer": "B. 60 days", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13038141699345501/13038141699345501.m3u8"}, {"text": "Line listing of cases of Acute flaccid paralysis is done for all of the following reasons except:", "options": [{"label": "A", "text": "To check for duplication", "correct": false}, {"label": "B", "text": "To document high risk groups", "correct": false}, {"label": "C", "text": "To confirm year of onset of illness", "correct": true}, {"label": "D", "text": "To identify high risk population", "correct": false}], "correct_answer": "C. To confirm year of onset of illness", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are true regarding Acute flaccid paralysis in national polio eradication programme, except:", "options": [{"label": "A", "text": "Acute flaccid paralysis in a child <15 years of age", "correct": false}, {"label": "B", "text": "All cases of AFP should be reported irrespective of diagnosis within 6 months of onset", "correct": true}, {"label": "C", "text": "Two specimen collected within 14 days of paralysis", "correct": false}, {"label": "D", "text": "60 days follow up examination", "correct": false}], "correct_answer": "B. All cases of AFP should be reported irrespective of diagnosis within 6 months of onset", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/43998681699345576/43998681699345576.m3u8"}, {"text": "Data regarding recent trend of Immunization in community can be found by", "options": [{"label": "A", "text": "Census data", "correct": false}, {"label": "B", "text": "Rural survey", "correct": false}, {"label": "C", "text": "DLHS", "correct": true}, {"label": "D", "text": "SRS", "correct": false}], "correct_answer": "C. DLHS", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35622751699345672/35622751699345672.m3u8"}, {"text": "Screening test used in ANC mothers under RMNCH+A at level of subcenter is", "options": [{"label": "A", "text": "HB", "correct": true}, {"label": "B", "text": "Rh", "correct": false}, {"label": "C", "text": "TSH", "correct": false}, {"label": "D", "text": "Urinary analysis for UTI", "correct": false}], "correct_answer": "A. HB", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39687361699345688/39687361699345688.m3u8"}, {"text": "A 15 day old newborn suffering from cough, sneezing and fever needs medical help. Mother has no money for transportation to the hospital. Which of the following national health programme can help the women?", "options": [{"label": "A", "text": "F-IMNCI", "correct": false}, {"label": "B", "text": "JSSK", "correct": true}, {"label": "C", "text": "NSSK", "correct": false}, {"label": "D", "text": "IGMSY", "correct": false}], "correct_answer": "B. JSSK", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59460631699345706/59460631699345706.m3u8"}, {"text": "About ASHA true is all except :", "options": [{"label": "A", "text": "They are preferably female", "correct": false}, {"label": "B", "text": "There is one ASHA worker per 1000 population", "correct": false}, {"label": "C", "text": "ASHA is not a skilled birth attendant", "correct": false}, {"label": "D", "text": "Provides primary medical care for minor ailments", "correct": true}], "correct_answer": "D. Provides primary medical care for minor ailments", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/55808151699345725/55808151699345725.m3u8"}, {"text": "Under NRHM, lowest level at which health action plan is prepared is:", "options": [{"label": "A", "text": "State level", "correct": false}, {"label": "B", "text": "District level", "correct": false}, {"label": "C", "text": "Sub centre level", "correct": false}, {"label": "D", "text": "Village level", "correct": true}], "correct_answer": "D. Village level", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/11710971699345742/11710971699345742.m3u8"}, {"text": "Resource persons for training of ASHA", "options": [{"label": "A", "text": "Medical officer & ANM", "correct": false}, {"label": "B", "text": "Medical officer & Anganwadi worker", "correct": false}, {"label": "C", "text": "ANM and anganwadi worker", "correct": true}, {"label": "D", "text": "Medical officer", "correct": false}], "correct_answer": "C. ANM and anganwadi worker", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74598071699345772/74598071699345772.m3u8"}, {"text": "ASHA is recruited under :", "options": [{"label": "A", "text": "NRHM", "correct": true}, {"label": "B", "text": "National urban health mission", "correct": false}, {"label": "C", "text": "ICDS", "correct": false}, {"label": "D", "text": "Village health system", "correct": false}], "correct_answer": "A. NRHM", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5417391699346023/5417391699346023.m3u8"}, {"text": "Janani Suraksha Yojana includes:", "options": [{"label": "A", "text": "Tetanus immunization", "correct": false}, {"label": "B", "text": "Institutional deliveries", "correct": true}, {"label": "C", "text": "Iron supplementation", "correct": false}, {"label": "D", "text": "Abortions", "correct": false}], "correct_answer": "B. Institutional deliveries", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23967151699346038/23967151699346038.m3u8"}, {"text": "NRHM was started in:", "options": [{"label": "A", "text": "2005", "correct": true}, {"label": "B", "text": "2006", "correct": false}, {"label": "C", "text": "2007", "correct": false}, {"label": "D", "text": "2009", "correct": false}], "correct_answer": "A. 2005", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/73475441699346052/73475441699346052.m3u8"}, {"text": "ASHA gets remuneration for all except:", "options": [{"label": "A", "text": "Institutional delivery", "correct": false}, {"label": "B", "text": "Zero dose of OPV and BCG", "correct": false}, {"label": "C", "text": "Recording birth weight", "correct": true}, {"label": "D", "text": "Birth registration", "correct": false}], "correct_answer": "C. Recording birth weight", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/47807431699346068/47807431699346068.m3u8"}, {"text": "All are true about JSSK except:", "options": [{"label": "A", "text": "Free diet to mother during hospital stay", "correct": false}, {"label": "B", "text": "Free delivery", "correct": false}, {"label": "C", "text": "Free transport from home to hospital and back", "correct": false}, {"label": "D", "text": "Free treatment of child only up to 28 days", "correct": true}], "correct_answer": "D. Free treatment of child only up to 28 days", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35196951699346088/35196951699346088.m3u8"}, {"text": "Elemental iron & folic acid content of adult tablets supplied under national program:", "options": [{"label": "A", "text": "60 mg of elemental iron and 500 micrograms of folic acid", "correct": true}, {"label": "B", "text": "100 mg of elemental iron and 500 micrograms of folic acid", "correct": false}, {"label": "C", "text": "120 mg of elemental iron and 750 micrograms of folic acid", "correct": false}, {"label": "D", "text": "200 mg of elemental iron and 1000 micrograms of folic acid", "correct": false}], "correct_answer": "A. 60 mg of elemental iron and 500 micrograms of folic acid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24583401699346104/24583401699346104.m3u8"}, {"text": "Which of these is the correct dosing schedule according to the modified nation iron plus initiative program?", "options": [{"label": "A", "text": "20 mg of elemental iron & 100 microgram of folic acid to 2-5 year old children weekly for an entire year", "correct": false}, {"label": "B", "text": "100 mg of elemental iron & 500 micrograms of folic acid to pregnant women biweekly for an entire year", "correct": false}, {"label": "C", "text": "60 mg of elemental iron & 500 micrograms of folic acid to pregnant women daily for an entire year", "correct": true}, {"label": "D", "text": "20 mg of elemental iron to all 2-5 year old children biweekly for an entire year", "correct": false}], "correct_answer": "C. 60 mg of elemental iron & 500 micrograms of folic acid to pregnant women daily for an entire year", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/45480571699346120/45480571699346120.m3u8"}, {"text": "All of the following are duties of an ASHA worker except:", "options": [{"label": "A", "text": "Assisting & accompanying pregnant women to hospital for delivery", "correct": false}, {"label": "B", "text": "Primary screening for prevalence of non communicable disease", "correct": false}, {"label": "C", "text": "Administering vaccines to children", "correct": true}, {"label": "D", "text": "Assessing the success of national programme under ANM", "correct": false}], "correct_answer": "C. Administering vaccines to children", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/427031699346135/427031699346135.m3u8"}, {"text": "Disease not under IDSP is:", "options": [{"label": "A", "text": "TB", "correct": false}, {"label": "B", "text": "Dengue", "correct": false}, {"label": "C", "text": "Cholera", "correct": false}, {"label": "D", "text": "Herpes Zoster", "correct": true}], "correct_answer": "D. Herpes Zoster", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/1705121699346149/1705121699346149.m3u8"}, {"text": "In IDSP which of the following type of diagnosis is done by PHC medical officer?", "options": [{"label": "A", "text": "Syndromic", "correct": false}, {"label": "B", "text": "Presumptive", "correct": true}, {"label": "C", "text": "Confirmed", "correct": false}, {"label": "D", "text": "Active surveillance", "correct": false}], "correct_answer": "B. Presumptive", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63269211699346163/63269211699346163.m3u8"}, {"text": "IMNCI includes all except :", "options": [{"label": "A", "text": "Malaria", "correct": false}, {"label": "B", "text": "Respiratory infection", "correct": false}, {"label": "C", "text": "Diarrhea", "correct": false}, {"label": "D", "text": "Tuberculosis", "correct": true}], "correct_answer": "D. Tuberculosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6603951699346179/6603951699346179.m3u8"}, {"text": "IMNCI differs from IMCI in all except:", "options": [{"label": "A", "text": "Malaria and anaemia are included", "correct": false}, {"label": "B", "text": "0-7 days infants are included", "correct": false}, {"label": "C", "text": "Sick neonates are preferred over sick older children", "correct": true}, {"label": "D", "text": "Treatment is aimed at more than one disease (Condition) at a time", "correct": false}], "correct_answer": "C. Sick neonates are preferred over sick older children", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Patient treated at home is allotted what color code according to IMNCI color coding?", "options": [{"label": "A", "text": "Pink", "correct": false}, {"label": "B", "text": "RED", "correct": false}, {"label": "C", "text": "Green", "correct": true}, {"label": "D", "text": "Yellow", "correct": false}], "correct_answer": "C. Green", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/25371061699346211/25371061699346211.m3u8"}, {"text": "IMNCI target age group is:", "options": [{"label": "A", "text": "Up to 5 years", "correct": true}, {"label": "B", "text": "Up to 10years", "correct": false}, {"label": "C", "text": "Up to 15 years", "correct": false}, {"label": "D", "text": "Up to 20 years", "correct": false}], "correct_answer": "A. Up to 5 years", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/48204631699346224/48204631699346224.m3u8"}, {"text": "Under the national program for control of blindness in India medical colleges are classified as center’s:", "options": [{"label": "A", "text": "Excellence", "correct": false}, {"label": "B", "text": "Training", "correct": true}, {"label": "C", "text": "Service", "correct": false}, {"label": "D", "text": "Vision", "correct": false}], "correct_answer": "B. Training", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/72049511699346248/72049511699346248.m3u8"}, {"text": "Under the school vision screening program all are true except:", "options": [{"label": "A", "text": "Age group screened is 5-10 years", "correct": true}, {"label": "B", "text": "Screening is done by Teacher", "correct": false}, {"label": "C", "text": "One teacher is for 150 students", "correct": false}, {"label": "D", "text": "Cut off referral of a child is vision <6/9", "correct": false}], "correct_answer": "A. Age group screened is 5-10 years", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59526301699346261/59526301699346261.m3u8"}, {"text": "‘SAFE’ strategy for Trachoma, S stands for :", "options": [{"label": "A", "text": "Surgery", "correct": true}, {"label": "B", "text": "Syringing", "correct": false}, {"label": "C", "text": "streptomycin", "correct": false}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "A. Surgery", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/70573241699346278/70573241699346278.m3u8"}, {"text": "In a town with population of 100,000 the number of slides examined is 5000. Out of these , 100 slides were positive for malaria . The API is:", "options": [{"label": "A", "text": "2", "correct": false}, {"label": "B", "text": "5", "correct": false}, {"label": "C", "text": "1", "correct": true}, {"label": "D", "text": "0.5", "correct": false}], "correct_answer": "C. 1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41353261699346301/41353261699346301.m3u8"}, {"text": "Burden of malaria is best estimated by:", "options": [{"label": "A", "text": "Mosquito rate", "correct": false}, {"label": "B", "text": "API", "correct": true}, {"label": "C", "text": "Parasite", "correct": false}, {"label": "D", "text": "SPR", "correct": false}], "correct_answer": "B. API", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/58501481699346317/58501481699346317.m3u8"}, {"text": "Malaria eradication program based on use of insecticide aims to reduce lifespan of mosquito larval to less than", "options": [{"label": "A", "text": "1 day", "correct": false}, {"label": "B", "text": "3 days", "correct": false}, {"label": "C", "text": "6 days", "correct": true}, {"label": "D", "text": "10 days", "correct": false}], "correct_answer": "C. 6 days", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A pregnant women in 3rd trimester having fever was diagnosed as a case of falciparum malaria. Under NVBDC which drug is recommended?", "options": [{"label": "A", "text": "ACT only", "correct": true}, {"label": "B", "text": "ACT + single dose of Primaquine on day 2", "correct": false}, {"label": "C", "text": "Quinine only", "correct": false}, {"label": "D", "text": "Chloroquinine", "correct": false}], "correct_answer": "A. ACT only", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41503551699346353/41503551699346353.m3u8"}, {"text": "According to revised malaria drug policy 2013, all are false except", "options": [{"label": "A", "text": "Presumptive treatment with chloroquine is given", "correct": false}, {"label": "B", "text": "ACT is not given in falciparum", "correct": false}, {"label": "C", "text": "Primaquine is not given in falciparum", "correct": false}, {"label": "D", "text": "Primaquine contraindicated in infants and pregnant women", "correct": true}], "correct_answer": "D. Primaquine contraindicated in infants and pregnant women", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4904351699346373/4904351699346373.m3u8"}, {"text": "Plasmodium vivax malaria in pregnancy should be treated in pregnancy by:", "options": [{"label": "A", "text": "Chloroquine", "correct": true}, {"label": "B", "text": "Quinine", "correct": false}, {"label": "C", "text": "Pyrimethamine", "correct": false}, {"label": "D", "text": "Mefloquine", "correct": false}], "correct_answer": "A. Chloroquine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56585861699346387/56585861699346387.m3u8"}, {"text": "Malaria surveillance should be done every:", "options": [{"label": "A", "text": "Fortnightly", "correct": true}, {"label": "B", "text": "Yearly", "correct": false}, {"label": "C", "text": "Monthly", "correct": false}, {"label": "D", "text": "weekly", "correct": false}], "correct_answer": "A. Fortnightly", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/50829511699346402/50829511699346402.m3u8"}, {"text": "Blood smear must be made at night for which of the following conditions:", "options": [{"label": "A", "text": "Malaria", "correct": false}, {"label": "B", "text": "Filaria", "correct": true}, {"label": "C", "text": "Leprosy", "correct": false}, {"label": "D", "text": "Onchocerciasis", "correct": false}], "correct_answer": "B. Filaria", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15658781699346416/15658781699346416.m3u8"}, {"text": "STEPS done for surveillance of:", "options": [{"label": "A", "text": "Risk factors of NCD", "correct": true}, {"label": "B", "text": "Incidence of NCD", "correct": false}, {"label": "C", "text": "Evaluation of treatment of NCD", "correct": false}, {"label": "D", "text": "Mortality from NCD", "correct": false}], "correct_answer": "A. Risk factors of NCD", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14705891699346429/14705891699346429.m3u8"}, {"text": "ICDS is under which ministry :", "options": [{"label": "A", "text": "Health & Family Welfare", "correct": false}, {"label": "B", "text": "Women & Child Development", "correct": true}, {"label": "C", "text": "Home affairs", "correct": false}, {"label": "D", "text": "Labour", "correct": false}], "correct_answer": "B. Women & Child Development", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/38988891699346450/38988891699346450.m3u8"}, {"text": "ICDS was launched in:", "options": [{"label": "A", "text": "1955", "correct": false}, {"label": "B", "text": "1968", "correct": false}, {"label": "C", "text": "1975", "correct": true}, {"label": "D", "text": "2005", "correct": false}], "correct_answer": "C. 1975", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23244481699346466/23244481699346466.m3u8"}, {"text": "The best indicator for monitoring the impact of iodine deficiency disorders control programme is :", "options": [{"label": "A", "text": "Prevalence of goiter among school children", "correct": false}, {"label": "B", "text": "Urinary iodine levels", "correct": true}, {"label": "C", "text": "Neonatal hypothyroidism", "correct": false}, {"label": "D", "text": "Iodine level is soil", "correct": false}], "correct_answer": "B. Urinary iodine levels", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34929211699346480/34929211699346480.m3u8"}, {"text": "FSSAI comes under", "options": [{"label": "A", "text": "Ministry of consumer affairs", "correct": false}, {"label": "B", "text": "Ministry of agriculture", "correct": false}, {"label": "C", "text": "MOHFW", "correct": true}, {"label": "D", "text": "Ministry of rural development", "correct": false}], "correct_answer": "C. MOHFW", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/1412711699346503/1412711699346503.m3u8"}, {"text": "‘Nikshay’ is used for tracking of", "options": [{"label": "A", "text": "High risk newborns", "correct": false}, {"label": "B", "text": "Malaria", "correct": false}, {"label": "C", "text": "TB", "correct": true}, {"label": "D", "text": "High risk pregnancy", "correct": false}], "correct_answer": "C. TB", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24039871699346527/24039871699346527.m3u8"}, {"text": "Ayushman Bharat all are true except:", "options": [{"label": "A", "text": "Applicable for BPL only", "correct": false}, {"label": "B", "text": "Entitled for 30000 rupees/ family", "correct": true}, {"label": "C", "text": "Smart card based", "correct": false}, {"label": "D", "text": "Is a type of insurance scheme", "correct": false}], "correct_answer": "B. Entitled for 30000 rupees/ family", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/33954121699346544/33954121699346544.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

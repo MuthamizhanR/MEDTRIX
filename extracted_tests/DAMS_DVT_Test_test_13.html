@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Psm Dvt Revision Test</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Psm Dvt Revision Test</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                50 Questions | 200 Total Marks | 60 min Duration | ~72.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 50 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 60 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 50</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Psm Dvt Revision Test - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 50</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 50 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A woman has 2 children named Ram and Shyam. One day, Shyam had measles with fever and rash. After 4 days, Ram developed the same symptoms. He was reported to the sub centre. Which of the following is not correct?", "options": [{"label": "A", "text": "Shyam is the primary case", "correct": false}, {"label": "B", "text": "Ram is the index case", "correct": true}, {"label": "C", "text": "Ram got the infection from Shyam", "correct": false}, {"label": "D", "text": "If mother had reported when Shyam got the infection, Ram could have been vaccinated", "correct": false}], "correct_answer": "B. Ram is the index case", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Rabies immunoglobulin false is:", "options": [{"label": "A", "text": "It should not be given after 7 days", "correct": false}, {"label": "B", "text": "It has to be given in MAX amount at the deltoid", "correct": true}, {"label": "C", "text": "Dose 20 IU per kg", "correct": false}, {"label": "D", "text": "If human IG is not present, then give equine IG", "correct": false}], "correct_answer": "B. It has to be given in MAX amount at the deltoid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Air quality Index in Delhi on occasion of Diwali on 23 November was 470. The assessment will be:", "options": [{"label": "A", "text": "Severe", "correct": true}, {"label": "B", "text": "Very poor", "correct": false}, {"label": "C", "text": "Poor", "correct": false}, {"label": "D", "text": "Satisfactory", "correct": false}], "correct_answer": "A. Severe", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Mercury spill from sphygmomanometer question asked. What will u do?", "options": [{"label": "A", "text": "Collect using paper/ cardboard and put in water tube/ bucket", "correct": true}, {"label": "B", "text": "Collect using your hand and discard", "correct": false}, {"label": "C", "text": "Collect and throw outside in the environment", "correct": false}, {"label": "D", "text": "Broom it and discard in dustbin", "correct": false}], "correct_answer": "A. Collect using paper/ cardboard and put in water tube/ bucket", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following increases Confidence interval except", "options": [{"label": "A", "text": "Increase sample size", "correct": true}, {"label": "B", "text": "Decrease sample size", "correct": false}, {"label": "C", "text": "Increase confidence level", "correct": false}, {"label": "D", "text": "Increasing variance", "correct": false}], "correct_answer": "A. Increase sample size", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Life span of Japanese women is 84.3 years. As Japanese have longest life expectancy, their life expectancy statistics are used as a standard for measuring premature death in:", "options": [{"label": "A", "text": "HALE", "correct": false}, {"label": "B", "text": "QALY", "correct": false}, {"label": "C", "text": "DFLE", "correct": false}, {"label": "D", "text": "DALY", "correct": true}], "correct_answer": "D. DALY", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A cohort study is undertaken to study association between green tea intake and DM. RR was found to be 0.85. Which is the following is correct regarding association between green tea and DM?", "options": [{"label": "A", "text": "Green tea consumption increases risk of DM", "correct": false}, {"label": "B", "text": "Green tea consumption decreases risk of DM", "correct": true}, {"label": "C", "text": "Green tea consumption has no effect on the risk of DM", "correct": false}, {"label": "D", "text": "Can’t be determined", "correct": false}], "correct_answer": "B. Green tea consumption decreases risk of DM", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "As a trauma patient is brought to an emergency, there is blood spill on the floor. Which disinfectant would you use?", "options": [{"label": "A", "text": "Ethyl alcohol", "correct": false}, {"label": "B", "text": "Sodium hypochlorite", "correct": true}, {"label": "C", "text": "Sodium hydroxide", "correct": false}, {"label": "D", "text": "Chlorhexidine", "correct": false}], "correct_answer": "B. Sodium hypochlorite", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "For analysis of functioning of a health centre with respect to evaluation, which of the following is the most important form assessing clinical management?", "options": [{"label": "A", "text": "Input", "correct": false}, {"label": "B", "text": "Output", "correct": false}, {"label": "C", "text": "Process", "correct": true}, {"label": "D", "text": "Structure", "correct": false}], "correct_answer": "C. Process", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "WHO STEP wise approach includes all except:", "options": [{"label": "A", "text": "Physical", "correct": false}, {"label": "B", "text": "Biological", "correct": false}, {"label": "C", "text": "Behavioural", "correct": false}, {"label": "D", "text": "Therapeutic", "correct": true}], "correct_answer": "D. Therapeutic", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Criteria for establishing Urban CHC to ensure facilities:", "options": [{"label": "A", "text": "Where SDH or DH is not present", "correct": false}, {"label": "B", "text": "Referral centre for 2- 3 Urban PHC", "correct": false}, {"label": "C", "text": "For city with 1- 1.5 lakh population", "correct": false}, {"label": "D", "text": "100 bedded in metro cities", "correct": true}], "correct_answer": "D. 100 bedded in metro cities", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Broken glass vaccine vials at the vaccination centre are supposed to be disposed in which container:", "options": [{"label": "A", "text": "Yellow bag", "correct": false}, {"label": "B", "text": "Red bag", "correct": false}, {"label": "C", "text": "Sharps container", "correct": false}, {"label": "D", "text": "Blue puncture proof container", "correct": true}], "correct_answer": "D. Blue puncture proof container", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Green colour on triage signifies:", "options": [{"label": "A", "text": "Dead patients", "correct": false}, {"label": "B", "text": "High priority patients", "correct": false}, {"label": "C", "text": "Ambulatory patients", "correct": true}, {"label": "D", "text": "Moderate priority patients", "correct": false}], "correct_answer": "C. Ambulatory patients", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "For applied nutrition program, seeds and manure supply under school health services has been done by:", "options": [{"label": "A", "text": "WHO", "correct": false}, {"label": "B", "text": "UNICEF", "correct": true}, {"label": "C", "text": "CARE", "correct": false}, {"label": "D", "text": "UNDP", "correct": false}], "correct_answer": "B. UNICEF", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Point ‘C’ indicates:", "options": [{"label": "A", "text": "Exposure time", "correct": false}, {"label": "B", "text": "Time of pathological changes", "correct": false}, {"label": "C", "text": "Onset of symptoms", "correct": true}, {"label": "D", "text": "Usual time of diagnosis", "correct": false}], "correct_answer": "C. Onset of symptoms", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(1197).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Correct statement among following is:", "options": [{"label": "A", "text": "Sensitivity depends on prevalence", "correct": false}, {"label": "B", "text": "Specificity depends on prevalence", "correct": false}, {"label": "C", "text": "In a population, if test shows more positive value in sensitivity, then there is lesser chance of people having disease", "correct": false}, {"label": "D", "text": "PPV depends on prevalence", "correct": true}], "correct_answer": "D. PPV depends on prevalence", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "You are a medical officer at a PHC. 50 patient’s requiring anti-hypertensive are being transferred to your PHC from periphery. 40 people need amlodipine )5 mg PO). 10 people have C/ I to use of amlodipine so those people have to be started with lisinopril (10 mg PO). Drugs comes to PHC once a month. How many drugs will you order combined and what will be reorder factor?", "options": [{"label": "A", "text": "800, 3", "correct": false}, {"label": "B", "text": "1000, 2", "correct": false}, {"label": "C", "text": "1600, 3", "correct": false}, {"label": "D", "text": "3000, 2", "correct": true}], "correct_answer": "D. 3000, 2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Global hunger index what is not included?", "options": [{"label": "A", "text": "Child mortality", "correct": false}, {"label": "B", "text": "Infant mortality rate", "correct": true}, {"label": "C", "text": "Undernourishment of under 5 population", "correct": false}, {"label": "D", "text": "Wasting of under 5 population", "correct": false}], "correct_answer": "B. Infant mortality rate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 16 months old child has weight 8 kg. Look at the chart given below; best management will be:", "options": [{"label": "A", "text": "Child is healthy, no advice required further", "correct": false}, {"label": "B", "text": "Child moderately undernourished (MAM), mother given advice", "correct": true}, {"label": "C", "text": "Child severely malnourished (SAM), mother given advice", "correct": false}, {"label": "D", "text": "Child severely malnourished (SAM), referral to nutritional rehabilitation centre (NRC)", "correct": false}], "correct_answer": "B. Child moderately undernourished (MAM), mother given advice", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7(345).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Patient from Chhattisgarh complaints of Spasticity and pure motor palsy. What history to ask?", "options": [{"label": "A", "text": "History of food intake", "correct": true}, {"label": "B", "text": "History of vaccination", "correct": false}, {"label": "C", "text": "History of fever", "correct": false}, {"label": "D", "text": "History of similar events in past", "correct": false}], "correct_answer": "A. History of food intake", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Anaemia mukt bharat for young girl:", "options": [{"label": "A", "text": "Weekly dose of 60 mg iron & 500 ug folic acid", "correct": true}, {"label": "B", "text": "Daily dose of 60 mg iron & 500 ug folic acid", "correct": false}, {"label": "C", "text": "Weekly dose of 100 mg iron & 500 ug folic acid", "correct": false}, {"label": "D", "text": "Daily dose of 100 mg iron & 500 ug folic acid", "correct": false}], "correct_answer": "A. Weekly dose of 60 mg iron & 500 ug folic acid", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1_1(97).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following don’t come under HIV sentinel surveillance?", "options": [{"label": "A", "text": "Long distance truck drivers", "correct": false}, {"label": "B", "text": "Single migrant male", "correct": false}, {"label": "C", "text": "Antenatal female", "correct": false}, {"label": "D", "text": "STD clinic attendees", "correct": true}], "correct_answer": "D. STD clinic attendees", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2_1(95).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Under RBSK which disease doesn’t come under screening at birth?", "options": [{"label": "A", "text": "Congenital cataract", "correct": false}, {"label": "B", "text": "Congenital glaucoma", "correct": true}, {"label": "C", "text": "Vitamin A deﬁciency", "correct": false}, {"label": "D", "text": "ROP", "correct": false}], "correct_answer": "B. Congenital glaucoma", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3_1(98).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Pacemaker should be discarded in:", "options": [{"label": "A", "text": "Blue cardboard box", "correct": true}, {"label": "B", "text": "Red bag", "correct": false}, {"label": "C", "text": "Yellow bag", "correct": false}, {"label": "D", "text": "Puncture proof container", "correct": false}], "correct_answer": "A. Blue cardboard box", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4_1(84).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Latex Gloves after use should be discarded in:", "options": [{"label": "A", "text": "Blue bag", "correct": false}, {"label": "B", "text": "Red bag", "correct": true}, {"label": "C", "text": "Yellow bag", "correct": false}, {"label": "D", "text": "Black bag", "correct": false}], "correct_answer": "B. Red bag", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5_1(103).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Maternal mortality ratio deﬁnition is:", "options": [{"label": "A", "text": "Number of maternal deaths in given period/ 1000 females females of reproductive age group in the same period", "correct": false}, {"label": "B", "text": "Number of maternal deaths in given period/ 10000 females females of reproductive age group in the same period", "correct": false}, {"label": "C", "text": "Number of maternal deaths in given period/ 100000 females females of reproductive age group in the same period", "correct": false}, {"label": "D", "text": "Number of maternal deaths/ 100000 live births", "correct": true}], "correct_answer": "D. Number of maternal deaths/ 100000 live births", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "For a reference Indian female true is:", "options": [{"label": "A", "text": "Weight = 55 kg", "correct": true}, {"label": "B", "text": "BMI = 1.73m2", "correct": false}, {"label": "C", "text": "Works for 10 hours/ day", "correct": false}, {"label": "D", "text": "Age: 18- 25 years", "correct": false}], "correct_answer": "A. Weight = 55 kg", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7_1(83).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "For seeing vaccine heat stability, we use:", "options": [{"label": "A", "text": "VVM", "correct": true}, {"label": "B", "text": "VMV", "correct": false}, {"label": "C", "text": "MMV", "correct": false}, {"label": "D", "text": "VMM", "correct": false}], "correct_answer": "A. VVM", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8_1(92).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Once clinically manifested, which of the following disease has the highest mortality?", "options": [{"label": "A", "text": "Zika", "correct": false}, {"label": "B", "text": "Ebola", "correct": false}, {"label": "C", "text": "Rabies", "correct": true}, {"label": "D", "text": "Nipah", "correct": false}], "correct_answer": "C. Rabies", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/9_1(58).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is not true for polio vaccine ?", "options": [{"label": "A", "text": "Currently trivalent strain is used in India in OPV", "correct": true}, {"label": "B", "text": "Endemic countries are Pakistan, and Afghanistan", "correct": false}, {"label": "C", "text": "Type 2 strain gone from India in 1999, and Type 3 strain rarely seen in India", "correct": false}, {"label": "D", "text": "Residual paralysis in regard to polio seen in quadriceps femoris muscle", "correct": false}], "correct_answer": "A. Currently trivalent strain is used in India in OPV", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "IDSP false statement is:", "options": [{"label": "A", "text": "HIV is covered under IDSP", "correct": false}, {"label": "B", "text": "TB is not a part of IDSP", "correct": true}, {"label": "C", "text": "Flaccid paralysis is under sentinel surveillance", "correct": false}, {"label": "D", "text": "P form ﬁll by physician", "correct": false}], "correct_answer": "B. TB is not a part of IDSP", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Global hunger index what is not included?", "options": [{"label": "A", "text": "Child mortality", "correct": false}, {"label": "B", "text": "Infant mortality rate", "correct": true}, {"label": "C", "text": "Undernourishment of under 5 population", "correct": false}, {"label": "D", "text": "Wasting of under 5 population", "correct": false}], "correct_answer": "B. Infant mortality rate", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/12_1(50).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Air quality Index in Delhi on occasion of Diwali on 23 November was 407. The assessment will be:", "options": [{"label": "A", "text": "Severe", "correct": true}, {"label": "B", "text": "Very poor", "correct": false}, {"label": "C", "text": "Poor", "correct": false}, {"label": "D", "text": "Satisfactory", "correct": false}], "correct_answer": "A. Severe", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/13_1(55).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "5 cases of kaposis sarcoma was reported among homosexuals for the ﬁrst time. Which is the type of study done in them to help to formulate hypothesis –", "options": [{"label": "A", "text": "Case series", "correct": true}, {"label": "B", "text": "Cross sectional study", "correct": false}, {"label": "C", "text": "Case control study", "correct": false}, {"label": "D", "text": "Cohort study", "correct": false}], "correct_answer": "A. Case series", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A study was done in 3 villages and number of typhoid carriers were computed and compared . This type of study is –", "options": [{"label": "A", "text": "Case series", "correct": false}, {"label": "B", "text": "Cross sectional study", "correct": true}, {"label": "C", "text": "Case control study", "correct": false}, {"label": "D", "text": "Cohort study", "correct": false}], "correct_answer": "B. Cross sectional study", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Matching is done to eliminate:", "options": [{"label": "A", "text": "Known confounders", "correct": true}, {"label": "B", "text": "Unknown confounders", "correct": false}, {"label": "C", "text": "Both of these", "correct": false}, {"label": "D", "text": "None of these", "correct": false}], "correct_answer": "A. Known confounders", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Study design preferred for rare disease :", "options": [{"label": "A", "text": "RCT", "correct": false}, {"label": "B", "text": "Case control study", "correct": true}, {"label": "C", "text": "Cohort study", "correct": false}, {"label": "D", "text": "All of these", "correct": false}], "correct_answer": "B. Case control study", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Recall bias can be eliminated by :", "options": [{"label": "A", "text": "Using questionnaires", "correct": false}, {"label": "B", "text": "Proper selection of controls", "correct": false}, {"label": "C", "text": "Prospective studies", "correct": true}, {"label": "D", "text": "All of these", "correct": false}], "correct_answer": "C. Prospective studies", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Attrition bias is seen in :", "options": [{"label": "A", "text": "Case control study", "correct": false}, {"label": "B", "text": "Cross sectional study", "correct": false}, {"label": "C", "text": "Cohort study", "correct": true}, {"label": "D", "text": "All of these", "correct": false}], "correct_answer": "C. Cohort study", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Multiples outcomes because of exposure to smoking can be studied by :", "options": [{"label": "A", "text": "Ecological study", "correct": false}, {"label": "B", "text": "Case control study", "correct": false}, {"label": "C", "text": "Cross over RCT", "correct": false}, {"label": "D", "text": "Cohort study", "correct": true}], "correct_answer": "D. Cohort study", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Randomization in RCTs can increase:", "options": [{"label": "A", "text": "External validity", "correct": false}, {"label": "B", "text": "Internal validity", "correct": true}, {"label": "C", "text": "Sensitivity", "correct": false}, {"label": "D", "text": "Speciﬁcity", "correct": false}], "correct_answer": "B. Internal validity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Funnel plot is used to detect :", "options": [{"label": "A", "text": "Selection bias", "correct": false}, {"label": "B", "text": "Recall bias", "correct": false}, {"label": "C", "text": "Publication bias", "correct": true}, {"label": "D", "text": "All of these", "correct": false}], "correct_answer": "C. Publication bias", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Diagnostic power of exclusion :", "options": [{"label": "A", "text": "Sensitivity", "correct": false}, {"label": "B", "text": "Speciﬁcity", "correct": false}, {"label": "C", "text": "PPV", "correct": false}, {"label": "D", "text": "NPV", "correct": true}], "correct_answer": "D. NPV", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "If prevalence increases, PPV:", "options": [{"label": "A", "text": "No change", "correct": false}, {"label": "B", "text": "Increases", "correct": true}, {"label": "C", "text": "Decreases", "correct": false}, {"label": "D", "text": "All of these", "correct": false}], "correct_answer": "B. Increases", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Formula for positive likelihood ratio :", "options": [{"label": "A", "text": "Sensitivity / speciﬁcity", "correct": false}, {"label": "B", "text": "Sensitvity x speciﬁcity", "correct": false}, {"label": "C", "text": "Sensitivity / 1-Speciﬁcity", "correct": true}, {"label": "D", "text": "1-Sensitivity / speciﬁcity", "correct": false}], "correct_answer": "C. Sensitivity / 1-Speciﬁcity", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(1202).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "ROC curve is a plot drawn between :", "options": [{"label": "A", "text": "True positives rates and true negatives rates", "correct": false}, {"label": "B", "text": "True positives rates and test positives rates", "correct": false}, {"label": "C", "text": "True positives rates and false positives rate", "correct": true}, {"label": "D", "text": "True positives rate and test negatives rate", "correct": false}], "correct_answer": "C. True positives rates and false positives rate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Time between earliest point of detection and usual time of diagnosis:", "options": [{"label": "A", "text": "Generation time", "correct": false}, {"label": "B", "text": "Lead time", "correct": true}, {"label": "C", "text": "Screening time", "correct": false}, {"label": "D", "text": "Incubation period", "correct": false}], "correct_answer": "B. Lead time", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Out of 100 students, starting from 4th every 10th is selected. This sampling is :", "options": [{"label": "A", "text": "Systematic random sampling", "correct": true}, {"label": "B", "text": "Simple random sampling", "correct": false}, {"label": "C", "text": "Cluster random sampling", "correct": false}, {"label": "D", "text": "All of these", "correct": false}], "correct_answer": "A. Systematic random sampling", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are non parametric tests except :", "options": [{"label": "A", "text": "Manwhitney test", "correct": false}, {"label": "B", "text": "Wilcoxon sign rank test", "correct": false}, {"label": "C", "text": "Chi square", "correct": false}, {"label": "D", "text": "Paired t test", "correct": true}], "correct_answer": "D. Paired t test", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• Paired t-test is a parametric test used to compare the means of two related groups (e.g., before-and-after measurements on the same subjects). It assumes that the differences between the paired observations are normally distributed.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Corelation coeﬃcient can indicate strength of relationship between :", "options": [{"label": "A", "text": "Age and sex", "correct": false}, {"label": "B", "text": "Sex and HTN", "correct": false}, {"label": "C", "text": "Weight and BP", "correct": true}, {"label": "D", "text": "Height and diabetes", "correct": false}], "correct_answer": "C. Weight and BP", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Grand Test 46 5 Sections</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Grand Test 46 5 Sections</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                200 Questions | 800 Total Marks | 210 min Duration | ~63.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 200 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 210 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 200</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Grand Test 46 5 Sections - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 200</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 200 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Study the image given below and identify the embryological basis of the condition shown:", "options": [{"label": "A", "text": "Failure of closure of anterior neuropore", "correct": true}, {"label": "B", "text": "Failure of closure of posterior neuropore", "correct": false}, {"label": "C", "text": "Failure of closure of both anterior and posterior neuropore", "correct": false}, {"label": "D", "text": "Failure of fusion of caudal neuropore", "correct": false}], "correct_answer": "A. Failure of closure of anterior neuropore", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(782).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Neural crest cells give rise to all the dental structures EXCEPT:", "options": [{"label": "A", "text": "Odontoblasts", "correct": false}, {"label": "B", "text": "Dentine", "correct": false}, {"label": "C", "text": "Enamel", "correct": true}, {"label": "D", "text": "Tooth pulp", "correct": false}], "correct_answer": "C. Enamel", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Lesser petrosal nerve derives preganglionic fibers from:", "options": [{"label": "A", "text": "Tympanic nerve", "correct": true}, {"label": "B", "text": "Cochlear nerve", "correct": false}, {"label": "C", "text": "Nervus intermedius", "correct": false}, {"label": "D", "text": "Chorda tympani", "correct": false}], "correct_answer": "A. Tympanic nerve", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following structures are pierced by the parotid duct except:", "options": [{"label": "A", "text": "Buccal pad of fat", "correct": false}, {"label": "B", "text": "Buccinator muscle", "correct": false}, {"label": "C", "text": "Masseter", "correct": true}, {"label": "D", "text": "Buccopharyngeal fascia", "correct": false}], "correct_answer": "C. Masseter", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Nerve supply of the tip of nose is :", "options": [{"label": "A", "text": "Infratrochlear", "correct": false}, {"label": "B", "text": "Supratrochlear", "correct": true}, {"label": "C", "text": "Supraorbital", "correct": false}, {"label": "D", "text": "External nasal", "correct": false}], "correct_answer": "B. Supratrochlear", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Given below are the CO 2 response curves at various fixed values of alveolar P A O 2 . What do the following indicate?", "options": [{"label": "A", "text": "Hypoxia makes an individual more sensitive to an increase in arterial P CO2", "correct": true}, {"label": "B", "text": "Hypoxia makes an individual less sensitive to an increase in arterial P CO2", "correct": false}, {"label": "C", "text": "Increase in P CO2 makes an individual more sensitive to hypoxia", "correct": false}, {"label": "D", "text": "Increase in P CO2 makes an individual less sensitive to hypoxia", "correct": false}], "correct_answer": "A. Hypoxia makes an individual more sensitive to an increase in arterial P CO2", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(1037).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A muscle has 140 mM of a bivalent cation present extracellularly while the intracellular concentration of the same cation is 14 mM. Assuming that 2.3 RT/F = 60 mV, what would be the membrane potential if the membrane were permeable to only this ion?", "options": [{"label": "A", "text": "-60 mV", "correct": false}, {"label": "B", "text": "+60 mV", "correct": false}, {"label": "C", "text": "-30 mV", "correct": false}, {"label": "D", "text": "+30 mV", "correct": true}], "correct_answer": "D. +30 mV", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following has the highest feedback gain?", "options": [{"label": "A", "text": "Starting blood pressure = 100; low point in blood pressure = 70; final blood pressure after feedback correction = 90", "correct": false}, {"label": "B", "text": "Starting body temperature = 37.2°C; high point in body temperature = 38.9°C; final body temperature after feedback correction = 37.4°C", "correct": true}, {"label": "C", "text": "Starting blood glucose = 80 mg/dL; high point in blood glucose = 110 mg/dL; final blood glucose after feedback correction = 85 mg/dL", "correct": false}, {"label": "D", "text": "Starting plasma osmolality = 280 mOsm/kg; low point in plasma osmolality = 270 mOsm/kg; final osmolality after feedback correction = 278 mOsm/kg", "correct": false}], "correct_answer": "B. Starting body temperature = 37.2°C; high point in body temperature = 38.9°C; final body temperature after feedback correction = 37.4°C", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3_1(90).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "During which phase of the ventricular action potential is the membrane potential closest to the K + equilibrium potential?", "options": [{"label": "A", "text": "Phase 0", "correct": false}, {"label": "B", "text": "Phase 1", "correct": false}, {"label": "C", "text": "Phase 3", "correct": false}, {"label": "D", "text": "Phase 4", "correct": true}], "correct_answer": "D. Phase 4", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/physio1.png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Fanconi’s syndrome is a renal disease, either hereditary or acquired, that results from the impaired ability of renal proximal tubular transport. Based on this information, which of the following substances has the smallest increase in fractional urinary excretion in Fanconi’s patients compared to normal?", "options": [{"label": "A", "text": "Amino acids", "correct": false}, {"label": "B", "text": "Bicarbonate", "correct": false}, {"label": "C", "text": "Glucose", "correct": false}, {"label": "D", "text": "Magnesium", "correct": true}], "correct_answer": "D. Magnesium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is deficient in the mucopolysaccharidosis associated with Natowicz disease?", "options": [{"label": "A", "text": "Dermatan sulfate", "correct": false}, {"label": "B", "text": "Heparan sulfate", "correct": false}, {"label": "C", "text": "Keratan sulfate", "correct": false}, {"label": "D", "text": "Hyaluronic acid", "correct": true}], "correct_answer": "D. Hyaluronic acid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is excreted in the urine of patients with pentosuria?", "options": [{"label": "A", "text": "﻿﻿﻿L- xylulose", "correct": true}, {"label": "B", "text": "﻿﻿﻿D ribose", "correct": false}, {"label": "C", "text": "﻿﻿﻿D ribulose", "correct": false}, {"label": "D", "text": "﻿﻿﻿D lactose", "correct": false}], "correct_answer": "A. ﻿﻿﻿L- xylulose", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents with arthritis, and arthroscopy reveals blackening of the joints. Which enzyme deficiency is most likely responsible for this condition?", "options": [{"label": "A", "text": "Homogentisate oxidase", "correct": true}, {"label": "B", "text": "Branched-chain alpha-ketoacid dehydrogenase", "correct": false}, {"label": "C", "text": "Tyrosinase", "correct": false}, {"label": "D", "text": "Fumarase", "correct": false}], "correct_answer": "A. Homogentisate oxidase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with a history of strenuous exercise skipped a meal and later consumed alcohol at a party. Alcohol inhibits which of the following biochemical processes, potentially leading to hypoglycemia", "options": [{"label": "A", "text": "Gluconeogenesis", "correct": true}, {"label": "B", "text": "Glycogenolysis", "correct": false}, {"label": "C", "text": "Hexose Monophosphate (HMP) Shunt", "correct": false}, {"label": "D", "text": "Ketone Body Formation", "correct": false}], "correct_answer": "A. Gluconeogenesis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A baby presents with the clinical features shown in the image, including characteristic perioral and perianal rash along with a history of diarrhoea. Which of the following is the most likely deficiency responsible for this condition?", "options": [{"label": "A", "text": "Zinc deficiency", "correct": true}, {"label": "B", "text": "Niacin deficiency", "correct": false}, {"label": "C", "text": "Selenium deficiency", "correct": false}, {"label": "D", "text": "Magnesium deficiency", "correct": false}], "correct_answer": "A. Zinc deficiency", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Bio.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Drug used in treatment of multiple myeloma", "options": [{"label": "A", "text": "Ruxolitinib", "correct": false}, {"label": "B", "text": "Bortexomib", "correct": true}, {"label": "C", "text": "Rituximab", "correct": false}, {"label": "D", "text": "Dabrafenib", "correct": false}], "correct_answer": "B. Bortexomib", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Pathogenesis of aneurysms in hypertension is", "options": [{"label": "A", "text": "Increased blood pressure Damaging elastin", "correct": false}, {"label": "B", "text": "Endothelial injury leading to leakage of lDl into vessel wall", "correct": false}, {"label": "C", "text": "Inflammation damaging the vessel wall", "correct": false}, {"label": "D", "text": "Necrosis of smooth muscle decreasing the vessel strength", "correct": true}], "correct_answer": "D. Necrosis of smooth muscle decreasing the vessel strength", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which type of injury is reversible if the stress is removed?", "options": [{"label": "A", "text": "Necrosis", "correct": false}, {"label": "B", "text": "Apoptosis", "correct": false}, {"label": "C", "text": "Hydropic change", "correct": true}, {"label": "D", "text": "Pyknosis", "correct": false}], "correct_answer": "C. Hydropic change", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is a marker of melanoma", "options": [{"label": "A", "text": "S100", "correct": false}, {"label": "B", "text": "HMB45", "correct": true}, {"label": "C", "text": "Napsin", "correct": false}, {"label": "D", "text": "Cytokeratin", "correct": false}], "correct_answer": "B. HMB45", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 65-year-old retired industrial worker presents with increasing dyspnoea, cough.. A bronchiolo alveolar lavage shows the following, what is the likely diagnsosis?", "options": [{"label": "A", "text": "Fungal pneumonia", "correct": false}, {"label": "B", "text": "Asbestosis", "correct": true}, {"label": "C", "text": "Hypersensitivity pneumonitis", "correct": false}, {"label": "D", "text": "Asthma", "correct": false}], "correct_answer": "B. Asbestosis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/0(17).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is an example of a hypersensitivity reaction that involves both Type III and Type IV mechanisms?", "options": [{"label": "A", "text": "Hypersensitivity pneumonitis", "correct": true}, {"label": "B", "text": "Rheumatoid arthritis", "correct": false}, {"label": "C", "text": "Systemic lupus erythematosus", "correct": false}, {"label": "D", "text": "Atopic dermatitis", "correct": false}], "correct_answer": "A. Hypersensitivity pneumonitis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following investigations is required to make a diagnosis of Mycosis Fungoides?", "options": [{"label": "A", "text": "Bone marrow Aspirate", "correct": false}, {"label": "B", "text": "Bone marrow Biopsy", "correct": false}, {"label": "C", "text": "Lymphnode biopsy", "correct": false}, {"label": "D", "text": "Skin biopsy.", "correct": true}], "correct_answer": "D. Skin biopsy.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Bradykinin causes:", "options": [{"label": "A", "text": "Vasoconstriction, Pain", "correct": false}, {"label": "B", "text": "Increased vascular permeability,pain", "correct": true}, {"label": "C", "text": "Chemotaxis, pain", "correct": false}, {"label": "D", "text": "Coagulation, increased vascular permeability", "correct": false}], "correct_answer": "B. Increased vascular permeability,pain", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-year-old is diagnosed to have an inherited disease due to mutation of HFE gene. Which of the following is not the likely manifestation of this disease?", "options": [{"label": "A", "text": "Atrophic testes", "correct": false}, {"label": "B", "text": "Dilated cardiomyopathy", "correct": false}, {"label": "C", "text": "Type II Diabetes Mellitus", "correct": true}, {"label": "D", "text": "Hyperpigmentation of skin.", "correct": false}], "correct_answer": "C. Type II Diabetes Mellitus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Blood for direct Coombs test is sent in which vacutainer", "options": [{"label": "A", "text": "Lavender", "correct": true}, {"label": "B", "text": "Red", "correct": false}, {"label": "C", "text": "Green", "correct": false}, {"label": "D", "text": "Sky blue", "correct": false}], "correct_answer": "A. Lavender", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is true about cystic fibrosis", "options": [{"label": "A", "text": "Increased sodium in sweat", "correct": false}, {"label": "B", "text": "Decreased chloride in bronchial secretion", "correct": false}, {"label": "C", "text": "Decreased bicarbonate in pancreatic secretion", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Peripheral blood smear of a child presenting with anemia and jaundice is as follows. Which other manifestation is likely to be seen in this child?", "options": [{"label": "A", "text": "Renal failure", "correct": true}, {"label": "B", "text": "Steatorrhea", "correct": false}, {"label": "C", "text": "Live failure", "correct": false}, {"label": "D", "text": "Gangrene", "correct": false}], "correct_answer": "A. Renal failure", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/30(66).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 25-year young man has a snake bite by the description it looks like a viper. 2 hours later he is having epistaxis hypotension, tachycardia, and rapid breathing. Which of the following is most likely diagnosis?", "options": [{"label": "A", "text": "Anaphylactic shock", "correct": false}, {"label": "B", "text": "Neurogenic Shock", "correct": false}, {"label": "C", "text": "Disseminated intravascular coagulation", "correct": true}, {"label": "D", "text": "Cardiogenic shock", "correct": false}], "correct_answer": "C. Disseminated intravascular coagulation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Worst prognostic histological type of breast carcinoma is", "options": [{"label": "A", "text": "Ductal", "correct": true}, {"label": "B", "text": "Lobular", "correct": false}, {"label": "C", "text": "Medullary", "correct": false}, {"label": "D", "text": "Tubular", "correct": false}], "correct_answer": "A. Ductal", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient is having multiple patichiae and purpura on the skin, has intermittent abdominal cramps for last 2 months. Now the patient presents to you with reduced urine output for last 24 hours and pedal edema, BP is 140/90, pulse is 88/min. urine examination shows many RBC and RBC casts. A renal biopsy is as shown in the image. An immunofluorescence came out to be negative. Which of the following is the most likely cause?", "options": [{"label": "A", "text": "Henoch Schnolein purpura", "correct": false}, {"label": "B", "text": "Good Pastuer syndrome", "correct": false}, {"label": "C", "text": "Granulomatosis with polyangiitis", "correct": true}, {"label": "D", "text": "Lupus nephritis", "correct": false}], "correct_answer": "C. Granulomatosis with polyangiitis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/31(62).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following drug inhibits CD80/86 on antigen-presenting cells (APCs)?", "options": [{"label": "A", "text": "Ipilumumab", "correct": false}, {"label": "B", "text": "Pembrolizumab", "correct": false}, {"label": "C", "text": "Atezolizumab", "correct": false}, {"label": "D", "text": "Abatacept", "correct": true}], "correct_answer": "D. Abatacept", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following drugs is primarily FDA-approved for neurogenic orthostatic hypotension (nOH)?", "options": [{"label": "A", "text": "Midodrine", "correct": false}, {"label": "B", "text": "Phenylephrine", "correct": false}, {"label": "C", "text": "Droxidopa", "correct": true}, {"label": "D", "text": "Fludrocortisone", "correct": false}], "correct_answer": "C. Droxidopa", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following drugs is useful in the management of Nelson Syndrome?", "options": [{"label": "A", "text": "Cabergoline", "correct": true}, {"label": "B", "text": "Ketoconazole", "correct": false}, {"label": "C", "text": "Mitotane", "correct": false}, {"label": "D", "text": "Mefepristone", "correct": false}], "correct_answer": "A. Cabergoline", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 40-year-old woman with a history of prolonged QT interval presents with syncope. ECG shows polymorphic ventricular tachycardia consistent with Torsades de Pointes (TdP). Which of the following is the first-line treatment?", "options": [{"label": "A", "text": "Magnesium sulfate", "correct": true}, {"label": "B", "text": "Amiodarone", "correct": false}, {"label": "C", "text": "Lidocaine", "correct": false}, {"label": "D", "text": "Qunidine", "correct": false}], "correct_answer": "A. Magnesium sulfate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 58-year-old diabetic male with chronic foot ulcers presents with fever, redness, and swelling in his right foot. Blood cultures grow vancomycin-resistant Staphylococcus aureus (VRSA). He has normal renal and hepatic function, no history of allergies, and is currently hospitalized. Which of the following drugs is the most appropriate choice for treating his infection?", "options": [{"label": "A", "text": "Linezolid", "correct": false}, {"label": "B", "text": "Daptomycin", "correct": true}, {"label": "C", "text": "Tigecycline", "correct": false}, {"label": "D", "text": "Cefepime", "correct": false}], "correct_answer": "B. Daptomycin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 52-year-old woman presents with advanced HER2-positive breast cancer that has metastasized to the liver. She has previously been treated with trastuzumab and pertuzumab but has experienced disease progression. She is otherwise healthy with no significant comorbidities and has good liver and renal function. Which of the following drugs would be the most appropriate next-line treatment?", "options": [{"label": "A", "text": "Lapatinib", "correct": true}, {"label": "B", "text": "Palbociclib", "correct": false}, {"label": "C", "text": "Pembrolizumab", "correct": false}, {"label": "D", "text": "Paclitaxel", "correct": false}], "correct_answer": "A. Lapatinib", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "40-year-old man with gout is prescribed probenecid to enhance the renal elimination of uric acid. Probenecid acts by inhibiting which renal drug transporter?", "options": [{"label": "A", "text": "Organic cation transporter 2 (OCT2)", "correct": false}, {"label": "B", "text": "Organic anion transporter 1 (OAT1)", "correct": true}, {"label": "C", "text": "P-glycoprotein (P-gp)", "correct": false}, {"label": "D", "text": "Sodium-phosphate cotransporter", "correct": false}], "correct_answer": "B. Organic anion transporter 1 (OAT1)", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-year-old man presents with seizures, and MRI reveals multiple cystic lesions in the brain with surrounding edema, consistent with neurocysticercosis caused by Taenia solium. Which of the following drugs is the most appropriate for treating this condition?", "options": [{"label": "A", "text": "Praziquantel", "correct": false}, {"label": "B", "text": "Albendazole", "correct": true}, {"label": "C", "text": "Ivermectin", "correct": false}, {"label": "D", "text": "Diethylcarbamazine", "correct": false}], "correct_answer": "B. Albendazole", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 70-year-old man undergoes abdominal surgery and is experiencing postoperative ileus, characterized by abdominal distension, delayed gastric emptying, and absent bowel movements. He has a history of opioid use for postoperative pain management. Which of the following drugs is the most appropriate for treating his condition?", "options": [{"label": "A", "text": "Erythromycin", "correct": false}, {"label": "B", "text": "Alvimopan", "correct": true}, {"label": "C", "text": "Metoclopramide", "correct": false}, {"label": "D", "text": "Cisapride", "correct": false}], "correct_answer": "B. Alvimopan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 65-year-old man with a 5-year history of Parkinson’s disease presents with increased \"off\" periods, during which his motor symptoms worsen despite being on carbidopa-levodopa. His neurologist decides to add a medication to reduce these fluctuations. Which of the following drugs is the most appropriate choice?", "options": [{"label": "A", "text": "Pramipexole", "correct": false}, {"label": "B", "text": "Selegiline", "correct": false}, {"label": "C", "text": "Entacapone", "correct": true}, {"label": "D", "text": "Amantadine", "correct": false}], "correct_answer": "C. Entacapone", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 25-year-old NRI patient with a history of travel to the Mississippi River Valley presents with fever, cough, and weight loss. Chest X-ray shows granulomas. Sputum culture grows dimorphic fungi. Which of the following is the most likely causative organism?", "options": [{"label": "A", "text": "Blastomyces dermatitidis", "correct": false}, {"label": "B", "text": "Coccidioides immitis", "correct": false}, {"label": "C", "text": "Histoplasma capsulatum", "correct": true}, {"label": "D", "text": "Paracoccidioides brasiliensis", "correct": false}], "correct_answer": "C. Histoplasma capsulatum", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A farmer from a rural area presents with diarrhea, weight loss, and abdominal discomfort. Stool microscopy shown in the image. What is the most likely organism?", "options": [{"label": "A", "text": "Ascaris lumbricoides", "correct": false}, {"label": "B", "text": "Fasciolopsis buski", "correct": true}, {"label": "C", "text": "Entamoeba histolytica", "correct": false}, {"label": "D", "text": "Trichuris trichiura", "correct": false}], "correct_answer": "B. Fasciolopsis buski", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(795).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents with watery diarrhea after returning from a camping trip. Stool examination reveals oval cysts that are acid-fast and contains four sporozoites only. What is the most likely organism?", "options": [{"label": "A", "text": "Giardia lamblia", "correct": false}, {"label": "B", "text": "Entamoeba histolytica", "correct": false}, {"label": "C", "text": "Cyclospora cayetanensis", "correct": false}, {"label": "D", "text": "Cryptosporidium parvum", "correct": true}], "correct_answer": "D. Cryptosporidium parvum", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old patient with a history of consuming unpasteurized dairy presents with fever, malaise, and hepatosplenomegaly. Blood cultures grow a gram-negative coccobacillus. Which of the following is the most likely causative organism?", "options": [{"label": "A", "text": "Francisella tularensis", "correct": false}, {"label": "B", "text": "Brucella melitensis", "correct": true}, {"label": "C", "text": "Pasteurella multocida", "correct": false}, {"label": "D", "text": "Bartonella henselae", "correct": false}], "correct_answer": "B. Brucella melitensis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with a prosthetic heart valve develops fever and signs of endocarditis. Blood cultures grow gram-positive cocci in chains that are alpha-hemolytic. What is the most likely causative organism?", "options": [{"label": "A", "text": "Staphylococcus aureus", "correct": false}, {"label": "B", "text": "Streptococcus pyogenes", "correct": false}, {"label": "C", "text": "Streptococcus viridans", "correct": true}, {"label": "D", "text": "Enterococcus faecalis", "correct": false}], "correct_answer": "C. Streptococcus viridans", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old man presents with a painless ulcer on his genitalia. Darkfield microscopy reveals spiral-shaped organisms. Which test involved in serological scar:", "options": [{"label": "A", "text": "VDRL", "correct": false}, {"label": "B", "text": "RPR", "correct": false}, {"label": "C", "text": "DFM", "correct": false}, {"label": "D", "text": "TPPA", "correct": true}], "correct_answer": "D. TPPA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 7-year-old child develops a maculopapular rash starting on the face and spreading downward. The rash is accompanied by fever and a typical white spots in buccal cavity as shown in the image. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Measles", "correct": true}, {"label": "B", "text": "Mumps", "correct": false}, {"label": "C", "text": "Varicella", "correct": false}, {"label": "D", "text": "Zoster", "correct": false}], "correct_answer": "A. Measles", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(700).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 5-year-old boy from Bangladesh develops acute flaccid paralysis following a febrile illness. Stool samples test positive for an RNA virus. Which virus is the most likely cause?", "options": [{"label": "A", "text": "Coxsackievirus", "correct": false}, {"label": "B", "text": "Rotavirus", "correct": false}, {"label": "C", "text": "Echovirus", "correct": false}, {"label": "D", "text": "Poliovirus", "correct": true}], "correct_answer": "D. Poliovirus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 16-year-old boy with a history of eczema and recurrent abscesses caused by Staphylococcus aureus is found to have high serum IgE levels. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Wiskott-Aldrich syndrome", "correct": false}, {"label": "B", "text": "Job’s syndrome", "correct": true}, {"label": "C", "text": "Common variable immunodeficiency", "correct": false}, {"label": "D", "text": "Chronic granulomatous disease", "correct": false}], "correct_answer": "B. Job’s syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All the following are belonging to Bioterrorism agent Category A except", "options": [{"label": "A", "text": "COVID 19", "correct": true}, {"label": "B", "text": "Plague", "correct": false}, {"label": "C", "text": "Tularemia", "correct": false}, {"label": "D", "text": "Ebola", "correct": false}], "correct_answer": "A. COVID 19", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which measure of Central Tendency is not calculated in a Likert scale?", "options": [{"label": "A", "text": "Arithmetic Mean", "correct": true}, {"label": "B", "text": "Median", "correct": false}, {"label": "C", "text": "Mode", "correct": false}, {"label": "D", "text": "Q2 of quartiles", "correct": false}], "correct_answer": "A. Arithmetic Mean", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Ayushmann Vay Vandana Card all is true except:", "options": [{"label": "A", "text": "Covers ≥ 70 years of age", "correct": false}, {"label": "B", "text": "Covers only BPL", "correct": true}, {"label": "C", "text": "Amount if 5 lakh/ year", "correct": false}, {"label": "D", "text": "Under Ayushmann Bharat", "correct": false}], "correct_answer": "B. Covers only BPL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the slogan for this?", "options": [{"label": "A", "text": "Sahi POSHAN Desh ROSHAN", "correct": false}, {"label": "B", "text": "TB harega Desh Jeetega", "correct": false}, {"label": "C", "text": "Aroyga parman Dhanam", "correct": true}, {"label": "D", "text": "Hum do hamare do", "correct": false}], "correct_answer": "C. Aroyga parman Dhanam", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/16(178).png"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/17(144).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The logo pertains to:", "options": [{"label": "A", "text": "AMRUT", "correct": false}, {"label": "B", "text": "AMRIT", "correct": true}, {"label": "C", "text": "AMRITA", "correct": false}, {"label": "D", "text": "MITRATA", "correct": false}], "correct_answer": "B. AMRIT", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/18(141).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The logo depicts:", "options": [{"label": "A", "text": "LaQshya", "correct": false}, {"label": "B", "text": "SUMAN", "correct": true}, {"label": "C", "text": "PMSMY", "correct": false}, {"label": "D", "text": "NQAS", "correct": false}], "correct_answer": "B. SUMAN", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/19(133).png"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/20(139).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "ANMOL application by GoI provides tablets to:", "options": [{"label": "A", "text": "HW F", "correct": true}, {"label": "B", "text": "HW M", "correct": false}, {"label": "C", "text": "ASHA", "correct": false}, {"label": "D", "text": "CHO", "correct": false}], "correct_answer": "A. HW F", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the phenomenon called where lower readings in childhood lead to lower readings in adulthood and higher readings in childhood lead to higher readings in adulthood?", "options": [{"label": "A", "text": "STEPwise questionnaire", "correct": false}, {"label": "B", "text": "Tracking phenomenon", "correct": true}, {"label": "C", "text": "Rule of halves", "correct": false}, {"label": "D", "text": "SPIKES protocol", "correct": false}], "correct_answer": "B. Tracking phenomenon", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following study designs is used to calculate Odd’s ratio?", "options": [{"label": "A", "text": "Cross sectional", "correct": false}, {"label": "B", "text": "Cohort", "correct": false}, {"label": "C", "text": "RCT", "correct": false}, {"label": "D", "text": "Case control", "correct": true}], "correct_answer": "D. Case control", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/21(118).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which indicator used Health and education as parameters?", "options": [{"label": "A", "text": "HDI", "correct": false}, {"label": "B", "text": "HPI", "correct": false}, {"label": "C", "text": "MDPI", "correct": true}, {"label": "D", "text": "GHI", "correct": false}], "correct_answer": "C. MDPI", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/22(111).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which test compares difference between 2 proportions?", "options": [{"label": "A", "text": "T Test", "correct": false}, {"label": "B", "text": "ANOVA", "correct": false}, {"label": "C", "text": "Chi square", "correct": true}, {"label": "D", "text": "Regression", "correct": false}], "correct_answer": "C. Chi square", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/23(108).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What type of distribution is depicted in the image below?", "options": [{"label": "A", "text": "Normal", "correct": false}, {"label": "B", "text": "Right skewed", "correct": false}, {"label": "C", "text": "Left skewed", "correct": false}, {"label": "D", "text": "Uniform Bimodal", "correct": true}], "correct_answer": "D. Uniform Bimodal", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/24(104).png"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/25(114).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Maternal mortality rate denominator is:", "options": [{"label": "A", "text": "Maternal mortality", "correct": false}, {"label": "B", "text": "Number of Live births", "correct": false}, {"label": "C", "text": "Number of females in reproductive age group in a year", "correct": true}, {"label": "D", "text": "Number of deaths in females", "correct": false}], "correct_answer": "C. Number of females in reproductive age group in a year", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/26(79).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following health reporting systems provides the TFR for India?", "options": [{"label": "A", "text": "SRS", "correct": false}, {"label": "B", "text": "Civil registration system", "correct": false}, {"label": "C", "text": "NFHS", "correct": true}, {"label": "D", "text": "Census", "correct": false}], "correct_answer": "C. NFHS", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/27(78).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "RDA for Vitamin A for adult male in (ug) is:", "options": [{"label": "A", "text": "840", "correct": false}, {"label": "B", "text": "900", "correct": false}, {"label": "C", "text": "950", "correct": false}, {"label": "D", "text": "1000", "correct": true}], "correct_answer": "D. 1000", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/28(78).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the amount of residual chlorine for drinking water ( in ppm)?", "options": [{"label": "A", "text": "> 0.5", "correct": true}, {"label": "B", "text": "> 0.7", "correct": false}, {"label": "C", "text": "> 1.0", "correct": false}, {"label": "D", "text": "> 2.0", "correct": false}], "correct_answer": "A. > 0.5", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/29(66).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not a blood stain analysis Test", "options": [{"label": "A", "text": "Barberio

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Surgery - NEET PG 2018</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Surgery - NEET PG 2018</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                17 Questions | 17 Total Marks | 27 min Duration | ~95.29 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 17 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 27 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 17</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Surgery - NEET PG 2018 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 17</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 17 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 50 kg man has 40% second-degree burns. So how much fluid will be needed in the first 8 hours:", "options": [{"label": "A", "text": "8 liters", "correct": false}, {"label": "B", "text": "4 liters", "correct": true}, {"label": "C", "text": "2 liters", "correct": false}, {"label": "D", "text": "6 liters", "correct": false}], "correct_answer": "B. 4 liters", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>4 liters Resuscitation in a burn patient: Two large-bore (18 gauge or larger) IV lines should be placed into the bilateral antecubital fossae; lactated Ringer is the classical fluid of choice. Adults: Parkland formula for second and third-degree burns. Fluid resuscitation: Should be tailored to urine output; the calculated fluid requirement is from the time of the burn. Timing: First 50% of the fluid is given in the initial 8 hours, with the rest in the remaining 16 hours. Urinary catheter: Placed to monitor urine output. Parkland formula or burn resuscitation: 4 mL X total body surface area burned (TBSA) X weight (kg) = estimated fluid requirements in the first 24 hours. So from question fluid required = 4 X 40 X 50 = 8000 mL So for 1st hour, 4 liters is given.</p>\n<p><strong>Highyeild:</strong></p><p>Resuscitation fluid should commence from the time of burn injury, and any delay must be caught up. Intravenous resuscitation is appropriate for adults with burns more significant than 15% TBSA and children with burns more critical than 10% TBSA . Some countries commence intravenous fluid resuscitation at 30% TBSA depending on the available resources. Oral resuscitation may be necessary, but additional salt solutions are required to avoid fatal hyponatremia and water intoxication . Three variables affect fluid requirements : percentage of TBSA burned, patient weight, and rate/type of fluid. Three primary fluids are used in resuscitation: crystalloid (most common), colloid , and hypertonic saline , each with advantages and disadvantages.</p>\n<p><strong>Extraedge:</strong></p><p>The modified Parkland formula is widely used for fluid resuscitation in burns. The formula is administered over 24 hours, with the first half given in 8 hours and the second over 16 hours. Maintenance fluid (dextrose-saline) should also be given in children, with varying doses based on body weight. Crystalloid resuscitation may lead to increased tissue edema due to its requirement for eight-fold more significant volumes than colloid.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Plan KUB showing what procedure was done.", "options": [{"label": "A", "text": "ESWL for renal stone", "correct": true}, {"label": "B", "text": "ESWL for bladder stones", "correct": false}, {"label": "C", "text": "ESWL for renal TB", "correct": false}, {"label": "D", "text": "Stent for benign prostatic hyperplasia", "correct": false}], "correct_answer": "A. ESWL for renal stone", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1694624974018-QTDSPYQ206IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>ESWL for renal stone The radiograph shows ESWL done for renal stones</p>\n<p><strong>Highyeild:</strong></p><p>Patients who have not passed their stone after a 4-6 week observation period, those with large rocks, and those who desire immediate intervention may be offered ESWL, PCNL, or URS. Management of Renal and Ureteric Calculi Indications of Conservative Treatment (for 4-6 weeks) (Feature of stone likely to pass spontaneously) Single stone ≤ 5 mm Stone in the lower third of the ureter Ureter is non-dilated Evidence of downward movement Surgical Intervention ESWL (Extracorporeal shock wave lithotripsy) PCNL (percutaneous nephrolithotomy) URS (Ureteroscopy) Laparoscopic stone surgery OSS (Open stone surgery) – Not done now on a routine basis The majority (80-85%) of simple renal calculi are treated satisfactorily with ESWLQ. PCNL/URS manages rests. EXTRACORPOREAL SHOCKWAVE LITHOTRIPSY (ESWL, ESL) : This is a non-invasive method of treating urinary tract stones by generating shockwaves outside the body focused on the rocks. It was first used on humans in Germany in 1980. Different shock wave generation methods include spark gap, electromagnetic, piezoelectric, and micro-expulsive. Shockwaves generated using the spark-gap method must be coordinated with the patient’s electrocardiogram (ECG) to prevent cardiac arrhythmias. Stones can be localized for treatment using either fluoroscopy or USS. This is the standard form of treatment for renal calculi, and stones up to approximately 1.5 cm in size are suitable for this treatment. More than one treatment session may be needed to treat the stone, especially if it is sizeable. Prophylactic antibiotics are used to prevent infection as bacteria often colonize rocks. Cystine stones are relatively resistant to ESWL due to their hardness. In addition to infection, ESWL may result in haematuria, parenchymal bleeding, and even perirenal hematoma. Contraindications to ESWL are obese patients, pregnant patients, and patients taking oral anticoagulants.</p>\n<p><strong>Extraedge:</strong></p><p>The efficacy of SWL reduces with an increasing number of stones and volume of stone burden. Steinstrasse is a German word meaning ‘ street of stones .’ It describes a row of closely gathered stone fragments that line the distal end of the ureter. These stones are usually asymptomatic and pass spontaneously ; however, they may cause obstruction, requiring surgical intervention.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old male with symptoms of obstructive uropathy. A retrograde urethrogram was done, which showed?", "options": [{"label": "A", "text": "Urethral stone", "correct": false}, {"label": "B", "text": "Bladder stone", "correct": false}, {"label": "C", "text": "Benign prostatic hyperplasia", "correct": true}, {"label": "D", "text": "Hydronephrosis", "correct": false}], "correct_answer": "C. Benign prostatic hyperplasia", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1694624974876-QTDSPYQ207IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Benign prostatic hyperplasia Retrograde urethrogram shows a filling defect at the bladder neck level, which can be due to any of the causes of the bladder neck obstruction.</p>\n<p><strong>Highyeild:</strong></p><p>Bladder outlet obstruction (BOO): It is a low urinary flow rate with high voiding pressure. It is an aerodynamically confirmed entity. A urodynamic pressure flow study diagnoses it. The flow rate will be less than 10 ml/second with voiding pressure of more than 80 cm of water. Eventually, detrusor inefficiency occurs, causing significant residual urine. Causes of BOO —BPH; bladder neck hypertrophy or stenosis; prostate carcinoma; urethral stricture; functional bladder neck obstruction. Effects of BOO —acute retention of urine; chronic retention of urine; impaired bladder emptying; uremia; infection; stone formation, hematuria. US; renal function tests; IVU; PSA are the investigations. Management is treating the cause by cystoscopic bladder neck incision, urethrotomy, TURP, etc.</p>\n<p><strong>Extraedge:</strong></p><p>BPH is a common cause of significant lower urinary tract symptoms (LUTS) in men and the most common cause of bladder outflow obstruction (BOO) in men >70 years of age.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Heller’s operation is done for?", "options": [{"label": "A", "text": "Achalasia cardia", "correct": true}, {"label": "B", "text": "Zenker’s diverticulum", "correct": false}, {"label": "C", "text": "Esophageal spasm", "correct": false}, {"label": "D", "text": "Esophageal perforation", "correct": false}], "correct_answer": "A. Achalasia cardia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Achalasia cardia Achalasia cardia (cardiospasm): It is the failure of relaxation of cardia (esophagogastric junction) due to disorganized esophageal peristalsis as a result of failure to integrate parasympathetic impulses causing a functional obstruction.f Etiology: There is an absence or less numbered ganglions in the myenteric plexus. Vit B 1 Chaga’s disease. It is caused by Trypanosoma cruzi, which is common in South America called sleeping sickness. Diffuse esophageal spasm (Corkscrew esophagus). Most commonly, it is idiopathic . There is degeneration of Auerbach’s myenteric plexus along the entire length of the esophagus, especially in LOS. There is a pencil-shaped narrowing of the cardio (O-G junction) with enormous dilatation of the proximal esophagus, which contains foul-smelling fluid and is more prone to aspiration pneumonia. Achalasia cardia is a precancerous condition—seven times chance of getting squamous cell carcinoma (8%, after 15 years). Pathology: Thickening of circular muscle fibers in the distal esophagus. Myenteric inflammation; depletion of ganglion cells; neural fibrosis; reduced nitric oxide and Vasoactive intestinal peptide [mediators of lower esophageal sphincter (LES) relaxation]. Absence of peristalsis; raised LES pressure; failure of relaxation with functional obstruction of the esophagogastric junction. Dilatation of proximal esophagus with atony. Clinical Features: Common in females between 20 and 40 years age group. Incidence is 6 per 1,00,000 population. Chest pain occurs in the early stage. Achalasia with diffuse esophageal spasm is called as ‘ vigorous achalasia.’ Presents with progressive dysphagia, which is more for liquid than to solid food. Regurgitation and recurrent pneumonia are common (10%). Walking while eating, chin thrusting, neck and shoulder extension, Valsalva maneuver facilitates emptying of food from the esophagus. Heartburn (50%) is expected. Malnutrition and general ill health. Lung abscess formation. Odynophagia and weight loss. Investigations: A barium swallow is diagnostic —shows. Pencil like smooth narrowing of lower esophagus —Bird beak appearance Dilatation of proximal esophagus Absence of fundic gas bubble Sigmoid esophagus or megaesophagus Chest X-ray shows patches of pneumonia. A double mediastinal strip of the dilated esophagus is typical, with an air-fluid level in the posterior mediastinum on the lateral view. Esophageal manometry shows an unrelaxed lower esophageal sphincter with high resting pressure—the beneficial and gold standard. It shows the failure of LES to relax entirely during swallowing and the complete absence of peristalsis. LES pressure is > 35 mm Hg. Baseline esophageal pressure will be high without progressive esophageal peristalsis with low amplitude muscular tone. Intra esophageal pressure about intragastric pressure is elevated. Esophagoscopy is done to confirm the diagnosis and to rule out carcinoma esophagus. It shows closed LES with atonic, dilated proximal esophagus. A biopsy of mucosa at LES should be done. Barium swallow X-ray showing features of achalasia cardia Differential Diagnosis: Carcinoma esophagus. Stricture esophagus. Scleroderma Treatment for achalasia: Forcible dilatation : Plummer’s pneumatic dilatation Negus hydrostatic balloon dilatation Modified Heller’s cardiomyotomy Drugs Botulinum toxin A Nitro-glycerine, nifedipine</p>\n<p><strong>Highyeild:</strong></p><p>Achalasia Cardia It is the most common hypomotility disorder of the esophagus . Achalasia refers to the failure of the lower esophageal sphincter (LES) to relax . Both the muscle of the esophagus and LES are affected. The prevailing theory suggests that the destruction of the nerves to LES is the primary pathology, and degeneration of the neuromuscular function of the body of the esophagus is secondary. It is a premalignant condition that may lead to squamous cell carcinoma. Achalasia can be seen in Triple-A syndrome or Allgrove disease , which involves Achalasia, lacrimal, and ACTH-resistant Adrenal insufficiency . It is caused by progressive inflammation and selective loss of inhibitory myenteric neurons in Auerbach’s plexus of the esophagus that generally secrete VIP and nitric oxide . This results in the failure to relax LES and peristalsis of the esophageal body, leading to functional obstruction at the level of the GE junction and gradual dilatation of the esophagus.</p>\n<p><strong>Table:</strong></p><p>#MANTRA Treatment options for Achalasia Cardia : Early stage : Sublingual nitroglycerin, nitrates, or calcium channel blockers can provide temporary relief of chest pressure before or after a meal. Bougie dilation up to 54 French may offer several months of relief but requires repeated dilations to be sustainable. Botulinum toxin injection directly into the LES can relax the LES and provide symptomatic relief for years, but symptoms may recur more than 50% of the time within six months. Laparoscopic Heller myotomy is the preferred surgical option , where the extent of myotomy is 2 cm above the GE junction to 1 cm below, over the stomach. A partial antireflux procedure (Toupet or Dor fundoplication) can be performed to restore a barrier to reflux and decrease postoperative symptoms. Esophagectomy may be considered for megaesophagus, sigmoid esophagus, failure of multiple myotomies, or an undeletable reflux stricture .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Van Nuys classification of DCIS include all except:", "options": [{"label": "A", "text": "Grade", "correct": false}, {"label": "B", "text": "Size", "correct": false}, {"label": "C", "text": "Microinvasion", "correct": false}, {"label": "D", "text": "Receptors", "correct": true}], "correct_answer": "D. Receptors", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Receptors Van Nuys prognostic index for DCIS Score 1 2 3 Size in mm < 15 mm 15–40 mm > 40 mm Clearance in mm > 10 mm 1–10 mm < 1 mm Grade and necrosis not high grade not high grade high grade No necrosis Necrosis present Necrosis present Total score is 9 Score 3–4 conservative breast surgery (wide local excision) Score 5–7 conservative surgery + Radiotherapy Score 8–9 total mastectomy</p>\n<p><strong>Highyeild:</strong></p><p>The Van Nuys prognostic index (VNPI) is a widely used system to classify ductal carcinoma in situ (DCIS) into different risk categories, which can be treated accordingly. This index helps to identify subsets of DCIS patients who may not require radiation therapy after undergoing wide excision. The following criteria are used to determine which patients may not need radiation therapy: The patient

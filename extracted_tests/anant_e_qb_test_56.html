@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>HNF Development - Tongue, Thyroid &amp; Eyeball</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">HNF Development - Tongue, Thyroid &amp; Eyeball</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                12 Questions | 12 Total Marks | 22 min Duration | ~110.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 12 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 22 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 12</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">HNF Development - Tongue, Thyroid &amp; Eyeball - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 12</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 12 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Epithelium of the tongue is derived from all pharyngeal arches except?", "options": [{"label": "A", "text": "1st Arch", "correct": false}, {"label": "B", "text": "2nd arch", "correct": true}, {"label": "C", "text": "3rd arch", "correct": false}, {"label": "D", "text": "4th arch", "correct": false}], "correct_answer": "B. 2nd arch", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>2nd arch 1st arch gives rise to the epithelium of the anterior 2/3rd of the tongue. 3rd arch and 4th arch together form hypobranchial eminence giving rise to epithelium of the posterior 1/3rd and posterior-most parts of the tongue. Hence 2nd arch does not contribute to the development of the epithelium of the tongue.</p>\n<p><strong>Highyeild:</strong></p><p>Development of various parts of the tongue from different sources. Five sources of development. B. Definitive tongue</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A. 1st arch gives rise to epithelium of anterior 2/3rd of tongue Option C . 3rd arch and J Option D. 4th arch together form hypobranchial eminence giving rise to epithelium of posterior 1/3rd and posterior-most parts of the tongue.</p>\n<p><strong>Extraedge:</strong></p><p>Taste sensations from the anterior two-third of the tongue are carried by the lingual nerve, from the posterior one-third by the glossopharyngeal nerve, and from the posterior most part by the internal laryngeal nerve. The beer is tasted at the posterior most part of the tongue which is supplied by the internal laryngeal nerve. For this reason, the internal laryngeal nerve is also called the ‘beer drinker’s nerve.’</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The lens is derived from?", "options": [{"label": "A", "text": "Mesoderm", "correct": false}, {"label": "B", "text": "Surface ectoderm", "correct": true}, {"label": "C", "text": "Neuroectoderm", "correct": false}, {"label": "D", "text": "Neural crest cells", "correct": false}], "correct_answer": "B. Surface ectoderm", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Surface ectoderm Surface ectoderm derivatives- lens, corneal, conjunctival epithelium, lacrimal, and tarsal glands.</p>\n<p><strong>Highyeild:</strong></p><p>The surface ectoderm (or external ectoderm) forms the following structures: Skin (only epidermis; dermis is derived from mesoderm) (along with glands, hair, and nails) Epithelium of the mouth and nasal cavity and glands of the mouth and nasal cavity Tooth enamel (as a side note, dentin, and dental pulp are formed from ectomesenchyme which is derived from ectoderm (specifically neural crest cells and travels with mesenchymal cells) Epithelium of anterior pituitary Lens, cornea, lacrimal gland, tarsal glands, and the conjunctiva of the eye Apical ectodermal ridge inducing the development of the limb buds of the embryo. Sensory receptors in the epidermis.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A. Mesoderm derivatives- extraocular muscles, sclera, choroid, and stroma of ciliary body Option C. Neuroectoderm derivatives-retina, optic nerve, optic tract, optic chiasma, pupillary muscles, ciliary body epithelium. Option D. Neural crest cell derivatives. The neural crest is a transient embryonic structure in vertebrates that gives rise to most of the peripheral nervous system (PNS) and to several non-neural cell types, including smooth muscle cells of the cardiovascular system, pigment cells in the skin, and craniofacial bones, cartilage, and connective tissue .</p>\n<p><strong>Extraedge:</strong></p><p>table,tr,th,td {border:1px solid black;} Sensory neurons Cholinergic neurons Adrenergic neurons Rohon-Beard cells Schwann cells Glial cells Chromaffin cells Parafollicular cells Calcitonin producing cells Melanocytes Chondroblasts, chondrocytes Osteoblasts, osteocytes Odontoblasts Fibroblasts Cardiac mesenchyme Striated myoblasts Spinal ganglia Thyroid gland Ultimobranchial body Adrenal gland Teeth Dentine Connective tissue Adipose tissue Smooth muscles Cardiac septa Dermis Cornea Endothelia Adipocytes Mesenchymal cells Smooth myoblasts</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following structures are involved in the formation of the tongue except:", "options": [{"label": "A", "text": "Lingual Swelling", "correct": false}, {"label": "B", "text": "Tuberculum impar", "correct": false}, {"label": "C", "text": "Hypobranchial eminence", "correct": false}, {"label": "D", "text": "Thyroglossal duct", "correct": true}], "correct_answer": "D. Thyroglossal duct", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Thyroglossal duct The thyroglossal duct helps in the descent of the thyroid during its development to reach its anatomical position. Ectopic thyroid can be a remnant of the thyroid gland anywhere along the path of the thyroglossal duct.</p>\n<p><strong>Highyeild:</strong></p><p>The oral part of the tongue develops from three swellings associated with the first pharyngeal arch. These swellings are two lateral lingual swellings and one median swelling— the tuberculum impar. The pharyngeal part of the tongue develops from a median swelling called hypobranchial eminence or copula of His associated with second, third, and fourth pharyngeal arches. Muscles of the tongue develop from occipital myotomes.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A. Lingual swelling and Option B. Tuberculum impar together forms epithelium of anterior 2/3rd of tongue Option C. Hypobranchial eminence cranial part gives rise to epithelium of circumvallate papillae and posterior 1/3 rd of tongue and caudal part gives rise to epithelium of posterior most part of the tongue.</p>\n<p><strong>Extraedge:</strong></p><p>The muscles of the tongue develop from myoblasts that migrate into the developing tongue from the occipital myotomes . The hypoglossal nerve —the nerve of occipital myotomes—accompanies the myoblasts during their migration to the pharyngeal arches and innervates the muscles of the tongue as they develop. The migration of the occipital myotomes to the developing tongue explains the course of the hypoglossal nerve.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Sphincter pupillae is derived from:", "options": [{"label": "A", "text": "Surface Ectoderm", "correct": false}, {"label": "B", "text": "Neuroectoderm", "correct": true}, {"label": "C", "text": "Mesoderm", "correct": false}, {"label": "D", "text": "Neural crest cells", "correct": false}], "correct_answer": "B. Neuroectoderm", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Neuroectoderm Neuroectoderm derivatives-retina, optic nerve, optic tract, optic chiasma, pupillary muscles, ciliary body epithelium. Sphincter pupillae muscle help in causing miosis.</p>\n<p><strong>Highyeild:</strong></p><p>The neuroectodermal cells of the optic cup give rise to muscles of the iris (sphincter and dilator pupillae). The two layers of the epithelium of the iris constitute the iridial part of the retina. The vascular connective tissue of the iris is derived from the mesoderm located anterior to the optic cup.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A. surface ectoderm derivatives-lens, corneal epithelium, conjunctival epithelium, lacrimal and tarsal glands Option C . Mesoderm derivatives- extraocular muscles, sclera, choroid, and stroma of the ciliary body. Option D . Neural crest cells The neural crest is a transient embryonic structure in vertebrates that gives rise to most of the peripheral nervous system (PNS) and to several non-neural cell types, including smooth muscle cells of the cardiovascular system, pigment cells in the skin, and craniofacial bones, cartilage, and connective tissue .</p>\n<p><strong>Extraedge:</strong></p><p>The cornea is derived from the following sources: Outer stratified squamous epithelium is derived from the surface ectoderm. Lamina propria of the cornea is derived from the mesoderm. It is continuous with the sclera. The inner corneal epithelium is derived from the neural crest cells.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Epithelium derived from the caudal part of hypobranchial eminence:", "options": [{"label": "A", "text": "Epiglottis", "correct": true}, {"label": "B", "text": "Circumvallate papillae", "correct": false}, {"label": "C", "text": "posterior 1/3 rd of tongue", "correct": false}, {"label": "D", "text": "anterior 2/3 rd", "correct": false}], "correct_answer": "A. Epiglottis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Epiglottis Epiglottis is derived from the caudal part of hypobranchial eminence.</p>\n<p><strong>Highyeild:</strong></p><p>The posterior-most part of the tongue and epiglottis develop from the caudal part of the hypobranchial eminence. Since the mucous membrane of the posterior-most part of the tongue and epiglottis develop from the fourth pharyngeal arch, it is supplied by the superior laryngeal nerve—the nerve of the fourth arch.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option B. Circumvallate papillae and Option C. Posterior 1/3 rd of the tongue are derived from the Cranial part of hypobranchial eminence. Option D . The anterior 2/3rd from lingual swelling, tuberculum impar. Anterior 2/3rd of the tongue has a general sensory supply from the lingual nerve whereas the taste sensation is from the Chorda tympani nerve.</p>\n<p><strong>Extraedge:</strong></p><p>The line of fusion of the anterior two-third and posterior one-third of the tongue is indicated by a V-shaped groove—the Sulcus terminalis . Since the mucous membrane of the posterior one-third of the tongue (including vallate papillae) develops from the third pharyngeal arch, it is supplied by the glossopharyngeal nerve —the nerve of the third arch.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The gene responsible for differentiation of neuroepithelium into neural retina:", "options": [{"label": "A", "text": "CHX10", "correct": true}, {"label": "B", "text": "MITF", "correct": false}, {"label": "C", "text": "Both A & B", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. CHX10", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>CHX10 CHX10 is responsible for neural retinal differentiation of neuroepithelium.</p>\n<p><strong>Highyeild:</strong></p><p>Fibroblast growth factors (FGFs) from the surface ectoderm promote differentiation of the neural (inner layer) retina, whereas transforming growth factor B (TGF-B), secreted by surrounding mesenchyme, directs the formation of the pigmented (outer) retinal layer. Downstream from these gene products, the t ranscription factors MITF and CHX1O are expressed and direct dif ferentiation of the pigmented and neural layer, respectively.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A. CHX10 is responsible for neural retinal differentiation of neuroepithelium. Option B. MITF is responsible for pigment epithelium differentiation of neuroepithelium Hence c) & d) cannot be the answer to the above question Any defect in these genes during embryonic development can result in abnormal development of the retina and vision problems in children.</p>\n<p><strong>Extraedge:</strong></p><p>PAX6 is the key regulatory gene for eye development.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Genes involved in the differentiation of retinal neuroepithelium are all except:", "options": [{"label": "A", "text": "CHX10", "correct": false}, {"label": "B", "text": "MITF", "correct": false}, {"label": "C", "text": "PAX 6", "correct": true}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "C. PAX 6", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>PAX 6 PAX 6 is involved in the formation of optic vesicles. Optic cup and lens development require Pax6 expression in the early optic vesicle during a narrow time window. It acts as a \"master control\" gene for the development of eyes and other sensory organs, certain neural and epidermal tissues as well as other homologous structures, usually derived from ectodermal tissues.</p>\n<p><strong>Highyeild:</strong></p><p>PAX6 is expressed on the surface and neuroectoderms at an early stage, then in the differentiating cells in the cornea, lens, ciliary body, and retina through development. PAX6 may play a role in determining cell fate in the morphogenesis of various human ocular tissues. The optic cup formation process is regulated by interactive signals between the optic vesicle and surrounding mesenchyme and the overlying surface ectoderm in the lens-forming region. PAX6 acts in the surface ectoderm to regulate lens development</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option B. MITF is responsible for pigment epithelium differentiation of neuroepithelium Option A .CHX10 is responsible for neural retinal differentiation of neuroepithelium Option D . cannot be the answer to the above question These genes play an important role in the development of eye and vision.</p>\n<p><strong>Extraedge:</strong></p><p>Fibroblast growth factors (FGFs) from the surface ectoderm promote differentiation of the neural (inner layer) retina, whereas transforming growth factor B (TGF-B), secreted by surrounding mesenchyme, directs the formation of the pigmented (outer) retinal layer. Differentiation of the lens depends on PAX6, although the gene is not responsible for inductive activity by the optic vesicle.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most common location of thyroglossal cyst:", "options": [{"label": "A", "text": "Subhyoid", "correct": true}, {"label": "B", "text": "foramen cecum", "correct": false}, {"label": "C", "text": "in front and below the thyroid", "correct": false}, {"label": "D", "text": "mediastinum", "correct": false}], "correct_answer": "A. Subhyoid", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Subhyoid Subhyoid (60%)is the most common site of the thyroglossal cyst and is treated by Sistrunk operation.</p>\n<p><strong>Highyeild:</strong></p><p>A thyroglossal cyst may lie at any point along the migratory pathway of the thyroid gland but is always near or in the midline of the neck. It is a cystic remnant of the thyroglossal duct. Although approximately 50% of these cysts are close to or just inferior to the body of the hyoid bone. Sometimes, a thyroglossal cyst is connected to the outside by a fistulous canal, a thyroglossal fistula. Such a fistula usually arises secondarily after the rupture of a cyst but may be present at birth.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Other locations of thyroglossal cyst include b) foramen cecum (2%), in front and below thyroid (13%) d) mediastinal being a site of ectopic thyroid. Ectopic thyroid can be an abnormal position of the thyroid gland anywhere along the path of the thyroglossal duct.</p>\n<p><strong>Extraedge:</strong></p><p>Aberrant thyroid tissue may be found anywhere along the path of descent of the thyroid gland. It is commonly found in the base of the tongue, just behind the foramen cecum, and is subject to the same diseases as the thyroid gland itself.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the tongue muscle not which doesn’t develop from occipital somites:", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "B", "correct": true}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "B. B", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1683682707160-QTDA084012IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>B B - palatoglossus - 4th pharyngeal arch. Palatoglossus is the only tongue muscle derived from the fourth branchial arch.</p>\n<p><strong>Highyeild:</strong></p><p>Tongue muscles probably differentiate in situ, but most are derived from myoblasts originating in occipital somites. Thus, tongue musculature is innervated by the hypoglossal nerve.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A - styloglossus Option C - hyoglossus Option D – genioglossus Palatoglossus is the only tongue muscle derived from the fourth branchial arch. All the other muscles of the tongue derive from the occipital myotomes. This is the reason that all the other tongue muscles receive innervation from the twelfth cranial nerve (hypoglossal nerve) except the palatoglossus muscle, which is innervated by the tenth cranial nerve (vagus nerve). Genioglossus is the main intrinsic muscle of the tongue responsible for tongue movements.</p>\n<p><strong>Extraedge:</strong></p><p>Palatoglossus arises from the palatine aponeurosis of the soft palate , where it is continuous with the muscle of the opposite side, and passes downward, forward, and lateral ward in front of the palatine tonsil, is inserted into the side of the tongue, some of its fibers spreading over the dorsum, and others passing deeply into the substance of the organ to intermingle with the transverse muscle of the tongue.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Tip of tongue drains into:", "options": [{"label": "A", "text": "Occipital Lymph Node", "correct": false}, {"label": "B", "text": "Submental lymph node", "correct": true}, {"label": "C", "text": "Deep cervical lymph node", "correct": false}, {"label": "D", "text": "Tonsillar lymph node", "correct": false}], "correct_answer": "B. Submental lymph node", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Submental lymph node So, these lymph nodes get enlarged in case of cancer of the tip of the tongue.</p>\n<p><strong>Highyeild:</strong></p><p>The lymphatics emerging from the tongue are grouped into the following four sets: Apical vessels: They drain the tip and inferior surface of the tongue into submental lymph nodes after piercing the mylohyoid muscle. Their efferents go to the submandibular nodes mainly, some cross the hyoid bone to reach the jugulo-omohyoid nodes. Marginal vessels: They drain the marginal portions of the anterior two-third of the tongue—unilaterally into submandibular lymph nodes and then to the lower deep cervical lymph nodes , including jugulo-omohyoid. Central vessels: They drain the central portion of the anterior two-third of the tongue (i.e., the area within 0.5 inches on either side of midline). They pass vertically downwards in the midline of the tongue between the genioglossus muscles and then drain bilaterally into the deep cervical lymph nodes . Basal vessels: They drain the root of the tongue and posterior one-third of the tongue bilaterally into upper deep cervical lymph nodes, including jugulodigastric . Lymphatic drainage of Tongue</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A. Occipital Lymph Node The occipital group of nodes drains to the sternocleidomastoid nodes or accessory nodes via efferent vessels. The superficial and deep occipital lymph nodes receive lymphatic drainage from the posterior aspect of the scalp, the skin of the upper neck, and a portion of the deep layers of the neck which borders on the occipital region. Option C. Deep cervical lymph node Deep cervical nodal groups drain the efferent lymphatics from the occipital, retro-auricular, occipital, and parietal scalp nodes. It receives direct drainage from the skin of the lateral and posterior neck and shoulder, the nasopharynx, the oropharynx, and the thyroid gland . Option D . Tonsillar lymph node Tonsillar lymph nodes drain tonsils and posterior pharynx.</p>\n<p><strong>Extraedge:</strong></p><p>The mucosa of the pharyngeal part of the dorsal surface of the tongue contains many lymphoid follicles aggregated into dome-shaped groups: the lingual tonsils.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following demarcates the anterior 2/3rd from the posterior 1/3rd of the tongue?", "options": [{"label": "A", "text": "Circumvallate Papillae", "correct": false}, {"label": "B", "text": "Filiform papillae", "correct": false}, {"label": "C", "text": "Sulcus terminalis", "correct": true}, {"label": "D", "text": "Passavant’s ridge", "correct": false}], "correct_answer": "C. Sulcus terminalis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Sulcus terminalis It is the junction between anterior 2/3rd and posterior 1/3rd of the tongue and circumvallate papillae are also present anterior to this junction.</p>\n<p><strong>Highyeild:</strong></p><p>The dorsal mucosa of the tongue has a longitudinal median sulcus and is covered by filiform, fungiform, and circumvallate papillae. The dorsal epithelium consists of a superficial stratified squamous epithelium, which varies from non-keratinized stratified squamous epithelium posteriorly, to fully keratinized epithelium overlying the filiform papillae more anteriorly. Dorsum of Tongue</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A. Circumvallate Papillae Circumvallate papillae : Also known as vallate papillae, 7-11 of these are located on the backside of your tongue, anterior to sulcus terminalis containing over 100 taste buds each . Option B. Filiform papillae Filiform papillae are found in large numbers across the tongue’s surface. They are cone-shaped structures that don’t contain taste buds, so have no taste function. Each papilla has brush-like structures called secondary papillae projecting from its tip. They are abrasive giving the tongue a cleaning, rasping action and helping grip food. Filiform papillae give the tongue a velvety or furry appearance. Option D. Passavant’s ridge The Passavant cushion or ridge is a small prominence in the posterior pharynx, formed from a focal bulge of the superior pharyngeal constrictor muscles during swallowing. The \"cushion\" opposes the soft palate during the act of swallowing and is part of the seal between the soft palate and pharynx that prevents nasopharyngeal reflux.</p>\n<p><strong>Extraedge:</strong></p><p>The tongue and the floor of the mouth are supplied chiefly by the lingual artery, which arises from the anterior surface of the external carotid artery. It passes between the hyoglossus and the middle constrictor of the pharynx to reach the floor of the mouth, accompanied by the lingual veins and the glossopharyngeal nerve.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Waldeyer’s ring is formed by all, except:", "options": [{"label": "A", "text": "Palatine Tonsil", "correct": false}, {"label": "B", "text": "Pharyngeal tonsil", "correct": false}, {"label": "C", "text": "Tubal tonsil", "correct": false}, {"label": "D", "text": "Postauricular nodes", "correct": true}], "correct_answer": "D. Postauricular nodes", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Postauricular nodes The Waldeyer’s ring is formed by: Pharyngeal tonsil (nasopharyngeal tonsil), postero-superiorly. Lingual tonsil, anteroinferiorly. Tubal and palatine tonsils, laterally.</p>\n<p><strong>Highyeild:</strong></p><p>Waldeyer’s ring prevents the invasion of microorganisms from entering the air and food passages and this helps in the defense mechanism of the respiratory and alimentary systems. Waldeyer’s ring</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A. Palatine Tonsil, Option B. Pharyngeal tonsil, and Option C. Tubal tonsil all lead to the formation of Waldeyer’s ring.</p>\n<p><strong>Extraedge:</strong></p><p>Waldeyer’s ring: These lymphatics can get infected during childhood. The aggregations of lymphoid tissue underneath the epithelial lining of the pharyngeal wall called tonsils, surround the commencement of air and food passages. These aggregations together constitute an interrupted circle called Waldeyer’s ring, which forms the special feature of the interior of the pharynx.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

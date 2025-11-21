@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Spinal Cord Disorder (Part 1)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Spinal Cord Disorder (Part 1)</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                8 Questions | 8 Total Marks | 18 min Duration | ~135.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 8 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 18 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 8</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Spinal Cord Disorder (Part 1) - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 8</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 8 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 62-year female is being evaluated for gait difficulty and Spondylotic myelopathy is suspected. Which of the following imaging usually gives the diagnosis?", "options": [{"label": "A", "text": "MRI", "correct": true}, {"label": "B", "text": "Plain x-rays", "correct": false}, {"label": "C", "text": "CT Scan without contrast", "correct": false}, {"label": "D", "text": "CECT", "correct": false}], "correct_answer": "A. MRI", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>MRI Diagnosis of Spondylotic Myelopathy is usually made by Extrinsic cord compression and deformation are appreciated on axial MRI views , and T2-weighted sequences may reveal areas of high signal intensity within the cord adjacent to the site of compression.</p>\n<p><strong>Highyeild:</strong></p><p>Spondylotic myelopathy- One of the most common causes of chronic cord compression and gait difficulty in the elderly. The diagnosis should be considered in appropriate cases of progressive cervical myelopathy, paresthesias of the feet and hands, or wasting of the hands. Symptoms Neck and shoulder pain with stiffness (Early) Radicular arm pain- Due to Impingement of bone and soft tissue overgrowth on nerve roots Most common in C5, C6. Asymmetric Slowly progressive spastic paraparesis- Compression of the cervical cord accompanied by paresthesias in the feet and hands. Vibratory sense is diminished in the legs Romberg sign Sensory level for vibration or pinprick on the upper thorax Coughing or straining produces leg weakness or radiating arm or shoulder pain. Dermatomal sensory loss in the arms atrophy of intrinsic hand muscles Increased deep tendon reflexes in the legs , extensor plantar response. A tendon reflex in the arms is often diminished at some level; most often at the biceps (C5-C6). Advanced cases Urinary urgency or In individual cases, radicular, myelopathic, or combined signs may predominate. Diagnosis- MRI - Axial MRI views- Extrinsic cord compression and deformation T2-weighted sequences areas of high signal intensity within the cord adjacent to the site of CT -Diagnosis may be suspected from CT Images. Radiograph-no role. Treatment- A cervical collar may be helpful in milder cases, but the likelihood of progression of medically treated myelopathy is high , Definitive therapy- Surgical decompression, posterior laminectomy Anterior approach with resection of the protruded disk and bony material.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option B. Plain x-rays are less helpful. Options C & D. Diagnosis may be suspected from CT Images. But , MRI is better.</p>\n<p><strong>Extraedge:</strong></p><p>Intramedullary tumours- Ependymomas Hemangioblastomas Low-grade astrocytomas Secondary (metastatic) intramedullary tumours (Rare) Intradural-Extramedullary tumours- Meningioma Schwannoma Extradural (epidural): Metastatic involvement of vertebral bodies. Lung cancer, breast carcinoma, thyroid carcinoma, and renal cell carcinoma are common sites of primary that metastasize to vertebral bodies. Primary vertebral body tumours (less common) Osteoma, Osteogenic sarcoma, Chondroma, Chondrosarcoma, Chordoma</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the mode of inheritance in cases of slowly progressive myelopathy?", "options": [{"label": "A", "text": "Autosomal dominant", "correct": false}, {"label": "B", "text": "Autosomal recessive", "correct": false}, {"label": "C", "text": "X-linked", "correct": false}, {"label": "D", "text": "All of the Above", "correct": true}], "correct_answer": "D. All of the Above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the Above</p>\n<p><strong>Highyeild:</strong></p><p>HEREDITARY SPASTIC PARAPLEGIA- Many cases of slowly progressive myelopathy are genetic in origin Autosomal dominant Autosomal recessive X-linked forms. Especially for the recessive and X-linked forms , a family history of myelopathy may be lacking. Most patients present with almost imperceptibly progressive spasticity and weakness in the legs, usually but not always symmetrical. Sensory symptoms and signs are absent or mild, but sphincter disturbances may be present. In some families, additional neurologic signs are prominent, including nystagmus, ataxia, or optic atrophy. The onset may be as early as the first year of life or as late as middle adulthood. Only symptomatic therapies are available.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Options A, B, and C. All three modes of inheritance are found in slowly progressive myelopathy.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All can cause compressive myelopathy except:", "options": [{"label": "A", "text": "Epidural neoplasm", "correct": false}, {"label": "B", "text": "Cervical lymphadenopathy", "correct": false}, {"label": "C", "text": "Herniated disc", "correct": false}, {"label": "D", "text": "Multiple sclerosis", "correct": true}], "correct_answer": "D. Multiple sclerosis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Multiple sclerosis All of the above condition can lead to a mass like effect on spinal cord causing compressive myelopathy. whereas,  In multiple sclerosis , patches of myelin and underlying nerve fibers in the brain, optic nerves, and spinal cord are damaged or destroyed i.e. pathology for myelopathy is intrinsi c to the cord and not due to any mass lesion causing compressive myelopathy.</p>\n<p><strong>Highyeild:</strong></p><p>Treatable Spinal Cord Disorders Compressive Epidural, intradural, or intramedullary neoplasm Epidural abscess Epidural haemorrhage Cervical spondylosis Herniated disk Posttraumatic compression by fractured or displaced vertebra or haemorrhage Vascular Arteriovenous malformation and dural fistula Antiphospholipid syndrome and other hypercoagulable states Inflammatory Multiple sclerosis Neuromyelitis Optica Sarcoidosis Systemic immune-mediated disorders: SLE , Sjögren’s , Behcet’s disease, APL antibody syndrome , others vasculitis Other CNS disorders : anti-MOG, anti-GFAP, paraneoplastic , CLIPPERS, Erdheim-Chester Infectious Viral: VZV, HSV-1 and 2, CMV, HIV, HTLV-1 , others Bacterial and mycobacterial: Borrelia, Listeria, syphilis , others Mycoplasma pneumonia Parasitic : schistosomiasis, toxoplasmosis, cysticercosis Developmental Syringomyelia Meningomyelocele Tethered cord syndrome Metabolic Vitamin B12 deficiency (subacute combined degeneration) Folate deficiency Copper deficiency</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Options A, B, and C can cause Compressive Myelopathy.</p>\n<p><strong>Extraedge:</strong></p><p>Distinguishing compressive from non compressive myelopathy The first priority is to exclude treatable compression of the cord by a mass lesion. The common causes are tumor , epidural abscess or hematoma , herniated disk, and spondylotic vertebral pathology. Epidural compression due to malignancy or abscess often causes warning signs of neck or back pain, bladder disturbances, and sensory symptoms that precede the development of paralysis. Spinal subluxation, hemorrhage , and noncompressive etiologies such as infarction are more likely to produce myelopathy without antecedent symptoms. MRI with gadolinium, centered on the clinically suspected level, is the initial diagnostic procedure if it is available; it is often appropriate to image the entire spine (cervical through sacral regions) to search for additional clinically silent lesions. Once compressive lesions have been excluded, noncompressive causes of acute myelopathy that are intrinsic to the cord are considered, primarily vascular, inflammatory, and infectious etiology.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 25-year-old female presented to OPD with back pain. MRI finding of the patient is shown below, identify the type of lesion:", "options": [{"label": "A", "text": "Intramedullary astrocytoma", "correct": true}, {"label": "B", "text": "Epidural metastasis", "correct": false}, {"label": "C", "text": "Cervical spondylosis", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Intramedullary astrocytoma", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1683855336448-QTDM132012IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Intramedullary astrocytoma Sagittal T1-weighted post-contrast Image through the cervical spine demonstrates the expansion of the upper cervical spine by a mass lesion emanating from within the spinal cord at the cervicomedullary junction. Irregular peripheral enhancement occurs within the mass (arrows).</p>\n<p><strong>Highyeild:</strong></p><p>Primary intramedullary tumours of the spinal cord - Uncommon Present as Central cord or hemicord syndromes , often in the cervical region. Poorly localised burning pain in the extremities and sparing of sacral sensation. Types- Ependymomas Hemangioblastomas Low-grade astrocytomas Secondary (metastatic) intramedullary tumours (Rare) Treatment- Intramedullary ependymoma- Microsurgical Complete resection Intramedullary astrocytoma Debulking adjunctive radiotherapy and chemotherapy are uncertain.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option B. Epidural metastasis - there is no epidural swelling in the given MRI finding. Option C. Cervical spondylosis -No spondylosis in the given image. Cervical spondylosis is a general term for age-related wear and tear affecting the spinal discs in your neck. As the disks dehydrate and shrink, signs of osteoarthritis develop, including bony projections along the edges of bones.</p>\n<p><strong>Extraedge:</strong></p><p>Intramedullary tumours- Ependymomas Hemangioblastomas Low-grade astrocytomas Secondary (metastatic) intramedullary tumours (Rare) Intradural-Extramedullary tumours- Meningioma Schwannoma Extradural (epidural): Metastatic involvement of vertebral bodies. Lung cancer, breast carcinoma, thyroid carcinoma, and renal cell carcinoma are common sites of primary that metastasize to vertebral bodies. Primary vertebral body tumours (less common) Osteoma, Osteogenic sarcoma, Chondroma, Chondrosarcoma, Chordoma</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 40 yrs male with a history of deep venous thrombosis on warfarin suddenly developed pain in the back of the neck and radicular pain. Pt present INR is 6. The MRI film is shown below: What is your diagnosis?", "options": [{"label": "A", "text": "Spinal epidural hematoma", "correct": true}, {"label": "B", "text": "Epidural metastasis", "correct": false}, {"label": "C", "text": "Cervical spondylosis", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Spinal epidural hematoma", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1683855336498-QTDM132014IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Spinal epidural hematoma The above clinical scenario is suggestive of pt with warfarin with raised INR leading to bleeding tendency. The t2 w MRI shows the spinal epidural hematoma.</p>\n<p><strong>Highyeild:</strong></p><p>Haemorrhage into the epidural (or subdural) space - Predisposing Factors- Therapeutic anticoagulation Trauma Tumour Blood dyscrasias Presentation- acute focal or radicular pain followed by variable signs of a spinal cord or conus medullaris disorder. Diagnosis- MRI and CT confirm the clinical suspicion the extent of the bleeding. Treatment prompt reversal of any underlying clotting disorder surgical decompression Patients with some preservation of motor function preoperatively have a better recovery. Complications- Rare cases complicate lumbar puncture or epidural anaesthesia. Because of the risk of haemorrhage , lumbar puncture should be avoided whenever possible in patients with severe thrombocytopenia or other coagulopathies.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option B. Epidural metastasis- No history s/o malignancy rules out option B Option C. Cervical spondylosis -No spondylosis in the given image. Cervical spondylosis is a general term for age-related wear and tear affecting the spinal discs in your neck. As the disks dehydrate and shrink, signs of osteoarthritis develop, including bony projections along the edges of bones.</p>\n<p><strong>Extraedge:</strong></p><p>Intramedullary tumours- Ependymomas Hemangioblastomas Low-grade astrocytomas Secondary (metastatic) intramedullary tumours (Rare) Intradural-Extramedullary tumours- Meningioma Schwannoma Extradural (epidural): Metastatic involvement of vertebral bodies. Lung cancer, breast carcinoma, thyroid carcinoma, and renal cell carcinoma are common sites of primary that metastasize to vertebral bodies. Primary vertebral body tumours (less common) Osteoma, Osteogenic sarcoma, Chondroma, Chondrosarcoma, Chordoma</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28 yrs male with a history of road traffic accidents, presented with the complaint of back pain. MRI is shown below: What is your diagnosis?", "options": [{"label": "A", "text": "Epidural metastasis", "correct": false}, {"label": "B", "text": "Cervical spondylosis", "correct": false}, {"label": "C", "text": "Hematomyelia", "correct": true}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "C. Hematomyelia", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1683855336530-QTDM132015IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hematomyelia MRI shows an Intramedullary hyperintense lesion after trauma (bleeding-Hematomyelia).</p>\n<p><strong>Highyeild:</strong></p><p>Hematomyelia- Haemorrhage into the substance of the spinal cord ( Intramedullary) Causes- Trauma Intraparenchymal vascular malformation Vasculitis polyarteritis nodosa systemic lupus erythematosus (SLE), Bleeding disorders Neoplasm Clinical features- Acute painful transverse myelopathy. Complications- With large lesions, extension into the subarachnoid space results in subarachnoid haemorrhage. Diagnosis MRI or CT. Treatment Supportive Surgical intervention NOT useful. Exception due to an underlying vascular malformation spinal angiography and endovascular occlusion Surgery to evacuate the clot and remove the underlying vascular lesion.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A. Epidural metastasis- No history s/o malignancy rules out option B Option B. Cervical spondylosis -No spondylosis in the given image. Cervical spondylosis is a general term for age-related wear and tear affecting the spinal discs in your neck. As the disks dehydrate and shrink , signs of osteoarthritis develop, including bony projections along the edges of bones.</p>\n<p><strong>Extraedge:</strong></p><p>Intramedullary tumours- Ependymomas Hemangioblastomas Low-grade astrocytomas Secondary (metastatic) intramedullary tumours (Rare) Intradural-Extramedullary tumours- Meningioma Schwannoma Extradural (epidural): Metastatic involvement of vertebral bodies. Lung cancer, breast carcinoma, thyroid carcinoma, and renal cell carcinoma are common sites of primary that metastasize to vertebral bodies. Primary vertebral body tumours (less common) Osteoma, Osteogenic sarcoma, Chondroma, Chondrosarcoma, Chordoma</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An 18-year-old male complains of numbness and paresthesia of hands & feet with progressive ataxia. There is a loss of proprioception & vibration sense. Genetic studies revealed nucleotide defeat inherited in autosomal recessive patterns. What can be the defect?", "options": [{"label": "A", "text": "CAG", "correct": false}, {"label": "B", "text": "CGG", "correct": false}, {"label": "C", "text": "GAA", "correct": true}, {"label": "D", "text": "CTG", "correct": false}], "correct_answer": "C. GAA", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>GAA Progressive ataxia , loss of Proprioception and vibration sense( Posterior column involvement) in < 25-year-old point towards a diagnosis of Friedreich’s ataxia, which is inherited in Autosomal recessive pattern and the defect is GAA trinucleotide repeat.</p>\n<p><strong>Highyeild:</strong></p><p>Friedreich’s Ataxia- A most common form of inherited ataxia , comprising one-half of all hereditary ataxias. Classic form association with a genetically determined vitamin E deficiency syndrome presents before 25 years of age Clinical features- progressive staggering gait, frequent falling, and titubation. The lower extremities are more severely involved than the upper Dysarthria occasionally is the presenting symptom rarely, progressive scoliosis, foot deformity, nystagmus, or cardiopathy is the initial sign. Neurologic examination- Nystagmus, loss of fast saccadic eye movements, truncal titubation , dysarthria, dysmetria, and ataxia of trunk and limb movements. Extensor plantar responses (with normal tone in trunk and extremities), absence of deep tendon reflexes , and weakness ( greater distally than proximally) are usually found. Loss of vibratory and proprioceptive sensation occurs. The median age of death is 35 years . Women have a significantly better prognosis than men. Associations- Cardiac involvement occurs in 90% of patients. myocyte hypertrophy and fibrosis Diabetes mellitus A high incidence (20%) Insulin resistance and pancreatic β-cell dysfunction . Musculoskeletal deformities are common pes cavus, pes equinovarus, and scoliosis. MRI The spinal cord shows Treatment : Idebenone a free-radical scavenger can improve myocardial hypertrophy , no current evidence, however, that it improves neurologic function. glutamate antagonist riluzole may oﬀer modest benefit. Iron chelators and antioxidant drugs are potentially harmful Increase heart muscle injury.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - None of the other options are inherited in Autosomal recessive form. Option A. Trinucleotide CAG repeat causes Huntigtons disease which is inherited in the Autosomal dominant pattern . Option B. Trinucleotide CGG repeat causes Fragile X syndrome which is inherited in the X-linked recessive pattern . Option D. CTG causes Myotonic dystrophy which is inherited in the Autosomal dominant pattern .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A child is born with the following defect at the hospital. Name the neural tube defect:", "options": [{"label": "A", "text": "Meningocele", "correct": false}, {"label": "B", "text": "Spina bifida occulta", "correct": false}, {"label": "C", "text": "Craniorachischisis", "correct": false}, {"label": "D", "text": "Myelomeningocele", "correct": true}], "correct_answer": "D. Myelomeningocele", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1683855336549-QTDM132022IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Myelomeningocele The child has a protruding sac on the back which contains some nervous tissue as well suggesting a Myelomeningocele.</p>\n<p><strong>Highyeild:</strong></p><p>Myelomeningocele- One of the most common and most severe forms of spina bifida. The spinal cord and the tissues covering it protrude from an opening in the back. Since it occurs because the bones of the vertebral column are not formed completely , the person has partial or complete paralysis in the regions below the affected part. Thus, movements of limbs, as well as bowel and bladder functions are affected. Children with this disorder can develop hydrocephalus , a condition where excessive fluid accumulates in the brain, which might cause mild-to-severe intellectual and learning disabilities.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A. Meningocele-Sac of fluid not involving the spinal cord comes out through an opening in the back. The sac is lined by the meninges. Option B. Spina bifida occulta-Mildest form. Where there is a small gap in the spine but the opening cannot be seen in the Brain and spinal cord functions are normal and there is no disability. Option C. Craniorachischisis -entire brain and spinal cord are exposed.</p>\n<p><strong>Extraedge:</strong></p><p>Spina bifida occulta (closed spinal dysraphism) is a failure of closure of one or several vertebral arches posteriorly; the meninges and spinal cord are normal. A dimple or small lipoma may overlie the defect, but the skin is intact. Most cases are asymptomatic and discovered incidentally during a physical examination for back pain.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

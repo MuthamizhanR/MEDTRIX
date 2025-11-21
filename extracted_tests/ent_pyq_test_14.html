@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>ENT - NEET PG 2018</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">ENT - NEET PG 2018</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                6 Questions | 6 Total Marks | 16 min Duration | ~160.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 6 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 16 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 6</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">ENT - NEET PG 2018 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 6</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 6 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "High tracheostomy is done in a patient with consideration of the following in future?", "options": [{"label": "A", "text": "Diphtheria infection", "correct": false}, {"label": "B", "text": "Ca larynx", "correct": true}, {"label": "C", "text": "Papillomatosis", "correct": false}, {"label": "D", "text": "Vocal polyps", "correct": false}], "correct_answer": "B. Ca larynx", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ca larynx Laryngeal carcinoma is an indication for high tracheostomy.</p>\n<p><strong>Highyeild:</strong></p><p>Tracheostomy is making an opening in the anterior wall of trachea and converting it into a stoma on the skin surface. Sometimes, the term tracheotomy has been interchangeably used but the latter actually means opening the trachea, which is a step in the tracheostomy operation. Types of Tracheostomy Emergency tracheostomy Elective or tranquil tracheostomy Permanent tracheostomy Percutaneous dilatational tracheostomy Mini tracheostomy (cricothyroidotomy) It has also been divided into high, mid or low. A high tracheostomy is done above the level of thyroid isthmus (isthmus lies against II, III and IV tracheal rings). It violates the first ring of trachea. Tracheostomy  at  this site can cause perichondritis of the cricoid cartilage and subglottic stenosis and is always avoided. Only indication for high tracheostomy is carcinoma of larynx because in such cases, total larynx anyway would ultimately be removed and a fresh tracheostome made in a clean area lower down. A mid tracheostomy is the preferred one and is done through the II or III ring and would entail division of the thyroid isthmus or its retraction upwards or downwards to expose this part of trachea. A low tracheostomy is done below the level of isthmus. Trachea is deep at this level and close to several large vessels; also there are difficulties with tracheostomy tube which impinges on suprasternal notch.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- OPTION A- In acute diphtheria mid tracheostomy may be done. OPTION C- In papillomatosis low tracheostomy may be done. OPTION D- In vocal polyp tracheostomy may not be needed at all.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Stimulater of auditory brainstem implant is placed in:", "options": [{"label": "A", "text": "Recess of 4th ventricle", "correct": true}, {"label": "B", "text": "Scala tympanum", "correct": false}, {"label": "C", "text": "Oval window", "correct": false}, {"label": "D", "text": "EAC", "correct": false}], "correct_answer": "A. Recess of 4th ventricle", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Recess of 4th ventricle Implant in auditory brainstem implant is placed in lateral recess of 4th ventricle.</p>\n<p><strong>Highyeild:</strong></p><p>Auditory brainstem implant (ABI) This implant is designed to stimulate the cochlear nuclear complex in the brainstem directly by placing the implant in the lateral recess of the fourth ventricle. Such an implant is needed when CN VIII has been severed in surgery of vestibular schwannoma. In these cases, cochlear implants are obviously of no use. In unilateral acoustic neuroma, ABI is not necessary as hearing is possible from the contralateral side but in bilateral acoustic neuromas as in NF2, rehabilitation is required by ABI. Brainstem implant is similar to ‘Nucleus’ multichannel cochlear implant except that the multielectrode array is attached to a Dacron mesh, which is placed on the brainstem. Receiver/ stimulator has a removable magnet so that MRI can be safely performed in such cases if need arises.</p>\n<p><strong>Extraedge:</strong></p><p>ABIs help in communication, awareness and recognition of environmental sounds; however, they are not as efficient as multichannel cochlear implants. Only limited numbers of such implants have been performed in the world and are under constant technological developments.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the tensor of vocal cords?", "options": [{"label": "A", "text": "Posterior crico arytenoids", "correct": false}, {"label": "B", "text": "Lateral cricoarytenoid", "correct": false}, {"label": "C", "text": "Thyroarytenoids", "correct": false}, {"label": "D", "text": "Cricothyroid", "correct": true}], "correct_answer": "D. Cricothyroid", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cricothyroid Out of the given options cricothyroid muscle is the tensor of vocal cords.</p>\n<p><strong>Highyeild:</strong></p><p>Muscles of Larynx They are of two types—intrinsic, which attach laryngeal cartilages to each other and extrinsic, which attach larynx to the surrounding structures. Intrinsic muscles: They may act on vocal cords or laryngeal inlet. ▪   Acting on vocal cords –  Abductors: Posterior cricoarytenoid –  Adductors: Lateral cricoarytenoid, interarytenoid (trans- verse arytenoid), thyroarytenoid (external part) –  Tensors: Cricothyroid, vocalis (internal part of thyroarytenoid) ▪   Acting on laryngeal inlet – Openers of laryngeal inlet: Thyroepiglottic (part of thyroarytenoid) – Closers of laryngeal inlet: Interarytenoid (oblique part), aryepiglottic (posterior oblique part of interarytenoid) Extrinsic muscles: They connect the larynx to the neighbouring structures and are divided into elevators or depressors of larynx. ▪ Elevators: Primary elevators act directly as they are attached to the thyroid cartilage and include stylopharyngeus, salpingopharyngeus, palatopharyngeus and thyrohyoid. Secondary elevators act indirectly as they are attached to the hyoid bone and include mylohyoid (main), digastric, stylohyoid and geniohyoid. ▪ Depressors: They include sternohyoid, sternothyroid and omohyoid.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- OPTION A- Posterior cricoarytenoid are abductors of vocal cords. OPTION B- Lateral cricoarytenoids are adductors of vocal cords. OPTION C- Thyroarytenoids are also adductors of vocal cords.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "MC fungus causing orbital cellulitis in diabetic patients is?", "options": [{"label": "A", "text": "Mucor", "correct": true}, {"label": "B", "text": "Rhizopus", "correct": false}, {"label": "C", "text": "Aspergillus", "correct": false}, {"label": "D", "text": "Candida", "correct": false}], "correct_answer": "A. Mucor", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Mucor Most common fungus causing orbital cellulitis in diabetic patients is mucor.</p>\n<p><strong>Highyeild:</strong></p><p>Mucormycosis: It is a fungal infection of nose and paranasal sinuses which may prove rapidly fatal. It is seen in uncontrolled diabetics or in those taking immunosuppressive drugs. From the nose and sinuses, infection can spread to orbit, cribriform plate, meninges and brain. The rapid destruction associated with the disease is due to affinity of the fungus to invade the arteries and cause endothelial damage and thrombosis. Typical finding is the presence of a black necrotic mass filling the nasal cavity and eroding the septum and hard palate. Special stains help to identify the fungus in tissue sections. Treatment is by amphotericin B and surgical debridement of the affected tissues and control of underlying predisposing cause. Mucormycosis must be suspected in all diabetic patients, particularly those in ketoacidosis, and any debilitated or immunocompromised individual with multiple cranial nerve palsies with or without proptosis. It requires immediate hospitalization because this is a rapidly progressive and possibly life-threatening disease and the treatment is complex both medical and surgical and must be conducted in a multidisciplinary team.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Water’s view is used for:", "options": [{"label": "A", "text": "Maxillary sinus", "correct": true}, {"label": "B", "text": "Frontal sinus", "correct": false}, {"label": "C", "text": "Sphenoid sinus", "correct": false}, {"label": "D", "text": "Ethmoid sinus", "correct": false}], "correct_answer": "A. Maxillary sinus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Maxillary sinus Water’s view is used to best obtain diagnostic information of the maxillary sinus.</p>\n<p><strong>Highyeild:</strong></p><p>Water’s / occipitomental view or nose-chin position. It is taken in such a way that nose and chin of the patient touch the film while X-ray beam is projected from behind. Waters’ view with open mouth is preferred as it also shows sphenoid sinus. In this view, petrous bones are projected below the maxillary antra. Structures seen are: (a) Maxillary sinuses (seen best). (b) Frontal sinuses. (c) Sphenoid sinus (if the film is taken with open mouth). (d) Zygoma. (e) Zygomatic arch.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- OPTION B- Frontal sinus is best viewed on caldwell’s view. OPTION C- Sphenoid sinus is best viewed on Hirtz view. OPTION D- Ethmoid sinus is best viewed on Rhese’s view.</p>\n<p><strong>Extraedge:</strong></p><p>Maxillary sinus (antrum of highmore): It is the largest of paranasal sinuses and occupies the body of maxilla. It is pyramidal in shape with base towards lateral wall of nose and apex directed laterally into the zygomatic process of maxilla and sometimes in the zygomatic bone itself. On an average, maxillary sinus has a capacity of 15 mL in an adult. It is 33 mm high, 35 mm deep     and 25 mm wide.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Tracheostomy is indicated in all except?", "options": [{"label": "A", "text": "Vocal cord replacement", "correct": false}, {"label": "B", "text": "Pharynx replacement", "correct": false}, {"label": "C", "text": "Tracheomalacia", "correct": true}, {"label": "D", "text": "Foreign body obstructing airway", "correct": false}], "correct_answer": "C. Tracheomalacia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Tracheomalacia Indications for tracheostomy Respiratory obstruction ▪   Infections –  Acute laryngo-tracheo-bronchitis, acute epiglottitis, diphtheria –  Ludwig’s angina, peritonsillar, retropharyngeal or para- pharyngeal abscess, tongue abscess ▪   Trauma –  External injury of larynx and trachea –  Trauma due to endoscopies especially in infants and children –  Fractures of mandible or maxillofacial injuries ▪ Neoplasms: Benign and malignant neoplasms of larynx, pharynx, upper trachea, tongue and thyroid ▪   Foreign body larynx ▪   Edema larynx due to steam, irritant fumes or gases, allergy (angioneurotic or drug sensitivity), radiation ▪   Bilateral abductor paralysis ▪   Congenital anomalies–laryngeal web, cysts, tracheoesophageal fistula–bilateral choanal atresia Retained secretions ▪   Inability to cough –  Coma of any cause, e.g. head injuries, cerebrovascular accidents, narcotic overdose –  Paralysis of respiratory muscles, e.g. spinal injuries, polio, Guillain–Barre syndrome, myasthenia gravis –  Spasm of respiratory muscles, tetanus, eclampsia, strychnine poisoning ▪   Painful cough chest injuries, multiple rib fractures, pneumonia ▪   Aspiration of pharyngeal secretions bulbar polio, polyneuritis, bilateral laryngeal paralysis Respiratory insufficiency chronic lung conditions, viz. emphysema, chronic bronchitis, bronchiectasis, atelectasis conditions listed in A and B.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

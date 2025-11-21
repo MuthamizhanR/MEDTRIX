@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Pharmacogenetics</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Pharmacogenetics</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                24 Questions | 24 Total Marks | 34 min Duration | ~85.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 24 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 34 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 24</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Pharmacogenetics - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 24</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 24 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Choose the incorrect statement regarding drug absorption:", "options": [{"label": "A", "text": "First-pass metabolism reduces the bioavailability", "correct": false}, {"label": "B", "text": "Highly ionized molecules are absorbed from the stomach", "correct": true}, {"label": "C", "text": "Heparin is not absorbed due to its large size", "correct": false}, {"label": "D", "text": "Most common method of drug absorption is by passive diffusion", "correct": false}], "correct_answer": "B. Highly ionized molecules are absorbed from the stomach", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Highly ionized molecules are absorbed from the stomach High-yield concepts about absorption First-pass metabolism is inversely proportional to bioavailability, so reduces bioavailability Highly ionized molecules are not at all absorbed from the stomach or intestine or any place Heparin is not absorbed due to its large size and it is highly ionized The most common method of drug absorption is by passive diffusion</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is a P glycoprotein inducer?", "options": [{"label": "A", "text": "Rifampicin", "correct": true}, {"label": "B", "text": "Erythromycin", "correct": false}, {"label": "C", "text": "Voriconazole", "correct": false}, {"label": "D", "text": "Ketoconazole", "correct": false}], "correct_answer": "A. Rifampicin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Rifampicin Rifampicin is used for the treatment of tuberculosis in combination with other antibiotics, such as pyrazinamide, isoniazid, and ethambutol. For the treatment of tuberculosis, it is administered daily for at least six months.</p>\n<p><strong>Highyeild:</strong></p><p>Rifampin Rifampin is a semisynthetic derivative of rifamycin, an antibiotic produced by Streptomyces mediterranei. Rifampin binds to the beta subunit of bacterial DNA- dependent RNA polymerase and thereby inhibits RNA synthesis. Rifampin is well absorbed after oral administration and excreted mainly through the liver into bile. It then undergoes enterohepatic recirculation, with the bulk excreted as a deacylated metabolite in feces and a small amount in the urine. Rifampin is distributed widely in body fluids and tissues.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Among the following extent of a drug, absorption is indicated by:", "options": [{"label": "A", "text": "Therapeutic range", "correct": false}, {"label": "B", "text": "Auc", "correct": true}, {"label": "C", "text": "Tmax", "correct": false}, {"label": "D", "text": "T ½", "correct": false}], "correct_answer": "B. Auc", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Auc Auc Area under Curve (AUC) --- Determines extent of absorption</p>\n<p><strong>Highyeild:</strong></p><p>Cmax is the maximum concentration attained by the drug after oral administration Time to peak (Tmax): the time after admin that it takes for the drug to reach cmax. This is an indication of the rate of absorption Both Cmax and Tmax indicate the rate of drug absorption The onset of action: The time required to reach the Minimum Effective Concentration (MEC) following drug administration Minimum Effective Concentration (MEC): minimum plasma concentration of drug required to produce a therapeutic effect. Half-life(t1/2): Time is taken by the body to reduce current Cmax by 50% (same as the time taken to achieve a 50 % increase. At 5 half live period 97% of ANY drug will be eliminated regardless of the initial concentration Therapeutic range: Between Minimum Effective Concentration and Maximum tolerated dose</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Therapeutic range is the range of drug levels in the blood of a patient in which a drug has the desired effects upon the body. It relates to a quantitative benchmark associated with proper dosage levels of prescription medications within the ser Option: D. T ½ pharmacological half-life) is the time taken for the concentration of a biological substance (such as a medication) to decrease from its maximum concentration (Cmax) to half of Cmax in the blood plasma, and is denoted by the abbreviation. This is used to measure the removal of things such as metabolites, drugs, and signaling molecules from the body</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A drug has a very low volume of distribution (Vd). Which of the following is the best explanation?", "options": [{"label": "A", "text": "The drug is eliminated by the kidneys, and the patient has renal insufficiency", "correct": false}, {"label": "B", "text": "The drug is having a large molecular weight", "correct": true}, {"label": "C", "text": "The drug is extensively stored in tissues", "correct": false}, {"label": "D", "text": "The drug is eliminated by zero-order kinetics", "correct": false}], "correct_answer": "B. The drug is having a large molecular weight", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>The drug is having a large molecular weight Factors affecting the volume of distribution (Vd): Low molecular weight drugs have high vd High molecular weight drugs have low vd Plasma protein binding High plasma protein binding decreases vd Low plasma protein binding increases vd Tissue perfusion Decreased tissue perfusion implies decreased vd Water soluble drugs have low vd and lipid-soluble drugs have high vd Tissue binding. High vd with higher tissue binding</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are true about biotransformation except:", "options": [{"label": "A", "text": "It is the chemical alteration of the drug in the body", "correct": false}, {"label": "B", "text": "The metabolites thus formed are more lipid soluble", "correct": true}, {"label": "C", "text": "Occurs Mainly in liver", "correct": false}, {"label": "D", "text": "There are two major phases of biotransformation", "correct": false}], "correct_answer": "B. The metabolites thus formed are more lipid soluble", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>The metabolites thus formed are more lipid soluble</p>\n<p><strong>Highyeild:</strong></p><p>Biotransformation means the chemical alteration of the drug in the body The metabolites thus formed are less lipid soluble and more water-soluble Hence not reabsorbed from the renal tubules and thus are finally excreted. SITES: Mainly in LIVER Other sites: GI tract, Kidney, Lungs, Blood, Skin, Placenta, The classification of biotransformation is given by T.WILLIAMS As PHASE I and PHASE II reaction</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. It is chemical alteration of the drug in the body is a true statement Option: C. Occurs Mainly in the liver is a true statement Option: D. There are two major phases of biotransformation is a true statement</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following statements are true about microsomal enzymes except:", "options": [{"label": "A", "text": "Present In Cytoplasm, and Mitochondria", "correct": true}, {"label": "B", "text": "Most of Phase I and Glucuronide conjugation of Phase II reaction are by microsomal enzymes", "correct": false}, {"label": "C", "text": "These are Inducible", "correct": false}, {"label": "D", "text": "Main enzyme is CYP450", "correct": false}], "correct_answer": "A. Present In Cytoplasm, and Mitochondria", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Present In Cytoplasm, and Mitochondria Difference between microsomal enzymes and non-microsomal enzymes microsomal enzymes Non-microsomal enzymes ●       Present In endoplasmic reticulum ●       Most of Phase I and Phase II [Glucuronide conjugation] ●       Inducible ●       CYP450 ●       Present in Cytoplasm, Mitochondria of liver cells and plasma ●       Most of Phase II and some Phase I [Some oxidation, most reduction and hydrolysis] ●       Not inducible ●       Flavoprotein  oxidases, ●       Flavoprotein esterases, amidases</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statement defines prodrug?", "options": [{"label": "A", "text": "Active drug to an inactive metabolite", "correct": false}, {"label": "B", "text": "Active drug to the active metabolite", "correct": false}, {"label": "C", "text": "Inactive drug to Active metabolite", "correct": true}, {"label": "D", "text": "Inactive metabolite to Active drug", "correct": false}], "correct_answer": "C. Inactive drug to Active metabolite", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Inactive drug to Active metabolite PRODRUG: It is an inactive form of a drug, which is converted to an active form after metabolism. List of prodrugs Inactive drug to Active metabolite: (Prodrug) Levodopa Dopamine Enalapril Enalaprilat - a-Methyldopa - a-methylnorepinephrin Dipevefrine Epinephrine Sulindac Sulfide metabolite Proguanil Cycloguanil - Prednisone Prednisolone Bacampicillin - Ampicillin Sulfasalazine 5-Aminosalicylic acid Cyclophosphamide and Aldophosphamide to phosphoramide mustard, acrolein Fluorouracil Fluoruridine monophosphate Mercaptopurine - Methyl mercaptopurine ribonucleotide Acyclovir - Acyclovir triphosphate</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The conversion of Diazepam to Oxazepam is an example of-", "options": [{"label": "A", "text": "Active drug to an inactive metabolite", "correct": false}, {"label": "B", "text": "Active drug to the active metabolite", "correct": true}, {"label": "C", "text": "Inactive drug to Active metabolite", "correct": false}, {"label": "D", "text": "Active drug toxic metabolite", "correct": false}], "correct_answer": "B. Active drug to the active metabolite", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Active drug to the active metabolite</p>\n<p><strong>Highyeild:</strong></p><p>Diazepam Indication and dose of the drug: SEIZURE DISORDERS: 0.2mg/kg repeat after 4- 12 hrs MUSCLE SPASMS:5-10mg IV/IM initially STATUS EPILEPTICUS: 5-10mg IV/IM not to exceed 30mg Sedation-Midazolam is indicated for the sedation of patients in intensive care settings, including intubated patients receiving mechanical ventilation Anesthesia, general, adjunct</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following are Synthetic reactions in biotransformation except:", "options": [{"label": "A", "text": "Glucuronidation", "correct": false}, {"label": "B", "text": "Acetylation", "correct": false}, {"label": "C", "text": "Methylation", "correct": false}, {"label": "D", "text": "Reduction", "correct": true}], "correct_answer": "D. Reduction", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Reduction The classification of biotransformation is given by R.T.WILLIAMS As PHASE I and PHASE II reaction PHASE I Reactions: Non-synthetic reaction – metabolite may be active or inactive Oxidation: hydroxylation (aromatic and aliphatic) Reduction Hydrolysis Cyclization Decyclization PHASE II Reactions: Synthetic/Conjugation reaction – metabolite is mostly inactive Glucuronidation Acetylation Methylation Sulphate Glycine glutathione REMEMBER: PHASE I Reactions are also called Non-synthetic reaction PHASE II Reactions are also called synthetic reaction</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 25-year-old married woman was on OCP for contraception and was started on a drug Y. Her UPT was positive after 1 month. Which of the following drug would have been added to her:", "options": [{"label": "A", "text": "Isoniazid", "correct": false}, {"label": "B", "text": "Rifampicin", "correct": true}, {"label": "C", "text": "Ketoconazole", "correct": false}, {"label": "D", "text": "Erythromycin", "correct": false}], "correct_answer": "B. Rifampicin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Rifampicin</p>\n<p><strong>Highyeild:</strong></p><p>CYP Inducers & Inhibitors CYP enzymes are proteins containing a heme cofactor- they are hemoproteins. They are also responsible for 75 percent of total drug metabolism. Some drugs induce, whereas other drugs inhibit, the activity of these enzymes. For example: St. Johns Wort induces activity of CYP3A4 - meaning substrates of this enzyme (such as ketoconazole) will be more rapidly metabolised. Inducers Inhibitors BULLSHIT CRAP GPS ↓ Barbiturates St. Johns Wort Carbamazepine Rifampin Alcohol (Chronic Use) Phenytoin Griseofulvin Phenobarbital Sulfonylureas SICKFACES.COM ↓ Sodium Valproate Isoniazid Cimetidine Ketoconazole Fluconazole Alcohol Chloramphenicol Erythromycin Sulfonamides Ciprofloxacin Omeprazole Metronidazole + Grapefruit Juice Amiodarone Quinidine</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Isoniazid is an antibiotic used for the treatment and prevention of tuberculosis (TB) and inactive (latent) TB (a serious infection caused by bacteria that affects the lungs and in certain cases other parts of the body). It works by killing the bacteria that cause tuberculosis. Option: C. Ketoconazole is an antiandrogen, antifungal, and anti-glucocorticoid medication used to treat several fungal infections. Applied to the skin it is used for fungal skin infections such as tinea, cutaneous candidiasis, pityriasis versicolor, and dandruff, Option: D. Erythromycin is an antibiotic used for the treatment of several bacterial infections. This includes respiratory tract infections, skin infections, chlamydia infections, pelvic inflammatory disease, and syphilis. It may also be used during pregnancy to prevent Group B streptococcal infection</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A breastfeeding mother comes to your clinic for advice regarding drug intake during lactation. What instruction do you give to a mother who is lactating?", "options": [{"label": "A", "text": "No advice as most drugs are not present in breast milk", "correct": false}, {"label": "B", "text": "Give longer half-life drugs", "correct": false}, {"label": "C", "text": "Systemic route of drug administration is preferred over topical", "correct": false}, {"label": "D", "text": "Just before the next dose when the plasma concentration of the drug would be the least", "correct": true}], "correct_answer": "D. Just before the next dose when the plasma concentration of the drug would be the least", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Just before the next dose when the plasma concentration of the drug would be the least Instruction given to a mother who is lactating is she should breastfeed just before the next dos, when the plasma concentration of the drug would be the least, If the nursing mother must take medications and the drug is a relatively safe one, she should optimally take it 30–60 minutes after nursing and 3–4 hours before the next feeding.</p>\n<p><strong>Highyeild:</strong></p><p>The effect of drugs on the nursing infant depends on Transfer of drug into Breast Milk The amount of breast milk consumed by the infant. The pharmacologic activity of the drug: absorption, distribution, metabolism and elimination by the infant. Condition of the infant: Greater precaution for infants premature or compromised or in the first week of life than for older, healthy infants.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. No advice as most drugs are not present in breast milk Option: B. Give longer half-life drugs Option: C. Systemic route of drug administration is preferred over topical note: a,b,c is wrong statement</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Digoxin has a half-life of 40 hours, which helps in prescribing to determine:", "options": [{"label": "A", "text": "Regimen for smooth discontinuation", "correct": false}, {"label": "B", "text": "Need for loading dose to give immediate effect", "correct": true}, {"label": "C", "text": "Regimen for maintenance dose", "correct": false}, {"label": "D", "text": "Can be given once in 2 days", "correct": false}], "correct_answer": "B. Need for loading dose to give immediate effect", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Need for loading dose to give immediate effect</p>\n<p><strong>Highyeild:</strong></p><p>Digoxin toxicity Electrolytes Hypokalemia results in increased digoxin binding increasing its therapeutic and toxic effects. Hypercalcemia enhances digitalis-induced inotropy leading to possible Ca 2 overload and increased susceptibility to digitalis-induced arrhythmias. Hypomagnesemia can sensitize the heart to digitalis-induced arrhythmias. Hack JB. Chapter 84. Cardoactive eroids in Hack JB, ed. Goldfank

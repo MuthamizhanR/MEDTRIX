@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Enzyme</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Enzyme</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                46 Questions | 248 Total Marks | 56 min Duration | ~73.04 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 46 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 56 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 46</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Enzyme - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 46</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 46 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "All of the following enzymes are proteinaceous in nature except", "options": [{"label": "A", "text": "Abzyme", "correct": false}, {"label": "B", "text": "Ribozyme", "correct": true}, {"label": "C", "text": "Eco RI", "correct": false}, {"label": "D", "text": "DNAase", "correct": false}], "correct_answer": "B. Ribozyme", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24829291704787790/24829291704787790.m3u8"}, {"text": "Which of the following force is not acting in an enzyme substrate complex", "options": [{"label": "A", "text": "Covalent", "correct": true}, {"label": "B", "text": "Hydrogen", "correct": false}, {"label": "C", "text": "Van der waals", "correct": false}, {"label": "D", "text": "Electrostatic", "correct": false}], "correct_answer": "A. Covalent", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/42079721704787816/42079721704787816.m3u8"}, {"text": "Enzyme acts by", "options": [{"label": "A", "text": "Decrease in activation energy", "correct": true}, {"label": "B", "text": "Increase in activation energy", "correct": false}, {"label": "C", "text": "By shifting equilibrium constant", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Decrease in activation energy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/70543801704787829/70543801704787829.m3u8"}, {"text": "Activation energy is the free energy difference between", "options": [{"label": "A", "text": "Substrate and transition state", "correct": true}, {"label": "B", "text": "Substrate and product", "correct": false}, {"label": "C", "text": "Product and transition state", "correct": false}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "A. Substrate and transition state", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/71035761704787846/71035761704787846.m3u8"}, {"text": "Apoenzyme is", "options": [{"label": "A", "text": "Coenzyme", "correct": false}, {"label": "B", "text": "Protein moiety", "correct": true}, {"label": "C", "text": "Cofactor", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "B. Protein moiety", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61055561704787863/61055561704787863.m3u8"}, {"text": "Kinases require", "options": [{"label": "A", "text": "Cu ++", "correct": false}, {"label": "B", "text": "Mg ++", "correct": true}, {"label": "C", "text": "Inorganic phosphate", "correct": false}, {"label": "D", "text": "Mn ++", "correct": false}], "correct_answer": "B. Mg ++", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/70922881704787879/70922881704787879.m3u8"}, {"text": "Which of the following is a example of metalloenzyme", "options": [{"label": "A", "text": "Glucosyl transferase", "correct": false}, {"label": "B", "text": "Lysyl oxidase", "correct": true}, {"label": "C", "text": "Lysyl hydroxylase", "correct": false}, {"label": "D", "text": "Prolyl hydroxylase", "correct": false}], "correct_answer": "B. Lysyl oxidase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14000941704787893/14000941704787893.m3u8"}, {"text": "Glutathione synthetase requires", "options": [{"label": "A", "text": "Copper", "correct": false}, {"label": "B", "text": "Iron", "correct": false}, {"label": "C", "text": "Magnesium", "correct": true}, {"label": "D", "text": "Selenium", "correct": false}], "correct_answer": "C. Magnesium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/72134131704787908/72134131704787908.m3u8"}, {"text": "Enzyme requires zinc as a cofactor", "options": [{"label": "A", "text": "Alpha-ketoglutarate dehydrogenase", "correct": false}, {"label": "B", "text": "Alcohol dehydrogenase", "correct": true}, {"label": "C", "text": "Pyruvate carboxylase", "correct": false}, {"label": "D", "text": "Pyruvate dehydrogenase", "correct": false}], "correct_answer": "B. Alcohol dehydrogenase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/7565571704787923/7565571704787923.m3u8"}, {"text": "Xanthine oxidase contains which cofactor", "options": [{"label": "A", "text": "Mg", "correct": false}, {"label": "B", "text": "Se", "correct": false}, {"label": "C", "text": "Mo", "correct": true}, {"label": "D", "text": "Zn", "correct": false}], "correct_answer": "C. Mo", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/42379591704787946/42379591704787946.m3u8"}, {"text": "Which of the following is cofactor for sulfite oxidase is", "options": [{"label": "A", "text": "Ca", "correct": false}, {"label": "B", "text": "Cu", "correct": false}, {"label": "C", "text": "Mn", "correct": false}, {"label": "D", "text": "Mo", "correct": true}], "correct_answer": "D. Mo", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/42838541704787966/42838541704787966.m3u8"}, {"text": "Fourth digit in enzyme according to IUB classification refers to", "options": [{"label": "A", "text": "Individual enzyme", "correct": true}, {"label": "B", "text": "Sub class", "correct": false}, {"label": "C", "text": "Sub-subclass", "correct": false}, {"label": "D", "text": "Main class", "correct": false}], "correct_answer": "A. Individual enzyme", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27561341704787987/27561341704787987.m3u8"}, {"text": "All of the following enzymes are involved in oxidation-reduction reactions except", "options": [{"label": "A", "text": "Hydrolases", "correct": true}, {"label": "B", "text": "Oxygenases", "correct": false}, {"label": "C", "text": "Peroxidases", "correct": false}, {"label": "D", "text": "Dehydrogenases", "correct": false}], "correct_answer": "A. Hydrolases", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/8351151704788008/8351151704788008.m3u8"}, {"text": "All are true about oxygenases except", "options": [{"label": "A", "text": "Play important role in hydroxylation of steroids", "correct": false}, {"label": "B", "text": "Catalyze carboxylation of drugs", "correct": true}, {"label": "C", "text": "Can incorporate 1 atoms of oxygen in a substance", "correct": false}, {"label": "D", "text": "Can incorporate 2 atoms of oxygen in a substance", "correct": false}], "correct_answer": "B. Catalyze carboxylation of drugs", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78826291704788028/78826291704788028.m3u8"}, {"text": "Transferases are classified as", "options": [{"label": "A", "text": "EC-1", "correct": false}, {"label": "B", "text": "EC-2", "correct": true}, {"label": "C", "text": "EC-3", "correct": false}, {"label": "D", "text": "EC-4", "correct": false}], "correct_answer": "B. EC-2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22420131704788048/22420131704788048.m3u8"}, {"text": "Transaminase is which type of enzyme", "options": [{"label": "A", "text": "Oxidoreductase", "correct": false}, {"label": "B", "text": "Transferase", "correct": true}, {"label": "C", "text": "Ligases", "correct": false}, {"label": "D", "text": "Isomerase", "correct": false}], "correct_answer": "B. Transferase", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• Option C: Ligases – Ligases (EC-6) are enzymes that catalyze the formation of bonds between molecules, typically using energy from ATP. Since transaminase involves the transfer of an amino group rather than bond formation, it is not classified as a ligase.</li><li>• Option D: Isomerase – Isomerases (EC-5) catalyze the conversion of a molecule from one isomer to another, involving the rearrangement of molecular structures. Transaminase does not catalyze isomerization but rather transfers a functional group, so it is not an isomerase.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/18996641704788071/18996641704788071.m3u8"}, {"text": "Hexokinase is a", "options": [{"label": "A", "text": "Oxidoreductase", "correct": false}, {"label": "B", "text": "Reductase", "correct": false}, {"label": "C", "text": "Transferase", "correct": true}, {"label": "D", "text": "Ligase", "correct": false}], "correct_answer": "C. Transferase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34035901704788091/34035901704788091.m3u8"}, {"text": "Digestive enzymes (trypsin, chymotrypsin, elastase) are", "options": [{"label": "A", "text": "Oxidoreductases", "correct": false}, {"label": "B", "text": "Hydrolases", "correct": true}, {"label": "C", "text": "Ligases", "correct": false}, {"label": "D", "text": "Lyases", "correct": false}], "correct_answer": "B. Hydrolases", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63564521704788107/63564521704788107.m3u8"}, {"text": "Glutamine synthetase is a", "options": [{"label": "A", "text": "Transferase", "correct": false}, {"label": "B", "text": "Ligase", "correct": true}, {"label": "C", "text": "Isomerase", "correct": false}, {"label": "D", "text": "Lyase", "correct": false}], "correct_answer": "B. Ligase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/62978981704788127/62978981704788127.m3u8"}, {"text": "Which of the following is a lyase", "options": [{"label": "A", "text": "Oxygenase", "correct": false}, {"label": "B", "text": "Kinase", "correct": false}, {"label": "C", "text": "Decarboxylase", "correct": true}, {"label": "D", "text": "Synthetase", "correct": false}], "correct_answer": "C. Decarboxylase", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• Option B: Kinase – Kinases (EC-2) are enzymes that transfer phosphate groups from ATP to substrates. They are classified as transferases, not lyases, because they transfer functional groups rather than breaking chemical bonds without hydrolysis or oxidation.</li><li>• Option D: Synthetase – Synthetases (EC-6) are enzymes that join two molecules using energy from ATP hydrolysis. Synthetases are classified as ligases, not lyases, because they catalyze bond formation rather than bond cleavage.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14776241704788145/14776241704788145.m3u8"}, {"text": "Enzyme activity is expressed as", "options": [{"label": "A", "text": "Mg/L", "correct": false}, {"label": "B", "text": "Mg/dl", "correct": false}, {"label": "C", "text": "Micromoles/min", "correct": true}, {"label": "D", "text": "Millimoles/liter", "correct": false}], "correct_answer": "C. Micromoles/min", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64176191704788177/64176191704788177.m3u8"}, {"text": "All of the following are true regarding Km of an enzyme except", "options": [{"label": "A", "text": "Km is the association constant of enzyme and substrate", "correct": true}, {"label": "B", "text": "Km is the Michaelis constant", "correct": false}, {"label": "C", "text": "Substrate concentration at half maximum velocity", "correct": false}, {"label": "D", "text": "Lower the Km suggests greater affinity of enzyme for substrate", "correct": false}], "correct_answer": "A. Km is the association constant of enzyme and substrate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/71222081704788194/71222081704788194.m3u8"}, {"text": "Which of the following is true for kinetics of competitive inhibition", "options": [{"label": "A", "text": "Low Km and low affinity", "correct": false}, {"label": "B", "text": "Low Km and high affinity", "correct": false}, {"label": "C", "text": "High Km and high affinity", "correct": false}, {"label": "D", "text": "High Km and low affinity", "correct": true}], "correct_answer": "D. High Km and low affinity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/55500611704788219/55500611704788219.m3u8"}, {"text": "Which of the following is true for enzyme specificity", "options": [{"label": "A", "text": "Number of sites per substrate", "correct": false}, {"label": "B", "text": "Amount of enzyme required per second, per mole or product formation", "correct": false}, {"label": "C", "text": "Number of enzyme units per milligram of enzyme protein", "correct": true}, {"label": "D", "text": "Amount of enzyme binding with various substrate", "correct": false}], "correct_answer": "C. Number of enzyme units per milligram of enzyme protein", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26895491704788237/26895491704788237.m3u8"}, {"text": "Fastest acting enzyme is", "options": [{"label": "A", "text": "Catalase", "correct": true}, {"label": "B", "text": "LDH", "correct": false}, {"label": "C", "text": "Trypsin", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Catalase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27801821704788254/27801821704788254.m3u8"}, {"text": "Cyanide affects respiratory chain by", "options": [{"label": "A", "text": "Competitive reversible inhibition", "correct": false}, {"label": "B", "text": "Non-competitive reversible inhibition", "correct": false}, {"label": "C", "text": "Non-competitive irreversible inhibition", "correct": true}, {"label": "D", "text": "Suicidal irreversible inhibition", "correct": false}], "correct_answer": "C. Non-competitive irreversible inhibition", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/43103961704788276/43103961704788276.m3u8"}, {"text": "Which of the following is a suicide enzyme", "options": [{"label": "A", "text": "5’ Nucleotidase", "correct": false}, {"label": "B", "text": "Lipooxygenase", "correct": false}, {"label": "C", "text": "Cyclooxygenase", "correct": true}, {"label": "D", "text": "Thromboxane synthase", "correct": false}], "correct_answer": "C. Cyclooxygenase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41541641704788292/41541641704788292.m3u8"}, {"text": "Allosteric inhibition of an enzyme is", "options": [{"label": "A", "text": "Binding of inhibitor to other site and inhibition of the enzyme", "correct": true}, {"label": "B", "text": "Binding of inhibitor to catalytic site and inhibition of enzyme", "correct": false}, {"label": "C", "text": "Inactivation by phosphorylation and dephosphorylation", "correct": false}, {"label": "D", "text": "Inhibition of enzyme by inhibitor without binding to enzyme", "correct": false}], "correct_answer": "A. Binding of inhibitor to other site and inhibition of the enzyme", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13345291704788333/13345291704788333.m3u8"}, {"text": "Which of the following is true for allosteric inhibition", "options": [{"label": "A", "text": "Citrate and ATP inhibiting PFK-1 is a classical example", "correct": true}, {"label": "B", "text": "Allosteric inhibitors directly bind to the active site of enzyme", "correct": false}, {"label": "C", "text": "It is the only homotropic allosteric regulation", "correct": false}, {"label": "D", "text": "Substrate of an enzyme mediate allosteric inhibition", "correct": false}], "correct_answer": "A. Citrate and ATP inhibiting PFK-1 is a classical example", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/68750421704788356/68750421704788356.m3u8"}, {"text": "Which of the following is false for covalent modification", "options": [{"label": "A", "text": "Phosphorylation is common covalent modification", "correct": false}, {"label": "B", "text": "It is slower than allosteric regulation", "correct": false}, {"label": "C", "text": "It is reversible", "correct": false}, {"label": "D", "text": "It uses the same enzyme for activation and inactivation", "correct": true}], "correct_answer": "D. It uses the same enzyme for activation and inactivation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22129621704788376/22129621704788376.m3u8"}, {"text": "Which of the following cannot be phosphorylated using protein kinase", "options": [{"label": "A", "text": "Serine", "correct": false}, {"label": "B", "text": "Threonine", "correct": false}, {"label": "C", "text": "Asparagine", "correct": true}, {"label": "D", "text": "Tyrosine", "correct": false}], "correct_answer": "C. Asparagine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/7385171704788400/7385171704788400.m3u8"}, {"text": "All of the following affect enzyme kinetics except", "options": [{"label": "A", "text": "ADP ribosylation", "correct": false}, {"label": "B", "text": "Acetylation", "correct": false}, {"label": "C", "text": "Glycosylation", "correct": true}, {"label": "D", "text": "Phosphorylation", "correct": false}], "correct_answer": "C. Glycosylation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/50540721704788420/50540721704788420.m3u8"}, {"text": "Functional plasma enzyme is", "options": [{"label": "A", "text": "LDH", "correct": false}, {"label": "B", "text": "SGPT", "correct": false}, {"label": "C", "text": "AGOT", "correct": false}, {"label": "D", "text": "Fibrinogen", "correct": true}], "correct_answer": "D. Fibrinogen", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24771251704788442/24771251704788442.m3u8"}, {"text": "Non-functional plasma enzyme area all except", "options": [{"label": "A", "text": "GGT", "correct": false}, {"label": "B", "text": "Alkaline phosphatase", "correct": false}, {"label": "C", "text": "Acid phosphatase", "correct": false}, {"label": "D", "text": "Lipoprotein lipase", "correct": true}], "correct_answer": "D. Lipoprotein lipase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/17129221704788462/17129221704788462.m3u8"}, {"text": "What are isoenzymes", "options": [{"label": "A", "text": "Physically distinct form of same enzymes", "correct": true}, {"label": "B", "text": "Forms of different enzyme that catalyze same reactions", "correct": false}, {"label": "C", "text": "Forms of same enzymes that catalyze different reaction", "correct": false}, {"label": "D", "text": "Physically same forms of different enzymes", "correct": false}], "correct_answer": "A. Physically distinct form of same enzymes", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63357311704788479/63357311704788479.m3u8"}, {"text": "LDH has how many isoenzymes", "options": [{"label": "A", "text": "Three based on B and M polypeptide subunits", "correct": false}, {"label": "B", "text": "Five based on H and M polypeptide subunits", "correct": true}, {"label": "C", "text": "Five based on B and M polypeptide subunits", "correct": false}, {"label": "D", "text": "Seven based on H and M polypeptide subunits", "correct": false}], "correct_answer": "B. Five based on H and M polypeptide subunits", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/65352381704788500/65352381704788500.m3u8"}, {"text": "The predominant isoenzyme of LDH present in cardiac muscle is", "options": [{"label": "A", "text": "LDH-1", "correct": true}, {"label": "B", "text": "LDH-2", "correct": false}, {"label": "C", "text": "LDH-3", "correct": false}, {"label": "D", "text": "LDH-4", "correct": false}], "correct_answer": "A. LDH-1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77793771704788531/77793771704788531.m3u8"}, {"text": "Which isoenzyme of LDH is raised in liver injury", "options": [{"label": "A", "text": "LDH-1", "correct": false}, {"label": "B", "text": "LDH-2", "correct": false}, {"label": "C", "text": "LDH-4", "correct": false}, {"label": "D", "text": "LDH-5", "correct": true}], "correct_answer": "D. LDH-5", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12938791704788552/12938791704788552.m3u8"}, {"text": "Which isoenzyme of LDH is raised in anemia", "options": [{"label": "A", "text": "LDH-2", "correct": true}, {"label": "B", "text": "LDH-3", "correct": false}, {"label": "C", "text": "LDH-4", "correct": false}, {"label": "D", "text": "LDH-5", "correct": false}], "correct_answer": "A. LDH-2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29558171704788568/29558171704788568.m3u8"}, {"text": "True about LDH1:LDH2 ratio in myocardial infarction", "options": [{"label": "A", "text": "LDH1= LDH2", "correct": false}, {"label": "B", "text": "LDH1 > LDH2", "correct": true}, {"label": "C", "text": "LDH2 > LDH1", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "B. LDH1 > LDH2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59564281704788593/59564281704788593.m3u8"}, {"text": "Which of the following LDH has fastest electrophoretic mobility", "options": [{"label": "A", "text": "LDH-1", "correct": true}, {"label": "B", "text": "LDH-3", "correct": false}, {"label": "C", "text": "LDH-4", "correct": false}, {"label": "D", "text": "LDH-5", "correct": false}], "correct_answer": "A. LDH-1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/8265551704788611/8265551704788611.m3u8"}, {"text": "Regan enzyme is an isoenzyme of", "options": [{"label": "A", "text": "Acid phosphatase", "correct": false}, {"label": "B", "text": "Alkaline phosphatase", "correct": true}, {"label": "C", "text": "LDH", "correct": false}, {"label": "D", "text": "Creatine kinase", "correct": false}], "correct_answer": "B. Alkaline phosphatase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74701631704788629/74701631704788629.m3u8"}, {"text": "Which of the following liver enzyme is predominantly found in mitochondria", "options": [{"label": "A", "text": "AST (SGOT)", "correct": true}, {"label": "B", "text": "ALT (SGPT)", "correct": false}, {"label": "C", "text": "5’ Nucleotidase", "correct": false}, {"label": "D", "text": "GGT", "correct": false}], "correct_answer": "A. AST (SGOT)", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19907421704788645/19907421704788645.m3u8"}, {"text": "Which enzyme is deficient in chronic alcoholics", "options": [{"label": "A", "text": "Isocitrate dehydrogenase", "correct": false}, {"label": "B", "text": "Aconitase", "correct": false}, {"label": "C", "text": "?-ketoglutarate dehydrogenase", "correct": true}, {"label": "D", "text": "Citrate synthase", "correct": false}], "correct_answer": "C. ?-ketoglutarate dehydrogenase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36383041704788665/36383041704788665.m3u8"}, {"text": "Following is a enzyme marker for golgi apparatus", "options": [{"label": "A", "text": "Catalase", "correct": false}, {"label": "B", "text": "5’ Nucleotidase", "correct": false}, {"label": "C", "text": "Galactosyl transferase", "correct": true}, {"label": "D", "text": "Glucose-6-phosphatase", "correct": false}], "correct_answer": "C. Galactosyl transferase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/28621921704788683/28621921704788683.m3u8"}, {"text": "All of the following are serine protease except", "options": [{"label": "A", "text": "Elastase", "correct": false}, {"label": "B", "text": "Trypsin", "correct": false}, {"label": "C", "text": "Chymotrypsin", "correct": false}, {"label": "D", "text": "Pepsin", "correct": true}], "correct_answer": "D. Pepsin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19076441704788703/19076441704788703.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

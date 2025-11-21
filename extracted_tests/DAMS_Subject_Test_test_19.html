@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Swt Ophthalmology Set A</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Swt Ophthalmology Set A</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                200 Questions | 800 Total Marks | 210 min Duration | ~63.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 200 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 210 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 200</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Swt Ophthalmology Set A - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 200</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 200 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Hyaloid vessel is which type of vitreous", "options": [{"label": "A", "text": "Primary", "correct": true}, {"label": "B", "text": "Secondary", "correct": false}, {"label": "C", "text": "Tertiary", "correct": false}, {"label": "D", "text": "NOTA", "correct": false}], "correct_answer": "A. Primary", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What could be the most common symptom of this condition?", "options": [{"label": "A", "text": "Vision loss", "correct": false}, {"label": "B", "text": "Pain", "correct": false}, {"label": "C", "text": "Amarousisfugax", "correct": false}, {"label": "D", "text": "No symptoms", "correct": true}], "correct_answer": "D. No symptoms", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/4199582.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "From what distance can a 6/6 patient can see the 6/60 on Snellen chart:", "options": [{"label": "A", "text": "60 m", "correct": true}, {"label": "B", "text": "36 m", "correct": false}, {"label": "C", "text": "24 m", "correct": false}, {"label": "D", "text": "6 m", "correct": false}], "correct_answer": "A. 60 m", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following method can be used for detection of malingering patients?", "options": [{"label": "A", "text": "Snellen chart", "correct": false}, {"label": "B", "text": "Visual evoked potentials", "correct": true}, {"label": "C", "text": "Electroretinography", "correct": false}, {"label": "D", "text": "Tellers", "correct": false}], "correct_answer": "B. Visual evoked potentials", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The time taken in visual pathway from retina to occipital cortex is", "options": [{"label": "A", "text": "128ms", "correct": false}, {"label": "B", "text": "124ms", "correct": true}, {"label": "C", "text": "11s", "correct": false}, {"label": "D", "text": "12s", "correct": false}], "correct_answer": "B. 124ms", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following lenses in indirect ophthalmoscopy will give maximum field of view", "options": [{"label": "A", "text": "+14D", "correct": false}, {"label": "B", "text": "+20D", "correct": false}, {"label": "C", "text": "+28D", "correct": false}, {"label": "D", "text": "+30D", "correct": true}], "correct_answer": "D. +30D", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which test is being done?", "options": [{"label": "A", "text": "Visual field testing", "correct": true}, {"label": "B", "text": "Muscle palsy testing", "correct": false}, {"label": "C", "text": "Colour vision testing", "correct": false}, {"label": "D", "text": "Vision testing", "correct": false}], "correct_answer": "A. Visual field testing", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/73690477.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following is used for testing function of?", "options": [{"label": "A", "text": "Central retina", "correct": true}, {"label": "B", "text": "Corneal surface", "correct": false}, {"label": "C", "text": "Visual acuity", "correct": false}, {"label": "D", "text": "Trabecular meshwork", "correct": false}], "correct_answer": "A. Central retina", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/13922148.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What test is being done in the given pic", "options": [{"label": "A", "text": "Exophthalmometer", "correct": true}, {"label": "B", "text": "Synaptophore", "correct": false}, {"label": "C", "text": "Measurement of horizontal eyelid distance", "correct": false}, {"label": "D", "text": "Measurement of corneal diameter", "correct": false}], "correct_answer": "A. Exophthalmometer", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/8838909.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All can cause axial proptosis except", "options": [{"label": "A", "text": "Thyroid eye disease", "correct": false}, {"label": "B", "text": "Cavernous hemangioma", "correct": false}, {"label": "C", "text": "Optic nerve glioma", "correct": false}, {"label": "D", "text": "Ethmoid sinus tumour", "correct": true}], "correct_answer": "D. Ethmoid sinus tumour", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The pictures are before and after Valsalva. What is likely condition?", "options": [{"label": "A", "text": "Orbital hemangioma", "correct": false}, {"label": "B", "text": "Orbital varices", "correct": true}, {"label": "C", "text": "Carotico-cavernous fistula", "correct": false}, {"label": "D", "text": "Orbital dermoid", "correct": false}], "correct_answer": "B. Orbital varices", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/95696811.JPG"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What could be the most likely profile of the following patient?", "options": [{"label": "A", "text": "Middle age male", "correct": false}, {"label": "B", "text": "Middle age female", "correct": true}, {"label": "C", "text": "Young male", "correct": false}, {"label": "D", "text": "Young girl", "correct": false}], "correct_answer": "B. Middle age female", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/450947612.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What are these lesions on iris?", "options": [{"label": "A", "text": "Lisch nodules", "correct": true}, {"label": "B", "text": "Busaca nodules", "correct": false}, {"label": "C", "text": "Koeppe nodules", "correct": false}, {"label": "D", "text": "Brushfield spots", "correct": false}], "correct_answer": "A. Lisch nodules", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/498779513.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Neurofibromatosis 1 can have all of the following ophthalmic features except", "options": [{"label": "A", "text": "S shaped deformity of eyelids", "correct": false}, {"label": "B", "text": "Sphenoid dysplasia", "correct": false}, {"label": "C", "text": "Choroidal hemangioma", "correct": true}, {"label": "D", "text": "Hamartoma of iris", "correct": false}], "correct_answer": "C. Choroidal hemangioma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is false regarding Cavernous hemangioma", "options": [{"label": "A", "text": "Is the most common benign primary orbital tumour in adults", "correct": false}, {"label": "B", "text": "Presents as axial proptosis", "correct": false}, {"label": "C", "text": "Presents in childhood", "correct": true}, {"label": "D", "text": "Is usually situated inside the muscle cone", "correct": false}], "correct_answer": "C. Presents in childhood", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which muscle is mostly affected in Graves ophthalmopathy is:", "options": [{"label": "A", "text": "Lateral rectus", "correct": false}, {"label": "B", "text": "Inferior rectus", "correct": true}, {"label": "C", "text": "Superior rectus", "correct": false}, {"label": "D", "text": "Medial rectus", "correct": false}], "correct_answer": "B. Inferior rectus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of these can cause intermittent proptosis?", "options": [{"label": "A", "text": "Fracture roof of orbit", "correct": false}, {"label": "B", "text": "Meningocele", "correct": false}, {"label": "C", "text": "Carotico-cavernous fistula", "correct": false}, {"label": "D", "text": "Orbital varices", "correct": true}], "correct_answer": "D. Orbital varices", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is these can spontaneously resolve?", "options": [{"label": "A", "text": "Capillary hemangioma", "correct": true}, {"label": "B", "text": "Thyroid-related orbitopathy", "correct": false}, {"label": "C", "text": "Orbital haemorrhage", "correct": false}, {"label": "D", "text": "Orbital cellulitis", "correct": false}], "correct_answer": "A. Capillary hemangioma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which tonometer is not of similar principle as rest?", "options": [{"label": "A", "text": "Goldmann tonometer", "correct": false}, {"label": "B", "text": "Pascal tonometer", "correct": false}, {"label": "C", "text": "Perkins", "correct": false}, {"label": "D", "text": "Tonopen", "correct": true}], "correct_answer": "D. Tonopen", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Van Herrick method is used to assess", "options": [{"label": "A", "text": "Anterior chamber depth", "correct": true}, {"label": "B", "text": "Corneal thickness", "correct": false}, {"label": "C", "text": "Lens thickness", "correct": false}, {"label": "D", "text": "Posterior chamber depth", "correct": false}], "correct_answer": "A. Anterior chamber depth", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The principle of osmosis is used in which antiglaucoma drug", "options": [{"label": "A", "text": "Brimonidine", "correct": false}, {"label": "B", "text": "Glycerol", "correct": true}, {"label": "C", "text": "Acetazolamide", "correct": false}, {"label": "D", "text": "Timolol", "correct": false}], "correct_answer": "B. Glycerol", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "During goniotomy, the angle of anterior chamber is seen by which gonioscope?", "options": [{"label": "A", "text": "Koeppe", "correct": true}, {"label": "B", "text": "Zeiss", "correct": false}, {"label": "C", "text": "Goldmann", "correct": false}, {"label": "D", "text": "Posner", "correct": false}], "correct_answer": "A. Koeppe", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "This surgery was done for?", "options": [{"label": "A", "text": "Cataract", "correct": false}, {"label": "B", "text": "Glaucoma", "correct": true}, {"label": "C", "text": "Corneal ulcer", "correct": false}, {"label": "D", "text": "Drainage of hyphema", "correct": false}], "correct_answer": "B. Glaucoma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/607781023.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are indicative of optic nerve head changes associated with glaucoma except", "options": [{"label": "A", "text": "Temporal shifting of vessels", "correct": true}, {"label": "B", "text": "Thinning of the neuroretinal rim", "correct": false}, {"label": "C", "text": "Optic disc haemorrhages", "correct": false}, {"label": "D", "text": "ISNT rule not followed", "correct": false}], "correct_answer": "A. Temporal shifting of vessels", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is example of reverse glaucoma", "options": [{"label": "A", "text": "Pseudoexfoliation", "correct": false}, {"label": "B", "text": "Pigment dispersion", "correct": true}, {"label": "C", "text": "Previous trauma or surgery", "correct": false}, {"label": "D", "text": "Congenital glaucoma", "correct": false}], "correct_answer": "B. Pigment dispersion", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which glaucoma drug does not increase trabecular outflow?", "options": [{"label": "A", "text": "Netarsudil (rhopressa)", "correct": false}, {"label": "B", "text": "Mannitol", "correct": true}, {"label": "C", "text": "Pilocarpine", "correct": false}, {"label": "D", "text": "Latanoprostene", "correct": false}], "correct_answer": "B. Mannitol", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A young myopic male presents with increased IOP after exercise. On examinations, there were Krukenberg spindle seen. Likely diagnosis?", "options": [{"label": "A", "text": "Pigmentory glaucoma", "correct": true}, {"label": "B", "text": "Acqueous misdirection glaucoma", "correct": false}, {"label": "C", "text": "Pseudoexfoliation glaucoma", "correct": false}, {"label": "D", "text": "Neovascular glaucoma", "correct": false}], "correct_answer": "A. Pigmentory glaucoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A pregnant woman with glaucoma should be treated with?", "options": [{"label": "A", "text": "Abort the fetus", "correct": false}, {"label": "B", "text": "Laser iridotomy", "correct": false}, {"label": "C", "text": "Start brimonidine", "correct": true}, {"label": "D", "text": "Start prostaglandins", "correct": false}], "correct_answer": "C. Start brimonidine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Coloured haloes can be seen in all of the following except", "options": [{"label": "A", "text": "Acute anterior uveitis", "correct": true}, {"label": "B", "text": "Mucopurulent conjunctivitis", "correct": false}, {"label": "C", "text": "Acute congestive glaucoma", "correct": false}, {"label": "D", "text": "Corneal edema", "correct": false}], "correct_answer": "A. Acute anterior uveitis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following are true about latanoprost except:", "options": [{"label": "A", "text": "It can cause inflammation in eye", "correct": false}, {"label": "B", "text": "Increased iris pigmentation is a known side effect", "correct": false}, {"label": "C", "text": "Activated during passage through cornea", "correct": false}, {"label": "D", "text": "It reduces the intraocular pressure by increasing the trabecular outflow", "correct": true}], "correct_answer": "D. It reduces the intraocular pressure by increasing the trabecular outflow", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is false regarding Primary open angle glaucoma?primary", "options": [{"label": "A", "text": "IOP high", "correct": false}, {"label": "B", "text": "Visual field defect present", "correct": false}, {"label": "C", "text": "Old age is a risk factor", "correct": false}, {"label": "D", "text": "Hypermetropia is a risk factor", "correct": true}], "correct_answer": "D. Hypermetropia is a risk factor", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the sign?", "options": [{"label": "A", "text": "Fleisher ring", "correct": false}, {"label": "B", "text": "Weiss ring", "correct": false}, {"label": "C", "text": "Vossius ring", "correct": true}, {"label": "D", "text": "Kayser Fleisher ring", "correct": false}], "correct_answer": "C. Vossius ring", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/749422732.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are complications of traumatic hyphema except?", "options": [{"label": "A", "text": "Rebleeding", "correct": false}, {"label": "B", "text": "Secondary glaucoma", "correct": false}, {"label": "C", "text": "Blockage of trabecular meshwork", "correct": false}, {"label": "D", "text": "Chalazion", "correct": true}], "correct_answer": "D. Chalazion", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which bone is mostly fractured in this?", "options": [{"label": "A", "text": "Palatine", "correct": false}, {"label": "B", "text": "Zygomatic", "correct": false}, {"label": "C", "text": "Maxillary", "correct": true}, {"label": "D", "text": "Sphenoid", "correct": false}], "correct_answer": "C. Maxillary", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/648491634.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Features of siderosis are all except", "options": [{"label": "A", "text": "Coloboma of iris", "correct": true}, {"label": "B", "text": "Heterochromia iridis", "correct": false}, {"label": "C", "text": "Pigmentary retinopathy", "correct": false}, {"label": "D", "text": "Secondary glaucoma", "correct": false}], "correct_answer": "A. Coloboma of iris", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "If myelination of optic nerve does not stop at lamina cribrosa, it will lead to", "options": [{"label": "A", "text": "Glaucoma", "correct": false}, {"label": "B", "text": "Enlargement of blind spot", "correct": true}, {"label": "C", "text": "Optic nerve hypoplasia", "correct": false}, {"label": "D", "text": "Bergmister papilla", "correct": false}], "correct_answer": "B. Enlargement of blind spot", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is false for Optic Nerve hypoplasia", "options": [{"label": "A", "text": "Associated with midline brain structural defect", "correct": false}, {"label": "B", "text": "Often appears with a double-ring sign", "correct": false}, {"label": "C", "text": "Enlargement of blind spot", "correct": true}, {"label": "D", "text": "Diabetes in mother is a risk factor for development in child", "correct": false}], "correct_answer": "C. Enlargement of blind spot", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Trypan blue dye is used in which stage of cataract surgery?", "options": [{"label": "A", "text": "Incision at limbus", "correct": false}, {"label": "B", "text": "Lens aspiration", "correct": false}, {"label": "C", "text": "Capsulorhhesxis", "correct": true}, {"label": "D", "text": "IOL implantation", "correct": false}], "correct_answer": "C. Capsulorhhesxis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the refractive index of center of lens", "options": [{"label": "A", "text": "10", "correct": false}, {"label": "B", "text": "1.37", "correct": false}, {"label": "C", "text": "1.33", "correct": false}, {"label": "D", "text": "1.4", "correct": true}], "correct_answer": "D. 1.4", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Treatment of this complication of cataract surgery is", "options": [{"label": "A", "text": "Topical steroids", "correct": false}, {"label": "B", "text": "Laser capsulotomy", "correct": true}, {"label": "C", "text": "Intravitreal antibiotics", "correct": false}, {"label": "D", "text": "Topical anti-glaucoma", "correct": false}], "correct_answer": "B. Laser capsulotomy", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/572403240.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The organism responsible for late post-cataract surgery endophthalmitis is", "options": [{"label": "A", "text": "Staphylococcus aureus", "correct": false}, {"label": "B", "text": "Streptococcus pneumonia", "correct": false}, {"label": "C", "text": "Propiobacterium acne", "correct": true}, {"label": "D", "text": "Bacillus cereus", "correct": false}], "correct_answer": "C. Propiobacterium acne", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are causes of uniocular diplopia except", "options": [{"label": "A", "text": "Astigmatism", "correct": false}, {"label": "B", "text": "Incipient cataract", "correct": false}, {"label": "C", "text": "3rd nerve palsy", "correct": true}, {"label": "D", "text": "Iridodialysis", "correct": false}], "correct_answer": "C. 3rd nerve palsy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents with abnormal facies, frontal baldness and with weakness of the hands and difficulty in walking. He has difficulty in releasing grip, muscle wasting and weakness. What could be ocular sign seen?", "options": [{"label": "A", "text": "Christmas tree cataract", "correct": true}, {"label": "B", "text": "Snowflake cataract", "correct": false}, {"label": "C", "text": "Sunflower cataract", "correct": false}, {"label": "D", "text": "Polychromatic lustre", "correct": false}], "correct_answer": "A. Christmas tree cataract", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which cataract surgery step is being done?", "options": [{"label": "A", "text": "Capsulorhhexis", "correct": true}, {"label": "B", "text": "Hydrodissection", "correct": false}, {"label": "C", "text": "IOL implantation", "correct": false}, {"label": "D", "text": "Lens aspiration", "correct": false}], "correct_answer": "A. Capsulorhhexis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/590328344.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Photo-retinitis is caused mainly by which rays", "options": [{"label": "A", "text": "UV-A", "correct": false}, {"label": "B", "text": "UV-B", "correct": false}, {"label": "C", "text": "UV-C", "correct": false}, {"label": "D", "text": "IR", "correct": true}], "correct_answer": "D. IR", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following sign can you see in the given picture?", "options": [{"label": "A", "text": "Corectopia", "correct": true}, {"label": "B", "text": "Lisch nodules", "correct": false}, {"label": "C", "text": "Koeppe nodule", "correct": false}, {"label": "D", "text": "Bruschfield spots", "correct": false}], "correct_answer": "A. Corectopia", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/529912046.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What test is important before cataract surgery", "options": [{"label": "A", "text": "Assessing corneal surface", "correct": false}, {"label": "B", "text": "Assessing corneal diameter", "correct": false}, {"label": "C", "text": "Assessing corneal curvature", "correct": true}, {"label": "D", "text": "Assessing corneal thickness", "correct": false}], "correct_answer": "C. Assessing corneal curvature", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which arteries are most commonly ruptured during suprachoroidalhemorrage?", "options": [{"label": "A", "text": "Anterior ciliary", "correct": false}, {"label": "B", "text": "Short posterior ciliary", "correct": true}, {"label": "C", "text": "long posterior ciliary", "correct": false}, {"label": "D", "text": "Central retinal", "correct": false}], "correct_answer": "B. Short posterior ciliary", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are associated with ectopialentis except", "options": [{"label": "A", "text": "Sulphite oxidase deficeiency", "correct": false}, {"label": "B", "text": "Homocystinuria", "correct": false}, {"label": "C", "text": "High myopia", "correct": true}, {"label": "D", "text": "Stickler

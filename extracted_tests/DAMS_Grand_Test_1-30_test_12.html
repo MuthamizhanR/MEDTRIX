@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Grand Test 20 Clinical New Pattern</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Grand Test 20 Clinical New Pattern</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                200 Questions | 800 Total Marks | 210 min Duration | ~63.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 200 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 210 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 200</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Grand Test 20 Clinical New Pattern - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 200</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 200 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which of the following is absolute contraindication to the use thrombolytic agent the setting of an acute anterior wall myocardial infarction?", "options": [{"label": "A", "text": "History of CVA with hemiparesis one month ago", "correct": true}, {"label": "B", "text": "Diabetic retinopathy", "correct": false}, {"label": "C", "text": "Patient’s age more than 70 years", "correct": false}, {"label": "D", "text": "Patient is on warfarin for AF with INR 1.8", "correct": false}], "correct_answer": "A. History of CVA with hemiparesis one month ago", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "With complete bundle branch blocks the QRS interval is?", "options": [{"label": "A", "text": ">= 90 ms in duration", "correct": false}, {"label": "B", "text": ">= 100 ms in duration", "correct": false}, {"label": "C", "text": ">= 110 ms in duration", "correct": false}, {"label": "D", "text": ">= 120 ms in duration", "correct": true}], "correct_answer": "D. >= 120 ms in duration", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Pulmonary wedge pressure corresponds to which of the following pressures?", "options": [{"label": "A", "text": "Right atrial", "correct": false}, {"label": "B", "text": "Left atrial", "correct": true}, {"label": "C", "text": "Right ventricular", "correct": false}, {"label": "D", "text": "Left ventricular", "correct": false}], "correct_answer": "B. Left atrial", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Elevated BP is defined as:", "options": [{"label": "A", "text": "SBP – 110-119mm of Hg", "correct": false}, {"label": "B", "text": "SBP – 120-129mm of Hg", "correct": true}, {"label": "C", "text": "SBP – 130-139mm of Hg", "correct": false}, {"label": "D", "text": "DBP – 80-89mm of Hg", "correct": false}], "correct_answer": "B. SBP – 120-129mm of Hg", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The timing of a murmur in patients with acute MR is?", "options": [{"label": "A", "text": "Early systolic", "correct": true}, {"label": "B", "text": "Presystolic", "correct": false}, {"label": "C", "text": "Midsystolic", "correct": false}, {"label": "D", "text": "Holosystolic", "correct": false}], "correct_answer": "A. Early systolic", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The differentiating feature between ectopic ACTH secretion and Cushing’s disease is-", "options": [{"label": "A", "text": "Increased ACTH", "correct": false}, {"label": "B", "text": "Hypokalemic alkalosis", "correct": true}, {"label": "C", "text": "Low dose dexamethasone suppression test", "correct": false}, {"label": "D", "text": "24-hour urinary free cortisol", "correct": false}], "correct_answer": "B. Hypokalemic alkalosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following statements about Liraglutide are true 1. It is an oral GLP-1 receptor agonist 2. It prolongs the action of endogenously secreted incretins 3. It can be used effectively in Type 1 DM patients 4. It can increase risk of Medullary carcinoma of thyroid 5. It reduces risk of cardiovascular mortality in Type 2 DM patients.", "options": [{"label": "A", "text": "1,4,5", "correct": false}, {"label": "B", "text": "2,4,5", "correct": true}, {"label": "C", "text": "3,4,5", "correct": false}, {"label": "D", "text": "1,3,5", "correct": false}], "correct_answer": "B. 2,4,5", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Wermer’s syndrome is characterized by all of the following EXCEPT:", "options": [{"label": "A", "text": "Gastrinoma", "correct": false}, {"label": "B", "text": "Hyperparathyroidism", "correct": false}, {"label": "C", "text": "Angiofibroma", "correct": false}, {"label": "D", "text": "Glucagonoma", "correct": true}], "correct_answer": "D. Glucagonoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is a feature of Conus medullaris syndrome?", "options": [{"label": "A", "text": "Asymmetrical areflexic paralysis", "correct": false}, {"label": "B", "text": "Absent knee jerk.", "correct": false}, {"label": "C", "text": "Gradual onset with upper limb involvement", "correct": false}, {"label": "D", "text": "Urinary retention with overflow incontinence.", "correct": true}], "correct_answer": "D. Urinary retention with overflow incontinence.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A young man has suddenly developed paraplegia following a short febrile illness. Examination reveals lower motor neuron type paralysis with no sensory disturbances and no bladder and bowel involvement. The CSF examination in this case of likely to reveal:", "options": [{"label": "A", "text": "Normal CSF", "correct": false}, {"label": "B", "text": "Traces of blood", "correct": false}, {"label": "C", "text": "Albumino-cytological dissociation", "correct": true}, {"label": "D", "text": "Features of tuberculous meningitis.", "correct": false}], "correct_answer": "C. Albumino-cytological dissociation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 9-yr-old girl has difficulty in combing hairs and climbing upstairs since 6 months. She has a maculopapular rash over metacarpophalangeal joints. What should be the next appropriate investigation to be done?", "options": [{"label": "A", "text": "ESR", "correct": false}, {"label": "B", "text": "RA factor", "correct": false}, {"label": "C", "text": "Creatine kinase", "correct": true}, {"label": "D", "text": "Electromyography", "correct": false}], "correct_answer": "C. Creatine kinase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which type of multiple sclerosis is depicted in the following image ?", "options": [{"label": "A", "text": "Relapsing remitting type (RRMS).", "correct": false}, {"label": "B", "text": "Primary progressive type (PPMS).", "correct": false}, {"label": "C", "text": "Secondary progressive type (SPMS).", "correct": true}, {"label": "D", "text": "Progressive relapsing types (PRMS).", "correct": false}], "correct_answer": "C. Secondary progressive type (SPMS).", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/12(333).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are true regarding OSA treatment except:", "options": [{"label": "A", "text": "CPAP is the standard medical therapy with the highest level of evidence for efficacy.", "correct": false}, {"label": "B", "text": "Oral appliances are most often used for treating patients with severe OSA", "correct": true}, {"label": "C", "text": "Upper airway surgery for OSA is less effective than CPAP", "correct": false}, {"label": "D", "text": "Uvulopalatopharyngoplasty is the most common surgery", "correct": false}], "correct_answer": "B. Oral appliances are most often used for treating patients with severe OSA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 68-year-old female presents for evaluation of SOB without wheezing or cough. She is being treated for SLE and her PFT results are given below. Most probable abnormality is:", "options": [{"label": "A", "text": "Obstructive pattern with emphysema", "correct": false}, {"label": "B", "text": "Restrictive pattern", "correct": true}, {"label": "C", "text": "Obstructive pattern without emphysema", "correct": false}, {"label": "D", "text": "Pulmonary hypertension", "correct": false}], "correct_answer": "B. Restrictive pattern", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/14(278).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "DLCO is decreased in all except", "options": [{"label": "A", "text": "Pulmonary fibrosis", "correct": false}, {"label": "B", "text": "ILD", "correct": false}, {"label": "C", "text": "Acute asthma", "correct": true}, {"label": "D", "text": "Severe emphysema", "correct": false}], "correct_answer": "C. Acute asthma", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/15_1(80).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most common mechanism in Hypoxemia is:", "options": [{"label": "A", "text": "Alveolar hypoventilation", "correct": false}, {"label": "B", "text": "Shunt formation", "correct": false}, {"label": "C", "text": "Diffusion defect", "correct": false}, {"label": "D", "text": "V: Q mismatch", "correct": true}], "correct_answer": "D. V: Q mismatch", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not a part of definition of ARDS?", "options": [{"label": "A", "text": "Severe dyspnoea", "correct": false}, {"label": "B", "text": "Hypercapnia", "correct": true}, {"label": "C", "text": "Hypoxemia", "correct": false}, {"label": "D", "text": "Diffuse bilateral pulmonary infiltrates", "correct": false}], "correct_answer": "B. Hypercapnia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Regarding Pneumocystis pneumonia in HIV-infected patients all are true except?", "options": [{"label": "A", "text": "Most patients have CD4 counts <200 at the time of diagnosis of their first episode PCP", "correct": false}, {"label": "B", "text": "Most patients with PCP will have an elevated serum lactate dehydrogenase level.", "correct": false}, {"label": "C", "text": "ABG can reveal PaO2 < 60mm of hg and a widened alveolo-arterial gradient", "correct": false}, {"label": "D", "text": "A normal chest radiograph rules out the diagnosis", "correct": true}], "correct_answer": "D. A normal chest radiograph rules out the diagnosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30 year previously healthy male came with 2 days fever and cough with purulent sputum. Examination reveals an impaired note with bronchial breathing and crackles and increased vocal resonance. He is alert. Pulse-106/min, BP=100/70. Respiratory rate =24/min. Blood urea=6 mmol/L. Which of the following is the best treatment for him?", "options": [{"label": "A", "text": "OP treatment with Clarithromycin 500mg BID for one week", "correct": true}, {"label": "B", "text": "Admit in ward and give Levofloxacin orally 750mg OD + Inj. Ceftriaxone 1G IV BID", "correct": false}, {"label": "C", "text": "Admit in ICCU and give Inj. Ceftriaxone 2G IV OD + IV levofloxacin 750mg OD", "correct": false}, {"label": "D", "text": "Admit in wards and give Piperacillin + tazobactam 4.5 G qid", "correct": false}], "correct_answer": "A. OP treatment with Clarithromycin 500mg BID for one week", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In APKD, all of the following changes/features can occur except:", "options": [{"label": "A", "text": "Bilateral, multiple cysts in the kidneys", "correct": false}, {"label": "B", "text": "Polycythemia", "correct": false}, {"label": "C", "text": "Shrunken kidneys", "correct": true}, {"label": "D", "text": "Renal oxalate stones", "correct": false}], "correct_answer": "C. Shrunken kidneys", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is/are oral JAK inhibitor/s for treatment of Rheumatoid Arthritis", "options": [{"label": "A", "text": "Tofacitinib", "correct": false}, {"label": "B", "text": "Baricitinib", "correct": false}, {"label": "C", "text": "Upadacitinib", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The most dreaded manifestation of Systemic sclerosis is:", "options": [{"label": "A", "text": "RPGN", "correct": false}, {"label": "B", "text": "Pulmonary hypertension", "correct": true}, {"label": "C", "text": "Cirrhosis", "correct": false}, {"label": "D", "text": "Lymphoma", "correct": false}], "correct_answer": "B. Pulmonary hypertension", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following statements are true regarding Sjogren’s syndrome EXCEPT:", "options": [{"label": "A", "text": "Primary Sjogren’s is associated with increased risk of systemic manifestations", "correct": false}, {"label": "B", "text": "Secondary Sjogren’s has increased risk of lymphoma", "correct": true}, {"label": "C", "text": "Elderly onset of disease has poorer prognosis", "correct": false}, {"label": "D", "text": "High SSA antibody titres is associated with increased risk of lymphoma", "correct": false}], "correct_answer": "B. Secondary Sjogren’s has increased risk of lymphoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most likely diagnosis associated with following pattern of ANA immunofluorescence is:", "options": [{"label": "A", "text": "SLE", "correct": true}, {"label": "B", "text": "Sicca syndrome", "correct": false}, {"label": "C", "text": "Systemic sclerosis", "correct": false}, {"label": "D", "text": "MCTD", "correct": false}], "correct_answer": "A. SLE", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/24(173).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following are features of Spondyloarthropathies EXCEPT:", "options": [{"label": "A", "text": "Strong Family history of arthropathies", "correct": false}, {"label": "B", "text": "Axial involvement is not uncommon", "correct": false}, {"label": "C", "text": "Enthesitis is the Primary site of joint involvement", "correct": false}, {"label": "D", "text": "Poor Response to NSAIDS", "correct": true}], "correct_answer": "D. Poor Response to NSAIDS", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is incorrect for the given pic?", "options": [{"label": "A", "text": "There is iris coloboma", "correct": true}, {"label": "B", "text": "Trauma history should be asked", "correct": false}, {"label": "C", "text": "There is polycoria", "correct": false}, {"label": "D", "text": "Uniocular diploia can be a presentation", "correct": false}], "correct_answer": "A. There is iris coloboma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(783).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 85 year old myopic patient presented with gradual vision loss with distortion of objects since 2 days. The doctor wants to evaluate retina to rule out macular degeneration. What will he choose among the following?", "options": [{"label": "A", "text": "Fundoscope", "correct": false}, {"label": "B", "text": "Direct ophthalmoscope", "correct": false}, {"label": "C", "text": "Slit lamp with lenses", "correct": true}, {"label": "D", "text": "Angiography", "correct": false}], "correct_answer": "C. Slit lamp with lenses", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is false for a 55 year old person?", "options": [{"label": "A", "text": "The accomodation is lost", "correct": false}, {"label": "B", "text": "Plus system of lenses are required to see near things", "correct": false}, {"label": "C", "text": "No cycloplegia for evaluation of refractive power for far distance", "correct": false}, {"label": "D", "text": "If he is hypermetropic, he gets presbyopia later than a patient of myopia", "correct": true}], "correct_answer": "D. If he is hypermetropic, he gets presbyopia later than a patient of myopia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following is used for testing function of?", "options": [{"label": "A", "text": "Central retina", "correct": true}, {"label": "B", "text": "Corneal surface", "correct": false}, {"label": "C", "text": "Visual acuity", "correct": false}, {"label": "D", "text": "Trabecular meshwork", "correct": false}], "correct_answer": "A. Central retina", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4(592).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The pictures are before and after Valsalva. What is likely condition?", "options": [{"label": "A", "text": "Orbital hemangioma", "correct": false}, {"label": "B", "text": "Orbital varices", "correct": true}, {"label": "C", "text": "Carotico-cavernous fistula", "correct": false}, {"label": "D", "text": "Orbital dermoid", "correct": false}], "correct_answer": "B. Orbital varices", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5(548).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55 year old female patient presented with the subacute onset of pain in the left medial canthal area, associated with epiphora. A very tender, tense red swelling develops at the left medial canthus. Patient is diabetic and on daily insulin injections. There was also a history of fall 3 years back in which the left eye had periorbital swelling, which subsided in 1 week with systemic anti-inflammatory. She was treated with the application of warm compresses and oral antibiotics and after the infection subsided, the doctor advised a surgery. The surgery will mainly involve which of the following pair of bones?", "options": [{"label": "A", "text": "Maxillary, Palatine", "correct": false}, {"label": "B", "text": "Maxillary, Lacrimal", "correct": true}, {"label": "C", "text": "Lacrimal, Ethmoid", "correct": false}, {"label": "D", "text": "Lacrimal, Palatine", "correct": false}], "correct_answer": "B. Maxillary, Lacrimal", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A young baby with hypotonia and development delay is referred to ophthalmology. The intra-ocular pressure is 29mmHg. The following slit lamp finding was observed. Its seen in which condition?", "options": [{"label": "A", "text": "Alport syndrome", "correct": false}, {"label": "B", "text": "Lowe syndrome", "correct": true}, {"label": "C", "text": "Aniridia", "correct": false}, {"label": "D", "text": "Congenital glaucoma", "correct": false}], "correct_answer": "B. Lowe syndrome", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7(412).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following sign was seen in a patient of Marfans syndrome. Which is not risk factor here?", "options": [{"label": "A", "text": "Hypermetropia", "correct": true}, {"label": "B", "text": "Posterior vitreous detachment", "correct": false}, {"label": "C", "text": "Posterior capsule rupture during cataract surgery", "correct": false}, {"label": "D", "text": "Lattice degeneration", "correct": false}], "correct_answer": "A. Hypermetropia", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8(404).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 34-year-old is struck in the eye by a golf ball. The doctor examines his eye and noted that hyphema is present in the anterior chamber. No rupture of the globe is present. IOP noted IOP of 42 mm Hg in that eye. Treatment with antiglaucoma medications were started. What is not correct?", "options": [{"label": "A", "text": "There can be irido-dialysis associated", "correct": false}, {"label": "B", "text": "Vossius ring can be seen after resolution of hemorrage", "correct": false}, {"label": "C", "text": "Secondary glaucoma associated is of closed type", "correct": true}, {"label": "D", "text": "Topical steroids and cycloplegic agents are given initially along with anti-glaucoma medications", "correct": false}], "correct_answer": "C. Secondary glaucoma associated is of closed type", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 3 year old boy came to OPD and following was seen. Which is not seen here?", "options": [{"label": "A", "text": "Ptosis", "correct": false}, {"label": "B", "text": "Esotropia", "correct": true}, {"label": "C", "text": "Telecanthus", "correct": false}, {"label": "D", "text": "Epicanthus inversus", "correct": false}], "correct_answer": "B. Esotropia", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/10(390).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Choose the most appropriate statement regarding “Congenital anomalies of the middle ear cleft”", "options": [{"label": "A", "text": "Due to their common origin the outer, middle and inner ear elements are all effected.", "correct": false}, {"label": "B", "text": "Congenital conductive deafness with a normal meatus and eardrum is easily corrected surgically.", "correct": false}, {"label": "C", "text": "The Treacher-Collins syndrome is an expression of ear anomalies associated with other developmental defects of the 1st and 2nd branchial arches.", "correct": false}, {"label": "D", "text": "Wildervanck

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Acyanotic CHD</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Acyanotic CHD</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                15 Questions | 15 Total Marks | 25 min Duration | ~100.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 15 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 25 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 15</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Acyanotic CHD - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 15</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 15 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Baby of Lata, a newborn baby delivered at 31 weeks of gestation, was admitted to the Neonatal intensive care unit(NICU) for Low birth weight (LBW) care. On the 5th day of life, the child had an apnea episode. On clinical examination, there was no pallor, but auscultation revealed a continuous murmur, and S2 was paradoxically split. An ECG was ordered, which showed left ventricular predominance. What would be the most likely diagnosis?", "options": [{"label": "A", "text": "Ventricular septal defect", "correct": false}, {"label": "B", "text": "Eissenmenger syndrome", "correct": false}, {"label": "C", "text": "Ostium primum ASD", "correct": false}, {"label": "D", "text": "Patent ductus arteriosus", "correct": true}], "correct_answer": "D. Patent ductus arteriosus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Patent ductus arteriosus Patent ductus arteriosus (PDA) is a communication between the pulmonary artery and the aorta and is most often distal to the subclavian artery.</p>\n<p><strong>Highyeild:</strong></p><p>A patent ductus arteriosus results in a shunt from the aorta to the pulmonary artery. Since there is overloading of the pulmonary artery both during systole and diastole, it results in a continuous murmur. Management- In preterm infants, Indomethacin is most commonly used. In-term babies will require surgical closure.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Baby of Lata, a newborn baby delivered at 31 weeks of gestation, was admitted to the Neonatal intensive care unit(NICU) for Low birth weight(LBW) care. On 5th day of life, the child had an episode of apnoea. On clinical examination, there was no pallor, but auscultation revealed a continuous murmur, and S2 was paradoxically split. An ECG was ordered, which showed left ventricular predominance. Which of the following drugs may be useful in the medical management of this baby?", "options": [{"label": "A", "text": "Prostaglandin E1", "correct": false}, {"label": "B", "text": "Caffeine", "correct": false}, {"label": "C", "text": "Indomethacin", "correct": true}, {"label": "D", "text": "Cannot be managed medically.", "correct": false}], "correct_answer": "C. Indomethacin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Indomethacin The diagnosis here is Patent ductus arteriosus (PDA). PDA is a connection between the pulmonary artery and the aorta and is most often distal to the subclavian artery. The Ductus arteriosus closes soon after birth, and its persistence is called PDA.</p>\n<p><strong>Highyeild:</strong></p><p>Management includes indomethacin (dose: 0.2mg/kg/dose given orally every 12-24 hours for three doses for a baby < 48 hours and 0.25 mg/kg/dose for babies > 7 days) Ibuprofen may be used alternatively. Furosemide and digoxin are used in heart failure following Congestive heart failure (CHF) due to Patent ductus arteriosus (PDA). Prostaglandin E1 is used to keep the ductus open, which is helpful in congenital heart lesions dependent on ductal circulation. Caffeine may be used in apnea of prematurity.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The mother of an infant presents to the clinic with complaints of reduced breastfeeding and excessive forehead sweating. The chest radiograph showed an enlarged cardiac shadow. Further investigation showed that the baby had patent ductus arteriosus (PDA). Which of the following is true regarding this condition?", "options": [{"label": "A", "text": "Patients with PDA develop congestive cardiac failure around 6-10 years of life.", "correct": false}, {"label": "B", "text": "Left-to-right flow occurs only during systole", "correct": false}, {"label": "C", "text": "ECG shows left axis deviation early in life", "correct": false}, {"label": "D", "text": "Aortic attachment of the ductus arteriosus is distal to the left subclavian artery.", "correct": true}], "correct_answer": "D. Aortic attachment of the ductus arteriosus is distal to the left subclavian artery.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Aortic attachment of the ductus arteriosus is distal to the left subclavian artery. PDA is a communication between the pulmonary artery and the aorta .</p>\n<p><strong>Highyeild:</strong></p><p>Aortic attachment of the ductus arteriosus is distal to the left subclavian artery . Therefore, differential cyanosis is seen when pulmonary artery hypertension develops because If Aorta is involved distal to the left subclavian artery- It can result in only that-sided cyanosis or asymmetrical symptoms.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options :- Option. A . Infants with PDA develop CCF around 6-10 weeks after birth. Option. B . Left to proper flow in the ductus arteriosus occurs during systole and diastole as a pressure gradient is maintained throughout the cardiac cycle between the two great arteries. Remember that in PDA, the continuous murmur is heard. Option. C . ECG shows a normal axis with left ventricular dominance or hypertrophy.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 3-month-old infant with a known case of patent ductus arteriosus is brought to the hospital for surgical ligation. However, examination shows cyanosis in the toes but not in the fingers. Seeing this, the surgeon declared the case inoperable. What is the reason behind the differential cyanosis?", "options": [{"label": "A", "text": "Congestive Cardiac Failure", "correct": false}, {"label": "B", "text": "Pulmonary Arterial Hypertension", "correct": true}, {"label": "C", "text": "Lutembacher syndrome", "correct": false}, {"label": "D", "text": "Coronary Arteriovenous fistula", "correct": false}], "correct_answer": "B. Pulmonary Arterial Hypertension", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Pulmonary Arterial Hypertension Here, the infant shows differential cyanosis, which is seen when pulmonary arterial hypertension develops in PDA patients. If Aorta is involved distal to the left subclavian artery- It can result in only that-sided cyanosis or asymmetrical symptoms.</p>\n<p><strong>Highyeild:</strong></p><p>It leads to the right to left shunt directing the deoxygenated blood directly into the descending aorta. This is because the aortic attachment of the ductus arteriosus is distal to the left subclavian artery. Patients with PDA develop pulmonary arterial hypertension earlier than VSD.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A . Congestive Cardiac Failure is a common complication of PDA and develops around 6-10 weeks of life, but it’s not directly related to the reversal of shunt flow. Option: C & D. Small Atrial Septal Defect associated with mitral stenosis is known as Lutembacher syndrome . This and coronary arteriovenous fistula are differential diagnoses of PDA as they may show continuous murmur. They have no role in the reversal of shunt.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 2-month-old infant, a known case of patent ductus arteriosus, is brought to the pediatrician with features suggestive of congestive cardiac failure. The pediatrician explains to the parents that large shunts result in congestive cardiac failure. Which of the following factors are directly proportional to the size of the shunt? i). Size of the heart ii). Presence of third heart sound on auscultation iii). Wide pulse pressure Select the correct answer from given below code:", "options": [{"label": "A", "text": "i, ii, iii", "correct": true}, {"label": "B", "text": "i & iii", "correct": false}, {"label": "C", "text": "Only i", "correct": false}, {"label": "D", "text": "ii & iii", "correct": false}], "correct_answer": "A. i, ii, iii", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>i, ii, iii The larger the shunt size, the more volume overload is in the left heart. This leads to the increased size of the left atrium and ventricle to accommodate the extra volume.</p>\n<p><strong>Highyeild:</strong></p><p>Large shunts cause extra blood to fill the ventricles, leading to a third heart sound rapidly. This is seen prominently in Systolic heart failure. Left to right shunt is a leak from the systemic flow , leading to wide pulse pressure. Thus, the larger the shunt, the more systemic runoff.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The mother of an infant presents to the clinic with complaints of an increased resting period between breastfeeds, forehead sweating, and rapid breathing. On examination, no cyanosis was found. Auscultation revealed a continuous “machinery-like” murmur with maximum intensity at S2 with multiple clicks. Best heard in the second left intercostal space. What is the diagnosis?", "options": [{"label": "A", "text": "Atrial Septal Defect", "correct": false}, {"label": "B", "text": "Patent Ductus Arteriosus", "correct": true}, {"label": "C", "text": "Ventricular Septal defect", "correct": false}, {"label": "D", "text": "Mitral Stenosis", "correct": false}], "correct_answer": "B. Patent Ductus Arteriosus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Patent Ductus Arteriosus Continuous systolic and diastolic pressure differences between the aorta and pulmonary artery give rise to constant murmur.</p>\n<p><strong>Highyeild:</strong></p><p>The murmur starts after the first sound and peaks at the second heart sound. The buzz then diminishes in intensity and is audible during part of the diastole. The peak in the second heart sound differentiates the PDA murmur from other causes of continuous murmur . PDA can result in differential cyanosis in babies. The murmur is heard as if broken into multiple systolic sounds.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A researcher working in the pediatrics unit includes babies suffering from congenital heart defects. He discovered that around 10% of all CHD cases are atrial septal defects. Which of the following is true about this condition? i). It is the most common anomaly among all the CHDs ii). Associated with fixed S2 iii). Ejection systolic murmur heard in the aortic area iv). ECG shows rsR’ pattern in lead V1 v). Size of the shunt is directly proportional to the intensity of the tricuspid murmur. Select the correct answer from given below code:", "options": [{"label": "A", "text": "i, ii, iii", "correct": false}, {"label": "B", "text": "i, iii, iv", "correct": false}, {"label": "C", "text": "ii, iv, v", "correct": true}, {"label": "D", "text": "iii, iv, v", "correct": false}], "correct_answer": "C. ii, iv, v", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>ii, iv, v The most common congenital cardiac defect is a Ventricular septal defect (around 25%). It occurs due to an endovascular cushion defect.</p>\n<p><strong>Highyeild:</strong></p><p>Since ASD connects the two atria, inspiration does not produce any net pressure change between them, and respiration-related fluctuations in systemic venous return to the right side of the heart are abolished; thereby, the fixed S2. A systolic ejection murmur was heard in the pulmonary area because of the increased blood flow . Almost 90% of the patients of ASD show rsR’ pattern in lead V1 The size of the left to right shunt is directly proportional to the intensity of the pulmonary and tricuspid murmurs and heart size.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An infant with ostium primum type of atrial septal defect is brought to the clinic for a routine check-up. What murmur(s) will be heard on auscultation in this patient?", "options": [{"label": "A", "text": "Ejection systolic murmur", "correct": false}, {"label": "B", "text": "Holosystolic murmur", "correct": false}, {"label": "C", "text": "Delayed diastolic murmur", "correct": false}, {"label": "D", "text": "Both A and C", "correct": true}], "correct_answer": "D. Both A and C", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Both A and C Left to right shunt causes volume overload of the right ventricle.</p>\n<p><strong>Highyeild:</strong></p><p>The increased blood flow through the tricuspid valve results in a soft, delayed diastolic rumble at the lower left sternal border. The increased blood flow through the pulmonary valve produces an systolic ejection So, this murmur is produced because of increased blood in Right Ventricle.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option B. Holosystolic murmur is seen in mitral regurgitation, tricuspid regurgitation, and ventricular septal defect.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A sick infant with an increased suck-rest-suck cycle and tachypnoea presents to the OPD. The chest X-ray shows cardiomegaly with right atrial and right ventricular enlargement and a prominent main pulmonary artery. What is the diagnosis?", "options": [{"label": "A", "text": "Atrial Septal Defect", "correct": true}, {"label": "B", "text": "Tetralogy of Fallot", "correct": false}, {"label": "C", "text": "Ventricular Septal Defect", "correct": false}, {"label": "D", "text": "Tricuspid Regurgitation", "correct": false}], "correct_answer": "A. Atrial Septal Defect", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Atrial Septal Defect Clinical features are suggestive of congenital heart disease Right atrial and ventricular enlargement indicates isolated right heart volume overload, which occurs when there is a defect in the inter-atrial septum.</p>\n<p><strong>Highyeild:</strong></p><p>The pulmonary Artery also enlarges to accommodate the increased blood volume. Other findings: Relatively small aortic shadow, plethoric lung field. It is also associated with the Wide Fixed Split of the second heart sound.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect  Option :- Option: B . Chest X-Ray in TOF shows a boot-shaped heart due to right ventricular hypertrophy Option: C . Chest X-Ray in Ventricular Septal Defect will show cardiomegaly (left ventricular type), prominent pulmonary artery, and increased pulmonary plethora.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 2-year-old boy with a history of congenital heart disease is referred to your hospital. Echocardiography shows a 16 mm defect in the central portion of the atrial septum. Which of the following is true regarding the treatment of ASD?", "options": [{"label": "A", "text": "Surgical closure can be delayed till schooling age", "correct": false}, {"label": "B", "text": "Defects < 18 mm can be observed.", "correct": false}, {"label": "C", "text": "Fossa ovalis defects can be closed percutaneously", "correct": true}, {"label": "D", "text": "Medical management with indomethacin is recommended.", "correct": false}], "correct_answer": "C. Fossa ovalis defects can be closed percutaneously", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Fossa ovalis defects can be closed percutaneously Fossa ovalis defects with good margins can be closed percutaneously in the catheterization lab with occlusive devices. ASD is also associated with wide fixed splitting of the second heart sound.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A . Surgical closure should be done before school entry to prevent late complications Option: B . Defects < 8 mm can be observed for s pontaneous closure . Option: D . Indomethacin or ibuprofen is used for treating PDA and not ASD .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 10-year-old girl with a birth history of full-term normal vaginal delivery presents to the OPD with recurrent chest infections, palpitations, and dyspnoea on exertion. Chest X-ray shows cardiomegaly with left ventricular hypertrophy and increased pulmonary vascular markings. The pediatrician made a diagnosis of VSD, and echocardiography confirmed the same. Which of the following is true regarding the diagnosis?", "options": [{"label": "A", "text": "ECG findings vary with age", "correct": true}, {"label": "B", "text": "Muscular septum is the most typical location of the defect", "correct": false}, {"label": "C", "text": "Patients with VSD develop congestive cardiac failure by 6-10 years of age", "correct": false}, {"label": "D", "text": "Late diastolic murmur is heard in VSD.", "correct": false}], "correct_answer": "A. ECG findings vary with age", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>ECG findings vary with age Initially, all patients with VSD have right ventricular hypertrophy, which regresses slowly due to the delay in fall of pulmonary vascular resistance.</p>\n<p><strong>Highyeild:</strong></p><p>By 6-12 months of age, ECG shows left ventricular hypertrophy (only in significant VSD cases). In small VSD cases, ECG becomes normal as age progresses because small VSD can get closed with age. The membranous septum is the most typical location of the defect Patients with VSD develop congestive cardiac failure by 6-10 weeks of life Pansystolic murmur is heard in VSD.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 6-year-old girl with a known case of Turner syndrome has a history of unknown congenital heart disease. On examination, there is no cyanosis, hypertension in the upper limb, or brachiofemoral delay. What is the most probable diagnosis?", "options": [{"label": "A", "text": "Patient Ductus Arteriosus", "correct": false}, {"label": "B", "text": "Atrial Septal Defect", "correct": false}, {"label": "C", "text": "Coarctation of Aorta", "correct": true}, {"label": "D", "text": "Ventricular Septal Defect", "correct": false}], "correct_answer": "C. Coarctation of Aorta", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Coarctation of Aorta Turner syndrome is associated with coarctation of the aorta.</p>\n<p><strong>Highyeild:</strong></p><p>The examination reveals a difference in blood pressure and pulse delay between the upper and lower limbs. This is highly suggestive of coarctation of the Inferior rib notching is also seen in the coarctation of the aorta. Such patients are at increased risk of berry aneurysms and cerebral hemorrhage. All the options are examples of cyanotic heart diseases, but Options A, B, and D do not cause blood pressure differences and pulse delays between the upper and lower limbs.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with a known history of Ventricular septal defect walks into your OPD. Which of the following is true regarding the severity of the disease?", "options": [{"label": "A", "text": "If VSD is small, S2 is generally split with the average intensity of P2", "correct": false}, {"label": "B", "text": "If VSD is small, the delayed diastolic mitral murmur is absent", "correct": false}, {"label": "C", "text": "If VSD is large, only an ejection systolic murmur is heard.", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above If the VSD is small, the left to right shunt murmur will be pan systolic with typically split S2.</p>\n<p><strong>Highyeild:</strong></p><p>If the VSD is very small, it acts as a stenotic area and results in an ejection systolic murmur. Small VSDs can even get close with age. If the VSD is large, it transmits left ventricular systolic pressure to the right ventricle. Thus, the proper ventricular pressure increases and the difference in the systolic pressure between the two ventricles reduces. The systolic left-to-right shunt becomes shorter, softer, and heard as an ejection systolic murmur.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 6-year-old girl with a history of unknown congenital heart disease. Previous hospital records of the child are missing. On examination, there is no cyanosis. A chest radiograph was ordered and is shown below: What is the most probable diagnosis?", "options": [{"label": "A", "text": "Truncus arteriosus", "correct": false}, {"label": "B", "text": "Coarctation of the aorta", "correct": true}, {"label": "C", "text": "Patent Ductus Arteriosus", "correct": false}, {"label": "D", "text": "Transposition of great arteries", "correct": false}], "correct_answer": "B. Coarctation of the aorta", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1682883708123-QTDK024017IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Coarctation of the aorta Figure 3 in the chest radiograph is seen in the coarctation of the aorta.</p>\n<p><strong>Highyeild:</strong></p><p>This appearance is formed due to restenotic dilatation of the aortic arch and left subclavian artery, indentation at the coarctation site, and post-stenotic dilatation of the descending aorta. Inferior rib Notching can also be seen in the Coarctation of the aorta.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A . Chest radiographs in truncus arteriosus often show moderate cardiomegaly with pulmonary plethora and widened mediastinum. Option: C . PDA can have cardiomegaly (predominantly left atrial and left ventricular enlargement) Option: D . TGA shoes egg-on-string There is often an apparent narrowing of the superior mediastinum due to the aortic and pulmonary arterial configuration, i.e., parallel in D-loop transposition, with the main pulmonary artery posterior to the aorta.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 6-year-old boy with a small ventricular septal defect in the muscular septum comes for a routine check-up. He has no symptoms, and the Chest radiograph shows no abnormality. Which of the following would you advise?", "options": [{"label": "A", "text": "Surgical closure of the VSD using a patch", "correct": false}, {"label": "B", "text": "Good oral-dental hygiene", "correct": true}, {"label": "C", "text": "Catheter-based closure of the VSD", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "B. Good oral-dental hygiene", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Good oral-dental hygiene VSD is the most typical congenital lesion complicated by infective endocarditis. Therefore, good oral hygiene practices should be encouraged. VSD occurs because of endocardial cushion defects .</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A & C. Closure is not recommended in small VSDs. Moreover, muscular defects have the highest chance of spontaneous closure.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

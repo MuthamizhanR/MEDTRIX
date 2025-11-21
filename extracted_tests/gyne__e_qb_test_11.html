@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Epithelial Ovarian Cancer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Epithelial Ovarian Cancer</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                22 Questions | 22 Total Marks | 32 min Duration | ~87.27 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 22 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 32 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 22</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Epithelial Ovarian Cancer - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 22</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 22 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "CA- 125 is NOT increased in?", "options": [{"label": "A", "text": "T.B. of genital organs", "correct": false}, {"label": "B", "text": "Ovarian cancer", "correct": false}, {"label": "C", "text": "Endometriosis", "correct": false}, {"label": "D", "text": "Stein- Leventhal syndrome", "correct": true}], "correct_answer": "D. Stein- Leventhal syndrome", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Stein- Leventhal syndrome</p>\n<p><strong>Highyeild:</strong></p><p>Assessment of levels of CA125 CA-125 is a glycoprotein secreted by malignant epithelial tumors of the Levels of Ca 125 correlate with the volume of the tumor and is elevated in 50% of Stage I tumor and 90% of tumors with Stage II or higher. CA-125 level is also useful for follow-up after treatment. Level > 35 units/ml suggests residual tumor. CA-125 is raised in: Benign gynecological condition Malignant condition • Pregnancy • PID • Endometriosis • Uterine fibroid • About 1% of normal females Mnemonic : CA-125 is raised in pregnant patient with endometrial fibroid B and PID Endogenous      Endometrial Ca Pneumocystis    Pancreas Ca Carinii               Colon Ca Causes               Cervix Ca T                        Fallopian tubes Ca B                        Breast Ca Or                      Ovarian epithelial Ca  (MC cause) Lung                  Lung Ca Mnemonic: Endogenous Pneumocystis Carinii Causes TB Of Lungs Normal levels > 35 IU/mL In postmenopausal women with an asymptomatic pelvic mass and CA - 125 > 65, U/ml is very sensitive for the diagnosis of ovarian epithelial tumor. In menopausal females - levels > 200 IU/mL are diagnostic. Although CA 125 is raised in many cancers it is specific for epithelial ovarian cancer.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Options A, B, and C: will have raised CA -125.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements regarding BRCA variants of uncertain clinical significance is FALSE?", "options": [{"label": "A", "text": "Women with this test result should undergo prophylactic salpingo-oophorectomy", "correct": true}, {"label": "B", "text": "They may be normal variants and may not represent an increased risk of ovarian and breast cancer", "correct": false}, {"label": "C", "text": "One-third of BRCA1 test results may be classified as a variant of uncertain clinical significance", "correct": false}, {"label": "D", "text": "One-half of BRCA2 test results may be classified as variants of uncertain clinical significance", "correct": false}], "correct_answer": "A. Women with this test result should undergo prophylactic salpingo-oophorectomy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Women with this test result should undergo prophylactic salpingo-oophorectomy Women with this test result should undergo prophylactic salpingo-oophorectomy is INCORRECT that “variants of uncertain clinical significance” may actually be pathogenic (true mutations) or just polymorphisms. Given the prognostic uncertainty and high rate of reclassification, individualized counseling and directing efforts toward surveillance, chemoprevention, or salpingectomy are recommended.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. is correct -“variants of uncertain clinical significance” may actually be pathogenic (true mutations) or just polymorphisms (normal variants found in at least 1 percent of alleles in the general population). Most are missense mutations, which result in a single amino acid change in the protein, without a frameshift. Option: C. is correct - These unclassified variants are common, representing approximately one-third of BRCA1 test results. Option: D. is CORRECT- These unclassified variants are common, half of those for BRCA2.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statement is NOT correct about low malignant potential tumors?", "options": [{"label": "A", "text": "Accounts for 10-15 % of epithelial ovarian cancers", "correct": false}, {"label": "B", "text": "They are also known as Borderline tumors", "correct": false}, {"label": "C", "text": "Having risk factors similar to epithelial ovarian cancers", "correct": false}, {"label": "D", "text": "They are considered part of the hereditary breast-ovarian cancer syndromes", "correct": true}], "correct_answer": "D. They are considered part of the hereditary breast-ovarian cancer syndromes", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>They are considered part of the hereditary breast-ovarian cancer syndromes They have considered part of the hereditary breast-ovarian cancer syndromes is INCORRECT, Typically, they are not considered part of any of the hereditary breast-ovarian cancer syndromes.</p>\n<p><strong>Highyeild:</strong></p><p>Management of Ovarian Cyst General principles:- Surgery for ovarian mass. Indications Any ovarian mass which shows high-risk features on USG. Any ovarian mass >7 cm & adnexal mass > 10 cm irrespective of age. Raised CA125 levels in postmenopausal females (>65 IU/mL) Acute complication of ovarian cyst. For diagnostic purposes. Low Malignant Potential Tumors/Borderline Tumors > Approximately 10% of all epithelial tumors are borderline of which 30% are of mucinous variety > Tumor cells display malignant characteristic histologically but no invasion is identified. > They remain confined to a single ovary for a very long time are slow growing and have a good prognosis (5 year survival >99%). > Common in age group-30-50 years unlike there malignant counterparts which are seen in age >50 years.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. CORRECT, 10 - 15 % of epithelial ovarian cancers have histologic and biologic features that are intermediate between clearly benign cysts and frankly invasive carcinomas. Option: B. CORRECT, these low malignant-potential (LMP) tumors, are also termed borderline malignant tumors. Option: C. CORRECT, they are associated with risk factors that are similar to those for epithelial ovarian cancer.</p>\n<p><strong>Extraedge:</strong></p><p>The criteria for the diagnosis of borderline tumors Epithelial hyperplasia in the form of pseudostratification, tufting, cribriform, and micropapillary architecture Nuclear atypia and increased mitotic activity Detached cell clusters • Absence of destructive stromal invasion (i.e., without tissue destruction) Metastasis is uncommon and occurs rarely > Treated with surgery, no proven benefit of chemotherapy.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-year-old G1P1 undergoes surgical exploration for a large pelvic mass. The frozen section analysis of her right ovary returns a diagnosis of a \"mucinous tumor of low malignant potential, cannot exclude invasion.\" Clinically, there is no other obvious disease. In addition to pelvic washings, multiple peritoneal biopsies, omentectomy, and appendectomy, what other surgical procedures should be performed?", "options": [{"label": "A", "text": "No other procedures", "correct": true}, {"label": "B", "text": "Bilateral pelvic and paraaortic lymph node dissection", "correct": false}, {"label": "C", "text": "Total abdominal hysterectomy, bilateral salpingo-oophorectomy, and bilateral pelvic and paraaortic lymph node dissection", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. No other procedures", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>No other procedures</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A: is CORRECT: since the tumor is a low malignant potential tumor and the patient is in the reproductive age group so fertility-sparing surgery should be planned and the patient can be observed in the follow-up period. Option B: is INCORRECT: In the absence of enlarged nodes or a frozen section suggestive of frankly invasive disease, routine pelvic and paraaortic lymph node dissection may not be necessary Option C: is INCORRECT: Total abdominal hysterectomy with bilateral salpingo-oophorectomy is not required since the patient is of reproductive age group, only a fertility-sparing procedure will be sufficient if required and the patient can be followed up later on.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the worst prognostic feature associated with low-malignant-potential tumors?", "options": [{"label": "A", "text": "Advanced stage", "correct": false}, {"label": "B", "text": "Invasive implants", "correct": true}, {"label": "C", "text": "Mucinous histology", "correct": false}, {"label": "D", "text": "Stromal microinvasion", "correct": false}], "correct_answer": "B. Invasive implants", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Invasive implants True -for advanced-stage tumors, the most reliable prognostic indicator is the presence of invasive implants.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A: INCORRECT- advanced stage is not associated with the worst prognosis. Option C: INCORRECT - Mucinous histology is not associated with the worst prognosis. Option D: INCORRECT-Stromal micro invasion is not associated with the worst prognosis.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following conditions can cause an elevated cancer antigen 125 (CA125) level?", "options": [{"label": "A", "text": "Leiomyomata", "correct": false}, {"label": "B", "text": "Menstruation", "correct": false}, {"label": "C", "text": "Endometriosis", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above The serum CA125 level is integral to epithelial ovarian cancer management. In 90 percent of women presenting with malignant nonmucinous tumors, CA125 levels are elevated.</p>\n<p><strong>Highyeild:</strong></p><p>Assessment of levels of CA125 CA-125 is a glycoprotein secreted by malignant epithelial tumors of the ovary. Levels of Ca 125 correlate with the volume of the tumor and is elevated in 50% of Stage I tumor and 90% of tumors with Stage II or higher. CA-125 level is also useful for follow-up after treatment. Level > 35 units/ml suggests residual tumor. CA-125 is raised in: Benign gynaecological condition Malignant condition • Pregnancy • PID • Endometriosis • Uterine fibroid • About 1% of normal females Mnemonic: CA - 125 is raised in pregnant patient with endometrial fibroid B and PID Endogenous      -     Endometrial Ca Pneumocystis    -    Pancreas Ca Carinii               -     Colon Ca Causes               -    Cervix Ca T                        -     Fallopian tubes Ca B                        -     Breast Ca Of                       -    Ovarian epithelial Ca(MC cause) Lung                  -     Lung Ca Mnemonic: Endogenous Pneumocystis Carinii Causes TB Of Lungs Normal levels > 35 IU/mL In postmenopausal women with an asymptomatic pelvic mass and CA - 125 > 65, U/ml is very sensitive for the diagnosis of ovarian epithelial tumor. In menopausal females - levels > 200 IU/mL are diagnostic. Although CA 125 is raised in many cancers it is specific for epithelial ovarian cancer.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is a possible mechanism by which primary cytoreductive surgery is felt to improve outcomes?", "options": [{"label": "A", "text": "Enhance tumor chemosensitivity", "correct": false}, {"label": "B", "text": "Decrease risk of chemoresistance", "correct": false}, {"label": "C", "text": "Improve drug delivery to cancer cells after removal of necrotic tissue", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above</p>\n<p><strong>Highyeild:</strong></p><p>Debulking, also called cytoreduction , is defined as the removal of as much tumor as possible during surgical exploration. Optimal cytoreduction implies that tumor nodules no larger than 1 cm in diameter are left behind and survival improves as the amount of residual diseases decreases. Primary cytoreductive surgery, or debulking is central in the treatment of advanced disease because maximal cytoreduction is one of the most powerful predictors of survival in patients with advanced cancer . The determination of residual disease does not include the total volume of tumor cells left behind but rather the diameter of the largest single residual nodule. The mechanism by which primary cytoreductive surgery is felt to improve outcomes: First, surgery removes large volumes of chemoresistant tumor cell clones . Second, the excision of necrotic tissue improves drug delivery to remaining well-vascularized cells. Third, small residual tumor implants should be faster growing and therefore more susceptible to chemotherapy . Fourth, smaller cancer cell populations should require fewer chemotherapy cycles, which lowers the chances of chemoresistance. Finally, the removal of bulky disease potentially enhances the immune system .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 34-year-old woman is admitted to the hospital with a diagnosis of ovarian cancer. Which of the following lymph nodes are the first to receive lymph from the diseased ovaries?", "options": [{"label": "A", "text": "Superficial and deep inguinal lymph nodes", "correct": false}, {"label": "B", "text": "External iliac nodes", "correct": false}, {"label": "C", "text": "Para-aortic nodes at the level of the renal vessels", "correct": true}, {"label": "D", "text": "Node of Cloquet", "correct": false}], "correct_answer": "C. Para-aortic nodes at the level of the renal vessels", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Para-aortic nodes at the level of the renal vessels Ovarian lymph first drains into the para-aortic nodes at the level of the renal vessels esp. in cases of serous tumors, the para-aortic region, particularly above the IMA, is the prime site for the earliest lymph node metastasis. lymphatics</p>\n<p><strong>Highyeild:</strong></p><p>The modes of spread of Ovary cancer Transcoelomic Lymphatic Direct Hematogenous The lymphatic spread of the CA Ovary is to the draining lymph nodes namely paraaortic and superior gastric nodes. The pelvic nodes may be involved through peritoneal permeation into the subperitoneal lymphatics. The left supraclavicular nodes are enlarged due to obstruction of the efferent lymphatic channel of the nodes by the tumor emboli, as it enters the thoracic duct just prior to its drainage into the left subclavian Vein. Lateral lymphatic spread through the broad ligament to the pelvic nodes may occur. Retrograde lymphatic spread in advanced disease may occur to the inguinal nodes through the round ligament . Transcoelomic: Implantation of malignant cells Occurs by Direct exfoliation of cells as in papillary cyst adenocarcinoma. Penetration of tumor capsule. Rupture of the capsule Direct : After the capsule is broken, the spread occurs directly to the adjacent organs such as tubes, broad ligaments, intestines, omentum, and uterus. Hematogenous : The bloodstream metastasis is late and the involved organs are lungs, liver, bones, etc.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A: The superficial and deep inguinal nodes drain the body wall below the umbilicus, the lower limbs, and the cutaneous portion of the anal canal and parts of the perineum. Option B: The external iliac nodes receive the lymph from the inguinal nodes. Option C: The node of Cloquet is located in the femoral ring, adjacent to the external iliac vein and beneath the inguinal ligament. The node of Cloquet drains into the common iliac nodes.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What percentage of epithelial ovarian cancers is hereditary?", "options": [{"label": "A", "text": "0.01 percent", "correct": false}, {"label": "B", "text": "0.3 percent", "correct": false}, {"label": "C", "text": "10 percent", "correct": true}, {"label": "D", "text": "30 percent", "correct": false}], "correct_answer": "C. 10 percent", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>10 percent The most important is a family history of ovarian cancer, and approximately 10% of patients have an inherited genetic predisposition. Numerous reproductive, environmental, and genetic risk factors have been associated with ovarian cancer. For the other 90 % with no identifiable genetic link or their ovarian cancer, most risks are related to a pattern of uninterrupted ovulatory cycles during the reproductive years. Repeated stimulation of the ovarian surface epithelium is hypothesized to lead to malignant transformation. Options A, B, and D are not correct.</p>\n<p><strong>Extraedge:</strong></p><p>Risk Factors for Ovarian Cancer Age - between 45 and 60 years Nulliparous or of low parity Women with previous PCOS, or on tamoxifen High-calorie, high-fat diet Genetic predisposition BRCA-1 and BRCA-2 gene mutation Late menopause Family history of breast and gastrointestinal cancers Multiple cycles of ovulation induction</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 65-year-old woman presents with bilateral solid ovarian tumors and has ascites. Her upper GI endoscopy reveals an ulcerative growth in the body of the stomach. The most likely diagnosis is?", "options": [{"label": "A", "text": "Serous cystadenocarcinoma of the ovary", "correct": false}, {"label": "B", "text": "Krukenberg tumor of the ovary", "correct": true}, {"label": "C", "text": "Clear cell carcinoma of the ovary", "correct": false}, {"label": "D", "text": "Transitional cell carcinoma of the ovary", "correct": false}], "correct_answer": "B. Krukenberg tumor of the ovary", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Krukenberg tumor of the ovary True- Krukenberg tumor refers to a metastatic Mucinous /signet ring cell adenocarcinoma of the ovaries that typically originates from primary tumors of the intestinal tract, characteristically the stomach. They are typically bilateral, solid, and have intact capsules.</p>\n<p><strong>Highyeild:</strong></p><p>Krukenberg Tumor Krukenberg tumor by definition represents carcinoma of the stomach metastasized to the But the eponym is commonly used to denote any gastric cancer metastatic to the ovary Tumors arise by retrograde lymphatic spread e. carcinoma cells pass from the stomach to the superior gastric lymph node which also receives lymphatics from the ovary. Characteristics of Krukenberg Tumor Always bilateral Have smooth surface No tendency to form adhesions Freely mobile No infiltration through the capsule. Histologically tumor has signet ring cells in the background of the myxomatous stroma. Microscopic appearance of Krukenberg tumour showing signet ring appearance of cells. They retain the shape of a normal ovary. Have waxy consistency.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. is False: Serous cystadenocarcinoma of the ovary is the primary tumor of the ovary. They are bilateral in 40 % of the cases not associated with intestinal malignancy. Option: C. False: Clear cell carcinoma is a primary tumor of the ovary, typically confined to the ovary, most frequently associated with pelvic endometriosis. Option: D. False: Transitional cell carcinoma is also the primary ovarian malignancy, accounting for less than 5% of the carcinoma ovary, Microscopically, transitional cell carcinoma resembles a primary bladder carcinoma but has an immunoreactive pattern consistent with ovarian origin.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the Pathognomonic cell type among serous cystadenocarcinoma of the ovary?", "options": [{"label": "A", "text": "Signet ring", "correct": false}, {"label": "B", "text": "Hobnail cell", "correct": false}, {"label": "C", "text": "Keratin pearl", "correct": false}, {"label": "D", "text": "Psammoma body", "correct": true}], "correct_answer": "D. Psammoma body", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Psammoma body Psammoma bodies are characteristic of serous cystadenocarcinoma of the ovary. Epithelial Tumors Derived from the ovarian surface epithelium. Epithelial tumors comprise 50-60% of all ovarian tumors but malignant epithelial tumors comprise 90% of all ovarian cancers. Varieties of epithelial cell tumors Serous (histology resembles the lining of fallopian tubes) Mucinous (histology resembles endocervical epithelium) Endometrioid (histology resembles endometrial lining) Clear cell (histology resembles vaginal mucosa) Transitional cell (Brenners

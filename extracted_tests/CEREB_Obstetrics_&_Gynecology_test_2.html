@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Obg E&amp;D (Mission Neet Pg Inicet 2.0)   16 07 2024   2024 07 16</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Obg E&amp;D (Mission Neet Pg Inicet 2.0)   16 07 2024   2024 07 16</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                100 Questions | 400 Total Marks | 110 min Duration | ~66.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 100 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 110 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 100</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Obg E&amp;D (Mission Neet Pg Inicet 2.0)   16 07 2024   2024 07 16 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 100</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 100 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 23 y P2L2 comes to the OPD. She says that she missed her period by 10 days and is now complaining of spotting. There is also mild abdominal pain. On examination the uterus is 6 weeks size and the os is closed. Which is the most likely diagnosis?", "options": [{"label": "A", "text": "Complete abortion", "correct": false}, {"label": "B", "text": "Incomplete abortion", "correct": false}, {"label": "C", "text": "Inevitable abortion", "correct": false}, {"label": "D", "text": "Threatened abortion", "correct": true}], "correct_answer": "D. Threatened abortion", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Threatened abortion</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ A threatened abortion is characterized by vaginal bleeding and mild abdominal pain in early pregnancy, with a closed cervical os and an intact pregnancy. These symptoms indicate a potential risk of miscarriage, but the pregnancy has not yet ended.</li><li>➤ threatened abortion</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 26y old gives a history of two 1st trimester abortions following delivery of a preterm baby at 30 weeks due to severe preeclampsia. She is anxious and wants to be evaluated preconceptionally. Which of the following investigation will you advise?", "options": [{"label": "A", "text": "Lupus anticoagulant", "correct": true}, {"label": "B", "text": "HBA1C", "correct": false}, {"label": "C", "text": "TSH", "correct": false}, {"label": "D", "text": "TORCH", "correct": false}], "correct_answer": "A. Lupus anticoagulant", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Lupus anticoagulant</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Antiphospholipid Antibody Syndrome (APLA) should be suspected in women with recurrent first-trimester abortions and preeclampsia leading to preterm delivery before 34 weeks. Diagnostic evaluation includes testing for lupus anticoagulant, anti-cardiolipin antibodies, and beta-2 glycoprotein I antibodies.</li><li>➤ Antiphospholipid Antibody Syndrome (APLA)</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All the following are risk factors for developing cervical insufficiency except?", "options": [{"label": "A", "text": "Conization", "correct": false}, {"label": "B", "text": "Dilatation and curettage", "correct": false}, {"label": "C", "text": "Endometrial biopsy", "correct": true}, {"label": "D", "text": "Trachelectomy", "correct": false}], "correct_answer": "C. Endometrial biopsy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Endometrial biopsy</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Cervical insufficiency can result from procedures that damage or remove portions of the cervix, such as conization, dilatation and curettage, or trachelectomy. Endometrial biopsy , however, does not affect the cervical tissue and is not a risk factor for cervical insufficiency.</li><li>➤ Endometrial biopsy</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old woman presents for a routine checkup. She has a sedentary lifestyle, and her BMI is 26. She used to smoke 1 pack/day but has recently stopped. She was advised calcium and vitamin D supplementation at her last checkup but has not been taking these. She has no significant medical history. A DEXA scan is done, which shows her T score as -2.5. What is the most appropriate treatment option for her?", "options": [{"label": "A", "text": "Bisphosphonates", "correct": true}, {"label": "B", "text": "Calcium + Vitamin D supplementation", "correct": false}, {"label": "C", "text": "Estrogen + Progesterone", "correct": false}, {"label": "D", "text": "Teriparatide", "correct": false}], "correct_answer": "A. Bisphosphonates", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Bisphosphonates</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Bisphosphonates are the first-line treatment for postmenopausal women diagnosed with osteoporosis (T-score ≤ -2.5). These medications reduce bone resorption and increase bone density, significantly lowering the risk of fractures. Calcium and vitamin D supplementation is essential as an adjunct therapy but not sufficient as standalone treatment for osteoporosis.</li><li>➤ Bisphosphonates</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is incorrect regarding Hormone Replacement Therapy in menopause?", "options": [{"label": "A", "text": "It is effective for vasomotor symptoms during perimenopausal period", "correct": false}, {"label": "B", "text": "It should be given for young women with premature menopause", "correct": false}, {"label": "C", "text": "It is useful for primary prevention of heart disease", "correct": true}, {"label": "D", "text": "Cyclical HRT is preferred over continuous HRT in perimenopausal women", "correct": false}], "correct_answer": "C. It is useful for primary prevention of heart disease", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) It is useful for primary prevention of heart disease</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ HRT should not be used for the primary prevention of cardiovascular disease due to its association with an increased risk of heart attacks and strokes. It is primarily used to relieve menopausal symptoms and in specific cases such as premature menopause.</li><li>➤ HRT should not be used for the primary prevention of cardiovascular disease</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 24-year-old primigravida at 36 weeks complains of decreased fetal movements since 1 day. The following test was ordered. What is this test?", "options": [{"label": "A", "text": "Biophysical profile", "correct": false}, {"label": "B", "text": "Doppler", "correct": false}, {"label": "C", "text": "Non-Stress Test", "correct": true}, {"label": "D", "text": "Ultrasound", "correct": false}], "correct_answer": "C. Non-Stress Test", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/15/screenshot-2024-07-15-143851.png"], "explanation_images": [], "explanation": "<p><strong>Ans. C) Non-Stress Test</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ A Non-Stress Test (NST) is a non-invasive method to monitor fetal heart rate patterns in response to fetal movements. It is commonly used in the third trimester when concerns about fetal well-being arise, such as decreased fetal movements.</li><li>➤ Non-Stress Test (NST)</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 22-year-old G2P1 with a history of a previous term stillbirth is now 37 weeks pregnant. She complains of decreased fetal movements for 2 days. A Biophysical Profile is ordered. All are components of the Biophysical Profile except?", "options": [{"label": "A", "text": "Amniotic Fluid measurement", "correct": false}, {"label": "B", "text": "Fetal tone", "correct": false}, {"label": "C", "text": "Fetal breathing", "correct": false}, {"label": "D", "text": "Umbilical Artery Doppler", "correct": true}], "correct_answer": "D. Umbilical Artery Doppler", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Umbilical Artery Doppler</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The Biophysical Profile (BPP) consists of five components: fetal breathing movements, fetal movements, fetal tone, amniotic fluid volume, and the non-stress test (NST). Umbilical Artery Doppler is not a part of the BPP but is a separate test used to assess placental blood flow.</li><li>➤ Biophysical Profile (BPP)</li><li>➤ Umbilical Artery Doppler</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 26-year-old lady with mild pre-eclampsia presents at 32 weeks. On abdominal examination, the uterus corresponds to 28 weeks, and the fetal heart rate is 132 bpm. An ultrasound is advised. The following image shows an umbilical artery Doppler. What is your interpretation?", "options": [{"label": "A", "text": "Absent diastolic flow", "correct": true}, {"label": "B", "text": "Normal diastolic flow", "correct": false}, {"label": "C", "text": "Reduced diastolic flow", "correct": false}, {"label": "D", "text": "Reversal of diastolic flow", "correct": false}], "correct_answer": "A. Absent diastolic flow", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/15/screenshot-2024-07-15-144131.png"], "explanation_images": [], "explanation": "<p><strong>Ans. A) Absent diastolic flow</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In cases of fetal growth restriction and placental insufficiency, absent diastolic flow in the umbilical artery Doppler is a concerning finding. It often indicates that delivery should be considered, especially if the gestational age is beyond 34 weeks, or if the fetus shows signs of distress.</li><li>➤ absent diastolic flow</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 23-year-old woman has been taking Oral Contraceptive Pills (OCPs) regularly for the past two years. She presents to the family planning OPD on Day 8 of her cycle with the complaint that she has missed taking two pills on Day 7 and Day 8. What will you advise her?", "options": [{"label": "A", "text": "Take the last missed pill as soon as possible and continue the remaining packet", "correct": true}, {"label": "B", "text": "Take the missed pill as soon as possible and offer her emergency contraception also", "correct": false}, {"label": "C", "text": "Take the missed pill as soon as possible and use additional contraception for 7 days", "correct": false}, {"label": "D", "text": "Take the missed pill as soon as possible, use emergency contraception and discard the remaining packet", "correct": false}], "correct_answer": "A. Take the last missed pill as soon as possible and continue the remaining packet", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Take the last missed pill as soon as possible and continue the remaining packet</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ For women who miss one or two pills , they should take the missed pills immediately and continue with the regular schedule without needing additional contraception. Only if three or more pills are missed is there a need for extra precautions, such as additional contraception or emergency contraception, depending on the timing of the missed pills.</li><li>➤ one or two pills</li><li>➤ take the missed pills immediately</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are true regarding postpartum contraception except:", "options": [{"label": "A", "text": "With full or near full breast-feeding, 70% of women remain amenorrheic through 6 months", "correct": false}, {"label": "B", "text": "With partial feeding or no breast feeding, a contraceptive method should begin during the 3rd postpartum week", "correct": false}, {"label": "C", "text": "The progestin only minipill does not affect lactation", "correct": false}, {"label": "D", "text": "The vaginal ring can be used effectively in breast feeding mothers as absorption of estrogen is minimal and does not affect lactation.", "correct": true}], "correct_answer": "D. The vaginal ring can be used effectively in breast feeding mothers as absorption of estrogen is minimal and does not affect lactation.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Estrogen-containing contraceptives , including the vaginal ring, are generally not recommended during breastfeeding because they can reduce milk production. Progestin-only methods are the preferred choice for postpartum contraception in breastfeeding women.</li><li>➤ Estrogen-containing contraceptives</li><li>➤ not recommended during breastfeeding</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An intrauterine pregnancy of approximately 10 weeks gestation is confirmed in a 30-year-old gravida 5, para 4 woman with an intrauterine device (IUD) in place. The patient expresses a strong desire for the pregnancy to be continued. On examination, the uterus is 10 weeks in size, and the string of the IUD is noted to be protruding from the cervical os. The most appropriate course of action is:", "options": [{"label": "A", "text": "Leave the IUD in place without any other treatment", "correct": false}, {"label": "B", "text": "Leave the IUD in place and start prophylactic antibiotics", "correct": false}, {"label": "C", "text": "Remove the IUD immediately", "correct": true}, {"label": "D", "text": "USG to rule out ectopic pregnancy", "correct": false}], "correct_answer": "C. Remove the IUD immediately", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Remove the IUD immediately</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In cases of intrauterine pregnancy with an IUD in place, the IUD should be removed as soon as possible if the strings are visible and accessible. This minimizes the risk of miscarriage, infection, and preterm labor. If there is any concern regarding ectopic pregnancy, an ultrasound should be performed to confirm the intrauterine location of the pregnancy.</li><li>➤ IUD should be removed as soon as possible</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28-year-old woman presents with infertility and is diagnosed with anovulatory cycles. Which of the following medications can be used for ovulation induction in this patient?", "options": [{"label": "A", "text": "Clomiphene citrate", "correct": false}, {"label": "B", "text": "Letrozole", "correct": false}, {"label": "C", "text": "Both clomiphene citrate and letrozole", "correct": true}, {"label": "D", "text": "Gonadotropin-releasing hormone (GnRH) agonists", "correct": false}], "correct_answer": "C. Both clomiphene citrate and letrozole", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Both clomiphene citrate and letrozole</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Both clomiphene citrate and letrozole are effective medications for ovulation induction in women with anovulatory infertility. Clomiphene acts by blocking estrogen receptors, while letrozole reduces estrogen production, both leading to increased FSH release and stimulation of ovulation.</li><li>➤ clomiphene citrate</li><li>➤ letrozole</li><li>➤ ovulation induction</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Match the following drugs used in gynecology with their corresponding indications:", "options": [{"label": "A", "text": "A-2, B-1, C-4, D-3", "correct": false}, {"label": "B", "text": "A-1, B-2, C-4, D-3", "correct": true}, {"label": "C", "text": "A-3, B-1, C-2, D-4", "correct": false}, {"label": "D", "text": "A-4, B-2, C-1, D-3", "correct": false}], "correct_answer": "B. A-1, B-2, C-4, D-3", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/10/16/screenshot-2024-10-16-173725.png"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/10/16/screenshot-2024-10-16-173527.png"], "explanation": "<p><strong>Ans. B) A-1, B-2, C-4, D-3</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 42-year-old woman presents with heavy menstrual bleeding and dysmenorrhea. Pelvic ultrasound reveals an intramural fibroid measuring 3 cm. The woman desires medical management rather than surgical intervention. Which of the following would be the most appropriate first-line drug in this woman?", "options": [{"label": "A", "text": "Antifibrinolytic with NSAID", "correct": true}, {"label": "B", "text": "Combined estrogen progesterone", "correct": false}, {"label": "C", "text": "GnRH antagonist", "correct": false}, {"label": "D", "text": "Ulipristal acetate", "correct": false}], "correct_answer": "A. Antifibrinolytic with NSAID", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Antifibrinolytic with NSAID</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ For the first-line medical management of heavy menstrual bleeding and dysmenorrhea due to fibroids, antifibrinolytics combined with NSAIDs are effective and well-tolerated. These treatments reduce menstrual blood loss and alleviate pain, offering a non-surgical option for symptom control.</li><li>➤ antifibrinolytics</li><li>➤ NSAIDs</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 33-year-old woman comes to the OPD with amenorrhea of 6 weeks. Her urine pregnancy test is positive. A transvaginal ultrasound is done, which shows a normal uterus and adnexa. What is the diagnosis?", "options": [{"label": "A", "text": "Complete abortion", "correct": false}, {"label": "B", "text": "Ectopic pregnancy", "correct": false}, {"label": "C", "text": "Pregnancy of undetermined location", "correct": true}, {"label": "D", "text": "Pseudocyesis", "correct": false}], "correct_answer": "C. Pregnancy of undetermined location", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Pregnancy of undetermined location</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ A pregnancy of undetermined location (PUL) is diagnosed when there is a positive pregnancy test but no clear signs of an intrauterine or ectopic pregnancy on ultrasound. Further monitoring with serial beta-hCG levels and follow-up ultrasounds are necessary to determine the pregnancy’s location and viability.</li><li>➤ pregnancy of undetermined location (PUL)</li><li>➤ beta-hCG levels</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 34-year-old woman presents to the gynecology OPD with an ultrasound report confirming an unruptured tubal ectopic pregnancy. She has no symptoms and is hemodynamically stable. Her β-hCG level is 600 IU/L. The scan shows a gestational sac measuring 20 mm in the right adnexa with no yolk sac or embryo seen. What is the most appropriate management?", "options": [{"label": "A", "text": "Expectant management", "correct": true}, {"label": "B", "text": "Single dose inj Methotrexate", "correct": false}, {"label": "C", "text": "Laparoscopic salpingostomy", "correct": false}, {"label": "D", "text": "Laparoscopic salpingotomy", "correct": false}], "correct_answer": "A. Expectant management", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Expectant management</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In patients with an unruptured, asymptomatic ectopic pregnancy and low β-hCG levels (<1,000 IU/L) , expectant management is an appropriate option. Regular follow-up with serial β-hCG measurements is necessary to confirm that the pregnancy is resolving spontaneously.</li><li>➤ β-hCG levels (<1,000 IU/L)</li><li>➤ expectant management</li><li>➤ β-hCG</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Of mullerian defects, which has the lowest associated risk of recurrent miscarriage and is shown here in this three-dimensional sonographic image?", "options": [{"label": "A", "text": "Septate uterus", "correct": false}, {"label": "B", "text": "Arcuate uterus", "correct": true}, {"label": "C", "text": "Uterus didelphys", "correct": false}, {"label": "D", "text": "Unicornuate uterus", "correct": false}], "correct_answer": "B. Arcuate uterus", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/15/screenshot-2024-07-15-145920.png"], "explanation_images": [], "explanation": "<p><strong>Ans. B) Arcuate uterus</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ An arcuate uterus is a mild form of Müllerian anomaly associated with the lowest risk of recurrent miscarriage compared to other uterine anomalies. It generally allows for successful pregnancies with minimal complications.</li><li>➤ arcuate uterus</li><li>➤ lowest risk of recurrent miscarriage</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Characteristics of the soft, fleshy intrauterine growth, shown here exhibiting a single feeder vessel, include which of the following?", "options": [{"label": "A", "text": "The main diagnostic tool is a Pap smear", "correct": false}, {"label": "B", "text": "It is a rare cause of abnormal uterine bleeding", "correct": false}, {"label": "C", "text": "It commonly causes infertility", "correct": false}, {"label": "D", "text": "Use of combined oral contraceptive pills appears to be protective", "correct": true}], "correct_answer": "D. Use of combined oral contraceptive pills appears to be protective", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/15/screenshot-2024-07-15-150126.png"], "explanation_images": [], "explanation": "<p><strong>Ans. D) Use of combined oral contraceptive pills appears to be protective</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Endometrial polyps are common causes of abnormal uterine bleeding and are associated with infertility in some cases. They can be diagnosed via ultrasound with Doppler imaging , and the use of combined oral contraceptives appears to reduce the risk of their development.</li><li>➤ Endometrial polyps</li><li>➤ ultrasound with Doppler imaging</li><li>➤ combined oral contraceptives</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All can be used as distension media during diagnostic hysteroscopy except:", "options": [{"label": "A", "text": "Air", "correct": true}, {"label": "B", "text": "Glycine", "correct": false}, {"label": "C", "text": "Normal Saline", "correct": false}, {"label": "D", "text": "Carbon dioxide", "correct": false}], "correct_answer": "A. Air", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Air</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Air should not be used as a distension medium in hysteroscopy due to the risk of air embolism . Safe alternatives include glycine , normal saline , and carbon dioxide , which provide effective uterine distension with minimal risks.</li><li>➤ Air</li><li>➤ air embolism</li><li>➤ glycine</li><li>➤ normal saline</li><li>➤ carbon dioxide</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 34-year-old woman with a history of 2 previous abortions presents with secondary infertility. On evaluation, this finding was seen on hysteroscopy. What is the next management option?", "options": [{"label": "A", "text": "Hysteroscopic septal resection", "correct": false}, {"label": "B", "text": "Hysteroscopic Adhesiolysis", "correct": true}, {"label": "C", "text": "In-vitro fertilization", "correct": false}, {"label": "D", "text": "Tubal recanalization", "correct": false}], "correct_answer": "B. Hysteroscopic Adhesiolysis", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/15/whatsapp-image-2024-07-15-at-54921-pm.jpeg"], "explanation_images": [], "explanation": "<p><strong>Ans. B) Hysteroscopic Adhesiolysis</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In cases of intrauterine adhesions (Asherman’s syndrome) contributing to secondary infertility, hysteroscopic adhesiolysis is the recommended treatment to restore uterine anatomy and improve fertility outcomes.</li><li>➤ intrauterine adhesions (Asherman’s syndrome)</li><li>➤ hysteroscopic adhesiolysis</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28-year-old G1P1 woman complains of significant dysmenorrhea & dyspareunia. She has regular periods & has no past history of any abdominal surgery or any vaginal infection. Which of the following tests would most likely identify the etiology of the infertility in this patient?", "options": [{"label": "A", "text": "Laparoscopy", "correct": true}, {"label": "B", "text": "Basal body temperature chart", "correct": false}, {"label": "C", "text": "Hysterosalpingogram", "correct": false}, {"label": "D", "text": "Progesterone assay", "correct": false}], "correct_answer": "A. Laparoscopy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Laparoscopy</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Laparoscopy is the most appropriate test to identify the etiology of infertility in a patient with symptoms suggestive of endometriosis . It allows for direct visualization and diagnosis of endometrial implants, adhesions, and other pelvic abnormalities that can cause infertility and pelvic pain.</li><li>➤ Laparoscopy</li><li>➤ endometriosis</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 32-year-old lady presents to the OPD. She had a Copper T inserted 5 years earlier and now wants to conceive. She has come for removal of the Copper T. Which instruments are required for this procedure? Cuscos speculum Vulsellum Uterine sound Artery forceps Anterior vaginal wall retractor Allis forceps", "options": [{"label": "A", "text": "a, d", "correct": true}, {"label": "B", "text": "a, b, f", "correct": false}, {"label": "C", "text": "a, b, c, d", "correct": false}, {"label": "D", "text": "a, b, c, d, e", "correct": false}], "correct_answer": "A. a, d", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) a, d</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ For the removal of a Copper T , the essential instruments are Cusco

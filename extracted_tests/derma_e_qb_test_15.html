@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Parasitic Infection</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Parasitic Infection</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                9 Questions | 9 Total Marks | 19 min Duration | ~126.67 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 9 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 19 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 9</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Parasitic Infection - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 9</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 9 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 29-Year-OLD male came with the below lesion and a biopsy from the same was taken. The lesions were itchy and responded well to ivermectin. Travel history to South America present. What is the likely Diagnosis?", "options": [{"label": "A", "text": "Onchocerciasis", "correct": true}, {"label": "B", "text": "Filariasis", "correct": false}, {"label": "C", "text": "Drug eruptions", "correct": false}, {"label": "D", "text": "leishmaniasis", "correct": false}], "correct_answer": "A. Onchocerciasis", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1689320037293-QTDD017001IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Onchocerciasis The given scenario is suggestive of Onchocerciasis. Causative organism: Onchocerca volvulus Transmitted by: Female black fly Clinical presentation: Pruritus and dermatitis Onchocercomata- Subcutaneous nodules ( black) It can cause visual impairment and progress to blindness ( river blindness) History of travel to an endemic area Microfilaria: Nonperiodic, unsheathed, nuclei present at the tip Treatment: Ivermectin</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B. Filariasis: It typically presents with lymphatic and/or subcutaneous nodules, rather than the characteristic skin lesions seen in onchocerciasis. Option C. Drug eruptions: It refers to a skin rash or other adverse skin reaction caused by medication. While certain medications can cause a skin rash, the presentation and clinical features of drug eruptions would be different than those seen in onchocerciasis. Option D. Leishmaniasis: It is a parasitic infection caused by the protozoan parasite Leishmania. Leishmaniasis typically presents as skin lesions, but the lesions are usually ulcerative and do not have the characteristic appearance of the lesions seen in onchocerciasis.</p>\n<p><strong>Extraedge:</strong></p><p>Mazzotti reaction: Occurs due to killing off microfilaria on treatment with DEC characterized but fever, joint pain, rash, hypotension, tachycardia</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient who is a resident of Delhi came to the OPD with skin lesions as shown below. Lesions form a nodule that is ulcerated later. A punch biopsy specimen from the active edge of the ulcer placed in Nicolle-Novy-MacNeal (NNN) medium and shipped at room temperature was positive. What is the likely Diagnosis?", "options": [{"label": "A", "text": "Amoebiasis cutis", "correct": false}, {"label": "B", "text": "Cutaneous leishmaniasis", "correct": true}, {"label": "C", "text": "Espundia", "correct": false}, {"label": "D", "text": "Human Trypanosomiasis", "correct": false}], "correct_answer": "B. Cutaneous leishmaniasis", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/questionImage-1724412828569-photos-1722940864417-QTDD017002IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cutaneous leishmaniasis The given clinical scenario showing ulcerative nodules on the skin is suggestive of Cutaneous Leishmaniasis. Causative organisms: tropica, L.major, L.mexicana Transmitted by: Sandfly Diagnosis: Demonstration of the organism in smears. A punch biopsy specimen from the active edge of the ulcer is ideal for culture. Biopsy: Reveals intracellular, round-oval protozoa with rod-shaped kinetoplasts. It can be placed in Nicolle-Novy-MacNeal (NNN) medium and shipped at room temperature. Parasites can also be cultured from tissue fluid.</p>\n<p><strong>Highyeild:</strong></p><p>Leishmaniasis: Clinical features Species Visceral Leishmaniasis Fever, visceromegaly, pancytopenia L.Donovani Cutaneous Leishmaniasis Multiple nodules or ulcers of the skin that spontaneously heals by fibrosis ( oriental sore) L. tropica L.major L.mexicana Mucocutaneous Leishmaniasis Similar to cutaneous but lesions occur at the mucocutaneous junction- oral and nasal mucosa ( espundia ) L.braziliensis</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A. Amoebiasis cutis: This is a parasitic infection caused by the protozoan Entamoeba histolytica. It typically presents as a single or multiple skin lesions with central necrosis, but there is no mention of necrosis in the given case. Option C. Espundia: It is a term used to describe the late, destructive stage of mucocutaneous leishmaniasis, which affects the mucous membranes of the nose, mouth, and throat. The given case describes a cutaneous lesion and there is no mention of mucosal involvement. Option D. Human Trypanosomiasis: It is aka African sleeping sickness, is a parasitic infection caused by the protozoan parasite Trypanosoma brucei. It is transmitted by the tsetse fly and typically presents with fever, lymphadenopathy, and neurological symptoms.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient comes with an expanding rash with lesions as shown. The rash is accompanied by symptoms of a viral-like illness with fatigue, headache, body aches, fever, and chills. On asking, patient gives a history of trek completed recently. The diagnosis is", "options": [{"label": "A", "text": "Erythema multiforme", "correct": false}, {"label": "B", "text": "Erythema nodosum", "correct": false}, {"label": "C", "text": "Erythema nodosum leprosum", "correct": false}, {"label": "D", "text": "Erythema migrans", "correct": true}], "correct_answer": "D. Erythema migrans", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1689320039383-QTDD017004IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Erythema migrans Erythema migrans Skin sign of Lyme disease (caused by Borrelia burgdorferi sensu lato species) Hard tick (Ixodidae) bite transmits the spirochetes into the skin Starts as a small red macule or papule at the site of the bite for e.g. legs, trunk. Seven days after the bite, there is a gradual ring shaped expansion of the redness around the papule (called annular erythema) Target lesions are also seen Treatment is oral doxycycline 100 mg BD for 10–30 days</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A- Erythema multiforme is also a target lesion but not after trek as in the MCQ. Also, it would have herpes simplex association. Other causes would be drugs/mycoplasma/idiopathic causes. Option B- Erythema nodosum is a panniculitis causing painful nodules on shin Option C- Erythema nodosum leprosum is a vasculitis and the other name for type 2 lepra reaction. It presents as nodules on limbs with fever.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An 8-month-old child presented with itchy, exudative lesions on the face, palm and soles. The siblings also have similar complaints. The treatment of choice in such patient is:", "options": [{"label": "A", "text": "Oral ivermectin", "correct": false}, {"label": "B", "text": "Sulphur", "correct": false}, {"label": "C", "text": "Benzyl benzoate", "correct": false}, {"label": "D", "text": "Topical permethrin", "correct": true}], "correct_answer": "D. Topical permethrin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Topical permethrin Itchy, exudative lesions on the face, palm and soles with similar lesions in siblings is s/o scabies.</p>\n<p><strong>Highyeild:</strong></p><p>Adult scabies Infant scabies Papules Papules + vesicles Face not involved(sebum protection) Face involved (no sebum protection) Palms and soles not involved Palms and soles involved (classical feature)</p>\n<p><strong>Extraedge:</strong></p><p>Treatment of scabies Five percent permethrin (single overnight application—neck to toe in adults, head to toe in infants) is the DOC in all ages including infants and pregnant women. It paralyzes the nerves not allowing the mite to breathe Oral ivermectin: As ivermectin does not kill eggs a repeat dose is given on day 14 (200 mcg/kg) when the eggs become the second wave of adults. It acts on nerve synapses utilizing glutamate. It is not recommended for use in children less than 15 kg or in pregnant or lactating women Topical sulfur is safe for infants less than 2 months old and pregnant and nursing women but is messy, has an unpleasant odor and stains clothes and is not preferred Gamma benzene hexachloride, lindane, benzyl benzoate, crotamiton are other agents used, though not the DOC</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A young boy had itchy, excoriated papules on the forehead and the exposed parts of the arms and legs for three years. The disease was most severe in the rainy season and improved completely in winter. The most likely diagnosis is:", "options": [{"label": "A", "text": "Insect bite hypersensitivity", "correct": true}, {"label": "B", "text": "Scabies", "correct": false}, {"label": "C", "text": "Urticaria", "correct": false}, {"label": "D", "text": "Atopic dermatitis", "correct": false}], "correct_answer": "A. Insect bite hypersensitivity", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Insect bite hypersensitivity Insect bite hypersensitivity Recurrent pruritic papules occurring on exposed skin areas due to mosquito, flea bites etc Hypersensitivity reaction to insect bites especially in children. Atopy is an association They are seen on exposed body parts mainly in rainy season Conservative topical therapy with corticosteroids and antipruritics</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B- Scabies presents as web papules with nodules on scrotum. It will not be on open skin areas. Disease would not be related to monsoons Option C- Urticaria will have wheals Option D - Atopic dermatitis will have oozing and in a young boy it would come on extensors. It would not be related to exposed areas</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 7-year-old boy with a past medical history significant only for prior head lice infection presents to the clinic after being sent by the school nurse for a repeat lice infection. The boy reports an itchy scalp, but a review of the systems is otherwise negative. After confirming the child’s diagnosis and sending him home with appropriate treatment, the school nurse contacts the clinic asking for recommendations on how to prevent future infection. Which of the following would be the best option to decrease the likelihood of lice reinfestation?", "options": [{"label": "A", "text": "Observation with close monitoring", "correct": false}, {"label": "B", "text": "Encouraging the family to move out of their home", "correct": false}, {"label": "C", "text": "Treatment of household members with topical ivermectin", "correct": true}, {"label": "D", "text": "Treatment with oral albendazole", "correct": false}], "correct_answer": "C. Treatment of household members with topical ivermectin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Treatment of household members with topical ivermectin The given clinical history is of The best option to decrease the likelihood of lice reinfestation would be to treat household members with topical ivermectin</p>\n<p><strong>Highyeild:</strong></p><p>Pediculosis: It is an infestation of the hairy parts of the body or clothing with the eggs, larvae or adults of lice. Features: The crawling stages of this insect feed on human blood, which can result in severe itching. Sites Head: Pediculosis capitis Body: Pediculosis corporis (aka Vagabond disease) Pubic area: Pediculosis pubis Treatment: First-line treatment for pediculosis includes options such as pyrethroids, malathion, benzyl alcohol, and topical ivermectin. For treatment to be effective, it is imperative that the patient follows the treatment regimen and avoid reinfestation through transfer among household member Preventive measures include strictly using one brush/comb per individual and removing lice from any bedding or clothing. This can be done by sealing the items in a plastic bag for 2 weeks. All hairy areas of the body should be treated at the same time. Shaving is sometimes necessary when nits are plentiful. Infestations of the eyelashes should be treated with permethrin 5% cream (washed off after 10 min) or only with petrolatum (applied twice a day for 8–10 days), followed by the mechanical removal of the nits.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A. Observation with close monitoring: Not useful as it does not remove lice and nits Option B. Encouraging the family to move out of their home: It is an extreme and unnecessary measure that is not likely to prevent reinfestation Option D. Treatment with oral albendazole: Not effective against head lice</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 76-year-old man presents to the physician with a severe, pruritic rash as shown in the image. The pruritis increases at night. He has not noticed any insect bite. Several residents are experiencing a similar problem. Which of the following pathogens is the most likely cause of this patient’s condition?", "options": [{"label": "A", "text": "Cimex lectularius", "correct": true}, {"label": "B", "text": "Dermatobia hominis", "correct": false}, {"label": "C", "text": "Varicella zoster", "correct": false}, {"label": "D", "text": "Lice", "correct": false}], "correct_answer": "A. Cimex lectularius", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1689320041899-QTDD017011IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cimex lectularius The given clinical scenario is suggestive of Cimex lectularius. Cimex lectularius It is a 5–7 mm blood-sucking insect better known as bed bugs. It does not transfer any known pathogens or cause any diseases in humans. -It lives in bed mattresses, in the corners of beds, inside wallpapers, It is a common pest in homes, hotels, hospitals, shelters, and cruise ships. At night the insect feeds on exposed skin. Characteristics : The bite is painless . Therefore, it usually goes unnoticed by its human host. Minutes to days later, the blood-thinning saliva that it injects during feeding c reates wheels around the central punctum . Other symptoms caused by bed bug bites are irritation and severe pruritus. The latter is a major cause of sleep deprivation. The rash may be seen anywhere on the skin but usually involves more exposed areas such as the face, arms, and feet. Diagnosis : The diagnosis is clinical and can be confirmed by finding the insect. A stinky odor produced by bed bugs can be recognized in heavily infested rooms. Treatment : The rash is self-limiting. Antiseptic lotions may be used to prevent secondary infections. Professional pest control is usually required.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B. Dermatobia hominids: aka bot, fly causes myiasis characterized by painful inflammatory nodule with central orifice Option C. Varicella zoster: causes chicken pox that produces rash which begins as macules, rapidly progresses to papules, followed by a vesicular stage and crusting of lesions. Option D. Lice: It produces pediculosis producing a tickling feeling of something moving in the hair or body with itching, caused by an allergic reaction to louse saliva, and irritability.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Scabies, an infection of the skin caused by Sarcoptes scabies, is an example of", "options": [{"label": "A", "text": "Waterborne disease", "correct": false}, {"label": "B", "text": "Water-washed disease", "correct": true}, {"label": "C", "text": "Water-based disease", "correct": false}, {"label": "D", "text": "Water-related disease", "correct": false}], "correct_answer": "B. Water-washed disease", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Water-washed disease Scabies is an example of Water-washed disease. It occurs due to lack of water and poor personal hygiene.</p>\n<p><strong>Highyeild:</strong></p><p>Scabies: Cause: Mite Sarcoptes Scabiei Mites burrow into S.corneum which produces pruritus (worse at night) and serpiginous burrows (between fingers and toes) Incubation period: 3 to 4 weeks e after 21 to 28 days, the person develops pruritis but reinfection provokes immediate symptoms . Female parasites burrow and lays eggs. (1 female = 30 eggs) Life cycle: 4 stages - Egg, larva, nymph, adult Common in children, crowded population Treatment: Permethrin 5% cream and crotamiton ( DOC)- MOA: Inhibition of voltage-gated sodium channels Oral ivermectin Treatment of all close contacts</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A. Waterborne disease: These diseases are caused due to ingestion of contaminated water Option C. Water-based disease: These are diseases that are caused by microorganisms that live in or are transmitted through water. Option D. Water-related disease: These diseases are transmitted by insect vectors that breed in water.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 3-year-old female child develops an umbilicated nodule over the face, following a trivial infection. What is the probable diagnosis?", "options": [{"label": "A", "text": "Molluscum contagiosum", "correct": true}, {"label": "B", "text": "Scabies", "correct": false}, {"label": "C", "text": "Chicken pox", "correct": false}, {"label": "D", "text": "L. planus", "correct": false}], "correct_answer": "A. Molluscum contagiosum", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Molluscum contagiosum The given clinical scenario is suggestive of Mollusucum contagiosum Molluscum Contagiosum Cause: Pox virus Incubation period: 2 weeks Mode of spread: Direct skin-to-skin contact Indirect contact via shared towels or other items Auto-inoculation into another site by scratching or shaving Sexual transmission in adults Characteristics: Multiple, pearly white, dome-shaped papules which are umbilicated Under a hand lens, may have a mosaic appearance On piercing the umbilicated center, white cheesy material can be extruded Diagnosis: By dermatoscopy and skin biopsy: shows characteristics intracytoplasmic inclusion bodies. Henderson Peterson bodies Treatment: Hydrogen peroxide cream/ povidone idodine</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B. Scabies: Caused by S. scabiei which produce a short, linear, curved, or S-shaped line burrow Option C. Chicken pox: caused by varicella zoster virus(VZV) that produces rash which begins as macules, rapidly progresses to papules, followed by a vesicular stage and crusting of lesions. Option D. Lichen planus: It is an autoimmune disease. Skin lesions are seen as plain purple polygonal pruritic papules. Mucosa shows the white lacy pattern. Nails have wing shaped extensions of the proximal nail fold called pterygium, and there is scarring alopecia.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

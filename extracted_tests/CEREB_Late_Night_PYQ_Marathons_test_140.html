@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Late Night Pyq Pyt Marathon   4   2024 08 31</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Late Night Pyq Pyt Marathon   4   2024 08 31</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                60 Questions | 240 Total Marks | 70 min Duration | ~70.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 60 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 70 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 60</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Late Night Pyq Pyt Marathon   4   2024 08 31 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 60</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 60 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "The instrument shown in the image is used for:(AIIMS MAY 2019)", "options": [{"label": "A", "text": "For cutting ribs in thoracic surgery", "correct": false}, {"label": "B", "text": "For smoothening of edges in amputation surgery", "correct": false}, {"label": "C", "text": "Used as a bone nibbler", "correct": true}, {"label": "D", "text": "To remove fibrous tissue from non-union site", "correct": false}], "correct_answer": "C. Used as a bone nibbler", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/05/08/io11.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/08/18/whatsapp-image-2023-06-12-at-190121011010201026_page_68_page_83.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/24/screenshot-2024-01-23-195511.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/24/screenshot-2024-01-23-195523.jpg"], "explanation": "<p><strong>Ans. C. Used as a bone nibbler</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient complains that he often gets troubled at night during sleep by tingling and numbness that involves his lateral three digits. He further explains that symptoms are relieved as he lays his arms hanging from the bed. Correct regarding the condition is: (NEET PG 2023)", "options": [{"label": "A", "text": "CTS: Froment sign", "correct": false}, {"label": "B", "text": "CTS: Durkan test", "correct": true}, {"label": "C", "text": "Guyon canal syndrome: Froment sign", "correct": false}, {"label": "D", "text": "Guyon canal syndrome: Durkan test", "correct": false}], "correct_answer": "B. CTS: Durkan test", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture41.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture37.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture38.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture39.jpg"], "explanation": "<p><strong>Ans. B) CTS: Durkan test</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The given clinical symptoms of the patient suggest presence of carpal tunnel syndrome. The most specific test to check median nerve compression in the carpal tunnel is the Durkan’s Test.</li><li>➤ The given clinical symptoms of the patient suggest presence of carpal tunnel syndrome. The most specific test to check median nerve compression in the carpal tunnel is the Durkan’s Test.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a surgery, the orthopedic surgeon asks you for bone holding forceps. Correctly identify bone holding forceps among the instruments in the tray as shown below.(AIIMS MAY 2017)", "options": [{"label": "A", "text": "1", "correct": false}, {"label": "B", "text": "2", "correct": false}, {"label": "C", "text": "3", "correct": false}, {"label": "D", "text": "4", "correct": true}], "correct_answer": "D. 4", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/05/15/screenshot-2024-05-15-112808.JPG"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/08/17/whatsapp-image-2023-06-12-at-190121011010201026_page_68_page_83_AJMegAp.jpg"], "explanation": "<p><strong>Ans. D) 4</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the diagnosis based on this X-ray? (INICET MAY 2024)", "options": [{"label": "A", "text": "Tibial Condyle fracture", "correct": false}, {"label": "B", "text": "Rheumatoid arthritis", "correct": false}, {"label": "C", "text": "Patella fracture", "correct": true}, {"label": "D", "text": "Hemarthrosis of Knee Joint", "correct": false}], "correct_answer": "C. Patella fracture", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/25/screenshot-2024-07-25-131335.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-02-19%20115127.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/25/screenshot-2024-07-25-131347.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/25/screenshot-2024-07-25-131359.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/25/screenshot-2024-07-25-131410.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/25/screenshot-2024-07-25-131422.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/25/screenshot-2024-07-25-131433.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/25/screenshot-2024-07-25-131447.jpg"], "explanation": "<p><strong>Ans. C) Patella fracture</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The given image shows the comminuted fracture of the patella.</li><li>➤ The given image shows the comminuted fracture of the patella.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A child was brought to the emergency department with multiple injuries, which included a femur fracture as well. He developed confusion, dyspnea, and a rash over his body. What is the diagnosis? (NEET PG 2022)", "options": [{"label": "A", "text": "Fat embolism", "correct": true}, {"label": "B", "text": "Air embolism", "correct": false}, {"label": "C", "text": "Pulmonary embolism", "correct": false}, {"label": "D", "text": "DIC", "correct": false}], "correct_answer": "A. Fat embolism", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/screenshot-2024-01-02-173500.jpg"], "explanation": "<p><strong>Ans. A) Fat embolism</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In a patient presenting with fracture of femur, complaint of breathlessness after 48 hours, is highly suggestive of fat embolism.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "While examining a patient in supine position, the examiner keeps his hand below the heel of one foot and asks the patient to flex the other hip against resistance, while keeping the week leg straight. This is known as:(AIIMS NOV 2017)", "options": [{"label": "A", "text": "Waddell’s test", "correct": false}, {"label": "B", "text": "O’ Donoghue’s test", "correct": false}, {"label": "C", "text": "Hoover’s sign", "correct": true}, {"label": "D", "text": "McMurray test", "correct": false}], "correct_answer": "C. Hoover’s sign", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/07/picture27.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/07/picture28.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/07/picture29.jpg"], "explanation": "<p><strong>Ans. C. Hoover’s sign</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ While examining a patient in supine position, the examiner keeps his hand below the heel of one foot and asks the patient to flex the other hip against resistance, while keeping the week leg straight. This is known as Hoover’s sign .</li><li>➤ Hoover’s sign</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 16-year-old girl arrives with several swellings and numerous brown rashes. Bone scans reveal heightened activity in the femur, skull, and rib areas. There are irregularities in her biochemical values. Additionally, she has a past medical record of hypothyroidism. The provided image displays an X-ray of her femur. What is the probable diagnosis from the options provided?(INICET MAY 2023)", "options": [{"label": "A", "text": "Langerhans cell histiocytosis", "correct": false}, {"label": "B", "text": "McCune-Albright syndrome", "correct": true}, {"label": "C", "text": "Neuroma with bone involvement", "correct": false}, {"label": "D", "text": "Papillary carcinoma of thyroid", "correct": false}], "correct_answer": "B. McCune-Albright syndrome", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/08/31/untitled-366.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/04/fat-embolism_page_2.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/04/screenshot-2024-01-04-190814.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/04/screenshot-2024-01-04-190827.jpg"], "explanation": "<p><strong>Ans. B. McCune-Albright syndrome</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The presentation of several swellings and numerous brown rashes represents café Au lait spots . Bone scans reveal heightened activity in the femur, skull, and rib areas. There are irregularities in her biochemical values. Presence of past medical history of hypothyroidism, and Shepherd crook deformity of femur in the given image, all point towards the McCune Albright Syndrome .</li><li>➤ The presentation of several swellings and numerous brown rashes represents café Au lait spots .</li><li>➤ café Au lait spots</li><li>➤ Bone scans reveal heightened activity in the femur, skull, and rib areas.</li><li>➤ There are irregularities in her biochemical values.</li><li>➤ Presence of past medical history of hypothyroidism, and Shepherd crook deformity of femur in the given image, all point towards the McCune Albright Syndrome .</li><li>➤ McCune Albright Syndrome</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 24-year-old male with history of intermittent evening rise of temperature and weight loss has presented with a flexion deformity of the right hip. He had occasional low back ache and on examination, there was hyper reflex on knee jerk. Identify the marked structure responsible to be involved in this pathology:(NEET PG 2021)", "options": [{"label": "A", "text": "1", "correct": false}, {"label": "B", "text": "2", "correct": false}, {"label": "C", "text": "3", "correct": false}, {"label": "D", "text": "4", "correct": true}], "correct_answer": "D. 4", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/07/21/5.jpg"], "explanation_images": [], "explanation": "<p><strong>Ans. D) 4</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old female came with hip flexor contracture. What is the most likely test to be done in this case?(AIIMS MAY 2018)", "options": [{"label": "A", "text": "Allis test", "correct": false}, {"label": "B", "text": "Thomas test", "correct": true}, {"label": "C", "text": "Ober test", "correct": false}, {"label": "D", "text": "Trendelenburg test", "correct": false}], "correct_answer": "B. Thomas test", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/08/17/whatsapp-image-2023-06-12-at-190121011010201026_page_68_page_87.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/31/picture1.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/31/picture2.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/31/picture3.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/31/picture4.jpg"], "explanation": "<p><strong>Ans. B. Thomas test</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Thomas test is used to assess the hip flexor contracture.</li><li>➤ Thomas test is used to assess the hip flexor contracture.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents with tear in the anteroinferior aspect of the glenoid capsule and labrum. Identify the lesion. (INICET NOV 2023)", "options": [{"label": "A", "text": "Bankart’s lesion", "correct": true}, {"label": "B", "text": "Hill-sachs lesion", "correct": false}, {"label": "C", "text": "Both A and B", "correct": false}, {"label": "D", "text": "Osteolytic lesion", "correct": false}], "correct_answer": "A. Bankart’s lesion", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/04/picture304.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/04/picture404.jpg"], "explanation": "<p><strong>Ans. A. Bankart’s lesion</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Hyperextension at MCP joint and flexion at IP joint occurs due to involvement of which muscle?(NEET PG 2020)", "options": [{"label": "A", "text": "Lumbricals and interossei", "correct": true}, {"label": "B", "text": "Palmar interossei", "correct": false}, {"label": "C", "text": "Dorsal interossei", "correct": false}, {"label": "D", "text": "Adductor pollicis", "correct": false}], "correct_answer": "A. Lumbricals and interossei", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/03/27.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/03/screenshot-2024-01-03-134412.jpg"], "explanation": "<p><strong>Ans. A) Lumbricals and interossei</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 12-year-old boy was brought by his parents to the clinic complaining of pain in his right hip. An X-ray of his pelvis was taken and is shown below. What is your diagnosis? (AIIMS NOV 2016)", "options": [{"label": "A", "text": "Osteoporosis", "correct": false}, {"label": "B", "text": "Osteopetrosis", "correct": false}, {"label": "C", "text": "Osteogenesis imperfecta", "correct": true}, {"label": "D", "text": "Osteopoikilosis", "correct": false}], "correct_answer": "C. Osteogenesis imperfecta", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/08/31/screenshot-2024-08-31-090929.png"], "explanation_images": [], "explanation": "<p><strong>Ans. C. Osteogenesis imperfecta</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Osteogenesis imperfecta involves generalized bone fragility due to defective type I collagen, leading to frequent fractures and skeletal deformities</li><li>➤ Osteogenesis imperfecta</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient who used to workout regularly at the gym, gradually developed pain in the hip which is aggravated while squatting. He gives history of regular steroid and creatine use over last six months. There is flattening of femoral head and subchondral cysts were seen on X-ray. What is the likely diagnosis?(INICET MAY 2022)", "options": [{"label": "A", "text": "AVN of hip", "correct": true}, {"label": "B", "text": "TB of hip", "correct": false}, {"label": "C", "text": "Fracture neck of femur", "correct": false}, {"label": "D", "text": "Osteomalacia", "correct": false}], "correct_answer": "A. AVN of hip", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/screenshot-2024-01-08-134949.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/17_UDa2gD9.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/18.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/20.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/21.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/22.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/23.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/screenshot-2024-01-08-151004.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/24.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/26.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/31.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/28.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/screenshot-2024-01-08-151752.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/32.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/30.jpg"], "explanation": "<p><strong>Ans. A) AVN of hip</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Regular steroid is the major risk factor for development of avascular necrosis of the hip. Flattening of femoral head on radiograph is also seen in the avascular necrosis of hip.</li><li>➤ Regular steroid is the major risk factor for development of avascular necrosis of the hip.</li><li>➤ Flattening of femoral head on radiograph is also seen in the avascular necrosis of hip.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which statement is incorrect about the pathology shown?(NEET PG 2019)", "options": [{"label": "A", "text": "Tumor arises from epiphyseal region", "correct": false}, {"label": "B", "text": "Tumor has distinct margins", "correct": false}, {"label": "C", "text": "Eccentric lesion", "correct": false}, {"label": "D", "text": "Chemotherapy is the treatment of choice", "correct": true}], "correct_answer": "D. Chemotherapy is the treatment of choice", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/05/11/20.jpg"], "explanation_images": [], "explanation": "<p><strong>Ans. D) Chemotherapy is the treatment of choice</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ Giant Cell Tumor (GCT) of bone typically manifests as an eccentric lytic lesion in the epiphyseal region of long bones with distinct margins. The mainstay of treatment for GCT is surgical intervention, either through curettage or excision followed by bone grafting, rather than chemotherapy. This surgical approach helps ensure complete removal of the tumor and helps prevent recurrence.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What are the different levels of triage in emergency care? (INICET MAY 2021)", "options": [{"label": "A", "text": "Primary, secondary, and tertiary triage", "correct": false}, {"label": "B", "text": "Immediate, delayed, and minimal triage", "correct": true}, {"label": "C", "text": "Head neck, thoracic and abdominal triage", "correct": false}, {"label": "D", "text": "Critical, non-critical, and dead triage", "correct": false}], "correct_answer": "B. Immediate, delayed, and minimal triage", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Immediate, delayed, and minimal triage</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Triage helps to ensure that patients receive the appropriate level of care based on their condition and the resources available. By prioritizing patients based on the severity of their injuries or illnesses, emergency medical personnel can provide the best possible care to the greatest number of patients in a disaster or emergency situation.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "First deformity corrected in CTEV is:(INICET NOV 2022)", "options": [{"label": "A", "text": "Cavus", "correct": true}, {"label": "B", "text": "Forefoot adduction", "correct": false}, {"label": "C", "text": "Varus", "correct": false}, {"label": "D", "text": "Equinus", "correct": false}], "correct_answer": "A. Cavus", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/05/screenshot-2024-01-05-102714.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/05/screenshot-2024-01-05-102726.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/05/screenshot-2024-01-05-102757.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/05/screenshot-2024-01-05-102812.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/05/screenshot-2024-01-05-102825.jpg"], "explanation": "<p><strong>Ans. A. Cavus</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a village, it is observed that several farmers have crossed gait and use a stick for support to stand up and walk. Due to poor yield from farms, they consume meals containing rice and pulses only. Supplementing their diet with which of the following vitamins could have prevented this? (NEET PG 2023)", "options": [{"label": "A", "text": "Vitamin A", "correct": false}, {"label": "B", "text": "Vitamin D", "correct": false}, {"label": "C", "text": "Vitamin C", "correct": true}, {"label": "D", "text": "Vitamin B", "correct": false}], "correct_answer": "C. Vitamin C", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/09/19/screenshot-2024-09-19-092757.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/09/19/screenshot-2024-09-19-092802.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/09/19/screenshot-2024-09-19-093002.png"], "explanation": "<p><strong>Ans. C) Vitamin C</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Match the Eponym with their fractures.(AIIMS MAY 2019)", "options": [{"label": "A", "text": "1-c, 2-d, 3-a, 4-e", "correct": true}, {"label": "B", "text": "1-a, 2-b, 3-c, 4-f", "correct": false}, {"label": "C", "text": "1-b, 2-e, 3-f, 4-d", "correct": false}, {"label": "D", "text": "1-d, 2-c, 3-e, 4-f", "correct": false}], "correct_answer": "A. 1-c, 2-d, 3-a, 4-e", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/24/screenshot-2024-01-23-194626.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/24/screenshot-2024-01-23-194649.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/08/18/whatsapp-image-2023-06-12-at-190121011010201026_page_68_page_84.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/24/screenshot-2024-01-23-194732.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/24/screenshot-2024-01-23-194746.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/24/screenshot-2024-01-23-194816.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/24/screenshot-2024-01-23-194828.jpg"], "explanation": "<p><strong>Ans. A. 1-c, 2-d, 3-a, 4-e</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ 1. Pilon’s fracture: It is the intra-articular comminuted fracture of the distal tibia. It is also known as Plafond fracture, Tibia Plafond fracture, Distal Tibial Explosion fracture. The high energy axial compression force if the tibia acts as a pestle, driving vertically into the talus.</li><li>➤ 1. Pilon’s fracture:</li><li>➤ 2. Runner’s fracture: It is the fracture of lower end of the fibula. They are usually the stress fracture, commonly seen in runners.</li><li>➤ Runner’s fracture:</li><li>➤ 3. Cotton’s fracture: It is the trimalleolar fracture in the ankle i.e., there is involvement of medial and lateral malleoli, and posterior aspect of the tibial plafond (also called as posterior malleolus). This is a more unstable fracture and may be associated with ligamentous injury.</li><li>➤ Cotton’s fracture:</li><li>➤ 4. Chauffer’s fracture: It is an intra-articular oblique fracture of the styloid process of the radius. It is sustained from a direct trauma like a blow to the back of the wrist or from forced dorsiflexion and abduction of the wrist.</li><li>➤ 4. Chauffer’s fracture:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statement/s is/are true regarding open fracture?(INICET MAY 2021) Compartment syndrome is rare. Immediate debridement should be done. Tibia is the most common long bone involved. Multiple fractures are uncommon.", "options": [{"label": "A", "text": "All are correct", "correct": false}, {"label": "B", "text": "I, II & III are correct", "correct": true}, {"label": "C", "text": "I & II are correct", "correct": false}, {"label": "D", "text": "I, II & IV are correct", "correct": false}], "correct_answer": "B. I, II & III are correct", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) I, II & III are correct</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following condition will cause intermittent breaking of long bones in a child? (NEET PG 2022)", "options": [{"label": "A", "text": "Achondroplasia", "correct": false}, {"label": "B", "text": "Marfan Syndrome", "correct": false}, {"label": "C", "text": "Osteogenesis Imperfecta", "correct": true}, {"label": "D", "text": "Cretinism", "correct": false}], "correct_answer": "C. Osteogenesis Imperfecta", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture52.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture56.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture57_56SXDq2.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture55.jpg"], "explanation": "<p><strong>Ans. C. Osteogenesis Imperfecta</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Intermittent breaking of long bones in children is a feature of osteogenesis imperfecta.</li><li>➤ Intermittent breaking of long bones in children is a feature of osteogenesis imperfecta.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which movement of the hip is being demonstrated by the examiner in the following diagram?(AIIMS MAY 2017)", "options": [{"label": "A", "text": "Internal rotation", "correct": true}, {"label": "B", "text": "External rotation", "correct": false}, {"label": "C", "text": "Adduction", "correct": false}, {"label": "D", "text": "Abduction", "correct": false}], "correct_answer": "A. Internal rotation", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/05/02/untitled-604.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/05/15/screenshot-2024-05-15-112419.JPG", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/05/15/screenshot-2024-05-15-112429.JPG", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/05/15/screenshot-2024-05-15-112438.JPG", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/05/15/screenshot-2024-05-15-112448.JPG"], "explanation": "<p><strong>Ans. A) Internal rotation</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The given image shows internal rotation of hip.</li><li>➤ The given image shows internal rotation of hip.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the sequence of performing a Thomas test?(INICET NOV 2021) Passive flexion of affected hip Overcorrection on the normal side Measure the flexion angle Checking for lumbar lordosis", "options": [{"label": "A", "text": "I, II, III, IV", "correct": false}, {"label": "B", "text": "I, III, II, IV", "correct": false}, {"label": "C", "text": "II, III, IV, I", "correct": false}, {"label": "D", "text": "IV, II, I, III", "correct": true}], "correct_answer": "D. IV, II, I, III", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/08/19/whatsapp-image-2023-06-12-at-190121011010201026_page_68_page_87.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/3.jpg"], "explanation": "<p><strong>Ans. D) IV, II, I, III</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The correct sequence of performing the Thomas test is:</li><li>➤ The correct sequence of performing the Thomas test is:</li><li>➤ Checking for lumbar lordosis</li><li>➤ ↓</li><li>➤ Overcorrection on the normal side</li><li>➤ ↓</li><li>➤ Passive flexion of affected hip</li><li>➤ ↓</li><li>➤ Measure the flexion angle</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 37-year-old woman presents with headaches for 6 months. She has been taking analgesics regularly. The headache recently increased in severity for 3 days but was reduced on stopping the analgesic. What is the likely diagnosis? (NEET PG 2021)", "options": [{"label": "A", "text": "Medication overuse headache", "correct": true}, {"label": "B", "text": "Tension headache", "correct": false}, {"label": "C", "text": "Chronic migraine", "correct": false}, {"label": "D", "text": "Cluster headache", "correct": false}], "correct_answer": "A. Medication overuse headache", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A. Medication overuse headache</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Medication overuse headache is characterized by the worsening of headaches due to frequent use of headache medications, and improvement upon cessation of the medication. This phenomenon highlights the importance of managing headache disorders with appropriate treatments and avoiding overuse of analgesics.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 12-year-old boy presents to the orthopedic clinic with persistent left knee pain and swelling for the past three months. He describes the pain as constant and worsening, even occurring at rest. There is no history of trauma. Physical examination reveals a swollen and tender distal femur with limited range of motion due to pain. An X-ray shows a sunburst pattern and periosteal reaction consistent with an aggressive bone lesion. The tumor is surgically resected, and the gross specimen reveals a gritty, gray-white mass with areas of necrosis and hemorrhage. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Osteosarcoma", "correct": true}, {"label": "B", "text": "Fibrous dysplasia", "correct": false}, {"label": "C", "text": "Aneurysmal bone cyst", "correct": false}, {"label": "D", "text": "Non-ossifying fibroma", "correct": false}], "correct_answer": "A. Osteosarcoma", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A. Osteosarcoma</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Osteosarcoma is a primary malignant bone tumor common in adolescents, presenting with aggressive radiographic features and characteristic gross pathology. Early recognition and timely intervention are crucial to prevent metastatic spread and improve survival outcomes.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following substances can be used for new bone formation in cases of non-union fracture?(INICET NOV 2020)", "options": [{"label": "A", "text": "Calcium phosphate", "correct": false}, {"label": "B", "text": "Calcium sulphate", "correct": false}, {"label": "C", "text": "PMMA", "correct": false}, {"label": "D", "text": "Bone morphogenetic protein", "correct": true}], "correct_answer": "D. Bone morphogenetic protein", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/06/screenshot-2024-01-06-174331.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/06/screenshot-2024-01-06-174451.jpg"], "explanation": "<p><strong>Ans. D) Bone morphogenetic protein</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ BMP helps in bone formation and repair. Thus, for the union of non-united fractures by surgery, it is used as an autograft material.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 10-year-old boy presents with bitemporal hemianopia. CT is shown below. What is the most likely diagnosis? (NEET PG 2020)", "options": [{"label": "A", "text": "​​​​​ Pituitary adenoma", "correct": false}, {"label": "B", "text": "Meningioma", "correct": false}, {"label": "C", "text": "Craniopharyngioma", "correct": true}, {"label": "D", "text": "Oligodendroglioma", "correct": false}], "correct_answer": "C. Craniopharyngioma", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/03/31/1_rW5stwZ.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/08/21/whatsapp-image-2023-06-12-at-190121011010201026_page_68_page_204.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/08/21/whatsapp-image-2023-06-12-at-190121011010201026_page_68_page_205.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/08/21/whatsapp-image-2023-06-12-at-190121011010201026_page_68_page_206.jpg"], "explanation": "<p><strong>Ans. C. Craniopharyngioma</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• A calcified lesion in the suprasellar region suggests craniopharyngioma . It is derived from Rathke

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>FM - INI CET NOV 2021</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">FM - INI CET NOV 2021</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                9 Questions | 9 Total Marks | 19 min Duration | ~126.67 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 9 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 19 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 9</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">FM - INI CET NOV 2021 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 9</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 9 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A chemical factory worker presented with burning pain sensation in mouth and abdomen along with nausea, vomiting and blood in stool. Which poisoning is suspected in this case?", "options": [{"label": "A", "text": "Phosphorus", "correct": false}, {"label": "B", "text": "Lead", "correct": false}, {"label": "C", "text": "Thallium", "correct": false}, {"label": "D", "text": "Arsenic", "correct": true}], "correct_answer": "D. Arsenic", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Arsenic Arsenic poisoning causes burning pain in the upper GI tract, Diarrhoea with blood, Nausea and vomiting.</p>\n<p><strong>Highyeild:</strong></p><p>Arsenic- Metallic Arsenic is non-toxic. None of heavy metals / Metallic poisons in their native form are poisonous except Mechanism of Action It inhibits the sulfhydryl group of mitochondrial enzymes there by interfering in cellular respiration. Primary target of Arsenic is vascular endothelium, It increases the permeability of it. In acute toxicity – Acute Arsenic resembles cholera Vomiting Abdominal pain Watery diarrhea Treatment : BAL – chelating agent of choice Freshly precipitated ferric oxide given orally is effective. DMSA / DMPS is better than Post Mortem Findings : Multiple Reddish erosions of gastric mucosa – Red velvety stomach Sub Endocardial haemorrhages of ventricles. Test : Marsh and Reinsh  (obsolete) AAS – Atomic Absorption Spectrometry is the best test. Signs and symptoms in chronic arsenic poisoning- Hyperkeratosis of palms and soles Rain drop pigmentation – brown mottled paths over eyelids, forehead, temple. Rashes – they resemble measles, addison’s d/s and secondary syphilis →Differential diagnosis. Aldrich Mee’s lines – on all the 10 finger nails. They are 1-2 mm in width occupying the entire breadth of nail. Painless perforation of Nasal Septum (cocaine also causes it) Peripheral Neuropathy – both sensory and motor sensory is also glove and stocking distribution . Sensitivity is reduced for pain, touch,temperature . Black foot disease - It is a peripheral vascular disease , producing ulceration, gangrene and spontaneous amputation of extremities.</p>\n<p><strong>Extraedge:</strong></p><p>Sub Endocardial haemorrhages of ventricles- Only 4 poisons - Arsenic Phosphorus Mercury Viper snake bite</p>\n<p><strong>Table:</strong></p><p>#MANTRA CRITERIA ACUTE ARSENIC CHOLERA 1. Vomiting First followed by Diarrhoea Diarrhoea followed by vomiting 2. Vomitus Contain blood & mucus Watery 3. Purging After vomiting Before vomiting 4. Stools Dark, blood, mucus and later it is rice watery stool No blood, no mucus only rice watery stools 5. Tenesmus and Anal Irritation ✔ X 6. Fatal Dose 0.1 to 0.2gm of Arsenic trioxide</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 48 year old male comes with injuries in hospital OPD. The examining doctor notices a lacerated wound of size 4×0.5 cm bone deep with blood clots over the scalp which was looking like an incised wound along with linear abrasion of size 2×0.5 cm below the nipple .What caused the lacerated injury over the scalp?", "options": [{"label": "A", "text": "Overstretching of skin and subcutaneous tissue", "correct": false}, {"label": "B", "text": "Shearing force", "correct": false}, {"label": "C", "text": "Soft tissue is sandwiched between the weapon and underlying bone", "correct": true}, {"label": "D", "text": "Impact by semi sharp object with heavy force", "correct": false}], "correct_answer": "C. Soft tissue is sandwiched between the weapon and underlying bone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Soft tissue is sandwiched between the weapon and underlying bone Given case findings suggest presence of a split laceration that occurred due to the soft tissue being sandwiched between the weapon and underlying bone .</p>\n<p><strong>Highyeild:</strong></p><p>Split Laceration- Also called as incised looking laceration Split lacerations are caused by blunt force splitting the thickness of the skin most frequently when the skin and soft tissues are crushed between impacting force and underlying bone. These types of lacerations are usually found in body parts with underlying bones without much tissue in between. Common sites include – scalp , face, shin etc. Due to splitting of skin these lacerations appear like incised wounds. Types of laceration: Split: It is an incised looking laceration where tissue is crushed between two hard surfaces. Eg., scalp, knee, chin, shin, iliac crest, forehead and eyebrows. Stretch: It is due to localised pressure with pull force overstretching the skin. Tear: Tearing of skin and subcutaneous tissue due to localised impact with hard irregular Avulsion: It is seen in runover injuries where shearing force is delivered at an oblique angle to the skin . Flaying: is seen where the shearing force or grinding force rips off skin and subcutaneous tissue from the bone.e.g., when lory wheel pass over limb</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A.Overstretching of skin and subcutaneous tissue- causes Stretch laceration. Option B.Shearing force-Avulsion injury is seen in runover injuries where shearing force is delivered at an oblique angle to the skin . Option D.Impact by semi sharp object with heavy force- can cause Chop wound.</p>\n<p><strong>Table:</strong></p><p>#MANTRA CRITERIA SPLIT LACERATION INCISED WOUND Margins Ragged Clean cut Abrasions & contusion along margin Present Absent Tissue bridges → Muscle → Tendon →Nerve → Vessel Crushed Clean out Haemorrhage Less Profuse Hair Crushed & driven into Injury Cut</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following are rules of insanity? Durham Ashley Curren Murphy Select the correct answer from the given below code:", "options": [{"label": "A", "text": "1, 3", "correct": true}, {"label": "B", "text": "2, 4", "correct": false}, {"label": "C", "text": "1, 3 and 4", "correct": false}, {"label": "D", "text": "1, 2, 3 and 4", "correct": false}], "correct_answer": "A. 1, 3", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>1, 3 Durham’s rule and Curren’s rule: are rules of insanity.</p>\n<p><strong>Highyeild:</strong></p><p>Statement 1.Durham’s rule states that an accused is not criminally responsible if his unlawful act is the result of a mental disease or defect. Statement 3.Curren’s rule- states that an accused person is not criminally responsible if, at the time of the act, he did not have the capacity to regulate his conduct to the requirements of the law as a result of mental disease or defect.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Statement 2.Ashley’s rule- is used to differentiate between males and female based on the combined length of manubrium and sternum. Statement 4. Murphy’s law- is an adage or epigram that is typically stated as: \" Anything that can go wrong will go wrong .” Option B,C and D. are incorrect .because statements 2 and 4 are not associated with insanity.</p>\n<p><strong>Table:</strong></p><p>#MANTRA McNaughton’s rule is adopted under IPC section 84. Act of a person of unsound mind Nothing is an offense which is done by a person who, at the time of doing it, by reason of unsoundness of mind, is incapable of knowing the nature of the act, or that he is doing what is either wrong or contrary to law.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "One friend murdered another because of having a common girlfriend by compressing his nostrils and mouth while sitting on his chest. What is this mechanism?", "options": [{"label": "A", "text": "Smothering", "correct": false}, {"label": "B", "text": "Traumatic asphyxia", "correct": false}, {"label": "C", "text": "Burking", "correct": true}, {"label": "D", "text": "Overlaying", "correct": false}], "correct_answer": "C. Burking", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Burking Includes two processes: Homicidal Smothering (compressing his nostrils and mouth) and Traumatic Asphyxia (sitting on his chest).</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A.Smothering- Form of asphyxia caused by closing the external respiratory orifices e. nose & mouth either by the hand or by other means i.e. mud, paper, cloth plastic bag, duct tape, etc. Option B.Traumatic Asphyxia/ Crush Asphyxia/ Compression Asphyxia: Death results from pressure and fixation of chest and abdomen. Thereby breathing is impaired and Asphyxia Option D.Overlaying/ Compression Suffocation: compression of chest which will prevent movement of chest. Thereby breathing is impaired and Asphyxia Most common example is mother sharing the same bed with infant and overlaying occurs.Along with petechial hemorrhage , there may be evidence of flattening of the nose and face.</p>\n<p><strong>Table:</strong></p><p>#MANTRA Classification of violent asphyxial deaths- Hanging Complete hanging- no part of the body touching the ground. Partial /incomplete hanging- some part of the body touching the ground. Typical- knot at back of neck Atypical- knot anywhere other than back. Strangulation Ligature strangulation Throttling Bansdola Garrotting Mugging Suffocation Smothering Gagging Choking Crush asphyxia/ traumatic asphyxia Bansdola Burking Drowning Typical drowning (wet) Salt water Fresh water Atypical drowning Dry drowning - sustained laryngeal spasm Hydrocution- sudden cardiac arrest on entering water. Near secondary drowning- patient dies after rescue due to secondary complication of drowning .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "During resuscitation, a patient received intralipid 20%. What could have been the most probable cause for giving intralipid?", "options": [{"label": "A", "text": "Pulmonary Air Embolism", "correct": false}, {"label": "B", "text": "Asphyxia due to drowning", "correct": false}, {"label": "C", "text": "Electrocution", "correct": false}, {"label": "D", "text": "LA toxicity", "correct": true}], "correct_answer": "D. LA toxicity", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>LA toxicity Intralipid is an antidote for Local Anaesthetic toxicity.</p>\n<p><strong>Highyeild:</strong></p><p>Local Anaesthetic systemic toxicity (LAST): The classic description is of a progressive “biphasic” effect on the CNS and then CVS, two areas highly sensitive to changes in tissue electrophysiology. CNS excitation (agitation, auditory change and metallic taste) progresses to seizures or CNS depression (drowsiness, coma, and respiratory arrest). This is followed by CVS excitation (tachycardia, ventricular arrhythmia, and hypertension) then depression (bradycardia, conduction block, asystole, and cardiac depression). Of particular importance is the nature of this collapse, with high incidence of LA-cardiac arrest being resistant to standard resuscitative measures. Accidental intravascular injection is the major cause of systemic toxicity, for example, regional anesthesia of the neck (interscalene block, cervical plexus block, and stellate ganglion block) can cause direct intra-arterial injection and cause rapid toxicity from early entry to the cerebral circulation. Epidural anesthesia holds a risk of intravenous injection into the engorged epidural venous plexus of the parturient, and the oral mucosa is also highly vascular. In pregnancy, the higher cardiac output will speed up absorption and with reduced plasma proteins this will increase the free fraction of LA in the plasma. 20% lipid infusion is the first safe intravenous lipid emulsion (ILE) used in medicine. The mechanism by which lipids reverse local anesthetic cardiotoxicity may be increasing clearance from cardiac tissue. This nonspecific, observed extraction of local anesthetics from aqueous plasma or cardiac tissues is termed a “lipid sink.” Another proposed mechanism is that lipids counteract local anesthetic inhibition of myocardial fatty acid oxidation , thereby enabling energy production and reversing cardiac depression .</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A, B and C. Intralipids have no role in Air embolism , Asphyxia or Electrocution.</p>\n<p><strong>Table:</strong></p><p>#MANTRA Poisoning Antidote Organophosphorus and carbamate Atropine (atropine is not used for organochlorine poisoning only organophosphorus) Atropine Physostigmine Opioids Naloxone (Intravenous) Valproate hyperammonemia Carnitine Beta blocker Glucagon Calcium channel blocker Calcium gluconate MgSO4 toxicity Calcium gluconate Na channel blocking drugs Na bicarbonate Dig oxin Dig ibind/ Digi fab Paracetamol N-Acetyl cysteine Neuroleptic Malignant syndrome Dantrolene sodium (DOC) Specific antidote if NMS due to D2 blockade-Bromocriptine Drug-induced dystonia Central anticholinergic Benzhexol Benztropine Biperiden 1st generation antihistamines Promethazine Diphenhydramine Tricyclic antidepressants NaHCO3 Sulfonylurea induced hypoglycemia Octreotide Cyanide Hydroxocobalamin Heparin.LMWH Protamine sulfate Warfarin Vitamin K Da bigatran Idarucizumab Rivaro xa b an Ap i xa ban(direct Xa inhibitor) And xa net alfa Fibrinolytic drug overdose Epsilon amino caproic acid, tranexamic acid Alco h ol , Metha n ol , Ethylene gly c ol Fomepiz ole Benzodia zep ines , Z drugs, Beta carboline Fluma ze nil Methotrexate Folinic acid/Leucovorin/Citrovorin Glucarpidase (preferred in renal failure) Methemoglobinemia Methylene blue Isoniazid induced seizure Pyridoxine Iron Acute iron poisoning- Desferioxamine Chronic iron overload- Deferiprone Deferasirox Copper Penicillamine Arsenic/lead/mercury BAL</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A case of hanging has come to the forensic department for autopsy. On examination a ligature mark covering about 1/3rd of the neck, protruded tongue, salivary stains, his right eye was open while left was close, both pupils dilated. The reason for the opened right eye?", "options": [{"label": "A", "text": "Compression of ICA", "correct": false}, {"label": "B", "text": "Compression of IJV", "correct": false}, {"label": "C", "text": "Cervical sympathetic chain", "correct": true}, {"label": "D", "text": "Vagus nerve", "correct": false}], "correct_answer": "C. Cervical sympathetic chain", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cervical sympathetic chain Given case scenario describes the term ‘Le Facies sympathique’ which is seen in cases of antemortem hanging along with ligature mark covering 1/3 rd of neck thus confirming suicidal hanging. Maximum pressure is always exerted on the opposite side of the knot. Thus, due to pressure upon the cervical sympathetic , the eye on the same side of the knot remains open and both pupils are dilated.</p>\n<p><strong>Highyeild:</strong></p><p>Hanging- Classified into Typical-knot at back of neck. Atypical-knot anywhere other than Complete-No part of the body touching the ground. Partial-Some part of the body touching the ground. Post mortem findings External- findings suggestive of Antemortem hanging Petechial hemorrhage above obstruction Peripheral cyanosis Dribbling of saliva from angle of mouth Le fasciae sympathique Internal- Tissues of neck-pale/whitish (Strangulation-tissue of neck extensive hemorrhage). Multiple transverse tears in the tunica intima of carotids→ Amussat sign→Antemortem Fracture of hyoid bone→ Outward compression/Anterior posterior compression. (Throttling-Inward compression fracture of hyoid bone- Hyoid fracture is most common in throttling.)</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A.Compression of ICA and Option B.Compression of Occlusion of both jugular and carotid systems creates a bloodless field during neck autopsy. Option D.Vagus nerve compression -can cause neurogenic shock leading to death.</p>\n<p><strong>Table:</strong></p><p>#MANTRA Hanging Strangulation Force of compression is body weight Outside force is applied Ligature mark is above the thyroid,is oblique,symmetrical and incomplete. Ligature mark is below thyroid,is horizontal,complete and continuous Knot present Knot absent Single ligature mark Multiple ligature mark ,Multiple hemorrhege, neck autopsy- Dry, white Hemorrhagic area Fracture of hyoid-Uncommon Fracture of hyoid-common. ( Most common in throttling ) Signs of struggle -absent Signs of struggle -present Lungs emphysematous bullae rare Emphysematous bullae common</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Patient was brought dead, with multiple small puncture wounds over right anterior chest wall, multiple abrasions and lacerations over left lower abdominal wall. What is the reason?", "options": [{"label": "A", "text": "Due to barotrauma", "correct": false}, {"label": "B", "text": "Fire burns", "correct": false}, {"label": "C", "text": "Flying missiles", "correct": true}, {"label": "D", "text": "Fall of building", "correct": false}], "correct_answer": "C. Flying missiles", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Flying missiles Triad of Punctate abrasions , bruises and punctate lacerations seen in secondary blast/ explosion injuries caused by flying missiles generated by the bomb blast and known as Marshall’s triad.</p>\n<p><strong>Highyeild:</strong></p><p>Blast Injury Mechanism of Injury Note Primary due to blast waves ● Organs which are injured more commonly are organs that contain air. ● Most sensitive for 1° blast injury – Tympanic Membrane ● Most Common finding in Bomb blast injury-Rupture of tympanic membrane. ● Most Common organ severely damaged ○ on land: Lung (Blast lung), ○ underwater: GIT Secondary Caused by missiles which are produced / generated by the blast Marshall’s triad: Abrasion Contusion Laceration (Punctate) Tertiary Caused when a person is throwed into air due to blast Quaternary Burns,Crush Injuries.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A.Due to barotrauma- Causes Primary Blast injury. Option B.Fire burns and Option D.Fall of building- Causes Quaternary Blast injury.</p>\n<p><strong>Extraedge:</strong></p><p>Molotoy Cocktail- Hand thrown incendiary bomb Empty glass bottle is filled with kerosene /petrol, small pieces of shar things are added into it, then thick thread is put in, it is lit and thrown on a mob. Once this blasts, the sharp things inside act as missiles causing damage to many people in the crowd.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A person had an injury on his thigh. On examination, there is soddened burn injury with erythema, blisters and red line of demarcation. What is most likely cause?", "options": [{"label": "A", "text": "Chemical burn", "correct": false}, {"label": "B", "text": "Dry burn", "correct": false}, {"label": "C", "text": "Electric burn", "correct": false}, {"label": "D", "text": "Moist burn", "correct": true}], "correct_answer": "D. Moist burn", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Moist burn Presence of sodden injury with erythema, blisters and red line of demarcation is typical of moist burn/scalds.</p>\n<p><strong>Highyeild:</strong></p><p>Burn wounds - can be classified into 6 separate groups based on the mechanism of injury : scalds, contact burns, fire, chemical, electrical, and radiation. Localized effect of heat produces burns (dry heat) and scalds (moist heat). Scald burn injuries can be caused by liquids, grease, or steam. Liquid scalds can be further divided into spill, steam and immersion scalds . Sticky liquids cause more severe scalds than non-sticky.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A.Chemical burn- will not show red line, and will have ulceration,characteristic stain. Option B.Dry burn- Will be dry,wrinkled. Option C.Electric burn- will show current pearls, joule burns,Bone melt, keratitis.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "While performing an autopsy the surgeon was informed that the pelvis was of a male patient. Pointers towards male pelvis are? Large obturator foramen Large sacroiliac joint surface Large acetabulum Subpubic angle V shaped Ischial tuberosity everted Prominent preauricular sulcus Large and wide greater sciatic notch Select the correct answer from the given below code:", "options": [{"label": "A", "text": "1,2,3,4", "correct": true}, {"label": "B", "text": "1,4,5,6", "correct": false}, {"label": "C", "text": "1,2,3,6", "correct": false}, {"label": "D", "text": "2,3,4,6", "correct": false}], "correct_answer": "A. 1,2,3,4", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>1,2,3,4</p>\n<p><strong>Highyeild:</strong></p><p>Female vs male pelvis CRITERIA MALE FEMALE 1. Greater Sciatic notch Small, deep & narrow Large, wide shallow 2. Sub pubic angle Inverted 

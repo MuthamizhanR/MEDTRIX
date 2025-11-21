@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>General Neuroanatomy</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">General Neuroanatomy</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                17 Questions | 17 Total Marks | 27 min Duration | ~95.29 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 17 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 27 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 17</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">General Neuroanatomy - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 17</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 17 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "The predominant protein in myelin in the peripheral nervous system is Protein zero (P0) and its function is to stabilize adjacent plasma membranes by interaction with similar P0 molecules. Which of the following cells manufactures P0?", "options": [{"label": "A", "text": "Fibrous Astrocytes", "correct": false}, {"label": "B", "text": "Microglia", "correct": false}, {"label": "C", "text": "Oligodendrocytes", "correct": false}, {"label": "D", "text": "Schwann cells", "correct": true}], "correct_answer": "D. Schwann cells", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Schwann cells Schwann cell, also called neurilemma cell, is a cell in the peripheral nervous system that produces the myelin sheath around neuronal axons and manufactures proteolipid protein in the peripheral nervous system.</p>\n<p><strong>Highyeild:</strong></p><p>Development of various cells of nervous tissue Neuroepithelial derivatives (from the wall of the neural tube) Neural crest derivatives Mesodermal/ Mesenchymal derivatives A. Neuron bodies inside CNS A. Neuron bodies outside CNS Microglia 1. Multipolar neurons 1. Dorsal root ganglia 2. Bipolar neurons 2. Sensory ganglia of cranial nerves 5th, 7th to 10th 3. Preganglionic sympathetic and parasympathetic neurons 3. Autonomic ganglia- postganglionic sympathetic and parasympathetic neurons B. Neuroglia of CNS B. Neuroglia of PNS 1. Protoplasmic and fibrous astrocytes 1. Satellite cells 2. Oligodendrocytes 2. Schwann cells 3. Ependymal cells</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: C. Oligodendrocytes manufacture the proteolipid protein, the functional equivalent to P0 in the central nervous system. Option: A. Fibrous and protoplasmic astrocytes are supportive cells which play a role in the regulation of brain metabolism. Option: B. Microglia are mesodermal in origin and have phagocytic activity in the central nervous system.</p>\n<p><strong>Extraedge:</strong></p><p>Nerve fibres, which remain within the brain and spinal cord, receive support from and are ensheathed by neuroglial cells. The nerve fibres, which leave the central nervous system to become constituents of peripheral nerves, acquire a special sheath called the neurolemma. This sheath is derived from cells of neural crest origin called Schwann cells.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which deficits are seen in a medial medullary syndrome that involves a left-sided branch of the anterior spinal artery?", "options": [{"label": "A", "text": "Deviation of the tongue to the left, hemiplegia of arm and leg on the left", "correct": false}, {"label": "B", "text": "Deviation of the tongue to the right, hemiplegia of arm and leg on the right", "correct": false}, {"label": "C", "text": "Loss of conscious proprioception and precise tactile discrimination over the right side of the body exclusive of the face", "correct": true}, {"label": "D", "text": "Only deviation of the tongue to the left", "correct": false}], "correct_answer": "C. Loss of conscious proprioception and precise tactile discrimination over the right side of the body exclusive of the face", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Loss of conscious proprioception and precise tactile discrimination over the right side of the body exclusive of the face A vascular lesion affecting the left caudal medulla involves the left medial lemniscus, left hypoglossal nerve fibres, and the left medullary pyramid. Involvement of the left medial lemniscus produces somatosensory deficits involving the right side of the body.</p>\n<p><strong>Highyeild:</strong></p><p>Medial medullary/Dejerine syndrome: It occurs due to blockage of an anterior spinal artery. Features are Contralateral hemiplegia due to damage to the pyramid of the medulla. Loss of sense of vibration and position due to damage to the medial lemniscus. Paralysis Of Muscles of the tongue on the same side due to injury to XII cranial nerve.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Options: A & B. Damage to the left hypoglossal nerve would result in deviation of the protruded tongue to the left (and other lower motor neuron signs), and damage to the left pyramid results in right hemiplegia .along with other upper motor neuron signs. Option: D. are incorrect because they fail to combine the involvement of the tongue and contralateral hemiplegia</p>\n<p><strong>Extraedge:</strong></p><p>Lateral medullary/Wallenburg syndrome : Occurs due to blockage of a posterior inferior cerebellar artery. It supplies areas behind the inferior olivary nucleus. Features are Ipsilateral paralysis of most muscles of the soft palate, pharynx and larynx due to injury to the nucleus ambiguus which gives fibres to IX, X and XI cranial nerves. Loss of pain and temperature on the same side of the face due to the involvement of the spinal nucleus and spinal tract of the trigeminal nerve. Loss of pain and temperature on the opposite side of the body due to the involvement of the lateral spinothalamic tract.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Occlusion of which vessels affects the entire dorsolateral part of the rostral medulla level of the restiform body and produces the lateral medullary Wallenberg syndrome?", "options": [{"label": "A", "text": "Anterior inferior cerebellar artery", "correct": false}, {"label": "B", "text": "Anterior spinal artery", "correct": false}, {"label": "C", "text": "Posterior inferior cerebellar artery", "correct": true}, {"label": "D", "text": "Posterior spinal artery", "correct": false}], "correct_answer": "C. Posterior inferior cerebellar artery", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Posterior inferior cerebellar artery The posterior inferior cerebellar artery supplies the rostral, dorsolateral medulla.</p>\n<p><strong>Highyeild:</strong></p><p>The posterior inferior cerebellar artery (PICA) is the largest branch of the vertebral artery. It is one of the three main arteries that supply blood to the cerebellum, a part of the brain. Blockage of the posterior inferior cerebellar artery can result in a type of stroke called lateral medullary syndrome.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options: - Option: A. Anterior inferior cerebellar artery The anterior inferior cerebellar and superior cerebellar arteries supply portions of the pons and mesencephalon although Wallenberg syndrome is called PICA syndrome; the most commonly involved vessel is the vertebral artery. Option: B. Anterior spinal artery Option: D. Posterior spinal artery The posterior spinal and anterior spinal arteries supply dorsal and ventral portions, respectively, of the caudal medulla.</p>\n<p><strong>Extraedge:</strong></p><p>The vertebral arteries are part of the circulatory system. They carry blood to the brain and spinal cord, which are part of the nervous system. The vertebral artery provides 20% of blood flow to your brain (the carotid artery supplies the other 80%). The vertebral arteries have many small branches</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 67-year-old male, known as a diabetic comes to the doctor for the treatment of an ulcer, which he developed while working in his workshop of wooden furniture. He says that he does not know when he got injured. While doing the sensory examination of the patient it was found the patient did not have a sensation of pain of touch on the plantar surface of the foot but had intact touch and pain sensation in the upper limb. Which functional component or nervous system has been affected?", "options": [{"label": "A", "text": "Afferent Component", "correct": true}, {"label": "B", "text": "Efferent component", "correct": false}, {"label": "C", "text": "Both", "correct": false}, {"label": "D", "text": "Lesion is in the CNS", "correct": false}], "correct_answer": "A. Afferent Component", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Afferent Component The anatomically nervous system is divided into two parts: A) CNS B) PNS PNS is again divided into two components A) Afferent- provides sensory information to CNS B) efferent- carries motor information from CNS to muscles, viscera, blood vessels etc. So injury to afferent components results in loss of sensation of touch and pain.</p>\n<p><strong>Highyeild:</strong></p><p>According to the number of their Processes, neurons are classified as Multipolar neurons. Most of the neurons in man are multipolar, e.g. all motor and internuncial neurons. Bipolar neurons are confined to the first neuron of the retina, the ganglia of the eighth cranial nerve, and the olfactory mucosa. Pseudounipolar neurons are actually unipolar, to begin with, but become bipolar functionally and are found in the dorsal nerve root ganglia and sensory ganglia of the cranial nerves. Unipolar neurons are present in the mesencephalic nucleus of the trigeminal nerve and also occur during fetal life. These cells are more common in lower vertebrates.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options: - Option: B. Efferent component The anatomically nervous system is divided into two parts: CNS PNS PNS is again divided into two components Afferent- provides sensory information to CNS efferent- carries motor information from CNS to muscles, viscera, blood vessels etc Injury to efferent components result in a decrease in muscle tone or paralysis as seen in poliomyelitis. Option: C. Both If both components of the peripheral nervous system are affected then the result in sensory as well as motor deficits like seen in demyelinating diseases such as multiple sclerosis etc. Option: D. Lesion in the CNS If the lesion is present in the CNS, in the cortex, midbrain or brainstem. Then manifestation would be of multisystem in such a lesion.</p>\n<p><strong>Extraedge:</strong></p><p>Types of neuroglial cells Protoplasmic astrocyte Fibrous astrocyte Oligodendrocyte Microglia Cell size Large Large Medium Small, elongated Shape of nucleus Oval, lightly stained Oval, lightly stained Small, spherical, dark stained Small, elongated, dark stained Cytoplasmic processes Many, short and thick Many long slender Few, short, beaded Short, thin, spinous Cytoplasm Granular Fibrillar - Situation Grey matter White matter White matter Grey and white matters Function The blood-brain barrier (BBB) BBB Myelination Phagocytosis Embryological origin Neural crest Neural crest Neural crest Mesoderm</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A young female patient of age 8 years comes to the OPD, with complaints of extensive growth of hair in his back. The clinical examination of motor and sensory arts was within physiological limits. Patients had no complaints otherwise, and the growth of patients was normal as per her age. What is the most likely reason for this development?", "options": [{"label": "A", "text": "Idiopathic Etiology", "correct": false}, {"label": "B", "text": "X-linked congenital hypertrichosis syndrome", "correct": false}, {"label": "C", "text": "Part of vestigial tail", "correct": false}, {"label": "D", "text": "Neural tube defect", "correct": true}], "correct_answer": "D. Neural tube defect", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1686392203280-QTDA062005IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Neural tube defect Neural tube defect is the result of the failure of the embryonic halves of one or more neural arches to fuse in the median plane Spina bifida occulta occurs in the L5 or S1 vertebra in approximately 10% of otherwise normal people. In its most minor form, the only evidence of its presence may be a small dimple with a tuft of hair arising from it an overlying lipoma, dermal sinus, or other birthmarks may also occur. Spina bifida Occulta usually produces no symptoms. A small percentage of affected infants have functionally significant defects of the underlying spinal cord and dorsal roots.</p>\n<p><strong>Highyeild:</strong></p><p>Divisions of the nervous system</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Idiopathic Etiology This can be a possibility but first or foremost we need to rule out other causes. If we do not find any cause then only we have to label it as idiopathic pathology. Option: B. X-LINKED CONGENITAL HYPERTRICHOSIS SYNDROME Congenital generalized hypertrichosis (CGH) is a genetically and phenotypically heterogeneous group of rare conditions characterized by universal hair overgrowth. It is generalized hair overgrowth rather than localized Option: C. Part Of Vestigial Tail The human tail is a caudal, vestigial, midline protrusion with skin covering a combination of muscle and adipose tissue. It may be a ‘true tail’ or a ‘pseudo-tail’. Pseudo-tails are lesions of various types coincidentally found in the caudal region of newborns, often associated with the spinal column and coccygeal malformations. The true human tail is characterized by a complex arrangement of adipose and connective tissue, central bundles of longitudinally arranged striated muscle in the core, blood vessels, nerve fibres, nerve ganglion cells and specialized pressure-sensing nerve organs (Pacini corpuscles). It is covered by normal skin, replete with hair follicles, sweat glands and sebaceous glands.</p>\n<p><strong>Extraedge:</strong></p><p>Myasthenia gravis: It is a consequence of auto-immune destruction of nicotinic postsynaptic receptors for acetylcholine. Thymus abnormality occurs in 80% of patients. Clinical features: Limb and trunk: Weakness of neck muscles resulting in lolling of the Proximal limb muscles are preferentially affected. Limb reflexes are hyperactive. Muscle wasting occurs in 15% of cases. Diagnosis: Acetylcholine receptor antibodies are detected in the majority of patients.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A twenty-year-old second gravida presented to the department of radiodiagnosis for routine obstetric ultrasonography. Her first child was a girl and normal. There was no history of consanguinity of marriage. Her general physical examination was within normal limits. On clinical examination, the gestational age corresponded to 16–18 weeks. Ultrasonography revealed a single live intrauterine fetus with an average gestational age corresponding to 17 weeks. The fetal skull bones were poorly ossified. The supratentorial brain was replaced by CSF with a thin rim of peripheral cerebral parenchyma and a large central mono ventricle, with fused thalami. Which structure failed to form in this congenital anomaly?", "options": [{"label": "A", "text": "Telencephalon", "correct": true}, {"label": "B", "text": "Procencephalon", "correct": false}, {"label": "C", "text": "Rhombencephalon", "correct": false}, {"label": "D", "text": "Diencephalon", "correct": false}], "correct_answer": "A. Telencephalon", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Telencephalon Failure in the formation of telencephalon from Prosencephalon is called holoprosencephalopathy. Holoprosencephalopathy (HPS) results from incomplete separation of the cerebral hemispheres. It is associated with facial abnormalities. Genetic and environmental factors have been implicated in this severe and relatively common ( fetuses and live births) developmental defect. Maternal diabetes and teratogens, such as high doses of alcohol, can destroy embryonic cells in the median plane of the embryonic disc during the third week, producing a wide range of birth defects resulting from the defective formation of the forebrain. In alobar holoprosencephaly, the forebrain is small and the lateral ventricles often merge to form one large ventricle.</p>\n<p><strong>Highyeild:</strong></p><p>Holoprosencephaly ( HPE ) is a cephalic disorder in which the prosencephalon (the forebrain of the embryo) fails to develop into two hemispheres, typically occurring between the 18th and 28th day of gestation. Normally, the forebrain is formed and the face begins to develop in the fifth and sixth weeks of human pregnancy. Holoprosencephaly is estimated to occur in approximately 1 in every 250 conceptions and most cases are not compatible with life and result in fetal death in utero due to deformities to the skull and brain. However, holoprosencephaly is still estimated to occur in approximately 1 in every 8,000 live births.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Prosencephalon Failure to form Procencephalon is called macroencephaly. It is a severe defect of the calvaria and brain that results from failure of the rostral neuropore to close during the fourth week. As a result, the forebrain, midbrain, most of the hindbrain and calvaria are absent Here there is no absence of formation but due to abnormal vascularisation, Prosencephalon undergoes degeneration. Option: C. Rhombencephalon No such defects have been mentioned in the medical literature. Option: D. Diencephalon Failure to form diencephalon results in the absence of a third ventricle. The absence of the third ventricle is often associated with holoprosencephalopathy. A child presents with hydrocephalus, seizures, mental retardation etc.</p>\n<p><strong>Extraedge:</strong></p><p>Symptoms of holoprosencephaly range from mild (no facial/organ defects, anosmia, or only a single central incisor) to moderate to severe (cyclopia). The symptoms are dependent upon the classification type. There are four classifications of holoprosencephaly as well as a mild \"microform\". Alobar- Most severe form includes the formation of synophthalmia (a single central eye), proboscis, and severe impairment. Semilobar - Can present with a severely decreased distance between the eyes, a flat nasal bridge, eye defects, cleft lip and palate, and severe impairment. Lobar - Can present with decreased distance between eyes, a flat nasal bridge, and closely spaced nostrils, mental and locomotion delays may be present. Syntelencephaly or middle interhemispheric variant of holoprosencephaly (MIHV)- Mild phenotypic presentation which can present with flat nasal bridge, metopic prominence, shallow philtrum, and possibly mental and locomotion delays. \" Microform\"- Mild phenotypic presentation with reduced distance between eyes, sharp nasal bridge, single maxillary central incisor.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 75-year-old man comes to the emergency department with the complaint of paralysis of one side of his whole body. MRI brain found an infarction of the motor cortex. Why did he not have pain from the infarction?", "options": [{"label": "A", "text": "There is a non-release of chemical mediators of pain", "correct": false}, {"label": "B", "text": "There is the absence of pain fibres", "correct": true}, {"label": "C", "text": "Both a and b", "correct": false}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "B. There is the absence of pain fibres", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>There is the absence of pain fibres There are no pain receptors or fibres located in the brain. Injury to the brain causes the release of pain mediators but due to the absence of pain fibres, no pain is felt. Hence, during infarction no pain is felt in the brain. But there is the presence of pain fibres in the meninges resulting in pain during raised ICP.</p>\n<p><strong>Highyeild:</strong></p><p>Main Somatosensory Pathways to Consciousness Sensation Receptor First-Order Neuron Second-Order Neuron Third-Order Neuron Pathways Destination Pain and temperature Free nerve endings Posterior root ganglion Substantia gelatinosa Ventral posterolateral nucleus of thalamus Lateral spinothalamic, spinal lemniscus Posterior central gyrus Light touch and pressure Free nerve endings Posterior root ganglion Substantia gelatinosa Ventral posterolateral nucleus of thalamus Anterior spinothalamic, spinal lemniscus Posterior central gyrus Discriminative touch, vibratory sense, conscious muscle joint sense Meissner corpuscles, pacinian corpuscles, muscle spindles, tendon organs Posterior root ganglion Nuclei gracilis and cuneatus Ventral posterolateral nucleus of thalamus Fasciculi gracilis and cuneatus, medial lemniscus Posterior central gyrus</p>\n<p><strong>Extraedge:</strong></p><p>The meninges of the brain and spinal cord form three concentric membranous coverings. The outermost covering, the dura mater, by virtue of its toughness, serves to protect the underlying nervous tissue. The dura protects the cranial nerves by forming a sheath that covers each cranial nerve for a short distance as It passes through foramina In the skull. The dura mater also provides each spinal nerve root with a protective sheath. In the skull, the falx cerebri, which is a vertical sheet of dura between the cerebral hemispheres, and the tentorium Cerebelll, which is a horizontal sheet that projects forward between the cerebrum and cerebellum, serve to limit excessive movements of the brain the skull. The arachnoid mater is a much thinner impermeable membrane that loosely covers the brain. The interval between the arachnoid and pia mater. the subarachnoid space is filled with CSF. The CSF gives buoyancy to the brain and protects the nervous tissue from mechanical forces applied to the skull. The pia mater is a vascular membrane that closely invests and supports the brain and spinal cord.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 16-year-old boy was hit by a scooter. He was unconscious for a period of half an hour and vomited thrice. He was a known case of juvenile diabetes mellitus on examination in the casualty, the patient was conscious and moved all 4 limbs. His pulse was 82/min and BP 130/80 mm of hg. CT scan done within 6 hours showed mild cerebral edema and a scalp contusion in the left frontal region. There were no fractures. He was observed in the ward and was given intravenous mannitol. The patient was alright for 48 hours after the accident. On the 3rd day, he started vomiting again, his GCS dropped to 12/15 and he developed bradycardia. A repeat CT scan, after 50 hours of the first CT, showed a moderately sized anterior fossa extradural hematoma at the site of the (left) frontal scalp contusion. By the time he was taken for surgery, GCS had dropped to 9/15.what was the reason for rapidly progressing extradural hematoma?", "options": [{"label": "A", "text": "Resistance due to adhesion of the dura mater with the periosteum of the skull", "correct": true}, {"label": "B", "text": "Because of the presence of comorbidities", "correct": false}, {"label": "C", "text": "Because of the wrong treatment", "correct": false}, {"label": "D", "text": "Because of misdiagnosis", "correct": false}], "correct_answer": "A. Resistance due to adhesion of the dura mater with the periosteum of the skull", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Resistance due to adhesion of the dura mater with the periosteum of the skull The dura mater is the outermost layer of the meninges, lying directly underneath the bones of the skull and vertebral column. It is thick, tough and inextensible. Within the cranial cavity, the dura contains two connective tissue sheets: Periosteal layer – lines the inner surface of the bones of the cranium. Meningeal layer – deep to the periosteal layer inside the cranial cavity. It is the only layer present in the vertebral column. Between these two layers, the dural venous sinuses are located. They are responsible for the venous vasculature of the cranium, draining into the internal jugular veins. In some areas within the skull, the meningeal layer of the dura mater folds inwards as dural reflections. They partition the brain and divide the cranial cavity into several compartments. For example, the tentorium Cerebelli divides the cranial cavity into supratentorial and infratentorial compartments. The dura mater receives its own blood supply – primarily from the middle meningeal artery and vein. It is innervated by the trigeminal nerve (v1, v2 and v3). Hence, Extradural hematoma is a rapidly expanding mass and forms a medical emergency due to 1) Resistance produced by attachment of dura mater to the periosteum of the skull 2) Intense arterial pressure</p>\n<p><strong>Highyeild:</strong></p><p>Migraine Headache Migraine Is a common form of headache, which may be unilateral or bilateral, recurring at Intervals and associated with prodromal visual disturbances. The prodromal visual disturbances are thought to be due to sympathetic vasoconstriction of the cerebral arteries supplying the visual cortex. The headache is chiefly due to the dilation and stretching of other cerebral arteries and branches of the external carotid artery. The disease, therefore, appears to affect arteries both inside and outside the skull, and its cause is unknown, although genetic, hormonal, and biochemical factors may initiate an attack. Beta-blockers bring relief to some patients due to the reduction In cerebral vasodilation.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Because of the presence of comorbidities Patients with hypotension, antiplatelet therapy, skull fractures, uncontrolled hypertension, and polytrauma, are considered some of the risk factors for progressive extradural hematoma. Here, the patient is a known case of diabetes mellitus. Diabetes mellitus is not a risk factor for progressive extradural hematoma. Option: C. Because of wrong the treatment In extradural hematoma, due to raised ICP, patients are required to give intravenous mannitol. If coagulopathy or persistent bleeding may require administration of vitamin K, protamine sulfate, fresh frozen plasma, platelet transfusions, or clotting factor concentrate. Minimally invasive surgical procedures, including the use of burr holes and negative pressure drainage, may be used in selected cases. Craniotomy or laminectomy can also be done followed by evacuation of the hematoma, coagulation of bleeding sites, and inspection of the dura. Option: D. Because of misdiagnosis Following in this list of differential diagnoses in the given case: Extradural hematoma Head injury Intracranial epidural abscess Intracerebral haemorrhage Posttraumatic epilepsy Spinal cord haemorrhage Transient ischemic attack But due to the presence of a history of minor trauma, and evidence from a CT scan, the most likely diagnosis is an extradural hematoma.</p>\n<p><strong>Extraedge:</strong></p><p>Alcoholic Headache Alcoholic headache is due to the direct toxic effect of alcohol on the meninges.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 75-year-old man working as a mine worker comes to the emergency due to the development of sudden unconsciousness. The patient is a known case of hypertension and diabetes mellitus, hyperlipidemia and COPD. The GCS was 10. There was no history of trauma or coagulopathy. The patient went under an urgent MRI which revealed left-sided basal ganglia hemorrhage. The patient was admitted to the ICU. After 10 hours, the condition of the patient deteriorated and the patient was kept on a ventilator. CT scan revealed transtentorial herniation of the brain. What could be the most probable cause of deterioration?", "options": [{"label": "A", "text": "Herniation of the brain causing compression of the brainstem", "correct": true}, {"label": "B", "text": "Because of a ischaemic attack of the brainstem", "correct": false}, {"label": "C", "text": "Because of embolism", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Herniation of the brain causing compression of the brainstem", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Herniation of the brain causing compression of the brainstem The arrangement of dural partitions such as the falx cerebri and tentorium cerebelli may help to stabilize the brain within the cranial cavity. However, when there is focal brain swelling or a focal space-occupying lesion within the brain or cranial cavity, mass effect and raised intracranial pressure may cause the brain to herniate under the falx Cerebri or, more significantly, through the tentorial incisura. A transtentorial herniation is a type of cerebral herniation broadly divided into two major types based on the direction of herniation: downwards due to supratentorial mass effect and upward due to infratentorial mass effect. Downward transtentorial herniation Downward herniation occurs when there is a mass effect upon or from within the cerebral hemispheres. The pattern of herniation can be divided into lateral and central herniation. Lateral herniation Lateral herniation occurs due to unilateral or asymmetric mass effects. The medial parts of the temporal lobe are pushed into the ambient cistern and up against the brainstem. This can be further divided according to whether the herniation is predominantly anterior (uncal herniation), which is most common, or posterior (posterior parahippocampal gyrus and anterior part of the lingual gyrus ). Central herniation Central herniation occurs when there is a symmetric or severe mass effect resulting in the downward displacement of the thalami and midbrain. Upward transtentorial herniation Ascending transtentorial herniation occurs due to mass effect within the posterior fossa.</p>\n<p><strong>Highyeild:</strong></p><p>Damage to the brainstem results in characteristic deficits that form part of the so-called herniation syndromes. The falx cerebri and tentorium Cerebelli incompletely partition the intracranial volume into partially communicating compartments. The tentorium Cerebelli incompletely separates the intracranial volume into the supratentorial space (above) and the infratentorial space (below). The supratentorial space is partially partitioned into left and right halves by the falx Cerebri. The supra and infratentorial spaces communicate through a narrow opening in the tentorium, the tentorial notch or incisura. The infratentorial compartment is continuous inferiorly with the intraspinal compartment through the small foramen magnum.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Because of an ischaemic attack of the brainstem Option: C. Because of embolism Option: D. None of the above Options B, C and D. are incorrect answers because in the above case, a CT scan revealed transtentorial herniation of the brain.</p>\n<p><strong>Extraedge:</strong></p><p>The pressure increase in the posterior fossa, an infratentorial location, may result in herniation upwards through the tentorial notch or downwards into the foramen magnum. Upward cerebellar herniation displaces the brainstem against the tentorium and into the notch with resultant symptoms of increased intracranial pressure, paralysis of upward gaze, motor deficits and altered consciousness. Extrusion of the cerebellar tonsils downwards into the foramen magnum may result in damage to medullary cardiac and respiratory centres, with resultant changes in heart and respiratory rates. Both of these syndromes may constitute a medical emergency, the former due to rapidly developing hydrocephalus, the latter due to compromise of cardiac and respiratory centres.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 22-year-old man with a severe headache and scalp bleeding after a head chop wound. Physical examination identified a 20-cm straight laceration in his Parieto occipital scalp. Computed tomography (CT) demonstrated a depressed cranial fracture (DCF) in the left Parieto occipital bone, a fracture line across the midline to the right side, and penetrations of bone fragments into the brain parenchyma. Which venous sinus is most likely to be injured?", "options": [{"label": "A", "text": "Sigmoid Sinus", "correct": true}, {"label": "B", "text": "Cavernous sinus", "correct": false}, {"label": "C", "text": "Occipital sinus", "correct": false}, {"label": "D", "text": "Intercavernous sinus", "correct": false}], "correct_answer": "A. Sigmoid Sinus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Sigmoid Sinus The sigmoid sinuses are continuations of the transverse sinuses, beginning where these leave the tentorium cerebelli Each sigmoid sinus curves inferomedially in a groove on the mastoid process of the temporal bone, crosses the jugular process of the occipital bone and turns forwards to the superior jugular bulb, lying posterior in the jugular foramen. Anteriorly, a thin plate of bone separates its upper part from the mastoid antrum and air cells. It connects with pericranial veins via mastoid and condylar emissary veins Due to such an anatomical position of the sigmoid sinus, skull fractures in the Parieto occipital region cause bleeding in the sigmoid sinus. Dural venous sinuses</p>\n<p><strong>Highyeild:</strong></p><p>The meningeal layer sends inwards following folds of dura mater Folds Shape Attachments Venous sinuses enclosed Falx cerebri (Fig. 2.1) Sickle-shaped, separates the right from the left cerebral hemisphere Superior, convex margins are attached to the sides of the groove lodging the superior sagittal sinus The inferior concave margin is free anterior attachment is to the crista galli and frontal crest Posterior attachment is to the upper surface of cerebelli tentorium Superior sagittal sinus Inferior sagittal sinus Straight sinus Tentorium cerebelli (Fig. 2.1) Tent-shaped, separates the cerebral hemispheres from the hindbrain and the lower part of the midbrain Lifts off the weight of occipital lobes from the cerebellum Has a free anterior margin. Its ends are attached to anterior clinoid processes Rest is free and concave Posterior margin is attached to the lips of the groove containing transverse sinuses, superior petrosal sinuses and posterior clinoid processes Transverse sinuses, Superior petrosal sinuses Falx cerebelli Small sickle-shaped fold partly separating two cerebellar hemispheres The base is attached to the posterior part of the inferior surface of tentorium cerebelli Apex reaches till foramen magnum Occipital sinus Diaphragma sellae (Fig. 2.1) Small horizontal fold Anterior attachment is to tuberculum sellae  Posterior attachment is to dorsum sellae laterally continuous with dura mater of middle cranial fossa Anterior and posterior intercavernous sinuses</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Cavernous sinus The cavernous sinuses are located within the middle cranial fossa, on either side of the sella turcica of the sphenoid bone (which contains the pituitary gland). They are enclosed by the endosteal and meningeal layers of the dura mater Option: C. Occipital sinus The occipital sinus is the smallest of the sinuses and it is typically larger in children. It lies in the attached margin of the falx Cerebelli. It commences near the foramen magnum in several small channels, one joining the end of the sigmoid sinus. It connects with the internal vertebral plexuses. It ends in the confluence of the sinuses. Option: D. Intercavernous sinus The two cavernous sinuses are connected by the superior, inferior and posterior intercavernous sinuses and the basilar plexus. The superior and posterior intercavernous sinuses lie in the anterior and posterior attached borders of the diaphragm sellae and they thus form a complete circular venous sinus. The inferior intercavernous sinuses are irregular and plexiform in nature, and commonly encountered in a surgical transnasal approach to the pituitary gland. Obliteration of any intercavernous sinus has no clinical consequences because all connections are valveless and the direction of flow in them is reversible.</p>\n<p><strong>Extraedge:</strong></p><p>Circulation of cerebrospinal fluid (CSF)</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An 18-year-old high school football player, with an unremarkable medical history, who was 181 cm tall and weighed 84 kg. While walking toward the sideline, the athlete took off his helmet and appeared confused. Falling to his knees, he began to vomit. However, the patient was oriented to time, person, and place. His immediate complaints included severe head pain, nausea, and vertigo. No neck pain or any lower or upper extremity paresthesias were present. The patient had a history of 2 minor trauma with the ball while playing the game. What could be the most probable diagnosis?", "options": [{"label": "A", "text": "Skull Fracture", "correct": false}, {"label": "B", "text": "Intracerebral haemorrhage", "correct": false}, {"label": "C", "text": "Subdural hematoma", "correct": true}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "C. Subdural hematoma", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Subdural hematoma The meningeal layer of the dura mater is usually adherent to the underlying arachnoid mater via a series of tight junctions. The subdural space does not exist under normal circumstances and is appreciable only when there is underlying pathology. Bridging veins drain from the underlying brain to the dura mater and the superior sagittal sinus. They have a relatively straight course and do not allow for much movement of the underlying brain tissue. Thus, they are easily placed under high tension. This is particularly important in the elderly where the underlying atrophic brain places these vessels under higher-than-normal tension. Bleeding from bridging veins may strip the dura from the arachnoid mater. This collection of blood is known as a subdural haematoma. Separation of the arachnoid and dura mater requires little physical force, which means that damage to small bridging veins in the space can result in subdural haematoma after even relatively mild head trauma. In many cases, there is some predisposing factor, such as cerebral atrophy or increased size of the underlying subarachnoid space.</p>\n<p><strong>Highyeild:</strong></p><p>Types of intracranial haemorrhage Type of haemorrhage Vessels/vessels most commonly involved Extradural haemorrhage Rupture of the anterior division of the middle meningeal artery Subdural haemorrhage Tearing of superior cerebral (bridging) veins Subarachnoid haemorrhage Leakage or rupture of congenital berry aneurysms on the arterial circle of Willis Intracerebral (cerebral) haemorrhage Rupture of thin-walled lenticulostriate artery (Charcot

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Late Night Pyq Pyt Marathon   30   2024 09 22</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Late Night Pyq Pyt Marathon   30   2024 09 22</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                60 Questions | 240 Total Marks | 70 min Duration | ~70.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 60 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 70 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 60</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Late Night Pyq Pyt Marathon   30   2024 09 22 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 60</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 60 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A young patient came with complaints of acute abdominal pain on and off and tingling sensation of limbs and at times weakness of limbs. She had a history of eating paint from the wall of a newly built house. Which of the following enzyme defect will be the cause of her condition? ( AIIMS Nov 2017)", "options": [{"label": "A", "text": "ALA synthase", "correct": false}, {"label": "B", "text": "ALA dehydratase", "correct": true}, {"label": "C", "text": "Heme synthase", "correct": false}, {"label": "D", "text": "Coproporphyrinogen oxidase", "correct": false}], "correct_answer": "B. ALA dehydratase", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) ALA dehydratase</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Lead poisoning inhibits ALA dehydratase, causing symptoms such as abdominal pain, tingling, and weakness of limbs. Paint ingestion, particularly in children, is a significant source of lead exposure.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following zymogens requires gamma-glutamyl carboxylase? (NEET PG 2023)", "options": [{"label": "A", "text": "Factors II, VIII, IX, X", "correct": false}, {"label": "B", "text": "Factors II, VII, IX, and X", "correct": true}, {"label": "C", "text": "Factors II, VII, IX, XI", "correct": false}, {"label": "D", "text": "Factors II, VIII, X, XI", "correct": false}], "correct_answer": "B. Factors II, VII, IX, and X", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/06/03/screenshot-2024-06-03-094428.jpg"], "explanation": "<p><strong>Ans. B) Factors II, VII, IX, and X</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Zymogens are the proprotein form of enzymes (proenzymes) that require proteolytic activation to carry out their function.</li><li>➤ Inactive form of vitamin K acts as a cofactor in the post-synthetic modification of these zymogens and their activation. This inactive form of vitamin K is recycled back from its oxidized form by the enzyme vitamin K epoxide reductase, which can be inhibited by warfarin or liver failure.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is not a product of heme catabolism? (INICET MAY 2024)", "options": [{"label": "A", "text": "Ferrous ion", "correct": false}, {"label": "B", "text": "Aminolaevulinic acid", "correct": true}, {"label": "C", "text": "Biliverdin", "correct": false}, {"label": "D", "text": "Carbon monoxide", "correct": false}], "correct_answer": "B. Aminolaevulinic acid", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Aminolaevulinic acid</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Aminolaevulinic acid is a precursor in the synthesis of heme, not a product of its catabolism.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Complex 4 inhibitor is? ( NEET PG 2022)", "options": [{"label": "A", "text": "Cyanide", "correct": true}, {"label": "B", "text": "Carbon Dioxide", "correct": false}, {"label": "C", "text": "Oligomycin", "correct": false}, {"label": "D", "text": "Antimycin", "correct": false}], "correct_answer": "A. Cyanide", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/06/03/screenshot-2024-06-03-163056.jpg"], "explanation": "<p><strong>Ans. A) Cyanide</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Cyanide is a potent inhibitor of Complex IV (cytochrome c oxidase) in the electron transport chain (ETC). Complex IV is crucial for the final step of the electron transport chain, where it facilitates the transfer of electrons to oxygen, the final electron acceptor, to form water. By inhibiting Complex IV, cyanide prevents the reduction of oxygen, halting ATP production and leading to cellular hypoxia and energy failure.</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option B. Carbon Dioxide: Carbon dioxide is not an inhibitor of any of the electron transport chain complexes. It is a byproduct of cellular respiration and does not interfere with the function of the ETC complexes.</li><li>• Option B. Carbon Dioxide:</li><li>• Option C. Oligomycin: Oligomycin is an inhibitor of ATP synthase (Complex V) in the electron transport chain. It binds to the F0 subunit of ATP synthase, blocking the proton channel and preventing proton translocation across the inner mitochondrial membrane. This inhibition halts ATP synthesis from ADP and inorganic phosphate.</li><li>• Option C. Oligomycin:</li><li>• Option D. Antimycin: Antimycin is an inhibitor of Complex III (cytochrome bc1 complex) in the electron transport chain. It binds to the Qi site of cytochrome c reductase, blocking the transfer of electrons from ubiquinol to cytochrome c, disrupting the proton gradient and halting ATP synthesis.</li><li>• Option D. Antimycin:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Inhibitor of ETC complexes</li><li>➤ Inhibitor of ETC complexes</li></ul>\n<p><strong>References:</strong></p><ul><li>↳ Reference : Harper’s 31 st ed/pg- 123</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which amino acid possesses a positive charge at physiological pH? (AIIMS NOV 2016)", "options": [{"label": "A", "text": "Valine", "correct": false}, {"label": "B", "text": "Aspartic acid", "correct": false}, {"label": "C", "text": "Arginine", "correct": true}, {"label": "D", "text": "Isoleucine", "correct": false}], "correct_answer": "C. Arginine", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Arginine, at physiological pH (around 7.4), maintains a positive charge. This is due to its side chain which contains a guanidino group capable of accepting protons. The guanidino group in arginine is a strong base, resulting in a higher pKa value compared to other amino acids, and thus remains protonated and positively charged at physiological pH. This property is essential for its roles in protein interactions and metabolic functions.</li><li>• Other Options:</li><li>• Other Options:</li><li>• a. Valine: This is a nonpolar amino acid with no charge on its side chain at physiological pH. b. Aspartic acid: This amino acid has a carboxyl group in its side chain that is deprotonated and negatively charged at physiological pH. d. Isoleucine: Similar to valine, isoleucine is a nonpolar amino acid with a neutral side chain at physiological pH.</li><li>• a. Valine: This is a nonpolar amino acid with no charge on its side chain at physiological pH.</li><li>• a. Valine:</li><li>• b. Aspartic acid: This amino acid has a carboxyl group in its side chain that is deprotonated and negatively charged at physiological pH.</li><li>• b. Aspartic acid:</li><li>• d. Isoleucine: Similar to valine, isoleucine is a nonpolar amino acid with a neutral side chain at physiological pH.</li><li>• d. Isoleucine:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Arginine is distinct among the common amino acids due to its positively charged guanidino group at physiological pH, which plays a crucial role in protein structure and function.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Liver produces KB but cannot use KB due to absence of which enzyme: (INICET MAY 2023)", "options": [{"label": "A", "text": "Thiophorase", "correct": true}, {"label": "B", "text": "Thiolase", "correct": false}, {"label": "C", "text": "HMG CoA synthase", "correct": false}, {"label": "D", "text": "HMG CoA Reductase", "correct": false}], "correct_answer": "A. Thiophorase", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A)</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The liver plays a crucial role in ketone body metabolism. During periods of prolonged fasting or low carbohydrate intake, the liver produces ketone bodies (acetoacetate and β-hydroxybutyrate) through a process called ketogenesis. These ketone bodies are then released into the bloodstream and can be used as an alternative fuel source by various tissues, including the brain, heart, and skeletal muscles.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following types of collagens is involved in wound healing? ( AIIMS May 2018)", "options": [{"label": "A", "text": "Type II", "correct": false}, {"label": "B", "text": "Type III", "correct": true}, {"label": "C", "text": "Type IV", "correct": false}, {"label": "D", "text": "Type V", "correct": false}], "correct_answer": "B. Type III", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/06/06/screenshot-2024-06-06-121900_zInpYlJ.jpg"], "explanation": "<p><strong>Ans. B) Type III</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Properties of Different types of Collagen:</li><li>➤ Properties of Different types of Collagen:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A healthcare professional nurse was ordered by a doctor to take patient’s blood sample for glucose estimation. She took this patient’s sample at 8 a.m. in the morning in the blue vacutainer. Anticoagulant in this container is: ( INICET Nov 2023)", "options": [{"label": "A", "text": "Sodium citrate", "correct": true}, {"label": "B", "text": "Potassium oxalate", "correct": false}, {"label": "C", "text": "Sodium fluoride", "correct": false}, {"label": "D", "text": "EDTA", "correct": false}], "correct_answer": "A. Sodium citrate", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/10/whatsapp-image-2024-01-10-at-115230.jpeg"], "explanation": "<p><strong>Ans. A) Sodium citrate</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The sequence of vitamin D synthesis is? (INICET May 2020)", "options": [{"label": "A", "text": "Liver- Skin- Kidney", "correct": false}, {"label": "B", "text": "Skin- Liver- Kidney", "correct": true}, {"label": "C", "text": "Skin- Kidney- Liver", "correct": false}, {"label": "D", "text": "Liver- Kidney- Skin", "correct": false}], "correct_answer": "B. Skin- Liver- Kidney", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/07/06/whatsapp-image-2023-06-12-at-190121011065.jpg"], "explanation": "<p><strong>Ans. B) Skin- Liver- Kidney</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The synthesis of vitamin D follows the sequence of Skin → Liver → Kidney, with each organ playing a critical role in converting the precursor to its active form.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following amino acid is necessary for conversion of nor-epinephrine to epinephrine? (NEET PG 2019)", "options": [{"label": "A", "text": "Tyrosine", "correct": false}, {"label": "B", "text": "Tryptophan", "correct": false}, {"label": "C", "text": "Phenyl alanine", "correct": false}, {"label": "D", "text": "Methionine", "correct": true}], "correct_answer": "D. Methionine", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Methionine</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Methionine is necessary for the conversion of nor-epinephrine to epinephrine.</li><li>➤ Norepinephrine is methylated by the enzyme N-methyl transferase (NMT) to epinephrine or adrenaline.</li><li>➤ Norepinephrine is methylated by the enzyme N-methyl transferase (NMT) to epinephrine</li><li>➤ S-adenosyl methionine (SAM) is the methyl donor . It is mainly produced by adrenal medulla and adrenergic nerve endings. It is stored in chromaffin granules and released into blood.</li><li>➤ S-adenosyl methionine (SAM) is the methyl donor</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Banding technique used for dicentric chromosomes: (INICET MAY 2022)", "options": [{"label": "A", "text": "G", "correct": false}, {"label": "B", "text": "NOR", "correct": false}, {"label": "C", "text": "C", "correct": true}, {"label": "D", "text": "R", "correct": false}], "correct_answer": "C. C", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture1_uAopcR9.jpg"], "explanation": "<p><strong>Ans. C) C</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Dicentric chromosome is an abnormal chromosome with two centromeres.</li><li>• C banding : stains heterochromatin which are regions of the chromosomes at or near centromere. So, C banding will be most useful for dicentric chromosomes.</li><li>• C banding</li><li>• So, C banding will be most useful for dicentric chromosomes.</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option A. G-banding: G-banding is the most common banding technique and uses Giemsa stain to stain AT-rich regions. It was developed as an alternative to Q-banding due to the cumbersome nature of Q-banding.</li><li>• Option A. G-banding:</li><li>• Option B. NOR-banding: NOR-banding (Nucleolar Organizer Region) is used to stain regions associated with nucleolus formation and is not specifically useful for dicentric chromosomes.</li><li>• Option B. NOR-banding:</li><li>• Option D. R-banding: R-banding provides a reverse pattern to G-banding, staining GC-rich regions instead of AT-rich regions. It is not specifically useful for identifying dicentric chromosomes.</li><li>• Option D. R-banding:</li><li>• Note –  Q banding : uses quinacrine dye (first used dye) and stains repetitive AT rich regions.</li><li>• Note –  Q banding</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ C-banding is the preferred technique for identifying dicentric chromosomes as it specifically stains heterochromatin regions at or near the centromere.</li></ul>\n<p><strong>References:</strong></p><ul><li>↳ Reference: Robbins 10th Ed. / page- 262-263, 293</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What would be the respiratory quotient if someone is on an exclusive carbohydrate diet? ( AIIMS Nov 2018)", "options": [{"label": "A", "text": "0.7", "correct": false}, {"label": "B", "text": "0.8", "correct": false}, {"label": "C", "text": "1", "correct": true}, {"label": "D", "text": "1.2", "correct": false}], "correct_answer": "C. 1", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/06/06/02_anx99YL.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/06/06/03_GMxc2Ks.jpg"], "explanation": "<p><strong>Ans. C) 1</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Respiratory quotient (RQ) is defined as the ratio of volume of CO 2 produced in L/g to the oxygen consumed in L/g.</li><li>➤ ratio of volume of CO 2 produced in L/g to the oxygen consumed in L/g.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A young male with a H/o dyslipidemia having ABC-A1 mutation shows the following. See the image and tell the diagnosis. ( INICET Nov 2022)", "options": [{"label": "A", "text": "Wolman’s Disease", "correct": false}, {"label": "B", "text": "Gaucher’s Disease", "correct": false}, {"label": "C", "text": "Tangier’s disease", "correct": true}, {"label": "D", "text": "Tay Sach’s disease", "correct": false}], "correct_answer": "C. Tangier’s disease", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/01/picture2_XX4nmXu.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/01/picture3_bCUeUCB.jpg"], "explanation": "<p><strong>Ans. C)</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ Tangier’s disease / Hypo alpha lipoproteinemia</li><li>➤ Tangier’s disease / Hypo alpha lipoproteinemia</li><li>➤ ABC-A1 transporters are required for efflux of intracellular free cholesterol and phospholipids across the plasma membrane to combine with apolipoproteins, forming nascent high-density lipoprotein-cholesterol (HDL-C) particles (see fig).</li><li>➤ So, in case of defective ABC-A1, HDL cholesterol and PL are not exported, and HDL is not properly formed causing HDL↓ (Hypo alpha-lipoproteinemia). Cholesterol accumulates in reticuloendothelial system causing: Hepatosplenomegaly Enlarged lymph nodes Large orange/ yellow tonsils (due to fat deposition) The characteristic feature of Wolman’s disease is calcification of adrenals . It is also known as cholesterol ester storage disease and occurs due to deficiency of enzyme acid lipase</li><li>➤ So, in case of defective ABC-A1, HDL cholesterol and PL are not exported, and HDL is not properly formed causing HDL↓ (Hypo alpha-lipoproteinemia).</li><li>➤ Cholesterol accumulates in reticuloendothelial system causing: Hepatosplenomegaly Enlarged lymph nodes Large orange/ yellow tonsils (due to fat deposition)</li><li>➤ Hepatosplenomegaly Enlarged lymph nodes Large orange/ yellow tonsils (due to fat deposition)</li><li>➤ Hepatosplenomegaly</li><li>➤ Enlarged lymph nodes</li><li>➤ Large orange/ yellow tonsils (due to fat deposition)</li><li>➤ The characteristic feature of Wolman’s disease is calcification of adrenals . It is also known as cholesterol ester storage disease and occurs due to deficiency of enzyme acid lipase</li><li>➤ calcification of adrenals</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A newborn presents on the 5th day of life with vomiting, severe jaundice, and an inability to tolerate breast milk, although the infant accepts glucose water without issue. Laboratory tests reveal hypoglycemia, a positive Benedict’s test for reducing substances in the urine, and elevated unconjugated bilirubin levels. On examination, the liver is enlarged. What enzyme deficiency is the most likely cause of these symptoms?", "options": [{"label": "A", "text": "Fructokinase deficiency", "correct": false}, {"label": "B", "text": "Galactose-1-phosphate uridyl transferase (GALT) deficiency", "correct": true}, {"label": "C", "text": "Phosphoglucomutase deficiency", "correct": false}, {"label": "D", "text": "Sorbitol dehydrogenase deficiency", "correct": false}], "correct_answer": "B. Galactose-1-phosphate uridyl transferase (GALT) deficiency", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/09/21/picture4.jpg"], "explanation": "<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Galactose-1-phosphate uridyl transferase (GALT) deficiency is the cause of classic galactosemia, an autosomal recessive disorder characterized by an inability to metabolize galactose due to a defect in the enzyme responsible for converting galactose-1-phosphate into glucose-1-phosphate. This deficiency leads to the accumulation of toxic substances such as galactose-1-phosphate in the liver, brain, and other organs, resulting in hypoglycemia, jaundice, hepatomegaly, and potential mental retardation if untreated. The positive Benedict’s test, jaundice, and refusal of lactose-containing feeds are hallmark findings of this condition. Early diagnosis and dietary management by eliminating galactose and lactose from the diet are crucial to prevent severe complications.</li><li>• Other Options:</li><li>• Other Options:</li><li>• A. Fructokinase deficiency: Fructokinase deficiency, also known as essential fructosuria, is a benign condition where fructose is not metabolized efficiently, leading to its excretion in the urine. It does not cause severe systemic symptoms like jaundice or hypoglycemia seen in GALT deficiency.</li><li>• A. Fructokinase deficiency:</li><li>• C. Phosphoglucomutase deficiency: This enzyme deficiency affects glycogen metabolism but does not directly involve galactose metabolism and does not present with the typical symptoms of classic galactosemia, such as vomiting, jaundice, or hepatomegaly.</li><li>• C. Phosphoglucomutase deficiency:</li><li>• D. Sorbitol dehydrogenase deficiency: Sorbitol dehydrogenase deficiency affects the metabolism of sorbitol and fructose, leading to cataracts and osmotic imbalances but does not cause severe systemic symptoms like jaundice or hypoglycemia seen in GALT deficiency.</li><li>• D. Sorbitol dehydrogenase deficiency:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Galactose-1-phosphate uridyl transferase (GALT) deficiency, or classic galactosemia, is a severe metabolic disorder marked by an inability to properly metabolize galactose, leading to serious systemic symptoms including jaundice, hypoglycemia, and liver dysfunction. Early diagnosis and management through a lactose-free diet are crucial for preventing long-term complications such as mental retardation, emphasizing the importance of newborn screening and prompt intervention in suspected cases of galactosemia.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-year-old Farmer on maize diet with diarrhoea, dementia, and dermatitis. Which Vitamin is deficient in this patient? (NEET PG 2021)", "options": [{"label": "A", "text": "Thiamine", "correct": false}, {"label": "B", "text": "Riboflavin", "correct": false}, {"label": "C", "text": "Niacin", "correct": true}, {"label": "D", "text": "Pyridoxine", "correct": false}], "correct_answer": "C. Niacin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Niacin</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The major protein of Maize, “Zein” lacks tryptophan which is required for Niacin biosynthesis. 60 mg of tryptophan gives 1 mg of Niacin in the body. So, pellagra is more common when maize is the staple diet due to decreased synthesis of Niacin. Pellagra is characterized by 3Ds i.e. diarrhoea, dementia and dermatitis. Death and delirium and depression can also occur.</li><li>➤ Pellagra can also be caused due to Isoniazid therapy as isoniazid inhibits PLP (B6) formation which in turn is required for Niacin synthesis. Vitamin B2 is also required for Niacin synthesis, so, a deficiency either of B2 or B6 or both can cause pellagra.</li><li>➤ Thiamine (B1) deficiency leads to Beri-Beri. CNS and CVS are affected in dry Beri-Beri and wet Beri-Beri respectively.</li><li>➤ Main symptoms of Riboflavin deficiency are Cheilosis, Glossitis and Corneal vascularization.</li><li>➤ Pyridoxine deficiency cause anemia (microcytic, hypochromic) and seizures in infants.</li><li>➤ Ref -Harper 31 st e/pg. 534-535</li><li>➤ Ref -Harper 31 st e/pg. 534-535</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Glycosylated Hb (Hb-A1c) is best detected by: ( INICET May 2021)", "options": [{"label": "A", "text": "Ion exchange", "correct": true}, {"label": "B", "text": "Affinity chromatography", "correct": false}, {"label": "C", "text": "Isoelectric focussing", "correct": false}, {"label": "D", "text": "Electrophoresis", "correct": false}], "correct_answer": "A. Ion exchange", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Ion exchange</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ HPLC based methods are gold standards for measurement of Hb-A1c. These methods further include ion exchange and affinity chromatography-based methods of which Ion exchange method is considered as the best and widely used method followed by affinity chromatography and enzymatic and immunological methods.</li><li>➤ Ref- https://www.japi.org/v264/hba1c-result-does-it-depend-upon-the-testing-methods-</li><li>➤ Ref- https://www.japi.org/v264/hba1c-result-does-it-depend-upon-the-testing-methods-</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following shows functional assessment of B1 deficiency? ( AIIMS May 2019)", "options": [{"label": "A", "text": "RBC Transketolase", "correct": true}, {"label": "B", "text": "RBC Glutathione reductase", "correct": false}, {"label": "C", "text": "Serum Thiamine levels", "correct": false}, {"label": "D", "text": "RBC Glutathione Peroxidase", "correct": false}], "correct_answer": "A. RBC Transketolase", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/06/06/03.jpg"], "explanation": "<p><strong>Ans. A. RBC Transketolase</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Thiamine deficiency causes lactic acidosis due to inhibition of: ( INICET Nov 2021)", "options": [{"label": "A", "text": "PDH", "correct": true}, {"label": "B", "text": "Pyruvate carboxylase", "correct": false}, {"label": "C", "text": "PEP carboxy kinase", "correct": false}, {"label": "D", "text": "Pyruvate kinase", "correct": false}], "correct_answer": "A. PDH", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/08/7_vr24cgN.jpg"], "explanation": "<p><strong>Ans. A) PDH (Pyruvate dehydrogenase)</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Pyruvate dehydrogenase is the enzyme affected in a patient with thiamine deficiency who develops lactic acidosis.</li><li>➤ Enzyme performing oxidative decarboxylation need vitamin B1 for their reaction. Some examples are:</li><li>➤ PDH Alpha-ketoglutarate dehydrogenase Isocitrate dehydrogenase Branched chain keto acid dehydrogenase</li><li>➤ PDH</li><li>➤ Alpha-ketoglutarate dehydrogenase</li><li>➤ Isocitrate dehydrogenase</li><li>➤ Branched chain keto acid dehydrogenase</li><li>➤ Additional Information:</li><li>➤ Additional Information:</li><li>➤ Marker for B1 deficiency is Transketolase activity Coenzyme for simple decarboxylation: B6 Marker for B2 deficiency is RBC glutathione reductase activity</li><li>➤ Marker for B1 deficiency is Transketolase activity</li><li>➤ Transketolase activity</li><li>➤ Coenzyme for simple decarboxylation: B6</li><li>➤ Marker for B2 deficiency is RBC glutathione reductase activity</li><li>➤ RBC glutathione reductase activity</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What type of mutation is seen in sickle cell anemia? ( AIIMS Nov 2019)", "options": [{"label": "A", "text": "Insertion", "correct": false}, {"label": "B", "text": "Deletion", "correct": false}, {"label": "C", "text": "Point mutation", "correct": true}, {"label": "D", "text": "Frameshift mutations", "correct": false}], "correct_answer": "C. Point mutation", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/06/07/screenshot-2024-06-07-120128.jpg"], "explanation": "<p><strong>Ans. C) Point mutations</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The maximum thermic effect is seen with a meal which has? ( INICET Nov 2020)", "options": [{"label": "A", "text": "Protein", "correct": true}, {"label": "B", "text": "Fat", "correct": false}, {"label": "C", "text": "Carbohydrates", "correct": false}, {"label": "D", "text": "Mixed meal having all 3 in equal amount", "correct": false}], "correct_answer": "A. Protein", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Protein</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The maximum thermic effect is seen with protein-rich meals, as proteins require more energy for digestion, absorption, and metabolism compared to fats and carbohydrates.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Vitamin B12 is found maximum in: ( NEET PG 2020)", "options": [{"label": "A", "text": "Animal products", "correct": true}, {"label": "B", "text": "Green leafy vegetables", "correct": false}, {"label": "C", "text": "Roots and tubers", "correct": false}, {"label": "D", "text": "Sunlight", "correct": false}], "correct_answer": "A. Animal products", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Animal products</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Vitamin B12 is naturally present in foods of animal origin, including fish, meat, poultry, eggs, and dairy products. Hence, vegetarians usually are prone to develop vitamin b12 deficiency. Strict vegetarians (vegans) are at risk of developing B12 deficiency.</li><li>➤ foods of animal origin, including fish, meat, poultry, eggs, and dairy products.</li><li>➤ Strict vegetarians (vegans) are at risk of developing B12 deficiency.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "True regarding CF (Cystic Fibrosis): ( INICET Nov 2023)", "options": [{"label": "A", "text": "Chloride secretion is decreased in sweat and increased in pancreatic fluid", "correct": false}, {"label": "B", "text": "Chloride secretion is increased in sweat and decreased in pancreatic fluid", "correct": true}, {"label": "C", "text": "Chloride secretion is decreased in both sweat and pancreatic fluid", "correct": false}, {"label": "D", "text": "Chloride secretion is increased in both sweat and pancreatic fluid", "correct": false}], "correct_answer": "B. Chloride secretion is increased in sweat and decreased in pancreatic fluid", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• In sweat glands, the defective CFTR leads to decreased chloride reabsorption, resulting in increased chloride secretion in sweat. Therefore, individuals with CF have elevated levels of chloride in their sweat, which is a diagnostic feature of the condition.</li><li>• In the pancreas, the impaired CFTR function leads to decreased chloride secretion into pancreatic fluid. This results in the production of thick, sticky mucus in the pancreatic ducts, leading to pancreatic insufficiency. The pancreas is unable to release digestive enzymes properly into the small intestine, affecting the digestion of food.</li><li>• Educational objective:</li><li>• Educational objective:</li><li>• Cystic Fibrosis (CF) is a genetic disorder caused by mutations in the CFTR (Cystic Fibrosis Transmembrane Conductance Regulator) gene. CFTR is a chloride channel that regulates the movement of chloride ions across cell membranes. In individuals with cystic fibrosis, the function of CFTR is impaired.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 12-year-old boy presents with recurrent episodes of abdominal pain, pancreatitis, and creamy plasma on laboratory analysis. Genetic testing confirms a diagnosis of lipoprotein lipase deficiency. Following the consumption of a fatty meal, which substance is most likely to be significantly elevated in this patient?", "options": [{"label": "A", "text": "Apolipoprotein B", "correct": false}, {"label": "B", "text": "Chylomicrons", "correct": true}, {"label": "C", "text": "Lipoprotein (a)", "correct": false}, {"label": "D", "text": "Sphingomyelin", "correct": false}], "correct_answer": "B. Chylomicrons", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/09/21/picture3.jpg"], "explanation": "<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• In lipoprotein lipase (LPL) deficiency, chylomicrons accumulate in the blood, particularly after consuming a fatty meal. LPL is essential for the hydrolysis of triglycerides present in chylomicrons into free fatty acids, which can be used for energy or stored in tissues. When LPL is deficient or non-functional, chylomicrons are not adequately broken down and thus accumulate in the bloodstream, causing hypertriglyceridemia, abdominal pain, and a higher risk of pancreatitis. This accumulation is especially noticeable after eating foods rich in fats, as chylomicrons are responsible for the transport of dietary triglycerides.</li><li>• Other Options:</li><li>• Other Options:</li><li>• A. Apolipoprotein B: Apolipoprotein B is a component of VLDL, LDL, and chylomicrons, but its levels do not specifically indicate LPL deficiency. The primary issue in LPL deficiency is the inability to clear triglyceride-rich lipoproteins, rather than a direct effect on apolipoprotein B.</li><li>• A. Apolipoprotein B:</li><li>• C. Lipoprotein (a): Lipoprotein (a) is a genetically determined lipoprotein that is associated with an increased risk of cardiovascular disease. It is not directly involved in triglyceride metabolism or affected by LPL deficiency.</li><li>• C. Lipoprotein (a):</li><li>• D. Sphingomyelin: Sphingomyelin is a type of phospholipid found in cell membranes and lipoproteins, but it is not directly related to triglyceride metabolism or influenced by LPL activity.</li><li>• D. Sphingomyelin:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Lipoprotein lipase (LPL) deficiency leads to the accumulation of chylomicrons after consuming a fatty meal due to the inability to hydrolyze triglycerides effectively. This enzyme deficiency results in hypertriglyceridemia, which can cause symptoms like abdominal pain and pancreatitis. Understanding the specific lipoproteins affected in lipid metabolism disorders is crucial for accurate diagnosis and management.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Cystic fibrosis is caused by which of the following deletion? ( INICET Nov 2022)", "options": [{"label": "A", "text": "Tyrosine at 508", "correct": false}, {"label": "B", "text": "Phenylalanine at 508", "correct": true}, {"label": "C", "text": "Tryptophan at 508", "correct": false}, {"label": "D", "text": "Lysine at 805", "correct": false}], "correct_answer": "B. Phenylalanine at 508", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/01/picture4_CFFYSB0.jpg"], "explanation": "<p><strong>Ans. B) Phenylalanine at 508</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ Cystic fibrosis is due to mutation in cystic fibrosis transmembrane conductance regulator (CFTR) protein by deletion of one codon which give rise to phenylalanine at position 508 of this protein. Mnemonic: F-fibrosis, F- Phenylalaine</li><li>➤ This protein helps in movement of H 2 O and chloride ion in and out of cell and helps in the formation of mucus secretion and saliva.</li><li>➤ In normal conditions, the channel allows the formation of thin layer of mucus. But in cystic fibrosis, a thick layer of mucus is formed (see fig) causing airway obstruction leading to infection and ultimately scarring of lung tissue.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 40-year-old man presents with complaints of facial puffiness and frothy urine. Given below is the histological image of the condition. What do you think is the diagnosis? (AIIMS NOV 2017)", "options": [{"label": "A", "text": "Membranous nephropathy", "correct": true}, {"label": "B", "text": "Focal segmental glomerulosclerosis", "correct": false}, {"label": "C", "text": "Membranoproliferative nephritis", "correct": false}, {"label": "D", "text": "Dense deposit disease", "correct": false}], "correct_answer": "A. Membranous nephropathy", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/12/29.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/12/30.jpg"], "explanation": "<p><strong>Ans. A) Membranous nephropathy</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Membranous nephropathy is characterized by uniform, diffuse thickening of the glomerular capillary wall with subepithelial immune deposits, as evidenced by the histological image provided.</li><li>➤ Ref: Robbins and Cortans pathologic basis of disease, page no. 1766, 1767</li><li>➤ Ref: Robbins and Cortans pathologic basis of disease, page no. 1766, 1767</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old male patient presented to the hospital with palpitations. Physical examination showed a diastolic murmur in the left 3rd intercostal space. What is the most likely diagnosis? (NEET PG 2023)", "options": [{"label": "A", "text": "Aortic stenosis", "correct": false}, {"label": "B", "text": "Aortic regurgitation", "correct": true}, {"label": "C", "text": "Mitral regurgitation", "correct": false}, {"label": "D", "text": "Tricuspid regurgitation", "correct": false}], "correct_answer": "B. Aortic regurgitation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans.</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Aortic Regurgitation is associated with a diastolic murmur, best heard at Erb’s point (left 3rd intercostal space). The murmur is typically described as a high-pitched, blowing, decrescendo murmur.</li><li>➤ Aortic Regurgitation</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Decreased sexual maturity and hypogonadism seen with deficiency of: (INICET MAY 2024)", "options": [{"label": "A", "text": "Copper", "correct": false}, {"label": "B", "text": "Zinc", "correct": true}, {"label": "C", "text": "Selenium", "correct": false}, {"label": "D", "text": "Iron", "correct": false}], "correct_answer": "B. Zinc", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Zinc</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Zinc deficiency is associated with decreased sexual maturity and hypogonadism, particularly in male children, and is a common nutritional deficiency in developing countries. It is also linked to impaired growth, immune dysfunction, and delayed wound healing.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 10-year-old child came with complaints of pain over the right lower quadrant and lower back pain. On examination, he had pain over the right side of the hip on passive extension along with a mass in the right lumbar region pointing towards the groin. What is the most likely diagnosis? (AIIMS MAY 2017)", "options": [{"label": "A", "text": "Pyelonephritis", "correct": false}, {"label": "B", "text": "Psoas abscess", "correct": true}, {"label": "C", "text": "Appendicitis", "correct": false}, {"label": "D", "text": "Torsion of right undescended testis", "correct": false}], "correct_answer": "B. Psoas abscess", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Psoas abscess</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ History of abdominal pain and mass in the right lumbar region, with pain on passive extension of the right hip (psoas sign), points towards the diagnosis of psoas abscess.</li><li>➤ The history of lower back pain needs to be evaluated with the possibility of tubercular origin to be kept in mind in this patient.</li><li>➤ tubercular origin</li><li>➤ Treatment is usually by percutaneous CT-guided drainage and appropriate antibiotic therapy.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A woman on anti-depressants presents with bleeding. She gives a history of bulky stools which sticks to the pan. Which of the following vitamin deficiency can cause bleeding in this condition? (NEET PG 2022)", "options": [{"label": "A", "text": "Vitamin A", "correct": false}, {"label": "B", "text": "Vitamin D", "correct": false}, {"label": "C", "text": "Vitamin E", "correct": false}, {"label": "D", "text": "Vitamin K", "correct": true}], "correct_answer": "D. Vitamin K", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Vitamin K</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Bulky, greasy stools that stick to the pan (often described as \"steatorrhea\") can be indicative of malabsorption, a condition where the absorption of nutrients, including fat-soluble vitamins, is impaired. Vitamin K is a fat-soluble vitamin crucial for the synthesis of blood clotting factors in the liver. Deficiency of vitamin K can lead to impaired blood clotting and a tendency to bleed .</li><li>➤ .</li><li>➤ Vitamin K is a fat-soluble vitamin crucial for the synthesis of blood clotting factors in the liver. Deficiency of vitamin K can lead to impaired blood clotting and a tendency to bleed.Top of Form</li></ul>\n<p><strong>References:</strong></p><ul><li>↳ Reference : Harper’s 31 st ed/pg- 532</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which muscles receive innervation from the Superior Gluteal Nerve? (INICET MAY 2023) 1. Gluteus Medius 2. Gluteus Minimus 3. Tensor fascia lata 4. Piriformis", "options": [{"label": "A", "text": "1, 2, 4", "correct": false}, {"label": "B", "text": "2, 3, 4", "correct": false}, {"label": "C", "text": "1, 2, 3", "correct": true}, {"label": "D", "text": "1, 3, 4", "correct": false}], "correct_answer": "C. 1, 2, 3", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/11/04/anotmy-15.jpg"], "explanation": "<p><strong>Ans. C. 1, 2, 3</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Gluteus Medius, Gluteus Minimus, and Tensor Fascia Lata receive innervation from the Superior Gluteal Nerve (L4, L5, and S1 nerve roots). Piriformis, on the other hand, is innervated by one of the branch of sacral plexus.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following organisms is represented by the given form of replication? (INICET MAY 2018)", "options": [{"label": "A", "text": "Hepatitis virus", "correct": false}, {"label": "B", "text": "Influenza virus", "correct": true}, {"label": "C", "text": "HIV", "correct": false}, {"label": "D", "text": "Herpes virus", "correct": false}], "correct_answer": "B. Influenza virus", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/03/30/1-micro-12.jpg"], "explanation_images": [], "explanation": "<p><strong>Ans. B) Influenza virus</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The replication cycle depicted in the image is characteristic of the influenza virus, involving binding of hemagglutinin (HA) to sialic acid residues, endocytosis, acidification within lysosomes, RNA replication in the nucleus, assembly at the plasma membrane, and release mediated by neuraminidase.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "JAK2 mutation is most commonly associated with? (AIIMS MAY 2020)", "options": [{"label": "A", "text": "Polycythemia vera", "correct": true}, {"label": "B", "text": "Essential thrombocytosis", "correct": false}, {"label": "C", "text": "CML", "correct": false}, {"label": "D", "text": "PMF", "correct": false}], "correct_answer": "A. Polycythemia vera", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/09/02/screenshot-2024-09-02-132158.png"], "explanation": "<p><strong>Ans. A) Polycythemia vera</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The JAK2 V617F mutation is most commonly associated with polycythemia vera, where it drives the excessive production of red blood cells through constitutive activation of the JAK-STAT pathway.</li><li>➤ Ref: Robbins and cotran pathologic basis of disease 8 th edition pg 1161</li><li>➤ Ref: Robbins and cotran pathologic basis of disease 8 th edition pg 1161</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the most common ocular manifestation of COVID-19? (INICET MAY 2022)", "options": [{"label": "A", "text": "Uveitis", "correct": false}, {"label": "B", "text": "Mucormycosis", "correct": false}, {"label": "C", "text": "Follicular conjunctivitis", "correct": true}, {"label": "D", "text": "Papillary conjunctivitis", "correct": false}], "correct_answer": "C. Follicular conjunctivitis", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/10/25/picture115.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/10/25/picture116.jpg"], "explanation": "<p><strong>Ans. C) Follicular conjunctivitis</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which component is most abundant in HDL compared to other lipoproteins? (AIIMS NOV 2016)", "options": [{"label": "A", "text": "Cholesterol", "correct": false}, {"label": "B", "text": "Apoproteins", "correct": true}, {"label": "C", "text": "Triglycerides", "correct": false}, {"label": "D", "text": "Fatty acids", "correct": false}], "correct_answer": "B. Apoproteins", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• High-Density Lipoprotein (HDL) is distinguished from other lipoproteins by its high proportion of apoproteins. This higher protein content contributes to its higher density, which is reflected in its nomenclature. HDL

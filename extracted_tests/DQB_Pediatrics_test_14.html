@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Pediatrics Nephrology</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Pediatrics Nephrology</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                28 Questions | 112 Total Marks | 38 min Duration | ~81.43 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 28 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 38 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 28</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Pediatrics Nephrology - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 28</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 28 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Biomarker not involved in acute kidney injury is?", "options": [{"label": "A", "text": "NGAL", "correct": false}, {"label": "B", "text": "KIM-1", "correct": false}, {"label": "C", "text": "Micro RNA 122", "correct": true}, {"label": "D", "text": "Cystatin-C", "correct": false}], "correct_answer": "C. Micro RNA 122", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/10328711700915194/10328711700915194.m3u8"}, {"text": "An 8-year-old child suffering from recurrent attacks of polyuria since childhood presents to OPD. On examination, he has short stature, normal vitals and normal BP. Serum creatinine 6 mg%, HCO3 is 16 mEq, Na + is 134, K + is 4.2 and ultrasonography shows bilateral small kidneys. What is the diagnosis?", "options": [{"label": "A", "text": "Juvenile nephronophthisis", "correct": true}, {"label": "B", "text": "Reflux nephropathy", "correct": false}, {"label": "C", "text": "Polycystic kidney disease", "correct": false}, {"label": "D", "text": "Medullary cystic kidney disease", "correct": false}], "correct_answer": "A. Juvenile nephronophthisis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22368911700915209/22368911700915209.m3u8"}, {"text": "A 7-year-old child has first episode of nephrotic syndrome one year back, which was inappropriately treated with low dose corticosteroids for 4 weeks. Since then, he had 4 more documented relapses and every time, the child responded to oral prednisolone. What is the best management for this child?", "options": [{"label": "A", "text": "Pulse methylprednisolone", "correct": false}, {"label": "B", "text": "Start Levamisole", "correct": false}, {"label": "C", "text": "Start Cyclophosphamide", "correct": false}, {"label": "D", "text": "Start Cyclosporine", "correct": true}], "correct_answer": "D. Start Cyclosporine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9884921700915220/9884921700915220.m3u8"}, {"text": "A 2-month-old girl has failure to thrive, polyuria and medullary nephrocalcinosis affecting both the kidneys. Investigations showed blood pH of 7.48, bicarbonate of 25 mEq/l, potassium of 2 meq/l, sodium of 126 meq/l and chloride of 88 meq/l. The most likely diagnosis is?", "options": [{"label": "A", "text": "Distal renal tubular acidosis", "correct": false}, {"label": "B", "text": "Primary hyperaldosteronism", "correct": false}, {"label": "C", "text": "Barter syndrome", "correct": true}, {"label": "D", "text": "Pseudohypoaldosteronism", "correct": false}], "correct_answer": "C. Barter syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/16303861700915230/16303861700915230.m3u8"}, {"text": "A 10 years old girl presented with hypokalemia, mild hypercalciuria, hypertension and metabolic alkalosis. Which among the following is the likely diagnosis?", "options": [{"label": "A", "text": "Bartter syndrome", "correct": false}, {"label": "B", "text": "Gitelman syndrome", "correct": false}, {"label": "C", "text": "Liddle syndrome", "correct": true}, {"label": "D", "text": "Alport syndrome", "correct": false}], "correct_answer": "C. Liddle syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78184341700915240/78184341700915240.m3u8"}, {"text": "A known case of childhood nephrotic syndrome presents with fever and sudden onset severe pain abdomen with a palpable mass in lower left abdomen. Likely diagnosis is?", "options": [{"label": "A", "text": "Spontaneous bacterial peritonitis", "correct": false}, {"label": "B", "text": "Renal vein thrombosis", "correct": true}, {"label": "C", "text": "Chronic pyelonephritis", "correct": false}, {"label": "D", "text": "Acute renal failure", "correct": false}], "correct_answer": "B. Renal vein thrombosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/32430841700915251/32430841700915251.m3u8"}, {"text": "A 5-year-old child was diagnosed to have steroid-resistant nephrotic syndrome, with no response to oral prednisolone at 2 mg/kg/day despite 28 days of daily administration. What is the next treatment?", "options": [{"label": "A", "text": "IV methylprednisolone", "correct": false}, {"label": "B", "text": "IV cyclophosphamide", "correct": false}, {"label": "C", "text": "Oral Levamisole", "correct": false}, {"label": "D", "text": "Oral cyclosporine", "correct": true}], "correct_answer": "D. Oral cyclosporine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31159831700915261/31159831700915261.m3u8"}, {"text": "A child successfully treated for 1st episode of nephrotic syndrome is advised pneumococcal vaccination. What is the earliest time he can be given that?", "options": [{"label": "A", "text": "2 weeks after last steroid dose", "correct": false}, {"label": "B", "text": "4 weeks after last steroid dose", "correct": true}, {"label": "C", "text": "6 weeks after last steroid dose", "correct": false}, {"label": "D", "text": "8 weeks after last steroid dose", "correct": false}], "correct_answer": "B. 4 weeks after last steroid dose", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26759541700915271/26759541700915271.m3u8"}, {"text": "Drug of choice for Frequently relapsing nephrotic syndrome?", "options": [{"label": "A", "text": "Methylprednisolone", "correct": false}, {"label": "B", "text": "Cyclophosphamide", "correct": true}, {"label": "C", "text": "Cyclosporine", "correct": false}, {"label": "D", "text": "Rituximab", "correct": false}], "correct_answer": "B. Cyclophosphamide", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29445351700915280/29445351700915280.m3u8"}, {"text": "Most common cause of renal vein thrombosis in children?", "options": [{"label": "A", "text": "Minimal change disease", "correct": false}, {"label": "B", "text": "PDA", "correct": false}, {"label": "C", "text": "Dehydration", "correct": true}, {"label": "D", "text": "FSGS", "correct": false}], "correct_answer": "C. Dehydration", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37692911700915292/37692911700915292.m3u8"}, {"text": "All of the following genes are involved in congenital nephrotic syndrome, except?", "options": [{"label": "A", "text": "WT1", "correct": false}, {"label": "B", "text": "WT2", "correct": true}, {"label": "C", "text": "LMX1B", "correct": false}, {"label": "D", "text": "SMARCAL1", "correct": false}], "correct_answer": "B. WT2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56214531700915302/56214531700915302.m3u8"}, {"text": "Most common cause of UTI in children?", "options": [{"label": "A", "text": "Klebsiella", "correct": false}, {"label": "B", "text": "E coli", "correct": true}, {"label": "C", "text": "Proteus", "correct": false}, {"label": "D", "text": "Pseudomonas", "correct": false}], "correct_answer": "B. E coli", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69100581700915314/69100581700915314.m3u8"}, {"text": "A child aged 13 months is successfully treated for UTI using antibiotics and comes on first follow-up visit. What is the next investigations to perform?", "options": [{"label": "A", "text": "USG-KUB", "correct": false}, {"label": "B", "text": "USG-KUB + DMSA", "correct": true}, {"label": "C", "text": "USG-KUB + DMSA + MCU", "correct": false}, {"label": "D", "text": "DMSA + MCU+", "correct": false}], "correct_answer": "B. USG-KUB + DMSA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/70536101700915326/70536101700915326.m3u8"}, {"text": "A child with recurrent UTI is most likely to show –", "options": [{"label": "A", "text": "PUV", "correct": false}, {"label": "B", "text": "VUR", "correct": true}, {"label": "C", "text": "Neurogenic bladder", "correct": false}, {"label": "D", "text": "Renal and ureteric calculi", "correct": false}], "correct_answer": "B. VUR", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/68900321700915350/68900321700915350.m3u8"}, {"text": "In HUS associated with shigella in children, the false statement is:", "options": [{"label": "A", "text": "Leucocytosis", "correct": false}, {"label": "B", "text": "Neurological abnormalities", "correct": false}, {"label": "C", "text": "Hepatic failure", "correct": true}, {"label": "D", "text": "Thrombotic angiopathy", "correct": false}], "correct_answer": "C. Hepatic failure", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54047791700915366/54047791700915366.m3u8"}, {"text": "True regarding minimal change disease?", "options": [{"label": "A", "text": "More common in girls than boys", "correct": false}, {"label": "B", "text": "Non-selective proteinuria", "correct": false}, {"label": "C", "text": "Severe hypoalbuminemia", "correct": true}, {"label": "D", "text": "Cyclosporine is effective first-line therapy", "correct": false}], "correct_answer": "C. Severe hypoalbuminemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22516531700915379/22516531700915379.m3u8"}, {"text": "A child aged 6 yr is asymptomatic but incidentally done urine culture showed 1 million colony count/mm3 of E.coli. What is the next step in management?", "options": [{"label": "A", "text": "Repeat urine culture", "correct": false}, {"label": "B", "text": "Nitrite test", "correct": false}, {"label": "C", "text": "Nothing needed", "correct": true}, {"label": "D", "text": "Start oral antibiotics", "correct": false}], "correct_answer": "C. Nothing needed", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9677411700915391/9677411700915391.m3u8"}, {"text": "As per RIFLE staging system criteria, the minimum time duration to define end stage renal disease is?", "options": [{"label": "A", "text": "4 weeks", "correct": false}, {"label": "B", "text": "8 weeks", "correct": false}, {"label": "C", "text": "3 months", "correct": true}, {"label": "D", "text": "6 months", "correct": false}], "correct_answer": "C. 3 months", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/28219381700915404/28219381700915404.m3u8"}, {"text": "The most common age for developing acute post-streptococcal glomerulonephritis is?", "options": [{"label": "A", "text": "Below 2 yrs", "correct": false}, {"label": "B", "text": "2-6 yr", "correct": false}, {"label": "C", "text": "6-12 yr", "correct": true}, {"label": "D", "text": ">12 yr", "correct": false}], "correct_answer": "C. 6-12 yr", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/43169211700915417/43169211700915417.m3u8"}, {"text": "A 5 year old child developed periorbital puffiness following an acute febrile illness. His spot urine protein sample showed protein: creatinine ratio of 3.5:1. There was no hypertension or hematuria. The child was started on oral prednisolone @ 2mg/kg/day as single morning dose. Despite 2 weeks of therapy, the child continues to have periorbital edema and persistently elevated protein: creatinine ratio. What next needs to be done?", "options": [{"label": "A", "text": "Continue prednisolone in same dose for 2 weeks more", "correct": true}, {"label": "B", "text": "Increase dose of prednisolone to double", "correct": false}, {"label": "C", "text": "Start Levamisole as steroid sparing agent", "correct": false}, {"label": "D", "text": "Consider renal biopsy", "correct": false}], "correct_answer": "A. Continue prednisolone in same dose for 2 weeks more", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4864251700915429/4864251700915429.m3u8"}, {"text": "A child develops nephrotic syndrome, which is poorly responsive to prednisolone. He has past history of VUR, Renal biopsy in such a child is likely to show which pathology?", "options": [{"label": "A", "text": "Effacement of foot process of podocytes", "correct": false}, {"label": "B", "text": "Focal segmental glomerulosclerosis", "correct": true}, {"label": "C", "text": "Subepithelial deposits", "correct": false}, {"label": "D", "text": "Mesangial IgA deposits", "correct": false}], "correct_answer": "B. Focal segmental glomerulosclerosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56331101700915441/56331101700915441.m3u8"}, {"text": "Renal potassium wasting associated with hypertension is seen in all except?", "options": [{"label": "A", "text": "Conn syndrome", "correct": false}, {"label": "B", "text": "Cushing syndrome", "correct": false}, {"label": "C", "text": "Bartter syndrome", "correct": true}, {"label": "D", "text": "Liddle syndrome", "correct": false}], "correct_answer": "C. Bartter syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/2939841700915471/2939841700915471.m3u8"}, {"text": "The treatment of choice for primary grade V VUR involving both kidneys in a 6-month old boy is?", "options": [{"label": "A", "text": "Antibiotic prophylaxis", "correct": true}, {"label": "B", "text": "Ureteric reimplantation", "correct": false}, {"label": "C", "text": "Cystoscopy followed by sub-ureteric injection of Teflon", "correct": false}, {"label": "D", "text": "Bilateral ureterostomies", "correct": false}], "correct_answer": "A. Antibiotic prophylaxis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/44190221700915484/44190221700915484.m3u8"}, {"text": "A 9-year old boy has steroid dependent NS for the last 5 years. The patient is markedly cushingoid with blood pressure of 120/86mm Hg and has small subcapsular cataracts. The most appropriate therapy of choice?", "options": [{"label": "A", "text": "Long-term prednisolone with enalapril", "correct": false}, {"label": "B", "text": "Cyclophosphamide", "correct": true}, {"label": "C", "text": "IVIG", "correct": false}, {"label": "D", "text": "IV pulse corticosteroids", "correct": false}], "correct_answer": "B. Cyclophosphamide", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/65660561700915497/65660561700915497.m3u8"}, {"text": "Most common cause of acute kidney injury in neonates is?", "options": [{"label": "A", "text": "Hypovolemia", "correct": false}, {"label": "B", "text": "HUS", "correct": false}, {"label": "C", "text": "Sepsis", "correct": true}, {"label": "D", "text": "Urinary obstruction", "correct": false}], "correct_answer": "C. Sepsis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which among the following is an indication of Renal biopsy in a patient of nephrotic syndrome?", "options": [{"label": "A", "text": "Massive proteinuria", "correct": false}, {"label": "B", "text": "Age 2-8 years", "correct": false}, {"label": "C", "text": "Low serum complement levels", "correct": true}, {"label": "D", "text": "2nd attack of nephrotic syndrome in 1 year", "correct": false}], "correct_answer": "C. Low serum complement levels", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76284501700915522/76284501700915522.m3u8"}, {"text": "Most common cause of urinary obstruction a male infant is?", "options": [{"label": "A", "text": "Anterior urethral valves", "correct": false}, {"label": "B", "text": "Posterior urethral valves", "correct": true}, {"label": "C", "text": "Stone", "correct": false}, {"label": "D", "text": "stricture", "correct": false}], "correct_answer": "B. Posterior urethral valves", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/55763281700915537/55763281700915537.m3u8"}, {"text": "Which one of the following is the most common cause of abdominal mass in neonates?", "options": [{"label": "A", "text": "Neuroblastoma", "correct": false}, {"label": "B", "text": "Wilm’stumor", "correct": false}, {"label": "C", "text": "Distended bladder", "correct": false}, {"label": "D", "text": "Multicystic dysplastic kidney", "correct": true}], "correct_answer": "D. Multicystic dysplastic kidney", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/66295901700915555/66295901700915555.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Medicine Cns Dr Achin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Medicine Cns Dr Achin</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                50 Questions | 200 Total Marks | 60 min Duration | ~72.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 50 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 60 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 50</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Medicine Cns Dr Achin - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 50</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 50 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "All of the following are risk factors associated with recurrent seizures EXCEPT", "options": [{"label": "A", "text": "Seizures presenting as a status epilepticus", "correct": false}, {"label": "B", "text": "Seizures associated with postictal confusion", "correct": true}, {"label": "C", "text": "Seizures associated with Postictal Todd’s paralysis", "correct": false}, {"label": "D", "text": "Strong family history of seizures", "correct": false}], "correct_answer": "B. Seizures associated with postictal confusion", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 47year old man was brought by his wife to casualty. He had been hallucinating that morning seeing three dogs run across his living floor and four small children in kitchen. Such formed visual hallucinations may occur in :", "options": [{"label": "A", "text": "Temporal lobe pathology.", "correct": true}, {"label": "B", "text": "Occipital lobe pathology.", "correct": false}, {"label": "C", "text": "Migraine aura.", "correct": false}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "A. Temporal lobe pathology.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following statement are true about epilepsy except :-", "options": [{"label": "A", "text": "Jacksonian epilepsy is spreading seizure activity.", "correct": false}, {"label": "B", "text": "Serum level of prolactin increases dramatically after tonic clonic convulsions.", "correct": false}, {"label": "C", "text": "Changes in memory/perception and blackouts are not features of focal seizure with impaired awareness.", "correct": true}, {"label": "D", "text": "Absence seizures are briefer and more frequent without post ictal confusion .", "correct": false}], "correct_answer": "C. Changes in memory/perception and blackouts are not features of focal seizure with impaired awareness.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Ratio of drug concentration in breast milk relative to serum is minimal with which of the following antiepileptic drug?", "options": [{"label": "A", "text": "Valproate", "correct": true}, {"label": "B", "text": "Phenobarbital", "correct": false}, {"label": "C", "text": "Carbamezepine", "correct": false}, {"label": "D", "text": "Levetriacetam", "correct": false}], "correct_answer": "A. Valproate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most physicians recommend using high dose of intravenous benzodiazepine as part of management of status epilepticus because it has which of the following qualities?", "options": [{"label": "A", "text": "Ability to suppress seizure activity for more than 24 hours after one injection.", "correct": false}, {"label": "B", "text": "Lack of respiratory depressant effect .", "correct": false}, {"label": "C", "text": "Rapid onset of action after intravenous administration.", "correct": true}, {"label": "D", "text": "Lack of hypotensive effects.", "correct": false}], "correct_answer": "C. Rapid onset of action after intravenous administration.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In treatment of epilepsy ,sodium valproate :- 1).Is the drug of choice in pregnant women. 2).Can cause weight loss. 3).No blood tests are required to screen for liver abnormalities. 4).Can cause hirsutism. 5).Is usually the drug of choice in primary generalized epilepsy. Select the correct answer using the code given below:", "options": [{"label": "A", "text": "1, 2 and 3", "correct": false}, {"label": "B", "text": "1 and 2 only", "correct": false}, {"label": "C", "text": "3 and 5 only", "correct": false}, {"label": "D", "text": "5 only.", "correct": true}], "correct_answer": "D. 5 only.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28 year old female primigravida 2 months pregnant known case of JME off any AED presently presented with an episode of GTCS preceded by multiple episodes of myoclonus .Which of the following would be best to start her therapy ?", "options": [{"label": "A", "text": "Phenobarbitone", "correct": false}, {"label": "B", "text": "Levetiracetam", "correct": true}, {"label": "C", "text": "Lamotrigine", "correct": false}, {"label": "D", "text": "Carbamazepine", "correct": false}], "correct_answer": "B. Levetiracetam", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Coarse tremors in tongue are seen in all except ?", "options": [{"label": "A", "text": "Parkinsonism", "correct": false}, {"label": "B", "text": "Alcohol", "correct": false}, {"label": "C", "text": "Thyrotoxicosis", "correct": true}, {"label": "D", "text": "Genreral paresis.", "correct": false}], "correct_answer": "C. Thyrotoxicosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Diagnose the following movement disorder", "options": [{"label": "A", "text": "Chorea", "correct": false}, {"label": "B", "text": "Athetosis", "correct": true}, {"label": "C", "text": "Hemiballismus", "correct": false}, {"label": "D", "text": "Resting tremors", "correct": false}], "correct_answer": "B. Athetosis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(1009).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Match the following Gait disorders I i. Parkinson disease II ii. Proximal Myopathy III iii. Spastic CP IV iv. Foot Drop", "options": [{"label": "A", "text": "I(i) II(ii) III(iii).IV(iv).", "correct": false}, {"label": "B", "text": "I(iv) II(iii) III(i).IV(ii)", "correct": false}, {"label": "C", "text": "I(iii) II(i) III(iv).IV.(ii)", "correct": true}, {"label": "D", "text": "I(iii) II(iv) III(i).IV(ii).", "correct": false}], "correct_answer": "C. I(iii) II(i) III(iv).IV.(ii)", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(896).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 79 year old male presents to his doctor after his wife noticed that he had slowed down and his posture has changed in that he has bent over. The following would support a diagnosis of Parkinson disease :", "options": [{"label": "A", "text": "Rest tremor, bradykinesia and spasticity.", "correct": false}, {"label": "B", "text": "Vertical supranuclear palsy.", "correct": false}, {"label": "C", "text": "Shuffling gait.", "correct": true}, {"label": "D", "text": "Postural tremor.", "correct": false}], "correct_answer": "C. Shuffling gait.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is most useful in the diagnosis of parkinsonism :", "options": [{"label": "A", "text": "EEG and CT scan", "correct": false}, {"label": "B", "text": "Clinical examination", "correct": true}, {"label": "C", "text": "History", "correct": false}, {"label": "D", "text": "Therapeutic response to drugs", "correct": false}], "correct_answer": "B. Clinical examination", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following about familial Parkinsonism are true except ?", "options": [{"label": "A", "text": "10-15 % cases are familial in origin.", "correct": false}, {"label": "B", "text": "LRRK 2 gene mutation is on chromosome number 21.", "correct": true}, {"label": "C", "text": "Mutation of parkin gene is associated with Parkinson disease below 40 years.", "correct": false}, {"label": "D", "text": "Alpha synuclein mutation is related to chromosome 4.", "correct": false}], "correct_answer": "B. LRRK 2 gene mutation is on chromosome number 21.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following patients with Parkinson disease is the best candidate for deep brain stimulation ?", "options": [{"label": "A", "text": "A 64 year old woman on levodopa –carbidopa who continues to experience episode of freezing while walking.", "correct": false}, {"label": "B", "text": "A 68 year old man with recurrent falls due to orthostatic hypotension.", "correct": false}, {"label": "C", "text": "A 70 year old woman with severe tremor unresponsive to therapy.", "correct": true}, {"label": "D", "text": "A 71 year old man with worsening symptoms of dementia.", "correct": false}], "correct_answer": "C. A 70 year old woman with severe tremor unresponsive to therapy.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following clinical sign is unilateral in", "options": [{"label": "A", "text": "Amyotrophic lateral sclerosis.", "correct": false}, {"label": "B", "text": "A cervical myelopathy secondary to cervical spondylosis.", "correct": false}, {"label": "C", "text": "Multiple sclerosis.", "correct": false}, {"label": "D", "text": "A right middle cerebral artery ischemic stroke.", "correct": true}], "correct_answer": "D. A right middle cerebral artery ischemic stroke.", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3(815).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 67-year-old male presented with complaint of a fogging of vision in the left eye which he described as a “curtain doming down”. It lasted a minute before returning to normal. There were no other symptoms. The following is the most likely cause of his visual impairment.", "options": [{"label": "A", "text": "Retinitis pigmentosa.", "correct": false}, {"label": "B", "text": "Carotid embolism.", "correct": true}, {"label": "C", "text": "Papilledema.", "correct": false}, {"label": "D", "text": "Migranous aura.", "correct": false}], "correct_answer": "B. Carotid embolism.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 74-year-old hypertensive man developed an acute onset severe weakness in his right side involving his arm & leg. On examination, he has a right hemiplegia with no sensory loss. Which of the following lesion best explains his deficit:", "options": [{"label": "A", "text": "Total left middle cerebral artery infarction.", "correct": false}, {"label": "B", "text": "Lacunar infarction of the internal capsule.", "correct": true}, {"label": "C", "text": "Partial left middle cerebral artery infarction.", "correct": false}, {"label": "D", "text": "Internal carotid artery occlusion.", "correct": false}], "correct_answer": "B. Lacunar infarction of the internal capsule.", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4(773).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 25-year-old woman was involved in a car accident and suffered a severe whiplash injury but was otherwise well. The following day she presents to casualty with weakness on her right side, confusion and incomprehensible speech. On examination she has a left sided Horner’s syndrome, right hemiplegia and right homonymous hemianopia. Unfortunately, she became drowsy and obtunded over the next 24 hours and dies. Which of the following lesion best explains her disorder:", "options": [{"label": "A", "text": "Total left middle cerebral artery infarction.", "correct": false}, {"label": "B", "text": "Lacunar infarction of internal capsule.", "correct": false}, {"label": "C", "text": "Cerebellar hemorrhage.", "correct": false}, {"label": "D", "text": "Internal carotid artery occlusion.", "correct": true}], "correct_answer": "D. Internal carotid artery occlusion.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 72 year old right handed man was admitted to the stroke unit.A CT brain scan performed identified an infarct in right middle cerebral artery territory .The following signs typically occur with non dominant cortical lesions :-", "options": [{"label": "A", "text": "Dysphasia", "correct": false}, {"label": "B", "text": "Dressing apraxia", "correct": true}, {"label": "C", "text": "Dyscalculia", "correct": false}, {"label": "D", "text": "Finger agnosia", "correct": false}], "correct_answer": "B. Dressing apraxia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "46 yr old patient complaining of severe bursting headache on examination he was found to be conscious but restless, neck stiffness & drooping of right eyelid were observed. Clinical diagnosis is", "options": [{"label": "A", "text": "Cerebral embolism", "correct": false}, {"label": "B", "text": "Posterior communicating artery aneurysm with SAH", "correct": true}, {"label": "C", "text": "Anterior communicating Artery aneurysm with SAH", "correct": false}, {"label": "D", "text": "Cavernous sinus thrombosis", "correct": false}], "correct_answer": "B. Posterior communicating artery aneurysm with SAH", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 58-year-old woman develops acute onset weakness in the right side of her face & right arm with slurring of speech. She is assessed within 90 minutes of symptom onset and deemed a candidate for thrombolysis. What is the single most appropriate next action?", "options": [{"label": "A", "text": "Alteplase infusion.", "correct": false}, {"label": "B", "text": "Aspirin 300 mg immediately.", "correct": false}, {"label": "C", "text": "CT brain.", "correct": true}, {"label": "D", "text": "MRI brain.", "correct": false}], "correct_answer": "C. CT brain.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 75-year-old male presents with an acute stroke. On examination he has mild right arm and face weakness. He has spontaneous speech with occasional paraphasic errors. He can understand and follow commands. Repetition is severely impaired. Which of the following best explains his speech pattern?", "options": [{"label": "A", "text": "Brocas aphasia.", "correct": false}, {"label": "B", "text": "Transcortical aphasia.", "correct": false}, {"label": "C", "text": "Anomic aphasia.", "correct": false}, {"label": "D", "text": "Conduction aphasia.", "correct": true}], "correct_answer": "D. Conduction aphasia.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 21-year-old man has a subarachnoid hemorrhage. His GCS is 13. CT angiogram confirms presence of a middle cerebral artery aneurysm with normal sized ventricles. He suddenly becomes comatose (GCS 3) with fixed dilated pupils. What is the single most likely cause of his symptoms.", "options": [{"label": "A", "text": "Hydrocephalus", "correct": false}, {"label": "B", "text": "Hyponatremia", "correct": false}, {"label": "C", "text": "Vasospasm", "correct": false}, {"label": "D", "text": "Re rupture", "correct": true}], "correct_answer": "D. Re rupture", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 75-year-old man’s wife suddenly noticed his slurring of speech and right arm weakness which completely resolved in 30 minutes. He has a history of diabetes. His blood pressure is normal. Which of the following best represents his ABCD2 score.", "options": [{"label": "A", "text": "2", "correct": false}, {"label": "B", "text": "3", "correct": false}, {"label": "C", "text": "5", "correct": true}, {"label": "D", "text": "7", "correct": false}], "correct_answer": "C. 5", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5(722).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Sensation tested by following instrument exhibits maximum sensitivity in", "options": [{"label": "A", "text": "Shin", "correct": false}, {"label": "B", "text": "Toes", "correct": false}, {"label": "C", "text": "Finger pads", "correct": true}, {"label": "D", "text": "Soles", "correct": false}], "correct_answer": "C. Finger pads", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/6(606).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Tau proteins is characterized by all except?", "options": [{"label": "A", "text": "It is a microtubule associated protein.", "correct": false}, {"label": "B", "text": "Functions to assemble and stabilize microtubules.", "correct": false}, {"label": "C", "text": "In Alzheimer’s disease ,it is hypo phosphyrylated.", "correct": true}, {"label": "D", "text": "Progressive supranuclear palsy may represent a tau pathologic process.", "correct": false}], "correct_answer": "C. In Alzheimer’s disease ,it is hypo phosphyrylated.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient suffering wi with Alzheimer has great difficulty in completing this task . Which of the following symptom is shown in the image ?", "options": [{"label": "A", "text": "Agnosia", "correct": false}, {"label": "B", "text": "Acalculia", "correct": false}, {"label": "C", "text": "Apraxia", "correct": true}, {"label": "D", "text": "Anomia", "correct": false}], "correct_answer": "C. Apraxia", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7(554).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 43-year-old female was applying her make up one morning when she noticed the right eye appeared different and the pupil appeared much larger than that in the left eye. A large pupil may be seen in:", "options": [{"label": "A", "text": "A lesion in the midbrain.", "correct": true}, {"label": "B", "text": "Horner’s syndrome.", "correct": false}, {"label": "C", "text": "Terminally ill patients taking morphine for analgesia.", "correct": false}, {"label": "D", "text": "A pontine lesion.", "correct": false}], "correct_answer": "A. A lesion in the midbrain.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following may cause a third nerve palsy:", "options": [{"label": "A", "text": "Idiopathic intracranial hypertension.", "correct": false}, {"label": "B", "text": "Multiple sclerosis.", "correct": false}, {"label": "C", "text": "Herniation of the uncus of the temporal lobe.", "correct": true}, {"label": "D", "text": "Pancoast tumor.", "correct": false}], "correct_answer": "C. Herniation of the uncus of the temporal lobe.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Sensory loss of this pattern would be seen in which of the following disorder.", "options": [{"label": "A", "text": "Amyotrophic lateral sclerosis.", "correct": false}, {"label": "B", "text": "Gullian barre syndrome.", "correct": false}, {"label": "C", "text": "Diabetes Mellitus.", "correct": false}, {"label": "D", "text": "Syringomyelia.", "correct": true}], "correct_answer": "D. Syringomyelia.", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8(549).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 46 year old male has lower back pain radiating down to posterior aspect of his left leg and paraesthesia in the lateral aspect of left foot.Strength and bowel functions have been normal.Examination is likely to show which of the following ?", "options": [{"label": "A", "text": "Left Babinski sign.", "correct": false}, {"label": "B", "text": "Loss of pinprick sensation over web space between first and second digits of left foot.", "correct": false}, {"label": "C", "text": "Hyperreflexia at the left knee jerk.", "correct": false}, {"label": "D", "text": "Hyporeflexia in the ankle jerk.", "correct": true}], "correct_answer": "D. Hyporeflexia in the ankle jerk.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following clinical sign would be positive if the lesion is BELOW.", "options": [{"label": "A", "text": "L1", "correct": false}, {"label": "B", "text": "S1", "correct": false}, {"label": "C", "text": "L5", "correct": false}, {"label": "D", "text": "T10", "correct": true}], "correct_answer": "D. T10", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/9(510).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 32-year-old male presented with increasing weakness over his right arm & leg with loss of vibration and joint position sense in the right arm & leg and loss of pin prick in the left arm & leg. Which of the following investigation would be useful to secure the diagnosis?", "options": [{"label": "A", "text": "Nerve conduction study.", "correct": false}, {"label": "B", "text": "Lumbar puncture", "correct": false}, {"label": "C", "text": "MRI of cervical spinal cord", "correct": true}, {"label": "D", "text": "MRI of the brain", "correct": false}], "correct_answer": "C. MRI of cervical spinal cord", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following test would be positive in which condition", "options": [{"label": "A", "text": "Syringomyelia", "correct": false}, {"label": "B", "text": "Amyotrophic lateral sclerosis.", "correct": false}, {"label": "C", "text": "Tabes dorsalis.", "correct": true}, {"label": "D", "text": "Myasthenia Gravis", "correct": false}], "correct_answer": "C. Tabes dorsalis.", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/10(532).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not a feature of extramedullary tumour?", "options": [{"label": "A", "text": "Early corticospinal signs and paralysis", "correct": false}, {"label": "B", "text": "Root pain or midine back pain", "correct": false}, {"label": "C", "text": "Asymmetric weakness", "correct": false}, {"label": "D", "text": "Sacral sparing", "correct": true}], "correct_answer": "D. Sacral sparing", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following clinical signs may be found in thoracic myelopathy", "options": [{"label": "A", "text": "Absent reflexes with flexor plantar.", "correct": false}, {"label": "B", "text": "Fasciculations.", "correct": false}, {"label": "C", "text": "Weakness of shoulder abduction and elbow extension.", "correct": false}, {"label": "D", "text": "Sensory level on the trunk.", "correct": true}], "correct_answer": "D. Sensory level on the trunk.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are features of Amyotrophic lateral sclerosis Except", "options": [{"label": "A", "text": "More common in male than female", "correct": false}, {"label": "B", "text": "Death of posterior horn cell neurons", "correct": true}, {"label": "C", "text": "Death of neurons in motor cortex in cerebral hemisphere", "correct": false}, {"label": "D", "text": "Bladder is not involved", "correct": false}], "correct_answer": "B. Death of posterior horn cell neurons", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A dissociated pattern of sensory loss may be seen in: 1). Compression of the spinal cord by a prolapsed interverbal disc. 2). Anterior spinal artery occlusion. 3). Brown Sequard syndrome. 4). Syringomyelia. 5). Tabes dorsalis. Select the correct answer using the code given below", "options": [{"label": "A", "text": "1, 2 and 3", "correct": false}, {"label": "B", "text": "4 only", "correct": false}, {"label": "C", "text": "3 and 5.", "correct": false}, {"label": "D", "text": "2, 4 and 5.", "correct": true}], "correct_answer": "D. 2, 4 and 5.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The patient with generalized myasthenia gravis shows improvement in ocular weakness on receiving edrophonium which of the following statement is true about the treatment of the patient?", "options": [{"label": "A", "text": "Thymectomy is indicated in the absence of thymoma", "correct": true}, {"label": "B", "text": "Physostigmine is drug of choice.", "correct": false}, {"label": "C", "text": "Immunosuppressants like azathioprine are used only in myesthenic crisis", "correct": false}, {"label": "D", "text": "MuSK positive patients go into complete remission with thymectomy", "correct": false}], "correct_answer": "A. Thymectomy is indicated in the absence of thymoma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/11(431).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following are correct in respect of Myasthenia gravis? 1. Symptoms worsen towards the end of the day 2. There may be difficulty in chewing and swallowing 3. Acetylcholine receptors in the pre-junctional membrane involved 4. Penicillamine may precipitate similar illness Select the correct answer using the code given below:", "options": [{"label": "A", "text": "1, 2 and 3", "correct": false}, {"label": "B", "text": "1, 2 and 4", "correct": true}, {"label": "C", "text": "1 and 3 only", "correct": false}, {"label": "D", "text": "2 and 4 only", "correct": false}], "correct_answer": "B. 1, 2 and 4", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The headache of raised intracranial pressure is typically associated with :-", "options": [{"label": "A", "text": "Worsening with coughing ,sneezing or bending over.", "correct": true}, {"label": "B", "text": "Fortification spectra.", "correct": false}, {"label": "C", "text": "Stabbing or shooting pains.", "correct": false}, {"label": "D", "text": "Better on waking first thing in the morning and worse on standing.", "correct": false}], "correct_answer": "A. Worsening with coughing ,sneezing or bending over.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 29-year-old woman has unilateral throbbing headaches associated with nausea & photophobia. They occur once per month around her menses and she sleeps them off in a dark room. She has not tried any medications. She wants to be pregnant in the future. Which is the single best initial treatment plan?", "options": [{"label": "A", "text": "Aspirin, domperidone during attack, no prophylactic therapy.", "correct": false}, {"label": "B", "text": "Rizatriptan, domperidone during attack, no prophylactic therapy.", "correct": true}, {"label": "C", "text": "Sumatriptan, domperidone during attack, Propranolol.", "correct": false}, {"label": "D", "text": "Paracetamol, domperidone during attack, topiramate.", "correct": false}], "correct_answer": "B. Rizatriptan, domperidone during attack, no prophylactic therapy.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Diagnosis of migraine is supported by :-", "options": [{"label": "A", "text": "Continous daily headache.", "correct": false}, {"label": "B", "text": "Episodes of loss of counciousness.", "correct": false}, {"label": "C", "text": "Improving by standing.", "correct": false}, {"label": "D", "text": "Associated nausea ,vertigo and photophobia.", "correct": true}], "correct_answer": "D. Associated nausea ,vertigo and photophobia.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 21-year-old overweight has 2 months of increasing frontal throbbing headaches. They are worse on lying down and coughing. She has markedly reduced peripheral vision. A CT head & CT venogram are normal. Lumbar puncture shows a very high opening pressure if 42 cm of water. What is the single best initial action?", "options": [{"label": "A", "text": "Analgesia & review later.", "correct": false}, {"label": "B", "text": "Insert Lumbo peritoneal shunt.", "correct": false}, {"label": "C", "text": "MRI to find any malignancy.", "correct": false}, {"label": "D", "text": "Start acetazolamide.", "correct": true}], "correct_answer": "D. Start acetazolamide.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 63-year-old female was brought by her daughter complaining of a new and persistent headache for 2 weeks that would awake her from her sleep. She felt persistently nauseated and drowsy through the day. Her CT scan showed hydrocephalus. In this case the most likely explanation for hydrocephalus is:", "options": [{"label": "A", "text": "Tuberculous meningitis.", "correct": true}, {"label": "B", "text": "Herpes simplex meningitis.", "correct": false}, {"label": "C", "text": "Idiopathic intracranial hypertension.", "correct": false}, {"label": "D", "text": "Sub Dural hemorrhage.", "correct": false}], "correct_answer": "A. Tuberculous meningitis.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 42-year-old male has relapsing type of multiple sclerosis and has developed progressive left arm weakness and numbness over 3 weeks. He has monthly natalizumab infusions. What is the next most appropriate management?", "options": [{"label": "A", "text": "Inform patient that he has entered progressive course.", "correct": false}, {"label": "B", "text": "MRI brain with contrast and lumbar puncture.", "correct": true}, {"label": "C", "text": "Prescribe steroids then give next natalizumab infusion.", "correct": false}, {"label": "D", "text": "Switch to an alternative drug due to failure of natalizumab.", "correct": false}], "correct_answer": "B. MRI brain with contrast and lumbar puncture.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is true about prion disease :-", "options": [{"label": "A", "text": "Are caused by slow viruses.", "correct": false}, {"label": "B", "text": "The infectious particles are easily destroyed by conventional sterilization techniques.", "correct": false}, {"label": "C", "text": "Can be genetically inherited.", "correct": true}, {"label": "D", "text": "Have a quicker clinical progression in the new variant than the sporadic form.", "correct": false}], "correct_answer": "C. Can be genetically inherited.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is not seen in Miller Fischer syndrome ?", "options": [{"label": "A", "text": "Anti GQ1 antibodies.", "correct": false}, {"label": "B", "text": "Ataxia", "correct": false}, {"label": "C", "text": "Cranial nerve palsy.", "correct": false}, {"label": "D", "text": "Postural hypotension.", "correct": true}], "correct_answer": "D. Postural hypotension.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A lesion of the lateral medulla on one side may give rise to:", "options": [{"label": "A", "text": "Ipsilateral facial weakness.", "correct": false}, {"label": "B", "text": "Horner’s syndrome.", "correct": true}, {"label": "C", "text": "Contralateral weakness of the palate.", "correct": false}, {"label": "D", "text": "Contralateral weakness of the tongue.", "correct": false}], "correct_answer": "B. Horner’s syndrome.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which type of multiple sclerosis is depicted in the following image ?", "options": [{"label": "A", "text": "Relapsing remitting type(RRMS).", "correct": true}, {"label": "B", "text": "Primary progressive type(PPMS)..", "correct": false}, {"label": "C", "text": "Secondary progressive type(SPMS).", "correct": false}, {"label": "D", "text": "Progressive relapsing types (PRMS).", "correct": false}], "correct_answer": "A. Relapsing remitting type(RRMS).", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/12(436).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/13(406).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Stomach (Upper GI Bleed)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Stomach (Upper GI Bleed)</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                14 Questions | 14 Total Marks | 24 min Duration | ~102.86 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 14 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 24 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 14</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Stomach (Upper GI Bleed) - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 14</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 14 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 69-year-old man is admitted to the emergency department with an acute UGI hemorrhage following a bout of repeated vomiting. Fiberoptic gastroscopy reveals three linear mucosal tears at the GE junction. What is the diagnosis?", "options": [{"label": "A", "text": "Reflux esophagitis with ulceration", "correct": false}, {"label": "B", "text": "Barrett’s esophagus", "correct": false}, {"label": "C", "text": "Carcinoma of the esophagus", "correct": false}, {"label": "D", "text": "Mallory-Weiss tear", "correct": true}], "correct_answer": "D. Mallory-Weiss tear", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Mallory-Weiss tear Mallory -Weiss tear is characterized by acute and sometimes massive UGI hemorrhage . It accounts for up to 10% of UGI bleeds. It is due to arterial bleeding following repeated vomiting (which causes mucosal tears at the GE junction). The cause is the same as that for spontaneous rupture of the esophagus (i.e., an increase in intra-abdominal pressure against a closed glottis). Causes other than vomiting such as paroxysmal coughing or retching, may sometimes lead to this condition. Upper endoscopy confirms the diagnosis.</p>\n<p><strong>Highyeild:</strong></p><p>Mallory - Weiss tear Mallory-Weiss tears are partial-thickness tears of the mucosa and submucosa near the gastroesophageal junction. These tears are caused by forceful contraction of the abdominal wall against an unrelaxed cardio, resulting in increased intragastric pressure and mucosal laceration. They were originally associated with alcoholic patients who had a history of intense retching and vomiting following binge drinking, but they can occur in any patient who has a history of repeated vomiting. Mallory-Weiss tears account for 5% to 10% of cases of upper gastrointestinal bleeding (UGIB). Diagnosis is usually made by history, and endoscopy is used to confirm the diagnosis. A retroflection maneuver is necessary to view the area just below the gastroesophageal junction to avoid missing this diagnosis in UGIB patients. Most tears occur along the lesser curvature and can extend into the esophagus. Supportive therapy with acid suppression therapy is successful in 90% of bleeding episodes, with the mucosa often healing within 72 hours. In rare cases of severe ongoing bleeding, endoscopic therapy with injection or electrocoagulation may be effective. If these therapies fail, angioembolization with absorbable material such as a gelatin sponge has been successfully employed.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Reflux esophagitis is esophageal inflammation secondary to repeated exposure of the esophageal mucosa to the acidic gastric secretions in gastroesophageal reflux disease leads to an inflammatory response that can result in chronic blood loss. Ulceration may accompany this, but the superficial mucosal ulcerations generally do not bleed acutely and are more commonly manifested as anemia or guaiac-positive stools . Option: B. Barrett’s esophagus is a metaplastic change in the lining mucosa of the esophagus in response to chronic gastro-oesophageal Reflux. The hallmark of ‘specialized’ Barrett’s epithelium is the presence of mucus-secreting goblet cells (intestinal metaplasia) Option: C. Squamous cell carcinoma generally affects the upper two-thirds of the esophagus and adenocarcinoma the lower third. They present usually with ulcers with everted or irregular edges than linear ulcers</p>\n<p><strong>Extraedge:</strong></p><p>In cases of failed endoscopic therapy, it is important to rule out variceal bleeding by thoroughly examining the gastroesophageal junction. Recurrent bleeding from a Mallory-Weiss tear is uncommon.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 56-year-old woman with Sjörgen’s syndrome complains of fatigue and melena. She is pale and anemic. Endoscopy reveals ectatic vessels radiating from the pylorus. Which of the following diagnosis is true?", "options": [{"label": "A", "text": "Watermelon Stomach", "correct": true}, {"label": "B", "text": "Mallory Weis tear", "correct": false}, {"label": "C", "text": "Shatzki’s ring", "correct": false}, {"label": "D", "text": "Caput Medusae", "correct": false}], "correct_answer": "A. Watermelon Stomach", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Watermelon Stomach “Watermelon stomach” is a term used to describe the appearance of the stomach in a condition called GAVE (gastric antral vascular ectasis) syndrome. Dilated blood vessels radiate from the pylorus to the antrum in a pattern that resembles the stripes of a watermelon. It is an uncommon cause of gastrointestinal bleeding. It has been associated with certain autoimmune diseases, however, it may also be seen in individuals not affected by these conditions. It may also be seen with portal hypertension. APC is used for its management.</p>\n<p><strong>Highyeild:</strong></p><p>Gastric Amtrak vascular ectasia Endoscopic image of en: gastric antral vascular ectasia seen as a radial pattern around the pylorus before (top) and after (bottom) treatment with argon plasma coagulation Gastric antral vascular ectasia (GAVE ) is named after the parallel red stripes found on the mucosal folds of the distal stomach. Histologically, GAVE is characterized by enlarged blood vessels containing thrombi in the lamina propria, as well as mucosal fibromuscular hyperplasia and hyalinization. GAVE is similar in appearance to portal hypertensive gastropathy, but GAVE is typically found in the distal stomach while portal hypertensive gastropathy usually affects the proximal stomach. Beta-blockers and nitrates are not effective in treating GAVE, which is typically found in elderly women with chronic gastrointestinal blood loss requiring transfusion. GAVE may be associated with an autoimmune connective tissue disorder , and at least a quarter of patients have chronic liver disease .</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: B. Mallory-Weiss tear is characterized by acute and sometimes massive UGI hemorrhage. It is due to arterial bleeding following repeated vomiting (which causes mucosal tears at the GE junction). Option: C. Schatzki’s ring is circular in the distal esophagus usually at the squamocolumnar junction . The core of the ring consists of variable amounts of fibrous tissue and cellular infiltrate. Most rings are incidental findings. Option: D. In portal HTN , portal blood flow is diverted away from the higher-pressure portal system through the paraumbilical veins to the lower-pressure veins of the anterior abdominal wall. In this setting, dilated superficial paraumbilical veins are termed caput medusae .</p>\n<p><strong>Extraedge:</strong></p><p>Treatment options for GAVE include estrogen and progesterone , as well as endoscopic treatment with the neodymium yttrium-aluminum-garnet (Nd: YAG) laser or argon plasma coagulator . If these options are ineffective, an antrectomy may be necessary to control blood loss. However, this operation is riskier for elderly patients. For patients with both portal hypertension and antral vascular ectasia , a transjugular intrahepatic portosystemic shunt ( TIPSS ) may be considered.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 54-year-old man presents with a massive UGI bleed. After resuscitation, an endoscopy is performed. No esophageal varices, gastritis, or gastric ulcers are seen. After copious irrigation, a pinpoint lesion is seen near the GE junction. What can be said about this lesion?", "options": [{"label": "A", "text": "It is a Mallory – Weiss tear", "correct": false}, {"label": "B", "text": "Barret’s Esophagus", "correct": false}, {"label": "C", "text": "Ca Esophagus", "correct": false}, {"label": "D", "text": "Bleeding is from a submucosal vessel.", "correct": true}], "correct_answer": "D. Bleeding is from a submucosal vessel.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Bleeding is from a submucosal vessel. A dieulafoy lesion is an uncommon cause of UGI bleeding (0.3–7%). It can occur anywhere in the gastrointestinal tract but is most commonly found in the stomach (near the GE junction). It is often difficult to visualize because of its small size. A dilated submucosal artery is the source of the bleeding. First-line management is therapeutic endoscopy. There is no association with NSAIDs or alcohol.</p>\n<p><strong>Highyeild:</strong></p><p>A Dieulafoy lesion is a malformation found in the gastric arterial-venous system with a unique histological appearance. It can cause severe upper gastrointestinal bleeding that is difficult to manage. The lesion is usually covered by normal mucosa and may not be visible when not bleeding. Profuse bleeding from an area of normal mucosa indicates the cause of bleeding is the Dieulafoy lesion . Endoscopic identification of the lesion can be done, and bleeding can be stopped by sclerosant injection or endoscopic clip application. Local excision is the only necessary treatment if the lesion is identified during surgery.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Mallory -Weiss tear is characterized by acute and sometimes massive UGI hemorrhage. It is due to arterial bleeding following repeated vomiting (which causes mucosal tears at the GE junction). Option: B.Barrett’s esophagus is a metaplastic change in the lining mucosa of the esophagus in response to chronic gastro-oesophageal Reflux. The hallmark of ‘specialized’ Barrett’s epithelium is the presence of mucus-secreting goblet cells (intestinal metaplasia) Option: C. Squamous cell carcinoma generally affects the upper two-thirds of the esophagus and adenocarcinoma the lower third. They present usually with ulcers with everted or irregular edges than linear ulcers</p>\n<p><strong>Extraedge:</strong></p><p>Dieulafoy lesions are relatively rare , accounting for only 1-2% of cases of upper gastrointestinal bleeding. The exact cause of Dieulafoy lesions is unknown , but they are thought to be congenital or acquired. Patients with a Dieulafoy lesion may experience symptoms such as abdominal pain, nausea, vomiting, and dizziness in addition to bleeding. Endoscopic ultrasound can be used to detect Dieulafoy lesions that may be missed during standard endoscopy. Dieulafoy lesions can occur in other areas of the body, including the colon and the bronchus .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 63-year-old male presents with rapidly progressive dysphagia and profound weight loss. He is pale and cachectic. He does not complain of hematemesis but there is a history of Malena. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Carcinoma of the esophagus", "correct": false}, {"label": "B", "text": "Gastro-oesophageal reflux disease (GORD)", "correct": false}, {"label": "C", "text": "Duodenal ulcer", "correct": true}, {"label": "D", "text": "Achalasia cardia", "correct": false}], "correct_answer": "C. Duodenal ulcer", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Duodenal ulcer PUD is responsible for up to two-thirds of UGIBs and can develop in the stomach or duodenum. Approximately 10% to 15% of patients with PUD will develop bleeding as part of their disease course. Significant bleeding does not occur until the erosion reaches an artery of the submucosa or an even larger vessel in the case of a penetrating ulcer.</p>\n<p><strong>Highyeild:</strong></p><p>Demographic changes have occurred in patients with duodenal ulceration in the West. The use of gastric antisecretory agents and pylori eradication therap y for dyspepsia has contributed to these changes. The peak incidence of duodenal ulceration is now in an older age group, and the gender difference is less marked. These changes reflect the changes in the epidemiology of pylori infection. Duodenal ulcers are most commonly found in the first part of the duodenum. Chronic ulcers can lead to fibrosis and deformities such as pyloric stenosis . Healing may leave a residual scar in the mucosa. Multiple ulcers may be present, known as \"kissing ulcers.\"</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Squamous cell carcinoma generally affects the upper two-thirds of the esophagus and adenocarcinoma the lower third. They present usually with ulcers with everted or irregular edges than linear ulcers Option: B. GERD presents with a history of heartburn and reflux. However, the history of Malena is rare. The patient has difficulty in eating but is rarely pale and cachectic Option: D. Achalasia (Greek ‘failure to relax’) is due to the loss of the ganglion cells in the myenteric (Auerbach’s) plexus, the cause of which is unknown. The classic physiological abnormalities are a non-relaxing LOS and absent peristalsis in the body of the esophagus.</p>\n<p><strong>Extraedge:</strong></p><p>Anterior ulcers tend to perforate , while posterior ulcers tend to bleed. The entire duodenal cap may be ulcerated and devoid of mucosa in rare cases. Giant duodenal ulcers are usually benign. Microscopically, the base of the ulcer is covered with granulation tissue . Pathological interpretations of healing ulcers must be careful, as epithelial down growth can be misinterpreted as an invasion.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 78-year-old female presents with upper GI bleed and melaena. She has been on long-term NSAIDs for her arthritis.", "options": [{"label": "A", "text": "Carcinoma of the esophagus", "correct": false}, {"label": "B", "text": "Gastro-oesophageal reflux disease (GORD)", "correct": false}, {"label": "C", "text": "Duodenal ulcer", "correct": false}, {"label": "D", "text": "Gastritis", "correct": true}], "correct_answer": "D. Gastritis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Gastritis Erosive gastritis is caused by agents that disturb the gastric mucosal barrier; NSAIDs and alcohol are common causes. The NSAID-induced gastric lesion is associated with the inhibition of the cyclo-oxygenase type 1 (COX-1) receptor enzyme, hence reducing the production of cytoprotective prostaglandins in the stomach. Many of the beneficial anti-inflammatory activities of NSAIDs are mediated by COX-2, and the use of specific COX-2 inhibitors reduces the incidence of these side effects. However, taken in long-term COX-2 inhibitors are associated with cardiovascular complications in common with many NSAIDs.</p>\n<p><strong>Highyeild:</strong></p><p>Stress gastritis is characterized by multiple superficial erosions that start in the proximal or acid-secreting part of the stomach and progress distally, almost always seen in the fundus and rarely in the diastal stomach. Impaired mucosal defense mechanisms against luminal acids, such as a reduction in blood flow, mucus, and bicarbonate secretion by mucosal cells, or a reduction in endogenous prostaglandins, is a key factor in the pathophysiology of stress gastritis. Risk factors or predisposing clinical conditions for stress gastritis include ARDS, multiple trauma, major burns, hepatic dysfunction, oliguric renal failure, large transfusion requirements, hypotension, prolonged surgical procedures, and sepsis. More than 50% of patients develop stress gastritis within 1-2 days after a traumatic event, and the only clinical sign may be painless upper GI bleeding that may be delayed at the onset. Treatment for stress gastritis involves definitive fluid resuscitation with correction of any coagulation abnormalities and treatment of the underlying sepsis. Intraluminal gastric pH should be maintained above 5.0 with antisecretory agents. Prophylaxis measures for stress gastritis include complete neutralization of luminal acid or antisecretory therapy, sepsis control, ventilatory support, adequate nutrition, and correction of dyselectrolytemia. Gastric volvulus is a condition where the stomach rotates on its axis, and it can be of two types: organoaxial and mesenteroaxial .</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Squamous cell carcinoma generally affects the upper two-thirds of the esophagus and adenocarcinoma the lower third. They present usually with ulcers with everted or irregular edges than linear ulcers Option: B. GERD presents with a history of heartburn and reflux. However, the history of Malena is rare. The patient has difficulty in eating but is rarely pale and cachectic Option: C. PUD is responsible for up to two-thirds of UGIBs and can develop in the stomach or duodenum. Approximately 10% to 15% of patients with PUD will develop bleeding as part of their disease course. Significant bleeding does not occur until the erosion reaches an artery of the submucosa or an even larger vessel in the case of a penetrating ulcer.</p>\n<p><strong>Extraedge:</strong></p><p>Primary gastric volvulus is seen in association with congenital asplenia and wandering spleen, while secondary gastric volvulus occurs secondary to some anatomic abnormality, most commonly diaphragmatic hernia. The major symptoms at presentation of gastric volvulus are acute-onset abdominal pain, distention, vomiting, and upper GI hemorrhage. Borchardt

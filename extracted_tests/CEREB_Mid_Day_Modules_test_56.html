@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Mid Day Module (Obg 3)   2025 03 04</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Mid Day Module (Obg 3)   2025 03 04</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                50 Questions | 200 Total Marks | 60 min Duration | ~72.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 50 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 60 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 50</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Mid Day Module (Obg 3)   2025 03 04 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 50</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 50 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "All are risk factors for progression of Hydatidiform mole to gestational trophoblastic neoplasia except?", "options": [{"label": "A", "text": "βhCG levels > 100,000", "correct": false}, {"label": "B", "text": "Slow decline in βhCG levels", "correct": false}, {"label": "C", "text": "Theca lutein cyst > 6 cm", "correct": false}, {"label": "D", "text": "Younger maternal age", "correct": true}], "correct_answer": "D. Younger maternal age", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D. Younger maternal age</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Risk Factors for progress to GTN</li><li>➤ Risk Factors for progress to GTN</li><li>➤ Complete mole (15%) > Partial mole (5%) Older Maternal Age βhCG levels > 100,000 Uterine size large for gestational age Theca lutein cysts > 6 cm Slow decline in βhCG levels</li><li>➤ Complete mole (15%) > Partial mole (5%)</li><li>➤ Older Maternal Age</li><li>➤ βhCG levels > 100,000</li><li>➤ Uterine size large for gestational age</li><li>➤ Theca lutein cysts > 6 cm</li><li>➤ Slow decline in βhCG levels</li><li>➤ Ref: page no 393, William’s Obstetrics 25 th edition</li><li>➤ Ref: page no 393, William’s Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 36-year-old woman presents to the OPD with complaints of 3 months pregnancy with vaginal bleeding. On examination, the uterus is palpable. An ultrasound shows the following picture. What is the best management option?", "options": [{"label": "A", "text": "Mifepristone + Misoprostol", "correct": false}, {"label": "B", "text": "Conservative management", "correct": false}, {"label": "C", "text": "Suction & Evacuation", "correct": true}, {"label": "D", "text": "Hysterotomy", "correct": false}], "correct_answer": "C. Suction & Evacuation", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/27/4.jpg"], "explanation_images": [], "explanation": "<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Treatment of a molar pregnancy is suction and evacuation followed by beta hCG surveilance</li><li>➤ Ref: Page no. 391, 392 William’s Obstetrics, 25 th edition</li><li>➤ Ref: Page no. 391, 392 William’s Obstetrics, 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Paternal chromosomal duplication is seen in?", "options": [{"label": "A", "text": "Partial mole", "correct": false}, {"label": "B", "text": "Complete mole", "correct": true}, {"label": "C", "text": "Down syndrome", "correct": false}, {"label": "D", "text": "Turner Syndrome", "correct": false}], "correct_answer": "B. Complete mole", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. Complete mole</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Partial moles are always TRIPLOID 2 sperm fertilize one ova The paternal contribution is called diandry Hence both maternal and paternal component present Usually, 69XXX or 69XXY Complete moles are DIPLOID Formed by either 1 sperm fertilizing an empty/ inactivated ovum and then undergoes duplication – this is called androgenesis.</li><li>➤ Partial moles are always TRIPLOID 2 sperm fertilize one ova The paternal contribution is called diandry Hence both maternal and paternal component present Usually, 69XXX or 69XXY</li><li>➤ 2 sperm fertilize one ova The paternal contribution is called diandry Hence both maternal and paternal component present Usually, 69XXX or 69XXY</li><li>➤ 2 sperm fertilize one ova</li><li>➤ The paternal contribution is called diandry</li><li>➤ Hence both maternal and paternal component present</li><li>➤ Usually, 69XXX or 69XXY</li><li>➤ Complete moles are DIPLOID Formed by either 1 sperm fertilizing an empty/ inactivated ovum and then undergoes duplication – this is called androgenesis.</li><li>➤ Formed by either 1 sperm fertilizing an empty/ inactivated ovum and then undergoes duplication – this is called androgenesis.</li><li>➤ Formed by either 1 sperm fertilizing an empty/ inactivated ovum and then undergoes duplication – this is called androgenesis.</li><li>➤ 2 sperms (dispermy) fertilize an empty/ inactivated ovum. 46 XX or 46 XY Only paternal component No maternal component</li><li>➤ 2 sperms (dispermy) fertilize an empty/ inactivated ovum.</li><li>➤ 46 XX or 46 XY</li><li>➤ Only paternal component</li><li>➤ No maternal component</li><li>➤ Ref: Page no 389, William’s Obstetrics 25 th edition</li><li>➤ Ref: Page no 389, William’s Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "During post evacuation surveillance following evacuation of a complete mole, the median time for resolution of serum βhCG values is:", "options": [{"label": "A", "text": "6 weeks", "correct": false}, {"label": "B", "text": "7 weeks", "correct": false}, {"label": "C", "text": "8 weeks", "correct": false}, {"label": "D", "text": "9 weeks", "correct": true}], "correct_answer": "D. 9 weeks", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D. 9 weeks</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 23y woman has a suction evacuation for molar pregnancy. The HPE is reported as a partial mole. You counsel her that her risk of progression to gestational trophoblastic neoplasia is?", "options": [{"label": "A", "text": "1-5%", "correct": true}, {"label": "B", "text": "5-10%", "correct": false}, {"label": "C", "text": "10-15%", "correct": false}, {"label": "D", "text": "15-20%", "correct": false}], "correct_answer": "A. 1-5%", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A. 1-5%</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Risk of progress of complete mole to GTN: 15-20 % Risk of progress of partial mole to GTN: 1-5%</li><li>➤ Risk of progress of complete mole to GTN: 15-20 %</li><li>➤ Risk of progress of partial mole to GTN: 1-5%</li><li>➤ Ref: Page 393, William’s Obstetrics 25 th edition</li><li>➤ Ref: Page 393, William’s Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the ultrasound finding:", "options": [{"label": "A", "text": "Ring of Pearls appearance", "correct": false}, {"label": "B", "text": "Rokitansky nodule", "correct": false}, {"label": "C", "text": "Snowstorm appearance", "correct": true}, {"label": "D", "text": "Waterlily sign", "correct": false}], "correct_answer": "C. Snowstorm appearance", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/27/21.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/27/21.jpg"], "explanation": "<p><strong>Ans. C. Snowstorm appearance</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ This image shows the typical snowstorm appearance seen on ultrasound in complete molar pregnancy</li><li>➤ Ref: Williams textbook of obstetrics, 26 edition, chapter 13.</li><li>➤ Ref: Williams textbook of obstetrics, 26 edition, chapter 13.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A woman with molar pregnancy is undergoing suction evacuation. Suddenly she develops breathing difficulty, tachypnoea and falls in saturation. The most likely cause is:", "options": [{"label": "A", "text": "Fluid overload", "correct": false}, {"label": "B", "text": "Metastatic disease suggestive of GTN", "correct": false}, {"label": "C", "text": "Thyroid storm", "correct": false}, {"label": "D", "text": "Trophoblastic embolization", "correct": true}], "correct_answer": "D. Trophoblastic embolization", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D. Trophoblastic embolization</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the instrument:", "options": [{"label": "A", "text": "Curette", "correct": false}, {"label": "B", "text": "Karman cannula", "correct": true}, {"label": "C", "text": "Manual vacuum aspiration syringe", "correct": false}, {"label": "D", "text": "Pipelle suction curette", "correct": false}], "correct_answer": "B. Karman cannula", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/27/22.jpg"], "explanation_images": [], "explanation": "<p><strong>Ans. B. Karman cannula</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Gestational trophoblastic neoplasia includes all Except:", "options": [{"label": "A", "text": "Choriocarcinoma", "correct": false}, {"label": "B", "text": "Epithelioid trophoblastic tumor (ETT)", "correct": false}, {"label": "C", "text": "Molar pregnancy", "correct": true}, {"label": "D", "text": "Placental site trophoblastic tumor (PSTT)", "correct": false}], "correct_answer": "C. Molar pregnancy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. molar pregnancy</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Mean pH of vagina during pregnancy is?", "options": [{"label": "A", "text": "4", "correct": true}, {"label": "B", "text": "5", "correct": false}, {"label": "C", "text": "6", "correct": false}, {"label": "D", "text": "7", "correct": false}], "correct_answer": "A. 4", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/15/screenshot-2024-01-15-181345.jpg"], "explanation": "<p><strong>Ans. A. 4</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Vagina</li><li>• Vagina</li><li>• Acidic pH (3.5 – 6): due to conversion of glycogen into lactic acid by the Lactobacillus acidophilus (due to high estrogen level )</li><li>• Acidic pH (3.5 – 6): due to conversion of glycogen into lactic acid by the Lactobacillus acidophilus (due to high estrogen level )</li><li>• Acidic pH (3.5 – 6):</li><li>• glycogen into lactic acid</li><li>• Lactobacillus acidophilus</li><li>• high estrogen level</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Ref: Page no 52, Williams Obstetrics 25 th edition</li><li>➤ Ref: Page no 52, Williams Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are true about hemodynamic changes in pregnancy except?", "options": [{"label": "A", "text": "Increase in ventricular stroke volume", "correct": false}, {"label": "B", "text": "Increase in systemic vascular resistance", "correct": true}, {"label": "C", "text": "Cardiac output is higher in lateral recumbent than supine position", "correct": false}, {"label": "D", "text": "Increase in heart rate", "correct": false}], "correct_answer": "B. Increase in systemic vascular resistance", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. Increase in systemic vascular resistance</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Systemic vascular resistance is reduced in pregnancy thereby causing a fall in BP</li><li>• Systemic vascular resistance is reduced in pregnancy thereby causing a fall in BP</li><li>• Systemic vascular resistance</li><li>• reduced</li><li>• fall in BP</li><li>• Other options:</li><li>• Other options:</li><li>• Option A: Increase in ventricular stroke volume: The stroke volume is increased in pregnancy Option C: Cardiac output is higher in lateral recumbent than supine position: This is because in supine position there is c ompression of the aorta and the IVC Option D: Increase in heart rate : The heart rate increases in pregnancy</li><li>• Option A: Increase in ventricular stroke volume: The stroke volume is increased in pregnancy</li><li>• Option A:</li><li>• Increase in ventricular stroke volume:</li><li>• increased</li><li>• pregnancy</li><li>• Option C: Cardiac output is higher in lateral recumbent than supine position: This is because in supine position there is c ompression of the aorta and the IVC</li><li>• Option C:</li><li>• Cardiac output</li><li>• higher</li><li>• lateral recumbent</li><li>• supine position</li><li>• ompression of the aorta</li><li>• IVC</li><li>• Option D: Increase in heart rate : The heart rate increases in pregnancy</li><li>• Option D:</li><li>• Increase</li><li>• heart rate</li><li>• increases</li><li>• pregnancy</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Systemic vascular resistance is reduced in pregnancy thereby causing a fall in BP</li><li>➤ Systemic vascular resistance is reduced in pregnancy thereby causing a fall in BP</li><li>➤ Systemic vascular resistance</li><li>➤ reduced</li><li>➤ pregnancy</li><li>➤ fall in BP</li><li>➤ Ref: Page 58, Williams Obstetrics 25 th edition</li><li>➤ Ref: Page 58, Williams Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following best describes the function of pregnancy associated plasma protein A (PAPP-A)?", "options": [{"label": "A", "text": "Carrier protein for estrogen and progesterone", "correct": false}, {"label": "B", "text": "Helps in maintenance of placenta", "correct": false}, {"label": "C", "text": "Immunosuppression against fetal antigens", "correct": true}, {"label": "D", "text": "Maintains colloid osmotic pressure in maternal blood", "correct": false}], "correct_answer": "C. Immunosuppression against fetal antigens", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. Immunosuppression against fetal antigens</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ Pregnancy-associated plasma protein-A (PAPP-A) largest of the pregnancy associated proteins is produced by both the embryo and the placenta (syncytio-cytotrophoblasts) during pregnancy. This protein is thought to have several different functions, including preventing recognition of the fetus by the maternal immune system, matrix mineralization and angiogenesis. Levels of PAPP-A rise from first detection in the first trimester until term. Maternal serum concentrations are related to subsequent fetal growth and this relationship has suggested that it can be used as a diagnostic test for adverse pregnancy outcomes ( intrauterine growth restriction, premature birth, preeclampsia, and stillbirth ).</li><li>➤ Pregnancy-associated plasma protein-A (PAPP-A) largest of the pregnancy associated proteins is produced by both the embryo and the placenta (syncytio-cytotrophoblasts) during pregnancy.</li><li>➤ Pregnancy-associated plasma protein-A (PAPP-A)</li><li>➤ pregnancy</li><li>➤ proteins</li><li>➤ both</li><li>➤ embryo and the placenta (syncytio-cytotrophoblasts)</li><li>➤ This protein is thought to have several different functions, including preventing recognition of the fetus by the maternal immune system, matrix mineralization and angiogenesis.</li><li>➤ preventing recognition of the fetus</li><li>➤ maternal</li><li>➤ immune system, matrix mineralization and angiogenesis.</li><li>➤ Levels of PAPP-A rise from first detection in the first trimester until term.</li><li>➤ PAPP-A rise</li><li>➤ first</li><li>➤ first trimester until term.</li><li>➤ Maternal serum concentrations are related to subsequent fetal growth and this relationship has suggested that it can be used as a diagnostic test for adverse pregnancy outcomes ( intrauterine growth restriction, premature birth, preeclampsia, and stillbirth ).</li><li>➤ Maternal serum concentrations</li><li>➤ fetal growth</li><li>➤ diagnostic test</li><li>➤ pregnancy outcomes</li><li>➤ intrauterine growth restriction, premature birth,</li><li>➤ preeclampsia, and stillbirth</li><li>➤ Ref: Page no 863, Williams Obstetrics 26 th edition</li><li>➤ Ref: Page no 863, Williams Obstetrics 26 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are risk factors for tubal ectopic pregnancy except?", "options": [{"label": "A", "text": "Endometriosis", "correct": false}, {"label": "B", "text": "History of salpingitis", "correct": false}, {"label": "C", "text": "Previous ectopic pregnancy", "correct": false}, {"label": "D", "text": "Previous cesarean", "correct": true}], "correct_answer": "D. Previous cesarean", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D. Previous cesarean</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Previous cesarean section is NOT a risk factor for tubal ectopic pregnancy</li><li>• Previous cesarean section is NOT a risk factor for tubal ectopic pregnancy</li><li>• Let’s Discuss all the other options:</li><li>• Let’s Discuss all the other options:</li><li>• Option A: Endometriosis affects tubal motility due to adhesions and thus increases the risk of ectopic pregnancy Option B: Salpingitis is inflammation of the fallopian tube. A past h/o salpingitis may have led to tubal damage and hence affect tubal motility thereby leading to a higher risk of tubal ectopic Option C: Previous h/o ectopic is also a risk factor for a repeat tubal ectopic as it means there is an underlying pathology</li><li>• Option A: Endometriosis affects tubal motility due to adhesions and thus increases the risk of ectopic pregnancy</li><li>• Option A:</li><li>• Option B: Salpingitis is inflammation of the fallopian tube. A past h/o salpingitis may have led to tubal damage and hence affect tubal motility thereby leading to a higher risk of tubal ectopic</li><li>• Option B:</li><li>• Option C: Previous h/o ectopic is also a risk factor for a repeat tubal ectopic as it means there is an underlying pathology</li><li>• Option C:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Risk Factors of ectopic pregnancy</li><li>➤ Risk Factors of ectopic pregnancy</li><li>➤ h/o Tubal Surgery (e.g., for fertility restoration or sterilization): As per Williams Obstetrics 25 th edition (page 371): HIGHEST RISK Prior h/o salpingitis: 6 – 10-fold increased risk h/o previous ectopic: 5-fold risk (10 – 15% chance of repeat ectopic) Peri tubal adhesions (like endometriosis) Salpingitis isthmica nodosa Congenital tubal anomalies Infertility (artificial Reproductive techniques like IVF) Associated with Atypical implantations and heterotopic pregnancies Contraception: Relative numbers increased with intra-uterine devices (Absolute numbers decreased) Intra uterine devices Progesterone only pill</li><li>➤ h/o Tubal Surgery (e.g., for fertility restoration or sterilization): As per Williams Obstetrics 25 th edition (page 371): HIGHEST RISK</li><li>➤ h/o Tubal Surgery (e.g., for fertility restoration or sterilization): As per Williams Obstetrics 25 th edition (page 371): HIGHEST RISK</li><li>➤ Prior h/o salpingitis: 6 – 10-fold increased risk</li><li>➤ h/o previous ectopic: 5-fold risk (10 – 15% chance of repeat ectopic)</li><li>➤ Peri tubal adhesions (like endometriosis)</li><li>➤ Salpingitis isthmica nodosa</li><li>➤ Congenital tubal anomalies</li><li>➤ Infertility (artificial Reproductive techniques like IVF) Associated with Atypical implantations and heterotopic pregnancies</li><li>➤ Associated with Atypical implantations and heterotopic pregnancies</li><li>➤ Associated with Atypical implantations and heterotopic pregnancies</li><li>➤ Contraception: Relative numbers increased with intra-uterine devices (Absolute numbers decreased) Intra uterine devices Progesterone only pill</li><li>➤ Intra uterine devices Progesterone only pill</li><li>➤ Intra uterine devices</li><li>➤ Progesterone only pill</li><li>➤ Ref: Page 371, William’s Obstetrics 25 th edition</li><li>➤ Ref: Page 371, William’s Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 24y lady presented to the emergency with generalized pain and spotting PV. Her LMP was 2 months back and she has a history of irregular cycles. On examination, she is pale, her PR is 110/ min, BP is 80/60 mmHg. There is guarding and rigidity on abdominal examination and a vaginal exam reveals cervical motion tenderness. Her urine pregnancy test is weakly positive. What is the next best step?", "options": [{"label": "A", "text": "Dilatation and evacuation", "correct": false}, {"label": "B", "text": "Shift to the O.T. for an emergency laparotomy", "correct": true}, {"label": "C", "text": "Urgent ultrasound", "correct": false}, {"label": "D", "text": "Urgent serum βhCG", "correct": false}], "correct_answer": "B. Shift to the O.T. for an emergency laparotomy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B.</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• This is most likely a ruptured ectopic pregnancy. A RUPTURED ectopic pregnancy is a clinical diagnosis. Whenever there is a ruptured ectopic pregnancy with the patient in shock (hypotension, tachycardia), no time is to be wasted and the patient should be shifted to the OT for an emergency laparoscopy/ laparotomy and salpingectomy.</li><li>• This is most likely a ruptured ectopic pregnancy. A RUPTURED ectopic pregnancy is a clinical diagnosis.</li><li>• Whenever there is a ruptured ectopic pregnancy with the patient in shock (hypotension, tachycardia), no time is to be wasted and the patient should be shifted to the OT for an emergency laparoscopy/ laparotomy and salpingectomy.</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option A: Dilatation and evacuation: This is not done in an ectopic pregnancy Option C: Doing an ultrasound (no matter how urgently in a patient with shock) will cause a delay and worsen patient prognosis Option D: Beta hCG (even urgent will take a few hours) is not indicated in a ruptured ectopic. It only has a role in an unruptured ectopic</li><li>• Option A: Dilatation and evacuation: This is not done in an ectopic pregnancy</li><li>• Option A:</li><li>• Option C: Doing an ultrasound (no matter how urgently in a patient with shock) will cause a delay and worsen patient prognosis</li><li>• Option C:</li><li>• Option D: Beta hCG (even urgent will take a few hours) is not indicated in a ruptured ectopic. It only has a role in an unruptured ectopic</li><li>• Option D:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ D/d of bleeding in the 1 st trimester</li><li>➤ Implantation bleeding (Placental Sign) Abortion (threatened, inevitable, incomplete, complete, missed) Ectopic Pregnancy Molar pregnancy</li><li>➤ Implantation bleeding (Placental Sign)</li><li>➤ Abortion (threatened, inevitable, incomplete, complete, missed)</li><li>➤ Ectopic Pregnancy</li><li>➤ Molar pregnancy</li><li>➤ Classic triad of symptoms I.e., pain, bleeding and delayed menstruation is seen in an ectopic pregnancy. In this scenario there is pain and bleeding with a positive pregnancy test and on examination there is pallor, shock and intraperitoneal bleed which points to a ruptured ectopic pregnancy. Next best management option is immediate surgical management and salpingectomy</li><li>➤ Classic triad of symptoms I.e., pain, bleeding and delayed menstruation is seen in an ectopic pregnancy.</li><li>➤ In this scenario there is pain and bleeding with a positive pregnancy test and on examination there is pallor, shock and intraperitoneal bleed which points to a ruptured ectopic pregnancy.</li><li>➤ Next best management option is immediate surgical management and salpingectomy</li><li>➤ Ref: Page 371, William’s Obstetrics 25 th edition</li><li>➤ Ref: Page 371, William’s Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The classic triad of clinical features in an ectopic pregnancy is:", "options": [{"label": "A", "text": "Pain, bleeding, pallor", "correct": false}, {"label": "B", "text": "Pain, delayed menstruation, pallor", "correct": false}, {"label": "C", "text": "Bleeding, pain, delayed menstruation", "correct": true}, {"label": "D", "text": "Pallor, pain, delayed menstruation", "correct": false}], "correct_answer": "C. Bleeding, pain, delayed menstruation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans.</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation</li><li>• Clinical Features of an ectopic pregnancy vary but is typically characterized by the classic triad of Delayed menstruation Abdominal pain Vaginal Bleeding</li><li>• Clinical Features of an ectopic pregnancy vary but is typically characterized by the classic triad of Delayed menstruation Abdominal pain Vaginal Bleeding</li><li>• Clinical Features of an ectopic pregnancy vary but is typically characterized by the classic triad of</li><li>• Delayed menstruation Abdominal pain Vaginal Bleeding</li><li>• Delayed menstruation</li><li>• Abdominal pain</li><li>• Vaginal Bleeding</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Clinical Features of an ectopic pregnancy vary but is typically characterized by the classic triad of Delayed menstruation Abdominal pain Vaginal Bleeding Other symptoms may include: Passage of a decidual cast Severe hemoperitoneum: diaphragmatic irritation – shoulder pain Pallor, Shock – uterine rupture Abdominal tenderness Bimanual exam: cervical motion tenderness Tender boggy mass in the post fornix (collected blood) Cullen’s sign: Periumbilical bluish discoloration due to intraperitoneal bleeding</li><li>➤ Clinical Features of an ectopic pregnancy vary but is typically characterized by the classic triad of Delayed menstruation Abdominal pain Vaginal Bleeding</li><li>➤ Clinical Features of an ectopic pregnancy vary but is typically characterized by the classic triad of</li><li>➤ Delayed menstruation Abdominal pain Vaginal Bleeding</li><li>➤ Delayed menstruation</li><li>➤ Abdominal pain</li><li>➤ Vaginal Bleeding</li><li>➤ Other symptoms may include: Passage of a decidual cast Severe hemoperitoneum: diaphragmatic irritation – shoulder pain Pallor, Shock – uterine rupture Abdominal tenderness Bimanual exam: cervical motion tenderness Tender boggy mass in the post fornix (collected blood) Cullen’s sign: Periumbilical bluish discoloration due to intraperitoneal bleeding</li><li>➤ Passage of a decidual cast Severe hemoperitoneum: diaphragmatic irritation – shoulder pain Pallor, Shock – uterine rupture Abdominal tenderness Bimanual exam: cervical motion tenderness Tender boggy mass in the post fornix (collected blood) Cullen’s sign: Periumbilical bluish discoloration due to intraperitoneal bleeding</li><li>➤ Passage of a decidual cast</li><li>➤ Severe hemoperitoneum: diaphragmatic irritation – shoulder pain</li><li>➤ Pallor, Shock – uterine rupture</li><li>➤ Abdominal tenderness</li><li>➤ Bimanual exam: cervical motion tenderness</li><li>➤ Tender boggy mass in the post fornix (collected blood)</li><li>➤ Cullen’s sign: Periumbilical bluish discoloration due to intraperitoneal bleeding</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are ultrasound signs of an unruptured ectopic pregnancy except?", "options": [{"label": "A", "text": "Bagel sign", "correct": false}, {"label": "B", "text": "Blob sign", "correct": false}, {"label": "C", "text": "Lemon sign", "correct": true}, {"label": "D", "text": "Tubal ring", "correct": false}], "correct_answer": "C. Lemon sign", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans.</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation</li><li>• Let’s Discuss all the Options:</li><li>• Let’s Discuss all the Options:</li><li>• Option A: Bagel sign: This is a ‘bagel’ or doughnut shaped structure seen in the adnexa on ultrasound typical of an unruptured ectopic pregnancy Option B: Blob sign: This is also a sign seen in ectopic pregnancy wherein a Heteroechoic structure is seen in the adnexal region Option C: Lemon sign: This is a sign seen in spina bifida which shows pinching of the calvarium Option D: Tubal ring: This is a ring like structure on ultrasound seen in ectopic pregnancy</li><li>• Option A: Bagel sign: This is a ‘bagel’ or doughnut shaped structure seen in the adnexa on ultrasound typical of an unruptured ectopic pregnancy</li><li>• Option A:</li><li>• Option B: Blob sign: This is also a sign seen in ectopic pregnancy wherein a Heteroechoic structure is seen in the adnexal region</li><li>• Option B:</li><li>• Option C: Lemon sign: This is a sign seen in spina bifida which shows pinching of the calvarium</li><li>• Option C:</li><li>• Option D: Tubal ring: This is a ring like structure on ultrasound seen in ectopic pregnancy</li><li>• Option D:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In Suspected unruptured ectopic pregnancy: Trans-vaginal Sonography (TVS) will reveal</li><li>➤ An absent intra-uterine pregnancy The presence of a pseudo-sac in the uterine cavity The presence of an adnexal mass separate from the ovary Hyperechoic ring surrounding an anechoic sac- seen in 20% (bagel sign/tubal ring sign) Inhomogeneous mass – 60% (blob sign) Obvious gestational sac with a fetal pole – 13% On color doppler: “Ring of fire” seen. (D/d – Corpus luteal cyst)</li><li>➤ An absent intra-uterine pregnancy</li><li>➤ The presence of a pseudo-sac in the uterine cavity</li><li>➤ The presence of an adnexal mass separate from the ovary Hyperechoic ring surrounding an anechoic sac- seen in 20% (bagel sign/tubal ring sign) Inhomogeneous mass – 60% (blob sign) Obvious gestational sac with a fetal pole – 13%</li><li>➤ Hyperechoic ring surrounding an anechoic sac- seen in 20% (bagel sign/tubal ring sign) Inhomogeneous mass – 60% (blob sign) Obvious gestational sac with a fetal pole – 13%</li><li>➤ Hyperechoic ring surrounding an anechoic sac- seen in 20% (bagel sign/tubal ring sign)</li><li>➤ Inhomogeneous mass – 60% (blob sign)</li><li>➤ Obvious gestational sac with a fetal pole – 13%</li><li>➤ On color doppler: “Ring of fire” seen. (D/d – Corpus luteal cyst)</li><li>➤ Ref: page no 375, William Obstetrics 25 th edition</li><li>➤ Ref: page no 375, William Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The value of βhCG above which an intra-uterine gestational sac should be seen is:", "options": [{"label": "A", "text": "500 IU/L", "correct": false}, {"label": "B", "text": "1500 IU/L", "correct": true}, {"label": "C", "text": "2500 IU/L", "correct": false}, {"label": "D", "text": "3500 IU/L", "correct": false}], "correct_answer": "B. 1500 IU/L", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. 1500 IU/L</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Discriminatory Zone: This is the level of serum βhCG above which an intra uterine gestational sac should be seen,</li><li>• Discriminatory Zone:</li><li>• 1500 – 2000 IU/L for TVS 5000 – 6000 IU/L for TAS</li><li>• 1500 – 2000 IU/L for TVS</li><li>• 1500 – 2000 IU/L for TVS</li><li>• 5000 – 6000 IU/L for TAS</li><li>• 5000 – 6000 IU/L for TAS</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Discriminatory Zone: This is the level of serum βhCG above which an intra uterine gestational sac should be seen, 1500 – 2000 IU/L for TVS 5000 – 6000 IU/L for TAS</li><li>➤ Discriminatory Zone: This is the level of serum βhCG above which an intra uterine gestational sac should be seen, 1500 – 2000 IU/L for TVS 5000 – 6000 IU/L for TAS</li><li>➤ Discriminatory Zone:</li><li>➤ 1500 – 2000 IU/L for TVS 5000 – 6000 IU/L for TAS</li><li>➤ 1500 – 2000 IU/L for TVS</li><li>➤ 1500 – 2000 IU/L for TVS</li><li>➤ 5000 – 6000 IU/L for TAS</li><li>➤ 5000 – 6000 IU/L for TAS</li><li>➤ Ref: page no 373, William’s Obstetrics 25 th edition</li><li>➤ Ref: page no 373, William’s Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 20y G2A1 presents at 6 weeks pregnancy with vaginal bleeding. On TVS, no gestational sac is visualized. Her serum βhCG is 2000 IU/L. Which is NOT a possible diagnosis?", "options": [{"label": "A", "text": "A failing intrauterine pregnancy", "correct": false}, {"label": "B", "text": "A Hydatiform mole", "correct": true}, {"label": "C", "text": "A recent complete abortion", "correct": false}, {"label": "D", "text": "An ectopic pregnancy", "correct": false}], "correct_answer": "B. A Hydatiform mole", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans.</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation</li><li>• Discriminatory Zone: This is the level of serum βhCG above which an intra uterine gestational sac should be seen, 1500 – 2000 IU/L for TVS 5000 – 6000 IU/L for TAS So, if serum βhCG levels are more than the discriminatory zone and still an intrauterine gestational sac is not seen on ultrasound, it is called a pregnancy of undetermined location & the following should be suspected: Ectopic pregnancy Failing intrauterine pregnancy Recent complete abortion Early multifetal pregnancy</li><li>• Discriminatory Zone: This is the level of serum βhCG above which an intra uterine gestational sac should be seen, 1500 – 2000 IU/L for TVS 5000 – 6000 IU/L for TAS</li><li>• Discriminatory Zone:</li><li>• 1500 – 2000 IU/L for TVS 5000 – 6000 IU/L for TAS</li><li>• 1500 – 2000 IU/L for TVS</li><li>• 1500 – 2000 IU/L for TVS</li><li>• 5000 – 6000 IU/L for TAS</li><li>• 5000 – 6000 IU/L for TAS</li><li>• So, if serum βhCG levels are more than the discriminatory zone and still an intrauterine gestational sac is not seen on ultrasound, it is called a pregnancy of undetermined location & the following should be suspected: Ectopic pregnancy Failing intrauterine pregnancy Recent complete abortion Early multifetal pregnancy</li><li>• pregnancy of undetermined location</li><li>• Ectopic pregnancy Failing intrauterine pregnancy Recent complete abortion Early multifetal pregnancy</li><li>• Ectopic pregnancy</li><li>• Failing intrauterine pregnancy</li><li>• Recent complete abortion</li><li>• Early multifetal pregnancy</li><li>• Other option</li><li>• Other option</li><li>• In molar pregnancy, the βhCG levels are very high (usually > 100,000)</li><li>• In molar pregnancy, the βhCG levels are very high (usually > 100,000)</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ If serum βhCG levels are more than the discriminatory zone and still an intrauterine gestational sac is not seen on ultrasound, it is called a pregnancy of undetermined location & the following should be suspected: Ectopic pregnancy Failing intrauterine pregnancy Recent complete abortion Early multifetal pregnancy</li><li>➤ If serum βhCG levels are more than the discriminatory zone and still an intrauterine gestational sac is not seen on ultrasound, it is called a pregnancy of undetermined location & the following should be suspected: Ectopic pregnancy Failing intrauterine pregnancy Recent complete abortion Early multifetal pregnancy</li><li>➤ pregnancy of undetermined location</li><li>➤ Ectopic pregnancy Failing intrauterine pregnancy Recent complete abortion Early multifetal pregnancy</li><li>➤ Ectopic pregnancy</li><li>➤ Failing intrauterine pregnancy</li><li>➤ Recent complete abortion</li><li>➤ Early multifetal pregnancy</li><li>➤ Ref: page no 374, William’s Obstetrics 25 th edition</li><li>➤ Ref: page no 374, William’s Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 34-year woman presents to the gyn OPD with an unruptured tubal ectopic pregnancy. She has no symptoms and is hemodynamically stable. Her βhCG is 600 IU/L. The ultrasound shows a gestational sac measuring 20 mm in the right adnexa with no yolk sac or embryo seen. Which of these is the most appropriate management?", "options": [{"label": "A", "text": "Expectant management", "correct": true}, {"label": "B", "text": "Single dose inj Methotrexate", "correct": false}, {"label": "C", "text": "Laparoscopic salpingostomy", "correct": false}, {"label": "D", "text": "Laparoscopic salpingectomy", "correct": false}], "correct_answer": "A. Expectant management", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A. Expectant management</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• This patient fulfills all the criteria for Expectant management, i.e. no active intervention needs to be done. Just following up with weekly beta hCG levels (it should decrease every week)</li><li>• Let’s discuss the other options</li><li>• Let’s discuss the other options</li><li>• Option B: Single dose inj Methotrexate: This is medical management and is indicated in an unruptured ectopic pregnancy with:</li><li>• Option B: Single dose inj Methotrexate: This is medical management and is indicated in an unruptured ectopic pregnancy with:</li><li>• Option B:</li><li>• Patient hemodynamically stable No significant symptoms Gestational sac size < 3.5 cm No visible cardiac activity Serum βhCG < 5000 IU/L No contraindication to Methotrexate (Anemia, liver disease, bleeding disorder, active pulmonary disease etc.)</li><li>• Patient hemodynamically stable</li><li>• No significant symptoms</li><li>• Gestational sac size < 3.5 cm</li><li>• No visible cardiac activity</li><li>• Serum βhCG < 5000 IU/L</li><li>• No contraindication to Methotrexate (Anemia, liver disease, bleeding disorder, active pulmonary disease etc.)</li><li>• Option C and D: Laparoscopic salpingostomy/ salpingectomy: Surgical management in an unruptured ectopic is indicated in a woman with an unruptured ectopic pregnancy with</li><li>• Option C and D: Laparoscopic salpingostomy/ salpingectomy: Surgical management in an unruptured ectopic is indicated in a woman with an unruptured ectopic pregnancy with</li><li>• Option C and D: Laparoscopic salpingostomy/ salpingectomy:</li><li>• Significant pain OR Gestational sac size > 3.5 cm OR Visible cardiac activity on ultrasound OR Hemodynamically unstable patient OR Beta hCG > 5000 IU/L</li><li>• Significant pain OR</li><li>• Gestational sac size > 3.5 cm OR</li><li>• Visible cardiac activity on ultrasound OR</li><li>• Hemodynamically unstable patient OR</li><li>• Beta hCG > 5000 IU/L</li><li>• The choice between salpingotomy or salpingectomy is made based on the following: Salpingectomy (Removing the whole tube) is preferred In women whose family is complete, if the tube is grossly distorted anatomically, if the ectopic has happened at the sire of a previous ectopic or at the site of a previous tubal ligation.</li><li>• The choice between salpingotomy or salpingectomy is made based on the following: Salpingectomy (Removing the whole tube) is preferred In women whose family is complete, if the tube is grossly distorted anatomically, if the ectopic has happened at the sire of a previous ectopic or at the site of a previous tubal ligation.</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Expectant Management</li><li>➤ Expectant Management</li><li>➤ Only for clinically stable asymptomatic women with an ultrasound diagnosis of ectopic pregnancy with the following features</li><li>➤ Only for clinically stable asymptomatic women with an ultrasound diagnosis of ectopic pregnancy with the following features</li><li>➤ Clinically stable with No pain AND Serum βhCG < 1000 IU/L AND Tubal ectopic < 35mm with no visible heartbeat AND Able to return for follow up</li><li>➤ Clinically stable with No pain AND</li><li>➤ AND</li><li>➤ Serum βhCG < 1000 IU/L AND</li><li>➤ AND</li><li>➤ Tubal ectopic < 35mm with no visible heartbeat AND</li><li>➤ AND</li><li>➤ Able to return for follow up</li><li>➤ Repeat βhCG levels on days 2, 4 and 7 after the original test If βhCG levels drop ≥ 15% from the previous values, then repeat weekly till a negative result If values fall < 15%, stay the same or rise from the previous value, review the condition and consider shifting to medical/ surgical management</li><li>➤ Repeat βhCG levels on days 2, 4 and 7 after the original test</li><li>➤ If βhCG levels drop ≥ 15% from the previous values, then repeat weekly till a negative result</li><li>➤ If values fall < 15%, stay the same or rise from the previous value, review the condition and consider shifting to medical/ surgical management</li><li>➤ Ref: page no 378, William’s Obstetrics 25 th edition, https://www.nice.org.uk/guidance/ng126</li><li>➤ Ref: page no 378, William’s Obstetrics 25 th edition, https://www.nice.org.uk/guidance/ng126</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The drug of choice for medical management of an unruptured ectopic pregnancy is?", "options": [{"label": "A", "text": "Methotrexate", "correct": true}, {"label": "B", "text": "Mifepristone", "correct": false}, {"label": "C", "text": "Misoprostol", "correct": false}, {"label": "D", "text": "Potassium chloride", "correct": false}], "correct_answer": "A. Methotrexate", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/03/18/screenshot-2024-03-18-121206.jpg"], "explanation": "<p><strong>Ans. A. Methotrexate</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• The drug of choice for treatment of an unruptured ectopic pregnancy is Methotrexate. MOA: Inhibits dihydrofolate reductase 2 protocols: Single dose and Multidose Usually, the single dose regime is sufficient, very rarely another dose is required.</li><li>• The drug of choice for treatment of an unruptured ectopic pregnancy is Methotrexate.</li><li>• MOA: Inhibits dihydrofolate reductase</li><li>• 2 protocols: Single dose and Multidose</li><li>• Usually, the single dose regime is sufficient, very rarely another dose is required.</li><li>• Other options:</li><li>• Other options:</li><li>• Option B: Mifepristone: This is also known as RU486 and is a selective progesterone receptor modulator with strong anti-progestogenic action. It is commonly used in medical methods of termination of pregnancy along with misoprostol in 1 st and 2 nd trimester. Option C: Misoprostol: This is PGE1 and is a uterotonic. It induces uterine contractions and is therefore used in medical methods of termination of pregnancy, induction of labor and prophylaxis and management of atonic PPH. Option D: KCl: Ultrasound guided Intracardiac injection of Kcl is used in selective fetal termination in multifetal pregnancy reduction.</li><li>• Option B: Mifepristone: This is also known as RU486 and is a selective progesterone receptor modulator with strong anti-progestogenic action. It is commonly used in medical methods of termination of pregnancy along with misoprostol in 1 st and 2 nd trimester.</li><li>• Option B:</li><li>• Option C: Misoprostol: This is PGE1 and is a uterotonic. It induces uterine contractions and is therefore used in medical methods of termination of pregnancy, induction of labor and prophylaxis and management of atonic PPH.</li><li>• Option C:</li><li>• Option D: KCl: Ultrasound guided Intracardiac injection of Kcl is used in selective fetal termination in multifetal pregnancy reduction.</li><li>• Option D:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The drug of choice for treatment of an unruptured ectopic pregnancy is Methotrexate. MOA: Inhibits dihydrofolate reductase 2 protocols: Single dose and Multidose Usually, the single dose regime is sufficient, very rarely another dose is required. 2 regimes:</li><li>➤ The drug of choice for treatment of an unruptured ectopic pregnancy is Methotrexate.</li><li>➤ MOA: Inhibits dihydrofolate reductase</li><li>➤ 2 protocols: Single dose and Multidose</li><li>➤ Usually, the single dose regime is sufficient, very rarely another dose is required.</li><li>➤ 2 regimes:</li><li>➤ Ref: Page no 377, William’s Obstetrics 25 th edition</li><li>➤ Ref: Page no 377, William’s Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The preferred treatment in heterotopic pregnancy with a viable intra-uterine pregnancy with an unruptured ectopic pregnancy is?", "options": [{"label": "A", "text": "Expectant", "correct": false}, {"label": "B", "text": "Medical", "correct": false}, {"label": "C", "text": "Surgical", "correct": true}, {"label": "D", "text": "Medical + Surgical", "correct": false}], "correct_answer": "C. Surgical", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. Surgical</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Incidence of heterotopic pregnancy: increasing due to ART Treatment of choice: Surgical i.e. laparoscopic salpingectomy/ salpingostomy Medical management with methotrexate is contra-indicated as it will kill the intrauterine pregnancy also</li><li>• Incidence of heterotopic pregnancy: increasing due to ART</li><li>• Treatment of choice: Surgical i.e. laparoscopic salpingectomy/ salpingostomy</li><li>• Medical management with methotrexate is contra-indicated as it will kill the intrauterine pregnancy also</li><li>• Other options:</li><li>• Other options:</li><li>• Option A: Expectant management is not preferred in a heterotopic pregnancy Option B: Medical management: Medical management with methotrexate is contra-indicated as it will kill the intrauterine pregnancy also Option D: Medical + Surgical: There is no role of both medical and surgical management in a heterotopic pregnancy</li><li>• Option A: Expectant management is not preferred in a heterotopic pregnancy</li><li>• Option A:</li><li>• Option B: Medical management: Medical management with methotrexate is contra-indicated as it will kill the intrauterine pregnancy also</li><li>• Option B:</li><li>• Option D: Medical + Surgical: There is no role of both medical and surgical management in a heterotopic pregnancy</li><li>• Option D:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ A heterotopic pregnancy is an intra uterine pregnancy with an ectopic pregnancy Incidence of heterotopic pregnancy: increasing due to ART Treatment of choice: Surgical i.e. laparoscopic salpingectomy/ salpingostomy Medical management with methotrexate is contra-indicated as it will kill the intrauterine pregnancy also</li><li>➤ A heterotopic pregnancy is an intra uterine pregnancy with an ectopic pregnancy</li><li>➤ Incidence of heterotopic pregnancy: increasing due to ART</li><li>➤ Treatment of choice: Surgical i.e. laparoscopic salpingectomy/ salpingostomy</li><li>➤ Medical management with methotrexate is contra-indicated as it will kill the intrauterine pregnancy also</li><li>➤ Ref: page no 142, Textbook of Obstetrics JB Sharma</li><li>➤ Ref: page no 142, Textbook of Obstetrics JB Sharma</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30-year lady presented to the gyn OPD with complaints of mild abdominal pain and spotting. She gives a history of delayed menses by about 7 days. Her UPT is faintly positive. An ultrasound with color doppler reveals the following image. What is the diagnosis and what is this sign known as?", "options": [{"label": "A", "text": "Corpus luteal cyst, Circle of fire sign", "correct": false}, {"label": "B", "text": "Corpus luteal cyst, Ring of fire sign.", "correct": false}, {"label": "C", "text": "Unruptured ectopic pregnancy, Circle of fire sign", "correct": false}, {"label": "D", "text": "Unruptured ectopic pregnancy, Ring of fire sign", "correct": true}], "correct_answer": "D. Unruptured ectopic pregnancy, Ring of fire sign", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/03/18/screenshot-2024-03-18-110437.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/03/18/screenshot-2024-03-18-110526.jpg"], "explanation": "<p><strong>Ans. D. Unruptured ectopic pregnancy, Ring of fire sign</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• The patient’s history is suggestive of an ectopic pregnancy (classic triad of pain, bleeding and delayed menstruation is there) The image shows the classical “ring of fire” sign which is peri-trophoblastic vascularity. Other options: Corpus luteal cyst, Circle of fire sign: A corpus luteal cyst can present with vascularity around it on Doppler and appear like the ing of fire, not circle of fire Corpus luteal cyst, Ring of fire sign: This could be a close differential to the question given but, in the question, the classic triad of ectopic is also mentioned which will not be seen in a corpus luteal cyst Unruptured ectopic pregnancy, Circle of fire sign: The name of the sign is “Ring of fire”</li><li>• The patient’s history is suggestive of an ectopic pregnancy (classic triad of pain, bleeding and delayed menstruation is there)</li><li>• The image shows the classical “ring of fire” sign which is peri-trophoblastic vascularity.</li><li>• Other options: Corpus luteal cyst, Circle of fire sign: A corpus luteal cyst can present with vascularity around it on Doppler and appear like the ing of fire, not circle of fire Corpus luteal cyst, Ring of fire sign: This could be a close differential to the question given but, in the question, the classic triad of ectopic is also mentioned which will not be seen in a corpus luteal cyst Unruptured ectopic pregnancy, Circle of fire sign: The name of the sign is “Ring of fire”</li><li>• Other options:</li><li>• Corpus luteal cyst, Circle of fire sign: A corpus luteal cyst can present with vascularity around it on Doppler and appear like the ing of fire, not circle of fire Corpus luteal cyst, Ring of fire sign: This could be a close differential to the question given but, in the question, the classic triad of ectopic is also mentioned which will not be seen in a corpus luteal cyst Unruptured ectopic pregnancy, Circle of fire sign: The name of the sign is “Ring of fire”</li><li>• Corpus luteal cyst, Circle of fire sign: A corpus luteal cyst can present with vascularity around it on Doppler and appear like the ing of fire, not circle of fire</li><li>• Corpus luteal cyst, Ring of fire sign: This could be a close differential to the question given but, in the question, the classic triad of ectopic is also mentioned which will not be seen in a corpus luteal cyst</li><li>• Unruptured ectopic pregnancy, Circle of fire sign: The name of the sign is “Ring of fire”</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The above image showing vascularity around a sac like structure is called the ring of fire sign and is seen in unruptured ectopic pregnancy</li><li>➤ The above image showing vascularity around a sac like structure is called the ring of fire sign and is seen in unruptured ectopic pregnancy</li><li>➤ Ref: page no 376, William’s Obstetrics 25 th edition</li><li>➤ Ref: page no 376, William’s Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 24-year woman in her 1 st antenatal checkup reveals to her Doctor that she had taken the 1 st dose of Hepatitis B immunization prior to conception. She now asks if she should continue with the immunization schedule or not. What is the correct response?", "options": [{"label": "A", "text": "Continue with the scheduled immunization schedule.", "correct": true}, {"label": "B", "text": "Delay the completion of immunization till after delivery", "correct": false}, {"label": "C", "text": "Terminate the pregnancy and continue the immunization", "correct": false}, {"label": "D", "text": "Delay the immunization till after 20 weeks as organogenesis will be complete by then.", "correct": false}], "correct_answer": "A. Continue with the scheduled immunization schedule.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Continue with the scheduled immunization schedule</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Hepatitis B vaccination is safe in pregnancy and the immunization schedule can be continued if the patient becomes pregnant.</li><li>• Hepatitis B vaccination is safe in pregnancy and the immunization schedule can be continued if the patient becomes pregnant.</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Hepatitis B immunization in pregnancy: Indicated in:</li><li>➤ Those women completing their immunization schedule which was started pre conception High risk groups – Household contacts, partners are positive, multiple sexual partners, chronic liver disease, HIV +ve Dose: 0.5 ml IM at 0, 1, 6 months</li><li>➤ Those women completing their immunization schedule which was started pre conception</li><li>➤ High risk groups – Household contacts, partners are positive, multiple sexual partners, chronic liver disease, HIV +ve</li><li>➤ Dose: 0.5 ml IM at 0, 1, 6 months</li><li>➤ Ref: Page No 172 William’s Obstetrics 25 th edition</li><li>➤ Ref: Page No 172 William’s Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the preferred schedule of immunization in pregnancy regarding tetanus as per the ministry of health and family welfare?", "options": [{"label": "A", "text": "Inj Td: 1 st dose: early in pregnancy, 2 nd dose: After 4 weeks; booster: if received 2 Td doses in a pregnancy within the last 3 years", "correct": true}, {"label": "B", "text": "Inj TT 1 st dose early in pregnancy, 2 nd dose after 4 weeks and booster if received 2 TT doses in a pregnancy within the last 3 years", "correct": false}, {"label": "C", "text": "Inj Tdap 1 st dose in the 2 nd trimester and 2 nd dose in the 3 rd trimester", "correct": false}, {"label": "D", "text": "Inj TT or Td 1 st dose in early pregnancy and 2 nd dose after 4 weeks.", "correct": false}], "correct_answer": "A. Inj Td: 1 st dose: early in pregnancy, 2 nd dose: After 4 weeks; booster: if received 2 Td doses in a pregnancy within the last 3 years", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Inj Td: 1stdose: early in pregnancy, 2nddose: After 4 weeks; booster:  if received 2 Td doses in a pregnancy within the last 3 years</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Vaccines given in pregnancy as per Ministry of Health and Family Welfare</li><li>• Vaccines given in pregnancy as per Ministry of Health and Family Welfare</li><li>• TT, Td or Tdap Td has replaced TT (as per MOHFW) 1 st dose: early in pregnancy 2 nd dose: After 4 weeks Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>• TT, Td or Tdap Td has replaced TT (as per MOHFW) 1 st dose: early in pregnancy 2 nd dose: After 4 weeks Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>• TT, Td or Tdap</li><li>• Td has replaced TT (as per MOHFW) 1 st dose: early in pregnancy 2 nd dose: After 4 weeks Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>• Td has replaced TT (as per MOHFW)</li><li>• 1 st dose: early in pregnancy</li><li>• 2 nd dose: After 4 weeks</li><li>• Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>• **As per ACOG Committee Guidelines 2017, Tdap: One dose of Td replaced with Tdap preferably given between 27-36 weeks of gestation</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Vaccines given in pregnancy as per Ministry of Health and Family Welfare</li><li>➤ Vaccines given in pregnancy as per Ministry of Health and Family Welfare</li><li>➤ TT, Td or Tdap Td has replaced TT (as per MOHFW) 1 st dose: early in pregnancy 2 nd dose: After 4 weeks Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>➤ TT, Td or Tdap Td has replaced TT (as per MOHFW) 1 st dose: early in pregnancy 2 nd dose: After 4 weeks Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>➤ TT, Td or Tdap</li><li>➤ Td has replaced TT (as per MOHFW) 1 st dose: early in pregnancy 2 nd dose: After 4 weeks Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>➤ Td has replaced TT (as per MOHFW)</li><li>➤ 1 st dose: early in pregnancy</li><li>➤ 2 nd dose: After 4 weeks</li><li>➤ Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>➤ **As per ACOG Committee Guidelines 2017, Tdap: One dose of Td replaced with Tdap preferably given between 27-36 weeks of gestation</li><li>➤ **As per ACOG Committee Guidelines 2017, Tdap: One dose of Td replaced with Tdap preferably given between 27-36 weeks of gestation</li><li>➤ Ref : https://www.fogsi.org/wp-content/uploads/2015/11/vaccination_women.pdf</li><li>➤ Ref :</li><li>➤ https://www.fogsi.org/wp-content/uploads/2015/11/vaccination_women.pdf</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 32-year woman who is planning to conceive visits her doctor for a pre conceptional visit. The Doctor asks her if she has been immunized against Rubella. She is not sure so she is advised to get a IgG rubella done which is positive. What is the next best step?", "options": [{"label": "A", "text": "Give the Rubella vaccine.", "correct": false}, {"label": "B", "text": "Advise her not to conceive for the next 3 months.", "correct": false}, {"label": "C", "text": "Advise her not to conceive for the next 1 month.", "correct": false}, {"label": "D", "text": "Tell her she can safely conceive.", "correct": true}], "correct_answer": "D. Tell her she can safely conceive.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Tell her she can safely conceive</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• A positive IgG rubella means that she is immunized against rubella She does not require any vaccination and can safely plan conception If she was IgG rubella negative, then she is susceptible to rubella in pregnancy and should be advised rubella vaccination As it is a live vaccine, she should not conceive for at least 1 month following vaccination</li><li>• A positive IgG rubella means that she is immunized against rubella</li><li>• She does not require any vaccination and can safely plan conception</li><li>• If she was IgG rubella negative, then she is susceptible to rubella in pregnancy and should be advised rubella vaccination</li><li>• As it is a live vaccine, she should not conceive for at least 1 month following vaccination</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ A positive IgG rubella indicates the patient is immune and does not require pre-conceptional rubella vaccination</li><li>➤ A positive IgG rubella indicates the patient is immune and does not require pre-conceptional rubella vaccination</li><li>➤ Ref: Page no 499, Williams Obstetrics 26 th edition</li><li>➤ Ref: Page no 499, Williams Obstetrics 26 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28-year-old pregnant woman is scheduled for her prenatal visit. She inquires about vaccines recommended during pregnancy. Which vaccine is generally considered safe and recommended for pregnant women to protect both the mother and the newborn?", "options": [{"label": "A", "text": "Mumps, Measles, and Rubella (MMR) vaccine", "correct": false}, {"label": "B", "text": "Tetanus, diphtheria, and acellular pertussis (Tdap) vaccine", "correct": true}, {"label": "C", "text": "Human papillomavirus (HPV) vaccine", "correct": false}, {"label": "D", "text": "All the above", "correct": false}], "correct_answer": "B. Tetanus, diphtheria, and acellular pertussis (Tdap) vaccine", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Tetanus, diphtheria, and acellular pertussis (Tdap) vaccine</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• The Tdap vaccine is generally considered safe and recommended for pregnant women, typically between 27-36 weeks of gestation. This vaccine helps protect the mother from tetanus, diphtheria, and pertussis (whooping cough), and it also provides passive immunity to the newborn, as pertussis can be severe in infants.</li><li>• The Tdap vaccine is generally considered safe and recommended for pregnant women, typically between 27-36 weeks of gestation. This vaccine helps protect the mother from tetanus, diphtheria, and pertussis (whooping cough), and it also provides passive immunity to the newborn, as pertussis can be severe in infants.</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option C: The HPV vaccine is not typically given during pregnancy. It is usually recommended for females before becoming pregnant to prevent HPV infection, which can lead to cervical cancer. If a woman becomes pregnant during the HPV vaccination series, it is generally recommended to complete the series after pregnancy, as there is limited data on its use during pregnancy. Option A: The MMR vaccine is not typically recommended during pregnancy because it is a live attenuated vaccine, meaning it contains weakened forms of the viruses. Live vaccines are generally contraindicated during pregnancy due to potential risks to the developing fetus.</li><li>• Option C: The HPV vaccine is not typically given during pregnancy. It is usually recommended for females before becoming pregnant to prevent HPV infection, which can lead to cervical cancer. If a woman becomes pregnant during the HPV vaccination series, it is generally recommended to complete the series after pregnancy, as there is limited data on its use during pregnancy.</li><li>• Option C:</li><li>• Option A: The MMR vaccine is not typically recommended during pregnancy because it is a live attenuated vaccine, meaning it contains weakened forms of the viruses. Live vaccines are generally contraindicated during pregnancy due to potential risks to the developing fetus.</li><li>• Option A:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ Tdap is safe in pregnancy; given between 27-36 weeks; can replace the 2 nd dose of Td; provides immunity to mother and newborn against tetanus, diphtheria, and pertussis.</li><li>➤ Tdap is safe in pregnancy; given between 27-36 weeks; can replace the 2 nd dose of Td; provides immunity to mother and newborn against tetanus, diphtheria, and pertussis.</li><li>➤ Ref: Page no 172, William’s Obstetrics, 25 th edition</li><li>➤ Ref: Page no 172, William’s Obstetrics, 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 25-year-old pregnant woman, who is a healthcare worker, asks about receiving the hepatitis B vaccine during pregnancy. What is the most appropriate recommendation regarding hepatitis B vaccination for pregnant healthcare workers?", "options": [{"label": "A", "text": "Administer the hepatitis B vaccine during pregnancy.", "correct": false}, {"label": "B", "text": "Delay hepatitis B vaccination until after delivery.", "correct": false}, {"label": "C", "text": "Hepatitis B vaccination is not necessary for pregnant healthcare workers.", "correct": false}, {"label": "D", "text": "Recommend hepatitis B vaccination after assessing the patient

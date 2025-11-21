@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Hepatic Fascioliasis</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Hepatic Fascioliasis</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                6 Questions | 6 Total Marks | 16 min Duration | ~160.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 6 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 16 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 6</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Hepatic Fascioliasis - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 6</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 6 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "All of the following statements are true except?", "options": [{"label": "A", "text": "Chronic infection of Fasciola hepatica can cause hepatocellular carcinoma", "correct": true}, {"label": "B", "text": "Paragonimus westermani infection causes endemic hemoptysis", "correct": false}, {"label": "C", "text": "Schistosoma is a trematode that lays nonoperculated eggs", "correct": false}, {"label": "D", "text": "Schistosoma has only one intermediate host, unlike other trematodes", "correct": false}], "correct_answer": "A. Chronic infection of Fasciola hepatica can cause hepatocellular carcinoma", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Chronic infection of Fasciola hepatica can cause hepatocellular carcinoma Fasciola hepatica is a liver fluke that can cause cholecystitis and cholangitis. It is not associated with hepatocellular carcinoma. Clonorchis sinensis is an inhabitant of the bile duct & is associated with Cholangiocarcinoma.</p>\n<p><strong>Highyeild:</strong></p><p>Immature eggs are discharged in the biliary ducts and passed in the stool. Eggs become embryonated in freshwater over ~2 weeks; Embryonated eggs release miracidia, which invade a suitable snail intermediate host. In the snail, the parasites undergo several developmental stages (sporocysts, rediae, and cercariae). The cercariae are released from the snail and encyst as metacercariae on aquatic vegetation or other substrates. Humans and other mammals become infected by ingesting metacercariae-contaminated greenery (e.g., watercress). After ingestion, the metacercariae exocyst in the duodenum penetrates through the intestinal wall into the peritoneal cavity. The immature flukes then migrate through the liver parenchyma into biliary ducts, where they mature into adult flukes and produce eggs. In humans, maturation from metacercariae into adult flukes usually takes about 3–4 months; the development of F. gigantica may take longer than F. hepatica .</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. paragonimus westermani infection presences endemic hemoptysis. Option: C. Schistosoma is a trematode that lays nonoperculated eggs. Option: D. Schistosoma has only one intermediate host, unlike other trematodes & it is diecious unlike other trematodes, which are monoecious</p>\n<p><strong>Extraedge:</strong></p><p>The standard way to be sure a person is infected with Fasciola is by seeing the parasite. This is usually done by finding Fasciola eggs in stool (fecal) specimens examined under a microscope. More than one specimen may need to be examined to find the parasite.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the correct pair regarding trematodes: I) Schistosoma-blood fluke-snail (intermediate host) II) Paragonimus westermani-intestinal fluke-snail & fish (intermediate host) III) Fasciola hepatica-liver fluke-snail & aquatic plants (intermediate host) IV) Fasciola buski-lung fluke-snail & aquatic plants (intermediate host) Select the correct option from the given below code:", "options": [{"label": "A", "text": "Only II, IV", "correct": false}, {"label": "B", "text": "Only I, III", "correct": true}, {"label": "C", "text": "Only I, II, and III", "correct": false}, {"label": "D", "text": "All are correct", "correct": false}], "correct_answer": "B. Only I, III", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Only I, III Schistosoma is a blood fluke with a snail as an intermediate host. Fasciola hepatica is a liver fluke with snails and aquatic plants as intermediate hosts. Fasciola buski is an intestinal fluke with snails and aquatic plants as the intermediate host.</p>\n<p><strong>Highyeild:</strong></p><p>The parasites that cause schistosomiasis live in certain types of freshwater snails. The infectious form of the parasite, known as cercariae, emerges from the snail into the water. You can become infected when your skin comes in contact with contaminated freshwater. Most human infections are caused by Schistosoma mansoni, S. haematobium , or S. japonicum .</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Paragonimus westermani is a lung fluke with snails and fish as an intermediate hosts. Option: D. Facial hepatica is a liver fluke with snails and aquatic plants as intermediate hosts.</p>\n<p><strong>Extraedge:</strong></p><p>Schistosomiasis, also known as bilharzia or snail fever, is an acute and chronic disease caused by parasitic flatworms called schistosomes or blood flukes. Most human infections are caused by Schistosoma mansoni, S. haematobium, or S. japonicum.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A traveler presents with conjugated hyperbilirubinemia. On investigations, an egg was found in his biliary tract. The likely organism is:", "options": [{"label": "A", "text": "Clonorchis sinensis", "correct": true}, {"label": "B", "text": "Fasciola busk", "correct": false}, {"label": "C", "text": "Gnathostomata", "correct": false}, {"label": "D", "text": "Ascaris", "correct": false}], "correct_answer": "A. Clonorchis sinensis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Clonorchis sinensis Clonorchis sinensis eggs. Clonorchis sinensis eggs are small. The eggs are oval-shaped with a convex operculum that rests on visible “shoulders” at the smaller end of the egg. At the opposite (opercular) lot, a small knob or hook-like protrusion is often visible.</p>\n<p><strong>Highyeild:</strong></p><p>The eggs of a C. sinensis are released through the biliary tract and excreted out along with the feces. The eggs are embryonated and contain the larvae called miracidia. Unlike most other flukes in which the miracidia undergo development and swim in the water to infect a suitable host, the eggs of C. Sinensis.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. The mammalian hosts become infected by ingesting metacercariae from the aquatic plants. After ingestion, the metacercariae exocyst in the duodenum attaches to the intestinal wall. Option: C. Humans are accidental hosts; the only forms found in humans are larvae or immature adults that never reach reproductive maturity. Option: D. Adult worms live in the lumen of the small intestine. A female may produce approximately 200,000 eggs per day, passed with feces. Unfertilized eggs may be ingested but are not infective. Larvae develop infectivity within fertile eggs after 18 days to several weeks, depending on the environmental conditions (optimum: moist, warm, shaded soil). After infective eggs are swallowed, the larvae hatch, invade the intestinal mucosa, and are carried via the portal, then systemic circulation to the lungs. The larvae mature further in the lungs (10 to 14 days), penetrate the alveolar walls, ascend the bronchial tree to the throat, and are swallowed. Upon reaching the small intestine, they develop into adult worms. Between 2 and 3 months are required from ingesting the infective eggs to oviposition by the adult female. Adult worms can live 1 to 2 years</p>\n<p><strong>Extraedge:</strong></p><p>Clonorchis is a liver fluke parasite that humans can get by eating raw or undercooked fish from areas where the parasite is found. Found across parts of Asia, Clonorchis is also known as the Chinese or oriental liver fluke. Liver flukes infect the liver, gallbladder, and bile duct in humans</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Liver is the primary target in-", "options": [{"label": "A", "text": "Clonorchis sinensis", "correct": true}, {"label": "B", "text": "Fasciolopsis buski", "correct": false}, {"label": "C", "text": "Ascaris lumbricoides", "correct": false}, {"label": "D", "text": "Schistosoma mansoni", "correct": false}], "correct_answer": "A. Clonorchis sinensis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Clonorchis sinensis Clonorchis sinensis, the Chinese liver fluke, belongs to the class Trematoda, phylum Platyhelminthes. It infects fish-eating mammals, including humans. Clonorchiasis is an infectious disease caused by the Chinese liver fluke, Clonorchis sinensis, and two related species.</p>\n<p><strong>Highyeild:</strong></p><p>Clonorchiasis is a known risk factor for developing cholangiocarcinoma, a neoplasm of the biliary system. Clonorchis is a liver fluke parasite that humans can get by eating raw or undercooked fish, crabs, or crayfish from areas where the parasite is found. Found across parts of Asia, Clonorchis is also known as the Chinese or oriental liver fluke. Liver flukes infect the liver, gallbladder, and bile duct in humans.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Fasciolopsis buski - Giant intestinal fluke. The mammalian hosts become infected by ingesting metacercariae from the aquatic plants. After ingestion, the metacercariae exocyst in the duodenum attaches to the intestinal wall. Option: C. Ascaris lumbricoides - Adult worms reside in the small intestine. Adult worms live in the lumen of the small intestine. A female may produce approximately 200,000 eggs per day, passed with feces. Unfertilized eggs may be ingested but are not infective. Larvae develop infectivity within fertile eggs after 18 days to several weeks, depending on the environmental conditions (optimum: moist, warm, shaded soil). After infective eggs are swallowed, the larvae hatch, invade the intestinal mucosa, and are carried via the portal, then systemic circulation to the lungs. The larvae mature further in the lungs (10 to 14 days), penetrate the alveolar walls, ascend the bronchial tree to the throat, and are swallowed. Upon reaching the small intestine, they develop into adult worms. Between 2 and 3 months are required from ingesting the infective eggs to oviposition by the adult female. Adult worms can live 1 to 2 years. Option: D. Schistosoma mansoni - Adult worms reside in the inferior mesenteric plexus. S. mansoni occurs more often in the inferior mesenteric veins draining the large intestine.</p>\n<p><strong>Extraedge:</strong></p><p>Clonorchis sinensis, the Chinese liver fluke, is a liver fluke belonging to the class Trematoda, phylum Platyhelminthes. It infects fish-eating mammals, including humans. In humans, it infects the common bile duct and gall bladder, feeding on bile</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Operculated eggs are seen on microscopy of a fresh stool sample. Which of the following can be ruled out?", "options": [{"label": "A", "text": "Schistosoma mansoni", "correct": true}, {"label": "B", "text": "Clonorchis sinensis", "correct": false}, {"label": "C", "text": "Heterophyes", "correct": false}, {"label": "D", "text": "Fasciolopsis buski", "correct": false}], "correct_answer": "A. Schistosoma mansoni", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Schistosoma mansoni Lays non-operculated eggs with the lateral spine. Schistosoma mansoni is a water-borne parasite of humans, and belongs to the group of blood flukes. The adult lives in the blood vessels near the human intestine. It causes intestinal schistosomiasis. Clinical symptoms are caused by the eggs.</p>\n<p><strong>Highyeild:</strong></p><p>Schistosomiasis, or bilharzia, is a disease caused by parasitic worms. Infection with Schistosoma mansoni, S. crematorium, and S. japonicum causes illness in humans. Eggs are round to oval in shape, operculate (hinged at one end) and contain to distinguish between Schistosoma species: S. mansoni producing oval eggs.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option B. Clonorchis sinensis eggs. Clonorchis sinensis eggs are small. The eggs are oval-shaped with a convex operculum that rests on visible “shoulders” at the smaller end of the egg. At the opposite (opercular) lot, a small knob or hook-like protrusion is often visible. The eggs of a C. sinensis are released through the biliary tract and excreted out along with the feces. The eggs are embryonated and contain the larvae called miracidia. Unlike most other flukes in which the miracidia undergo development and swim in the water to infect a suitable host, the eggs of C. Sinensis. Option C. Eggs are hard to distinguish from C. Sinensis Option D. The mammalian hosts become infected by ingesting metacercariae on the aquatic plants. After ingestion, the metacercariae exocyst in the duodenum attaches to the intestinal wall.</p>\n<p><strong>Extraedge:</strong></p><p>Schistosoma mansoni eggs are large (114 to 180 µm long by 45-70 µm wide) and have a characteristic shape, with a prominent lateral spine near the posterior end. The anterior end is tapered and slightly curved. When the eggs are excreted in stool, they contain a mature miracidium</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Stool examination shows the eggs (140 X 80 microns) shown in the Image. Diagnosis is?", "options": [{"label": "A", "text": "Schistosomiasis", "correct": false}, {"label": "B", "text": "Ascariasis", "correct": false}, {"label": "C", "text": "Fascioliasis", "correct": true}, {"label": "D", "text": "Giardiasis", "correct": false}], "correct_answer": "C. Fascioliasis", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1689241071984-QTDV037006IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Fascioliasis The given image shows an operculated egg characteristic of Fasciola (trematode).</p>\n<p><strong>Highyeild:</strong></p><p>Fascioliasis (Fasciola Infection): The young worms move through the intestinal wall, the abdominal cavity, and the liver tissue into the bile ducts, where they develop into mature adult flukes that produce eggs. The pathology typically is most pronounced in the bile ducts and liver. Fasciolosis is a parasitic worm infection caused by the common liver fluke Fasciola hepatica. Fascioliasis belongs to the group of foodborne trematode infections. Fascioliasis is a waterborne and foodborne zoonotic disease caused by Fasciola hepatica. Immature Fasciola eggs are discharged in the biliary ducts.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A. Size of the egg in schistosomiasis is 40-70 microns only Option B. Size of the egg in ascariasis is 45-75 microns only Option D. size of the egg in giardiasis is 10-14 microns only</p>\n<p><strong>Extraedge:</strong></p><p>Fasciola hepatica eggs. are broadly ellipsoidal, are operculated, measure 130–150 µm long by 60–90 µm wide, and are passed unembryonated in feces. Fasciola spp. eggs can be difficult to distinguish from Fasciolopsis buski eggs, although the abopercular end of Fasciola spp</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

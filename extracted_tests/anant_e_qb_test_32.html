@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Cranial Duramater &amp; Dural Venous Sinus</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Cranial Duramater &amp; Dural Venous Sinus</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                12 Questions | 12 Total Marks | 22 min Duration | ~110.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 12 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 22 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 12</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Cranial Duramater &amp; Dural Venous Sinus - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 12</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 12 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which among the following are paired venous sinuses: Superior Petrosal Sinus Inferior petrosal sinus Superior sagittal sinus Transverse sinus Select the correct answer from the given below code:", "options": [{"label": "A", "text": "2,3,4", "correct": false}, {"label": "B", "text": "1,3,4", "correct": false}, {"label": "C", "text": "1,2,4", "correct": true}, {"label": "D", "text": "1,2,3", "correct": false}], "correct_answer": "C. 1,2,4", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>1,2,4 There are 23 venous sinuses, of which 8 are paired, and 7 are unpaired. Paired Venous Sinuses There is one sinus each on the right and left side. Cavernous sinus Superior petrosal sinus Inferior petrosal sinus Transverse sinus Sigmoid sinus Sphenoparietal sinus Petrosquamous sinus Middle meningeal sinus/veins Unpaired Venous Sinuses These are median in position Superior sagittal sinus Inferior sagittal sinus Straight sinus Occipital sinus Anterior intercavernous sinus Posterior intercavernous sinus Basilar plexus of veins</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is a direct content of cavernous sinus?", "options": [{"label": "A", "text": "The ophthalmic division of trigeminal vein", "correct": false}, {"label": "B", "text": "Trochlear nerve", "correct": false}, {"label": "C", "text": "Abducent nerve", "correct": true}, {"label": "D", "text": "Oculomotor nerve", "correct": false}], "correct_answer": "C. Abducent nerve", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Abducent nerve Structures outside the cavernous sinus Superiorly: Optic tract, optic chiasma, olfactory tract, internal carotid artery, and anterior perforated substance Inferiorly: Foramen lacerum and the junction of the body and greater wing of the sphenoid bone. Medially: Hypophysis cerebri and sphenoidal air sinus. Laterally: Temporal lobe with uncus. Below laterally: Mandibular nerve Anteriorly: Superior orbital fissure and the apex of the orbit. Posteriorly: Apex of the petrous temporal and the crus cerebri of the midbrain. Structures within the lateral wall of the cavernous sinus, from above downwards: Oculomotor nerve: In the anterior part of the sinus, it divides into superior and inferior divisions which leave the sinus by passing through the superior orbital fissure. Trochlear nerve: In the anterior part of the sinus, it crosses superficial to the oculomotor nerve and enters the orbit through the superior orbital fissure. Ophthalmic nerve: In the anterior part of the sinus, it divides into the lacrimal, frontal, and nasociliary nerves. Maxillary nerve: It leaves the sinus by passing through the foramen rotundum on its way to the pterygopalatine fossa. Greg’s 41st Ed update: the maxillary nerve is not in lateral relation to the cavernous sinus. Trigeminal ganglion: The ganglion and its dural cave may project into the posterior part of the lateral wall of the sinus. Structures passing through the medial aspect of the cavernous sinus: An internal carotid artery with the venous and sympathetic plexus around it. Abducent nerve, inferolateral to the internal carotid artery.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following are the tributaries of the cavernous sinus? Superficial middle cerebral vein Superior petrosal sinus Inferior ophthalmic vein The central vein of the retina Select the correct answer from the given below code:", "options": [{"label": "A", "text": "1,2,3,4", "correct": false}, {"label": "B", "text": "1,3,4", "correct": true}, {"label": "C", "text": "1,2,3", "correct": false}, {"label": "D", "text": "1,4", "correct": false}], "correct_answer": "B. 1,3,4", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>1,3,4 The superior petrosal sinus is not a tributary to the cavernous sinus. It drains the cavernous sinus into the transverse sinus. Tributaries of the Cavernous Sinus: The cavernous sinus receives blood from the orbit, meninges, and brain. From the orbit: The superior ophthalmic vein. A branch of the inferior ophthalmic vein or sometimes the vein itself. The central vein of the retina may drain either into the superior ophthalmic vein or the cavernous sinus. From the brain: Superficial middle cerebral vein. Inferior cerebral veins from the temporal lobe. From the meninges Sphenoparietal sinus. The frontal trunk of the middle meningeal vein may drain either into the pterygoid plexus through the foramen ovale or into the sphenoparietal or cavernous sinus.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The central area of the face is called the dangerous area of the face because:", "options": [{"label": "A", "text": "Infection in this area causes cavernous sinus thrombosis", "correct": true}, {"label": "B", "text": "The area is liable to the formation of tumor", "correct": false}, {"label": "C", "text": "The area is directly connected to an ear", "correct": false}, {"label": "D", "text": "Infection directly reaches to meninges", "correct": false}], "correct_answer": "A. Infection in this area causes cavernous sinus thrombosis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Infection in this area causes cavernous sinus thrombosis The facial vein communicates with the cavernous sinus through the superior ophthalmic vein and deep facial vein. Hence, infection from the central area (between the lower part of nose and the upper part of the lip - a dangerous area) spreads to the cavernous sinus.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All the following are true about cavernous sinus thrombosis, except: Spreads through ethmoidal sinus Marked edema of eyelids Loss of jaw jerk The infection spreads to cavernous sinus from dangerous area of the face via a superior ophthalmic vein Select the correct answer from the given below code:", "options": [{"label": "A", "text": "1,2", "correct": false}, {"label": "B", "text": "2,4", "correct": false}, {"label": "C", "text": "3", "correct": true}, {"label": "D", "text": "1", "correct": false}], "correct_answer": "C. 3", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>3 Loss of jaw jerk Routes of spread From the infection of the sphenoid sinus, ethmoid sinus, and frontal sinus Through facial veins draining dangerous areas of the face via a superior ophthalmic vein and angular vein Clinical features of cavernous sinus thrombosis Headache Involvement of III, IV & VI cranial nerves Papilledema - an increase of intra-cranial tension Loss of vision – Involvement of optic nerve Proptosis - protrusion of the eyeball Ophthalmoplegia - paralysis of eyeball muscles Chemosis- swelling of the conjunctiva</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Choose the incorrect statement regarding the marked structures in the given image:", "options": [{"label": "A", "text": "A continues as left transverse sinus", "correct": true}, {"label": "B", "text": "B is formed by Basal vein of the Rosenthal", "correct": false}, {"label": "C", "text": "C and D are present in the meningeal layer of dura mater", "correct": false}, {"label": "D", "text": "All marked sinuses are unpaired sinuses", "correct": false}], "correct_answer": "A. A continues as left transverse sinus", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1686392481611-QTDA019006IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>A continues as left transverse sinus A is the superior sagittal sinus, which via confluence, drains to the right transverse sinus</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. B is Vein of Galen formed by basal vein of Rosenthal and internal cerebral vein Option: C. C and D are straight & inferior sagittal sinus respectively and are present in the meningeal layer of duramater only</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All the given options regarding marked structure are correct EXCEPT:", "options": [{"label": "A", "text": "A is drainage channel of cavernous sinus", "correct": false}, {"label": "B", "text": "B is sphenoparietal sinus", "correct": false}, {"label": "C", "text": "C is an inferior cerebral vein that drains into the cavernous sinus", "correct": true}, {"label": "D", "text": "D drains cavernous sinus into the transverse sinus", "correct": false}], "correct_answer": "C. C is an inferior cerebral vein that drains into the cavernous sinus", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1686392481612-QTDA019007IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>C is an inferior cerebral vein that drains into the cavernous sinus A is inferior petrosal sinus, drains cavernous sinus into sigmoid sinus, and forms IJV B is sphenoparietal sinus (incoming channel of cavernous sinus) C is middle meningeal vein (incoming channel of cavernous sinus) D is superior petrosal sinus, which drains cavernous sinus into the transverse sinus</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Anterior ethmoidal nerve supplies which of the following: Maxillary Sinus Internal nasal cavity Dura mater in the anterior cranial fossa Ethmoidal cells Select the correct answer from the given below code:", "options": [{"label": "A", "text": "2,3,4", "correct": true}, {"label": "B", "text": "1,,2", "correct": false}, {"label": "C", "text": "2,4", "correct": false}, {"label": "D", "text": "1,2,3,4", "correct": false}], "correct_answer": "A. 2,3,4", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>2,3,4 Nerve Supply of Dura mater The dura of the vault has only a few sensory nerves derived mostly from the ophthalmic division of the trigeminal nerve. 2. The dura of the floor has a rich nerve supply and is quite sensitive to pain. A. The anterior cranial fossa is supplied mostly by the anterior ethmoidal nerve and partly by the maxillary nerve. B. The middle cranial fossa is supplied by the maxillary nerve in its anterior half, and by branches of the mandibular nerve, and trigeminal ganglion in its posterior half. C. The posterior cranial fossa is supplied chiefly by recurrent branches from the first, second, and third cervical spinal nerves and partly by meningeal branches of the ninth and tenth cranial nerves. Ethmoidal Sinuses The anterior ethmoidal sinus is made up of 1 to 11 air cells, and opens into the anterior part of the hiatus semilunaris of the nose. It is supplied by the anterior ethmoidal nerve and vessels.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The arachnoid villi responsible for cerebrospinal fluid absorption protrude mainly in the:", "options": [{"label": "A", "text": "Superior Sagittal Sinus", "correct": true}, {"label": "B", "text": "Inferior sagittal sinus", "correct": false}, {"label": "C", "text": "Straight sinus", "correct": false}, {"label": "D", "text": "Transverse sinus", "correct": false}], "correct_answer": "A. Superior Sagittal Sinus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Superior Sagittal Sinus CSF is gradually reabsorbed into the blood through fingerlike projections into the dural venous sinuses = arachnoid granulations The nodular white excresences seen here over the cerebral hemispheres at the vertex on both sides of the central fissure with falx cerebri of the brain are the arachnoid granulations. This is where the cerebrospinal fluid produced in the choroid plexuses of the ventricles and which has circulated out of the foramina of Magendie and Luschka and into the subarachnoid space is reabsorbed.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following supply the dura mater, except:", "options": [{"label": "A", "text": "Anterior Ethmoidal", "correct": false}, {"label": "B", "text": "Posterior ethmoidal", "correct": false}, {"label": "C", "text": "Auriculotemporal", "correct": true}, {"label": "D", "text": "Mandibular", "correct": false}], "correct_answer": "C. Auriculotemporal", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Auriculotemporal The auriculotemporal nerve supplies the parotid gland and skin of the cheek and ear.</p>\n<p><strong>Highyeild:</strong></p><p>Nerve Supply of the Dura Mater: Supratentorial dura is supplied by the ophthalmic nerve. Infratentorial dura (dura of the floor) has rich sensory innervation (hence very sensitive to pain). It is supplied by the following nerves: 1. In the anterior cranial fossa: by the anterior and posterior ethmoidal nerves (and receives some twigs from the maxillary nerve). 2. In the middle cranial fossa: by the meningeal branch of the maxillary nerve (in the anterior part) and the meningeal branch of the mandibular nerve (nervus spinosus) in the posterior part. 3. In the posterior cranial fossa: by the meningeal branches of the vagus and hypoglossal nerves. These are the C1 and C2 fibres carried by the cranial nerves. The dura mater around the foramen magnum is directly supplied by the C2 and C3 cervical nerves.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following true or false options about cranial dura mater is correct? It has an endosteal layer and a meningeal layer It is supplied by 5th cranial nerve It is the outermost meningeal layer Venous sinuses present inner to meningeal layer Select the correct answer from the given below code:", "options": [{"label": "A", "text": "TTFF", "correct": false}, {"label": "B", "text": "TFTF", "correct": false}, {"label": "C", "text": "TFFF", "correct": false}, {"label": "D", "text": "TTTF", "correct": true}], "correct_answer": "D. TTTF", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>TTTF Coronal sections through the posterior cranial fossa showing folds of dura mater and the venous sinuses enclosed in them: (a) Section through the tentorial notch (anterior part of the fossa); (b) Section through the middle part of the fossa; (c) Section through the posteriormost part</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Blood supply of dura mater is by all of the following except?", "options": [{"label": "A", "text": "Meningeal branch of the internal carotid artery in posterior cranial fossa", "correct": true}, {"label": "B", "text": "Accessory meningeal artery", "correct": false}, {"label": "C", "text": "Meningeal branch of an anterior and posterior ethmoidal artery", "correct": false}, {"label": "D", "text": "Middle meningeal artery", "correct": false}], "correct_answer": "A. Meningeal branch of the internal carotid artery in posterior cranial fossa", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Meningeal branch of the internal carotid artery in posterior cranial fossa Blood Supply of Dura Mater: The outer layer is richly vascular. The inner meningeal layer is more fibrous and requires little blood supply. The vault or supratentorial space is supplied by the middle meningeal artery. The anterior cranial fossa and the dural lining are supplied by meningeal branches of the anterior ethmoidal, posterior ethmoidal, and ophthalmic arteries. The middle cranial fossa is supplied by the middle meningeal, accessory meningeal, internal carotid arteries; and meningeal branches of the ascending pharyngeal artery. The posterior cranial fossa is supplied by meningeal branches of the vertebral, occipital, and ascending pharyngeal arteries.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

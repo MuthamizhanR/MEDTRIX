@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Fmge Mock 1 Paper 1</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Fmge Mock 1 Paper 1</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                150 Questions | 150 Total Marks | 160 min Duration | ~64.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 150 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 160 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 150</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Fmge Mock 1 Paper 1 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 150</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 150 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "All of the following structures pass through the esophageal hiatus except", "options": [{"label": "A", "text": "Posterior vagal trunk", "correct": false}, {"label": "B", "text": "Esophageal branches of the left gastric vessels", "correct": false}, {"label": "C", "text": "Anterior vagal trunk", "correct": false}, {"label": "D", "text": "Thoracic duct", "correct": true}], "correct_answer": "D. Thoracic duct", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The normal position of the uterus is:", "options": [{"label": "A", "text": "Anteflexed and anteverted", "correct": true}, {"label": "B", "text": "Retroflexed and anteverted", "correct": false}, {"label": "C", "text": "Anteflexed and retroverted", "correct": false}, {"label": "D", "text": "Retroverted and retroflexed", "correct": false}], "correct_answer": "A. Anteflexed and anteverted", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 46-year-old man complains of dryness of the mouth. On examination he lack salivary secretion from the submandibular gland. This indicates a lesion of which of the following nervous structures?", "options": [{"label": "A", "text": "Greater petrosal nerve", "correct": false}, {"label": "B", "text": "Chorda tympani in the middle ear cavity", "correct": true}, {"label": "C", "text": "Superior cervical ganglion", "correct": false}, {"label": "D", "text": "Lesser petrosal nerve", "correct": false}], "correct_answer": "B. Chorda tympani in the middle ear cavity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Anterior belly of digastric is a derivate of :", "options": [{"label": "A", "text": "1stbranchial arch", "correct": true}, {"label": "B", "text": "2ndbranchial arch", "correct": false}, {"label": "C", "text": "3rdbranchial arch", "correct": false}, {"label": "D", "text": "4thbranchial arch", "correct": false}], "correct_answer": "A. 1stbranchial arch", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Adrenal medulla is a derivative of :", "options": [{"label": "A", "text": "Surface ectoderm", "correct": false}, {"label": "B", "text": "Endoderm", "correct": false}, {"label": "C", "text": "Neural crest", "correct": true}, {"label": "D", "text": "Mesoderm", "correct": false}], "correct_answer": "C. Neural crest", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is a true statement regarding spermatogenesis :", "options": [{"label": "A", "text": "Takes around 74 days", "correct": true}, {"label": "B", "text": "Occurs in spermatic cord", "correct": false}, {"label": "C", "text": "Meiosis occurs only after secondary spermatocyte stage", "correct": false}, {"label": "D", "text": "Spermatozoa forms spermatids", "correct": false}], "correct_answer": "A. Takes around 74 days", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Epithelial lining of esophagus is :", "options": [{"label": "A", "text": "Cuboidal", "correct": false}, {"label": "B", "text": "Columnar", "correct": false}, {"label": "C", "text": "Stratified squamous non- keratinized", "correct": true}, {"label": "D", "text": "Stratified squamous keratinized", "correct": false}], "correct_answer": "C. Stratified squamous non- keratinized", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Blood testis barrier is Formed by the :", "options": [{"label": "A", "text": "Leydig cells", "correct": false}, {"label": "B", "text": "Sertoli cells", "correct": true}, {"label": "C", "text": "Germ cells", "correct": false}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "B. Sertoli cells", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which part of the ear has origin from all the three layer of germ layer :", "options": [{"label": "A", "text": "Auricle", "correct": false}, {"label": "B", "text": "Tympanic membrane", "correct": true}, {"label": "C", "text": "Ossicles", "correct": false}, {"label": "D", "text": "Middle ear cavity", "correct": false}], "correct_answer": "B. Tympanic membrane", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Azygous vein drain into :", "options": [{"label": "A", "text": "Left brachiocephalic vein", "correct": false}, {"label": "B", "text": "Inferior venal cava", "correct": false}, {"label": "C", "text": "Superior vena cava", "correct": true}, {"label": "D", "text": "Right brachiocephalic vein", "correct": false}], "correct_answer": "C. Superior vena cava", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Superior epigastric artery is a branch of :", "options": [{"label": "A", "text": "Subclavian artery", "correct": false}, {"label": "B", "text": "Musculophrenic artery", "correct": false}, {"label": "C", "text": "Internal thoracic artery", "correct": true}, {"label": "D", "text": "Superior intercostals artery", "correct": false}], "correct_answer": "C. Internal thoracic artery", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Epiploic Foramen is bounded by all except", "options": [{"label": "A", "text": "IVC", "correct": false}, {"label": "B", "text": "Free border of Lesser omentum", "correct": false}, {"label": "C", "text": "Free border of Greater omentum", "correct": true}, {"label": "D", "text": "Caudate lobe of Liver", "correct": false}], "correct_answer": "C. Free border of Greater omentum", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Sphenoid vomer joint is which type of joint ?", "options": [{"label": "A", "text": "Schindylesis", "correct": true}, {"label": "B", "text": "Gomphoses", "correct": false}, {"label": "C", "text": "Syndesmoses", "correct": false}, {"label": "D", "text": "Synchondrosis", "correct": false}], "correct_answer": "A. Schindylesis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Example of traction epiphysis is ?", "options": [{"label": "A", "text": "Trochanters of Femur", "correct": true}, {"label": "B", "text": "Os trigonum", "correct": false}, {"label": "C", "text": "Head of Femur", "correct": false}, {"label": "D", "text": "Coracoid process", "correct": false}], "correct_answer": "A. Trochanters of Femur", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Brachialis is supplied by -", "options": [{"label": "A", "text": "Radial and Ulnar nerve", "correct": false}, {"label": "B", "text": "Median and musculocutaneous neve", "correct": false}, {"label": "C", "text": "Radial and musculocutaneous nerve", "correct": true}, {"label": "D", "text": "Radial and Median nerve", "correct": false}], "correct_answer": "C. Radial and musculocutaneous nerve", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "If the greater tuberosity of the humerus is lost, which of the following movements will be affected?", "options": [{"label": "A", "text": "Adduction and flexion", "correct": false}, {"label": "B", "text": "Abduction and lateral rotation", "correct": true}, {"label": "C", "text": "Medial rotation and adduction", "correct": false}, {"label": "D", "text": "Flexion and medial rotation", "correct": false}], "correct_answer": "B. Abduction and lateral rotation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Red blood cell transketolase level is a marker for deficiency of:", "options": [{"label": "A", "text": "Vitamin B1", "correct": true}, {"label": "B", "text": "Vitamin B2", "correct": false}, {"label": "C", "text": "Vitamin B6", "correct": false}, {"label": "D", "text": "Vitamin B12", "correct": false}], "correct_answer": "A. Vitamin B1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "V max unchanged, increased Km is seen in:", "options": [{"label": "A", "text": "Competitive inhibition", "correct": true}, {"label": "B", "text": "Non-competitive inhibition", "correct": false}, {"label": "C", "text": "Allosteric regulation", "correct": false}, {"label": "D", "text": "Suicide inhibition", "correct": false}], "correct_answer": "A. Competitive inhibition", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Hartnup’s disease is associated with increased urinary excretion of:", "options": [{"label": "A", "text": "Tryptophan", "correct": true}, {"label": "B", "text": "Ornithine", "correct": false}, {"label": "C", "text": "Glycine", "correct": false}, {"label": "D", "text": "Cysteine", "correct": false}], "correct_answer": "A. Tryptophan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Precursor of tyrosine is:", "options": [{"label": "A", "text": "Cysteine", "correct": false}, {"label": "B", "text": "Histidine", "correct": false}, {"label": "C", "text": "Tryptophan", "correct": false}, {"label": "D", "text": "Phenylalanine", "correct": true}], "correct_answer": "D. Phenylalanine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Niacin is synthesized from:", "options": [{"label": "A", "text": "Phenylalanine", "correct": false}, {"label": "B", "text": "Tryptophan", "correct": true}, {"label": "C", "text": "Tyrosine", "correct": false}, {"label": "D", "text": "Methionine", "correct": false}], "correct_answer": "B. Tryptophan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Norepinephrine to epinephrine conversion requires which enzyme?", "options": [{"label": "A", "text": "Phenylethanolamine-N-methyltransferase", "correct": true}, {"label": "B", "text": "Transaldolase", "correct": false}, {"label": "C", "text": "Tyrosine hydroxylase", "correct": false}, {"label": "D", "text": "Alpha ketoglutarate", "correct": false}], "correct_answer": "A. Phenylethanolamine-N-methyltransferase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Protein folding is done by:", "options": [{"label": "A", "text": "Ubiquitin", "correct": false}, {"label": "B", "text": "Clathrin", "correct": false}, {"label": "C", "text": "Keratin", "correct": false}, {"label": "D", "text": "Chaperones", "correct": true}], "correct_answer": "D. Chaperones", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "G-6-P deficiency occurs in:", "options": [{"label": "A", "text": "Forbes disease", "correct": false}, {"label": "B", "text": "Niemann Picks disease", "correct": false}, {"label": "C", "text": "Von Gierke disease", "correct": true}, {"label": "D", "text": "Tay Sachs disease", "correct": false}], "correct_answer": "C. Von Gierke disease", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Tricarboxylic acid cycle does not occur in:", "options": [{"label": "A", "text": "Muscle cell", "correct": false}, {"label": "B", "text": "Red blood cell", "correct": true}, {"label": "C", "text": "Nerve cell", "correct": false}, {"label": "D", "text": "Liver cell", "correct": false}], "correct_answer": "B. Red blood cell", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Cerebroside contains which sugar:", "options": [{"label": "A", "text": "Ribose", "correct": false}, {"label": "B", "text": "Fructose", "correct": false}, {"label": "C", "text": "Galactose", "correct": true}, {"label": "D", "text": "Pentose", "correct": false}], "correct_answer": "C. Galactose", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Muscle glycogen stores can NOT be used to provide glucose into the circulation due to lack of:", "options": [{"label": "A", "text": "Glucose-6-phosphate dehydrogenase", "correct": false}, {"label": "B", "text": "Glutamate dehydrogenase", "correct": false}, {"label": "C", "text": "Glucose-6-phosphatase", "correct": true}, {"label": "D", "text": "Glucokinase", "correct": false}], "correct_answer": "C. Glucose-6-phosphatase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following inhibits gluconeogenesis?", "options": [{"label": "A", "text": "Insulin", "correct": false}, {"label": "B", "text": "Glucagon", "correct": false}, {"label": "C", "text": "Acetyl CoA", "correct": true}, {"label": "D", "text": "Glucogenic amino acids", "correct": false}], "correct_answer": "C. Acetyl CoA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Substrate level phosphorylation in Glycolysis is observed in reaction catalysed by:", "options": [{"label": "A", "text": "Pyruvate carboxylase", "correct": false}, {"label": "B", "text": "Aconitase", "correct": false}, {"label": "C", "text": "Pyruvate kinase", "correct": true}, {"label": "D", "text": "Enolase", "correct": false}], "correct_answer": "C. Pyruvate kinase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Oxidative phosphorylation leads of formation of which compound?", "options": [{"label": "A", "text": "Oxygen", "correct": false}, {"label": "B", "text": "ATP", "correct": true}, {"label": "C", "text": "Phosphate", "correct": false}, {"label": "D", "text": "ADP", "correct": false}], "correct_answer": "B. ATP", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In fatty liver, which lipid accumulates:", "options": [{"label": "A", "text": "HDL", "correct": false}, {"label": "B", "text": "Triglycerides", "correct": true}, {"label": "C", "text": "Cholesterol", "correct": false}, {"label": "D", "text": "FFA", "correct": false}], "correct_answer": "B. Triglycerides", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is true sequence of auditory pathway:", "options": [{"label": "A", "text": "Superior olivary nucleus ,Cochlear nuclei pathway ,Lateral lemniscus,Inferior colliculus", "correct": false}, {"label": "B", "text": "Cochlear nuclei pathway ,Superior olivary nucleus,Lateral lemniscus,Inferior colliculus", "correct": true}, {"label": "C", "text": "Inferior colliculus ,Cochlear nuclei pathway ,Superior olivary nucleus,Lateral lemniscus", "correct": false}, {"label": "D", "text": "Lateral lemniscus,Cochlear nuclei pathway ,Superior olivary nucleus ,Inferior colliculus", "correct": false}], "correct_answer": "B. Cochlear nuclei pathway ,Superior olivary nucleus,Lateral lemniscus,Inferior colliculus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Aspiration in the respiratory tract prevented by supraglottic and cough reflex, these reflexes are sluggish in alcohol patient, Which of the following nerve is common injured:", "options": [{"label": "A", "text": "Glossopharyngeal nerve", "correct": false}, {"label": "B", "text": "Internal laryngeal nerve", "correct": false}, {"label": "C", "text": "External laryngeal nerve", "correct": true}, {"label": "D", "text": "Recurrent Laryngeal", "correct": false}], "correct_answer": "C. External laryngeal nerve", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Study the given slide and comment where the given structure drains:", "options": [{"label": "A", "text": "Inferior meatus", "correct": false}, {"label": "B", "text": "Middle meatus", "correct": false}, {"label": "C", "text": "Superior meatus", "correct": false}, {"label": "D", "text": "Sphenoethmoidal recess", "correct": true}], "correct_answer": "D. Sphenoethmoidal recess", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3(50).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A trumpet blower present with left sided neck swelling. X-ray reveals following finding. Most likely diagnosis of this patient:", "options": [{"label": "A", "text": "Laryngeal cyst", "correct": false}, {"label": "B", "text": "Thyrogossal duct cyst", "correct": false}, {"label": "C", "text": "Laryngoceoele", "correct": true}, {"label": "D", "text": "Brachial cyst", "correct": false}], "correct_answer": "C. Laryngoceoele", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4(49).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A child with throat pain and fever has been found to have whitish membrane in the Tonsillar region which bleeds on scrapping. What is the possible diagnosis?", "options": [{"label": "A", "text": "Acute Membranous Tonsillitis", "correct": false}, {"label": "B", "text": "Candidiasis", "correct": false}, {"label": "C", "text": "Diphtheric Tonsillitis", "correct": true}, {"label": "D", "text": "Infectious Mononucleosis", "correct": false}], "correct_answer": "C. Diphtheric Tonsillitis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with ear wax underwent syringing. During syringing, patient developed syncopal episode. Stimulation of which nerve is responsible?", "options": [{"label": "A", "text": "Auriculotemporal nerve", "correct": false}, {"label": "B", "text": "Chorda Tympani nerve", "correct": false}, {"label": "C", "text": "Arnold

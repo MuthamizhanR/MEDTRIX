@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Late Night Pyqs (Mixed Bag 13)   2025 03 23</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Late Night Pyqs (Mixed Bag 13)   2025 03 23</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                40 Questions | 160 Total Marks | 50 min Duration | ~75.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 40 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 50 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 40</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Late Night Pyqs (Mixed Bag 13)   2025 03 23 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 40</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 40 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "An HIV patient presents with breathlessness and cough. His recent CD4 count was less than 200 and the patient’s chest X-ray is shown. BAL was done and reports are pending. What is the likely diagnosis and treatment? (FMGE JULY 2024)", "options": [{"label": "A", "text": "Pneumocystis jiroveci; Cotrimoxazole", "correct": true}, {"label": "B", "text": "Mucor; Amphotericin B", "correct": false}, {"label": "C", "text": "Aspergillus; Voriconazole", "correct": false}, {"label": "D", "text": "Candida; Fluconazole", "correct": false}], "correct_answer": "A. Pneumocystis jiroveci; Cotrimoxazole", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/08/30/screenshot-2024-08-30-103031.png"], "explanation_images": [], "explanation": "<p><strong>Ans. A) Pneumocystis jiroveci; Cotrimoxazole</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In an HIV patient with a CD4 count less than 200, presenting with breathlessness and bilateral infiltrates on chest X-ray, the likely diagnosis is Pneumocystis jiroveci pneumonia (PJP), and the treatment of choice is cotrimoxazole.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 7-year-old boy presented with a white pupillary reflex for which enucleation was done. The histopathological examination of the specimen showed Flexner-Wintersteiner rosettes. What is the most likely diagnosis? ( NEET PG 2021)", "options": [{"label": "A", "text": "Retinoblastoma", "correct": true}, {"label": "B", "text": "Medulloblastoma", "correct": false}, {"label": "C", "text": "Rhabdomyosarcoma", "correct": false}, {"label": "D", "text": "Astrocytoma", "correct": false}], "correct_answer": "A. Retinoblastoma", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/11/08/picture9333.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/11/08/picture10333333.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/11/10/whatsapp-image-2023-11-10-at-174623-1.jpeg"], "explanation": "<p><strong>Ans. A. Retinoblastoma</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Flexner-Wintersteiner rosettes are a hallmark of retinoblastoma, indicating a malignant proliferation of immature retinal neural cells. This specific histopathological finding is crucial for diagnosing retinoblastoma, especially in children presenting with leukocoria.</li><li>➤ Different rosettes seen in retinoblastoma:</li><li>➤ Different rosettes seen in retinoblastoma:</li><li>➤ 1. True rosette -FLEXNER-WINTERSTEINER ROSETTE</li><li>➤ This is specific for RB - hallmark of RB It consists of tumor cells surrounding a central lumen that contains cytoplasmic extensions from the tumor cells, which have well-differentiated features suggestive of primitive photoreceptor cells.</li><li>➤ This is specific for RB - hallmark of RB</li><li>➤ It consists of tumor cells surrounding a central lumen that contains cytoplasmic extensions from the tumor cells, which have well-differentiated features suggestive of primitive photoreceptor cells.</li><li>➤ 2. HOMER-WRIGHT ROSETTE is a non-specific rosette seen in any of the primitive neuroectodermal tumors. Tumor cells surround a central region containing neutrophil.</li><li>➤ 3. FLUERETTE is pseudo rosette because the central structure is not a part of the tumor and it consists of tumor cells around a blood vessel.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 17-year-old boy presents with growth on talus as seen on foot x-ray. What is the likely diagnosis? (FMGE JULY 2024)", "options": [{"label": "A", "text": "Enchondroma", "correct": false}, {"label": "B", "text": "Osteosarcoma", "correct": false}, {"label": "C", "text": "Osteomyelitis", "correct": false}, {"label": "D", "text": "Osteochondroma", "correct": true}], "correct_answer": "D. Osteochondroma", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-05-24%20110005.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-05-24%20110019.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-05-24%20110033.jpg"], "explanation": "<p><strong>Ans. D) Osteochondroma</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The given x-ray image shows growth in the talus which is characteristic of osteochondroma of the talus bone. Osteochondroma is a benign bone tumor presenting as a palpable growth with a cartilaginous cap, most often found in young adults, and visible on x-ray as a bony projection.</li><li>➤ The given x-ray image shows growth in the talus which is characteristic of osteochondroma of the talus bone.</li><li>➤ Osteochondroma is a benign bone tumor presenting as a palpable growth with a cartilaginous cap, most often found in young adults, and visible on x-ray as a bony projection.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The most common triggering factor of the given condition is? (NEET PG 2019)", "options": [{"label": "A", "text": "Drugs", "correct": false}, {"label": "B", "text": "Infection", "correct": true}, {"label": "C", "text": "Vaccination", "correct": false}, {"label": "D", "text": "Malignancy", "correct": false}], "correct_answer": "B. Infection", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/06/434.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/08/17/untitled-1328.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/06/14/screenshot-2024-06-14-175255.png"], "explanation": "<p><strong>Ans. B. Infection</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The most common trigger for erythema multiforme , particularly when target lesions are present on the palms, is infection, notably with herpes simplex virus .</li><li>➤ most common trigger</li><li>➤ erythema multiforme</li><li>➤ target lesions</li><li>➤ palms,</li><li>➤ herpes simplex virus</li><li>➤ Additional information</li></ul>\n<p><strong>References:</strong></p><ul><li>↳ Reference: Rooks textbook of dermatology- 9 th Edition volume I Chapter 4. Page no 4.11, 4.13</li><li>↳ Question Level – Intermediate</li><li>↳ Question Level – Intermediate</li><li>↳ Question Id-7462 Unique Key-Q3225777</li><li>↳ Question Id-7462 Unique Key-Q3225777</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Components of the MELD (2016) score are all except? (INICET NOV 2020)", "options": [{"label": "A", "text": "Bilirubin", "correct": false}, {"label": "B", "text": "Albumin", "correct": true}, {"label": "C", "text": "Prothrombin time", "correct": false}, {"label": "D", "text": "Creatinine", "correct": false}], "correct_answer": "B. Albumin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B)</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Albumin is not a component of the MELD score. The key components are bilirubin, creatinine, and INR, with sodium also included in the updated MELD-Na scoring system to better predict outcomes in patients with end-stage liver disease.</li></ul>\n<p><strong>References:</strong></p><ul><li>↳ Reference: Harrison 21/Cirrhosis/Chap 344</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Testosterone helps in the development of various organs in the fetus. Which of the following stimulates its production? (NEET PG 2022)", "options": [{"label": "A", "text": "LH from maternal pituitary", "correct": false}, {"label": "B", "text": "HCG from placenta", "correct": true}, {"label": "C", "text": "Inhibin from corpus luteum", "correct": false}, {"label": "D", "text": "GnRH from fetal hypothalamus", "correct": false}], "correct_answer": "B. HCG from placenta", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) HCG from placenta</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• HCG from placenta : HCG (human chorionic gonadotropin) from the placenta stimulates the production of testosterone in the male fetus. HCG released from the placenta is the initial stimulus for testosterone production in the male fetus. Later by the eighth week of gestation, fetal pituitary LH (luteinizing hormone) stimulates the Leydig cells of the testes to produce testosterone. Sex differentiation of the embryo depends on the Y chromosome, which contains the testis-determining gene called the SRY (sex-determining region on Y) gene. In a genetically male embryo (46, XY), the gonad is converted into testis under the influence of this gene. Female development (Mullerian ducts) occurs in the absence of this gene.</li><li>• HCG from placenta : HCG (human chorionic gonadotropin) from the placenta stimulates the production of testosterone in the male fetus. HCG released from the placenta is the initial stimulus for testosterone production in the male fetus. Later by the eighth week of gestation, fetal pituitary LH (luteinizing hormone) stimulates the Leydig cells of the testes to produce testosterone. Sex differentiation of the embryo depends on the Y chromosome, which contains the testis-determining gene called the SRY (sex-determining region on Y) gene. In a genetically male embryo (46, XY), the gonad is converted into testis under the influence of this gene. Female development (Mullerian ducts) occurs in the absence of this gene.</li><li>• HCG from placenta</li><li>• HCG (human chorionic gonadotropin) from the placenta stimulates the production of testosterone in the male fetus. HCG released from the placenta is the initial stimulus for testosterone production in the male fetus. Later by the eighth week of gestation, fetal pituitary LH (luteinizing hormone) stimulates the Leydig cells of the testes to produce testosterone. Sex differentiation of the embryo depends on the Y chromosome, which contains the testis-determining gene called the SRY (sex-determining region on Y) gene. In a genetically male embryo (46, XY), the gonad is converted into testis under the influence of this gene. Female development (Mullerian ducts) occurs in the absence of this gene.</li><li>• HCG (human chorionic gonadotropin) from the placenta stimulates the production of testosterone in the male fetus.</li><li>• HCG released from the placenta is the initial stimulus for testosterone production in the male fetus.</li><li>• Later by the eighth week of gestation, fetal pituitary LH (luteinizing hormone) stimulates the Leydig cells of the testes to produce testosterone.</li><li>• Sex differentiation of the embryo depends on the Y chromosome, which contains the testis-determining gene called the SRY (sex-determining region on Y) gene.</li><li>• In a genetically male embryo (46, XY), the gonad is converted into testis under the influence of this gene.</li><li>• Female development (Mullerian ducts) occurs in the absence of this gene.</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option A. LH from maternal pituitary : Maternal LH does not play a role in fetal testosterone production. The fetal pituitary gland, not the maternal pituitary, influences testosterone production later in gestation.</li><li>• Option A. LH from maternal pituitary</li><li>• Option C. Inhibin from corpus luteum : Inhibin is involved in the regulation of FSH and does not stimulate testosterone production. It primarily acts to provide feedback inhibition to the anterior pituitary gland to control FSH levels.</li><li>• Option C. Inhibin from corpus luteum</li><li>• Option D. GnRH from fetal hypothalamus : GnRH (gonadotropin-releasing hormone) from the fetal hypothalamus plays a role in stimulating the fetal pituitary to release LH and FSH, but it is not the initial trigger for testosterone production in the fetus.</li><li>• Option D. GnRH from fetal hypothalamus</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ HCG from the placenta is the initial stimulus for testosterone production in the male fetus.</li><li>➤ Ref: Page 103, Williams Obstetrics 26 th edition</li><li>➤ Ref: Page 103, Williams Obstetrics 26 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the dose of Ulipristal used in emergency contraception? (NEET PG 2019)", "options": [{"label": "A", "text": "30 mg", "correct": true}, {"label": "B", "text": "300 mg", "correct": false}, {"label": "C", "text": "60 mg", "correct": false}, {"label": "D", "text": "600 mg", "correct": false}], "correct_answer": "A. 30 mg", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/09/14/untitled-76.jpg"], "explanation": "<p><strong>Ans. A) 30 mg</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• The dose of Ulipristal in emergency contraception is 30 mg to be taken within 72 hrs (can be taken upto 120hrs).</li><li>• The following can be used as emergency contraceptives:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The dose of Ulipristal for emergency contraception is 30 mg, to be taken within 72 hours (up to 120 hours) after unprotected intercourse.</li><li>➤ Ref: Page no 630, DC Dutta’s Textbook of Gynecology, 6 th edition</li><li>➤ Ref: Page no 630, DC Dutta’s Textbook of Gynecology, 6 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Patient with high triglycerides esterified with long chain fatty acid (LCFA) presents with fatigue and biopsy of muscle shows fat vacuoles. Which of the following is the diagnosis? (NEET PG 2024)", "options": [{"label": "A", "text": "Carnitine deficiency", "correct": true}, {"label": "B", "text": "FA synthase defect", "correct": false}, {"label": "C", "text": "LPL defect", "correct": false}, {"label": "D", "text": "LDL receptor defect", "correct": false}], "correct_answer": "A. Carnitine deficiency", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Carnitine deficiency</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Carnitine is essential for the transport of long-chain fatty acids into the mitochondria for beta-oxidation. Deficiency in carnitine leads to the accumulation of triglycerides esterified with long-chain fatty acids in muscle tissues, causing fatigue and exercise intolerance</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30-year-old female patient, on treatment for infertility, came with 6 weeks of amenorrhea, abdominal pain, and mild vaginal bleeding. Her beta hCG level was 2800 mlU/mL. On ultrasound, a 3cm mass was seen in the left adnexa. It contained a gestational sac with no fetal cardiac activity. What is the most appropriate management for this patient hCG- Human chorionic gonadotropin? (NEET PG 2021)", "options": [{"label": "A", "text": "Expectant management", "correct": false}, {"label": "B", "text": "Single dose methotrexate", "correct": true}, {"label": "C", "text": "Salpingectomy", "correct": false}, {"label": "D", "text": "Milking of the tube", "correct": false}], "correct_answer": "B. Single dose methotrexate", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Single dose methotrexate</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In a stable patient with an unruptured ectopic pregnancy, beta hCG levels < 5000 IU/L, gestational sac size < 3.5 cm, and no fetal cardiac activity, single-dose methotrexate is the most appropriate management option.</li><li>➤ Ref: Page no 378, William’s Obstetrics 25 th edition, https://www.nice.org.uk/guidance/ng126</li><li>➤ Ref: Page no 378, William’s Obstetrics 25 th edition, https://www.nice.org.uk/guidance/ng126</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the site of drainage of the marked structure? (INICET NOVEMBER 2021)", "options": [{"label": "A", "text": "Superior meatus", "correct": false}, {"label": "B", "text": "Middle meatus", "correct": false}, {"label": "C", "text": "Inferior meatus", "correct": false}, {"label": "D", "text": "Sphenoethmoidal recess", "correct": true}], "correct_answer": "D. Sphenoethmoidal recess", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_QoAaVwI.png"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/06/20/ent-1.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/09/13/untitled-17.jpg"], "explanation": "<p><strong>Ans. D) Sphenoethmoidal recess</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Ref - Dhingra 7 th edition, Page No. 209</li><li>➤ Ref - Dhingra 7 th edition, Page No. 209</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is correct about a patient who presented in the OPD with a swelling as shown in the image? The swelling is reducible. (FMGE JULY 2024)", "options": [{"label": "A", "text": "Incision and drainage", "correct": false}, {"label": "B", "text": "Reduce the swelling and do the observation", "correct": false}, {"label": "C", "text": "Do a surgical procedure and reduce the swelling with mesh repair", "correct": true}, {"label": "D", "text": "Observation alone", "correct": false}], "correct_answer": "C. Do a surgical procedure and reduce the swelling with mesh repair", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/08/26/screenshot-2024-08-26-164247.png"], "explanation_images": [], "explanation": "<p><strong>Ans. C) Do a surgical procedure and reduce the swelling with mesh repair</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ For reducible hernias, the appropriate treatment is surgical repair with mesh reinforcement to prevent recurrence and avoid complications. Observation alone is not sufficient, and procedures such as incision and drainage are not applicable.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient came with hypoxemia and a normal alveolar-arterial oxygen gradient. What can be the cause? (INICET NOV 2021)", "options": [{"label": "A", "text": "Right to left shunt", "correct": false}, {"label": "B", "text": "Ventilation/Perfusion mismatch", "correct": false}, {"label": "C", "text": "Hypoventilation", "correct": true}, {"label": "D", "text": "Alveolar membrane damage", "correct": false}], "correct_answer": "C. Hypoventilation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Hypoventilation</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Hypoventilation is a primary cause of hypoxemia with a normal alveolar-arterial oxygen gradient.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "You are a public health officer in a remote village experiencing a rise in dog bites due to an increase in stray dogs. The local panchayat asks you to teach the villagers essential first aid steps after a dog bite. Which method would you primarily use? (FMGE JAN 2023)", "options": [{"label": "A", "text": "Panel discussion", "correct": false}, {"label": "B", "text": "Flash cards", "correct": false}, {"label": "C", "text": "Demonstration", "correct": true}, {"label": "D", "text": "Symposium", "correct": false}], "correct_answer": "C. Demonstration", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/08/06/screenshot-2024-08-06-130424.jpg"], "explanation": "<p><strong>Ans. C. Demonstration</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Demonstration is the most effective method for teaching practical first aid steps, such as wound care after a dog bite, especially in settings with limited healthcare access.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Sour taste is mediated by:", "options": [{"label": "A", "text": "TRPV1 Channel", "correct": true}, {"label": "B", "text": "Metabotropic Receptor", "correct": false}, {"label": "C", "text": "GPCR T1R1", "correct": false}, {"label": "D", "text": "GPCR T1R3", "correct": false}], "correct_answer": "A. TRPV1 Channel", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/09/04/screenshot-2024-09-04-164708_ph9q8pj.jpeg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/09/04/screenshot-2024-09-04-165350.jpeg"], "explanation": "<p><strong>Ans. A) TRPV1 Channel</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Sour taste is mediated by the activation of ion channels, particularly the TRPV1 channel and acid-sensitive ion channels, in response to H+ ions from acidic substances</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the subsequent pairs are inaccurately matched? ( INICET May 2023)", "options": [{"label": "A", "text": "Gastrin - G cells, Antrum", "correct": false}, {"label": "B", "text": "Secretin - S cells, Duodenum", "correct": false}, {"label": "C", "text": "CCK - I cells, Duodenum and jejunum", "correct": false}, {"label": "D", "text": "Motilin - M cells, Duodenum and Jejunum", "correct": true}], "correct_answer": "D. Motilin - M cells, Duodenum and Jejunum", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Motilin - M cells, Duodenum and Jejunum</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ GIT HORMONES</li><li>➤ GIT HORMONES</li><li>➤ Gastrin – G cell at antrum. Acts on Parietal cells stimulate the H+ K+ ATPase. Secretin – S cells at Duodenum. Decrease gastric acid secretion and Increase pancreatic HCO 3 - secretion. CCK-PZ – I cells in duodenum and jejunum. Increase pancreatic HCO 3 - secretion, Increase gall bladder contraction, Decrease gastric emptying and increase sphincter of Oddi relaxation. GIP – K cells in duodenum and jejunum. Decrease H+ secretion and increase insulin release. Motilin – Mo cells in small intestine. Produces migrating motor complexes (MMCs).</li><li>➤ Gastrin – G cell at antrum. Acts on Parietal cells stimulate the H+ K+ ATPase.</li><li>➤ Secretin – S cells at Duodenum. Decrease gastric acid secretion and Increase pancreatic HCO 3 - secretion.</li><li>➤ CCK-PZ – I cells in duodenum and jejunum. Increase pancreatic HCO 3 - secretion, Increase gall bladder contraction, Decrease gastric emptying and increase sphincter of Oddi relaxation.</li><li>➤ GIP – K cells in duodenum and jejunum. Decrease H+ secretion and increase insulin release.</li><li>➤ Motilin – Mo cells in small intestine. Produces migrating motor complexes (MMCs).</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A skin rash gets exaggerated on sun exposure is repaired by which mechanism? (NEET PG 2024)", "options": [{"label": "A", "text": "Base excision repair", "correct": false}, {"label": "B", "text": "Double-stranded DNA break repair", "correct": false}, {"label": "C", "text": "Mismatch repair", "correct": false}, {"label": "D", "text": "Nucleotide excision repair", "correct": true}], "correct_answer": "D. Nucleotide excision repair", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/09/06/screenshot-2024-09-06-170306.jpeg"], "explanation": "<p><strong>Ans. D) Nucleotide excision repair</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Nucleotide excision repair is the primary DNA repair mechanism that corrects damage caused by UV light, such as thymidine dimers.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following decreases in pregnancy? (NEET PG 2019)", "options": [{"label": "A", "text": "Respiratory rate", "correct": false}, {"label": "B", "text": "Vital capacity", "correct": false}, {"label": "C", "text": "Functional residual capacity", "correct": true}, {"label": "D", "text": "Inspiratory capacity", "correct": false}], "correct_answer": "C. Functional residual capacity", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/09/14/untitled-71.jpg"], "explanation": "<p><strong>Ans. C) Functional residual capacity</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Functional residual capacity (FRC) is the volume of air remaining in the lungs at the end of a normal expiration. During pregnancy, the diaphragm is elevated due to the enlarging uterus, leading to a decrease in FRC by approximately 22%. This is primarily due to reductions in expiratory reserve volume and residual volume.</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option A. Respiratory rate : The respiratory rate typically remains unchanged during pregnancy, staying at about 14-16 breaths per minute.</li><li>• Option A. Respiratory rate</li><li>• Option B. Vital capacity : Vital capacity, which is the sum of inspiratory reserve volume, tidal volume, and expiratory reserve volume, remains unchanged during pregnancy.</li><li>• Option B. Vital capacity</li><li>• Option D. Inspiratory capacity : Inspiratory capacity increases during pregnancy by about 10%. This increase is due to the higher tidal volume and inspiratory reserve volume.</li><li>• Option D. Inspiratory capacity</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Functional residual capacity decreases during pregnancy due to the elevation of the diaphragm caused by the enlarging uterus.</li><li>➤ Functional residual capacity decreases in pregnancy.</li><li>➤ Functional residual capacity decreases in pregnancy.</li><li>➤ Ref: Page no 189, Williams Obstetrics 26 th edition</li><li>➤ Ref: Page no 189, Williams Obstetrics 26 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following helminthic infections that is commonly transmitted by soil, is characterized by the egg in stool as shown in the image below? ( NEET PG 2020)", "options": [{"label": "A", "text": "Trichuris trichiura", "correct": true}, {"label": "B", "text": "Ancyclostoma duodenale", "correct": false}, {"label": "C", "text": "Necator americanus", "correct": false}, {"label": "D", "text": "Ascaris lumbricoides", "correct": false}], "correct_answer": "A. Trichuris trichiura", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/01/1_IM0tLJR.jpg"], "explanation_images": [], "explanation": "<p><strong>Ans. A) Trichuris trichiura</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Recognizing the distinctive egg morphology of Trichuris trichiura in stool samples is crucial for diagnosing whipworm infection. Proper sanitation and hygiene are key in preventing soil-transmitted helminth infections, and treatment involves specific antihelminthic medications to reduce the worm burden and alleviate symptoms.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the false statement out of the following: (INICET NOV 2021)", "options": [{"label": "A", "text": "TACE is used for multinodular lesions", "correct": false}, {"label": "B", "text": "Lenvatinib is used for lesions less than 3 cm", "correct": true}, {"label": "C", "text": "The incidence of HCC is increasing", "correct": false}, {"label": "D", "text": "NASH and NAFLD are risk factors for HCC", "correct": false}], "correct_answer": "B. Lenvatinib is used for lesions less than 3 cm", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Lenvatinib is used for lesions less than 3 cm</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The Barcelona-Clinic-Liver Cancer (BCLC) Classification is the commonly used staging system for HCC. Very early HCC is treated by ablation, early HCC with a single nodule is resected, and when there are multiple nodules over 3 cm, ablation or transplantation are considered. Intermediate stage HCC is treated by chemoembolization, and TACE (Trans-arterial chemoembolization) is used for multinodular lesions. Advanced stages of the disease with macrovascular invasion are treated with systemic therapies. Lenvatinib and sorafenib are first-line drugs. Supportive care is given at the terminal stage of the disease.</li><li>➤ The Barcelona-Clinic-Liver Cancer (BCLC) Classification is the commonly used staging system for HCC.</li><li>➤ Very early HCC is treated by ablation, early HCC with a single nodule is resected, and when there are multiple nodules over 3 cm, ablation or transplantation are considered.</li><li>➤ Intermediate stage HCC is treated by chemoembolization, and TACE (Trans-arterial chemoembolization) is used for multinodular lesions.</li><li>➤ Advanced stages of the disease with macrovascular invasion are treated with systemic therapies. Lenvatinib and sorafenib are first-line drugs.</li><li>➤ Supportive care is given at the terminal stage of the disease.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "1st pharyngeal arch gives rise to all except:(NEET PG 2019)", "options": [{"label": "A", "text": "Medial pterygoids", "correct": false}, {"label": "B", "text": "Levator veli palatini", "correct": true}, {"label": "C", "text": "Lateral pterygoids", "correct": false}, {"label": "D", "text": "Tensor veli palatini", "correct": false}], "correct_answer": "B. Levator veli palatini", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/11/07/screenshot-2023-11-07-110824.jpg"], "explanation": "<p><strong>Ans. B. Levator veli palatini</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 26-year-old male presents with back ache, morning stiffness and reddening of eyes. X-ray of the patient is given below. Identify the diagnosis of this patient: (NEET PG 2021)", "options": [{"label": "A", "text": "Rheumatoid arthritis", "correct": false}, {"label": "B", "text": "Psoriatic arthritis", "correct": false}, {"label": "C", "text": "Ankylosing spondylitis", "correct": true}, {"label": "D", "text": "Paget’s disease", "correct": false}], "correct_answer": "C. Ankylosing spondylitis", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/08/26/untitled-1367961.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture62_q2G5WQZ.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture63_61MkIzQ.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture64_sV9AOV9.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture66.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture67.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/02/picture68.jpg"], "explanation": "<p><strong>Ans. C) Ankylosing spondylitis</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The described symptoms of back ache, morning stiffness and reddening of eyes, along with the bamboo spine appearance in the spine x-ray are diagnostic of ankylosing spondylitis.</li><li>➤ The described symptoms of back ache, morning stiffness and reddening of eyes, along with the bamboo spine appearance in the spine x-ray are diagnostic of ankylosing spondylitis.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents to the hospital with complaints of abdominal pain. A stool examination was done, and it showed the presence of the organism shown in image A. The body has segments broader than the length. Which of the eggs shown in column B corresponds to this organism? (INICET MAY 2022)", "options": [{"label": "A", "text": "1", "correct": false}, {"label": "B", "text": "2", "correct": false}, {"label": "C", "text": "3", "correct": false}, {"label": "D", "text": "4", "correct": true}], "correct_answer": "D. 4", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/06/28/screenshot-2024-06-28-170006.png"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/06/28/screenshot-2024-06-28-170058.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/2%20(2).png"], "explanation": "<p><strong>Ans. D) 4</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient is being treated with phenobarbitone. Which of the following is inhibited? (NEET PG 2024)", "options": [{"label": "A", "text": "Complex I → coenzyme Q", "correct": true}, {"label": "B", "text": "Complex II → coenzyme Q", "correct": false}, {"label": "C", "text": "Complex III → Cyt. C", "correct": false}, {"label": "D", "text": "Complex IV → oxygen", "correct": false}], "correct_answer": "A. Complex I → coenzyme Q", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Complex I → coenzyme Q</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Phenobarbitone specifically inhibits the electron transport between Complex I and coenzyme Q, disrupting ATP production.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old HIV-positive patient presents with persistent headaches, confusion, and a gradual onset of fever. A lumbar puncture is performed, revealing an elevated opening pressure and a cerebrospinal fluid analysis, showing a positive India Ink stain. What is the most likely diagnosis? (FMGE JANUARY 2024)", "options": [{"label": "A", "text": "Bacterial meningitis", "correct": false}, {"label": "B", "text": "Viral encephalitis", "correct": false}, {"label": "C", "text": "Cryptococcus neoformans", "correct": true}, {"label": "D", "text": "Tuberculous meningitis", "correct": false}], "correct_answer": "C. Cryptococcus neoformans", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/05/27/12.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/05/27/screenshot-2024-05-27-121105_RWjSGJX.jpg"], "explanation": "<p><strong>Ans. C) Cryptococcus neoformans</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• The key points that support the diagnosis of Cryptococcus neoformans meningitis are:</li><li>• The patient is HIV-positive, indicating an immunocompromised state.</li><li>• The presentation of persistent headache, confusion, and gradual onset of fever is consistent with meningitis.</li><li>• The lumbar puncture reveals an elevated opening pressure, which is seen in meningitis.</li><li>• The cerebrospinal fluid (CSF) analysis shows a positive India Ink stain, which is a negative stain used to detect capsulated organisms like Cryptococcus neoformans.</li><li>• Cryptococcus neoformans is an opportunistic fungus that commonly causes chronic meningitis in immunocompromised individuals, such as those with HIV.</li><li>• Indian Ink Preparation showing Cryptococcus</li><li>• Other Options:</li><li>• Other</li><li>• Options:</li><li>• Option A. Bacterial meningitis: While the symptoms and elevated CSF pressure are consistent with bacterial meningitis, the positive India Ink stain indicates the presence of a fungal organism rather than bacteria.</li><li>• Option A. Bacterial meningitis:</li><li>• Option B. Viral encephalitis: The symptoms and elevated CSF pressure are not typically seen in viral encephalitis, which primarily affects the brain parenchyma rather than the meninges. Additionally, the positive India Ink stain is not consistent with a viral etiology.</li><li>• Option B. Viral encephalitis:</li><li>• Option D. Tuberculous meningitis: Although tuberculous meningitis is a chronic form of meningitis, it is caused by Mycobacterium tuberculosis, a bacterium, and would not result in a positive India Ink stain, which is specific for detecting Cryptococcus neoformans.</li><li>• Option D. Tuberculous meningitis:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Cryptococcus neoformans is an opportunistic fungus that can cause meningitis in immunocompromised individuals, such as those with HIV.</li><li>➤ A positive India Ink stain on CSF analysis, along with elevated opening pressure and compatible clinical symptoms, strongly suggests Cryptococcus neoformans meningitis.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most common hernia in females (INICET MAY 2024)", "options": [{"label": "A", "text": "Direct inguinal hernia", "correct": false}, {"label": "B", "text": "Indirect inguinal hernia", "correct": true}, {"label": "C", "text": "Femoral hernia", "correct": false}, {"label": "D", "text": "Obturator hernia", "correct": false}], "correct_answer": "B. Indirect inguinal hernia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Indirect inguinal hernia</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In females, the most common type of hernia is the indirect inguinal hernia, despite femoral hernias being more common in females compared to males.</li><li>➤ Incidence of Hernia in Females: Indirect inguinal Hernia > Direct inguinal Hernia > Femoral hernia</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents to the OPD with complaints of vertigo, sensorineural hearing loss and tinnitus which lasts minutes to hours with accompanied nausea and vomiting. On investigation, there is endolymphatic hypertension present. What is the diagnosis? (INICET Nov 2023)", "options": [{"label": "A", "text": "Meniere’s disease", "correct": true}, {"label": "B", "text": "Otosclerosis", "correct": false}, {"label": "C", "text": "BPPV", "correct": false}, {"label": "D", "text": "Acoustic neuroma", "correct": false}], "correct_answer": "A. Meniere’s disease", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/05/08/screenshot-2024-05-08-111007.JPG"], "explanation_images": [], "explanation": "<p><strong>Ans. A) Meniere’s disease</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ Meniere’s disease is a chronic condition that requires management of symptoms through lifestyle changes, medications to control vertigo, and sometimes more invasive treatments to manage fluid pressure in the inner ear.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient was started on haloperidol for the treatment of schizophrenia. He develops torticollis, muscle spasm, and trismus. What is the next best step in the management? (FMGE JANUARY 2024)", "options": [{"label": "A", "text": "Decrease the dose of haloperidol", "correct": false}, {"label": "B", "text": "Shift from haloperidol to clozapine", "correct": false}, {"label": "C", "text": "Shift from haloperidol to fluphenazine", "correct": false}, {"label": "D", "text": "Give benzhexol", "correct": true}], "correct_answer": "D. Give benzhexol", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Give benzhexol</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Acute dystonia, an early side effect of antipsychotic treatment, is managed by administering an intramuscular anticholinergic medication such as benzhexol (trihexyphenidyl) or benztropine to quickly relieve muscle spasms.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A veterinarian developed an ulcer with central black eschar over the forearm as shown in the image. Which of the following is the most probable causative organism? (NEET PG 2019)", "options": [{"label": "A", "text": "Pseudomonas aeruginosa", "correct": false}, {"label": "B", "text": "﻿﻿﻿Yersinia pestis", "correct": false}, {"label": "C", "text": "﻿﻿﻿Bacillus anthracis", "correct": true}, {"label": "D", "text": "﻿﻿﻿Francisella tularensis", "correct": false}], "correct_answer": "C. ﻿﻿﻿Bacillus anthracis", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/01/1_av1PUvn.jpg"], "explanation_images": [], "explanation": "<p><strong>Ans. C) Bacillus anthracis</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Cutaneous anthrax is characterized by the initial appearance of a small pimple that quickly turns into a painless ulcer with a necrotic (black) eschar at the center. This presentation is typical for individuals who have been in contact with infected animals or animal products, which is common in the veterinary profession.</li><li>➤ Additional Information</li><li>➤ Additional Information</li><li>➤ Robert Koch validated the germ theory of disease after discovering the anthrax bacillus as the cause of anthrax. He also discovered the causative agents of tuberculosis and cholera. Hence, he is Known as the Father of Bacteriology.</li><li>➤ Koch

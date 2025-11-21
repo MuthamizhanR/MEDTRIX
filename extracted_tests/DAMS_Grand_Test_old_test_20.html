@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Grand Test   169</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Grand Test   169</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                300 Questions | 1200 Total Marks | 310 min Duration | ~62.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 300 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 310 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 300</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Grand Test   169 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 300</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 300 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Nerve supply of the tip of nose is :", "options": [{"label": "A", "text": "Infratrochlear", "correct": false}, {"label": "B", "text": "Supratrochlear", "correct": true}, {"label": "C", "text": "Supraorbital", "correct": false}, {"label": "D", "text": "External nasal", "correct": false}], "correct_answer": "B. Supratrochlear", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "While removing a fish bone stuck in the throat, the main trunk of internal laryngeal nerve was severed. The bone was stuck in the :", "options": [{"label": "A", "text": "Piriform fossa", "correct": true}, {"label": "B", "text": "Sinus of larynx", "correct": false}, {"label": "C", "text": "Vallecula epiglottis", "correct": false}, {"label": "D", "text": "Vestibule of larynx", "correct": false}], "correct_answer": "A. Piriform fossa", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Example of traction epiphysis is :", "options": [{"label": "A", "text": "Os trigonum of talus", "correct": false}, {"label": "B", "text": "Coracoid process of scapula", "correct": false}, {"label": "C", "text": "Head of femur", "correct": false}, {"label": "D", "text": "Tibial tuberosity", "correct": true}], "correct_answer": "D. Tibial tuberosity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The third week of development is characterized by the appearance of the branchial apparatus, the embryonic primordium from which head and neck structures will be derived.Which of the following structures develop from the second branchial arch?", "options": [{"label": "A", "text": "Anterior digastric muscle", "correct": false}, {"label": "B", "text": "Posterior cricoarytenoideus muscle", "correct": false}, {"label": "C", "text": "Posterior digastric muscle", "correct": true}, {"label": "D", "text": "Stylopharyngeus muscle", "correct": false}], "correct_answer": "C. Posterior digastric muscle", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 31-year-old woman complains of headache and dizziness after hitting a kitchen cabinet door with her head. Her magnetic resonance imaging (MRI) scan and venogram show a large blood clot in the great cerebral vein of Galen. The obstructed vein of the brain is a direct tributary of which of the following venous structures?", "options": [{"label": "A", "text": "Emissary veins", "correct": false}, {"label": "B", "text": "Pterygoid venous plexus", "correct": false}, {"label": "C", "text": "Diploic veins", "correct": false}, {"label": "D", "text": "Dural venous sinuses", "correct": true}], "correct_answer": "D. Dural venous sinuses", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 53-year-old woman with a severe middle ear infection comes to a hospital. On examination, a physician finds that the infection has injured the tympanic nerve. The damaged nerve:", "options": [{"label": "A", "text": "Is a branch of the facial nerve", "correct": false}, {"label": "B", "text": "Contains postganglionic parasympathetic fibers", "correct": false}, {"label": "C", "text": "Synapses with fibers in the lesser petrosal nerve", "correct": false}, {"label": "D", "text": "Is a branch of the glossopharyngeal nerve", "correct": true}], "correct_answer": "D. Is a branch of the glossopharyngeal nerve", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 43-year-old man has new onset of difficulty with speaking. Examination reveals problems in elevating the hyoid bone and floor of the mouth, secondary to paralysis of the posterior belly of the digastric muscle. Which of the following nerves is most likely involved?", "options": [{"label": "A", "text": "Accessory nerve", "correct": false}, {"label": "B", "text": "Trigeminal nerve", "correct": false}, {"label": "C", "text": "Ansa cervicalis", "correct": false}, {"label": "D", "text": "Facial nerve", "correct": true}], "correct_answer": "D. Facial nerve", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which nerve lesion could produce the condition where stimulation of right cornea results in blinking of the left eye but not the right eye?", "options": [{"label": "A", "text": "Left trigeminal", "correct": false}, {"label": "B", "text": "Left facial", "correct": false}, {"label": "C", "text": "Right trigeminal", "correct": false}, {"label": "D", "text": "Right facial", "correct": true}], "correct_answer": "D. Right facial", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/gt-171-10_jpg-.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Association Fibers are white matter fibers which connect :", "options": [{"label": "A", "text": "Corresponding areas in two cerebral hemisphere", "correct": false}, {"label": "B", "text": "Cerebral cortex with lower level in brain", "correct": false}, {"label": "C", "text": "Different cortical areas in the same hemisphere", "correct": true}, {"label": "D", "text": "Different cranial nerve nuclei", "correct": false}], "correct_answer": "C. Different cortical areas in the same hemisphere", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the muscle :", "options": [{"label": "A", "text": "Lateral cricoarytenoid", "correct": false}, {"label": "B", "text": "Posterior cricoarytenoid", "correct": true}, {"label": "C", "text": "Thyroepiglottis", "correct": false}, {"label": "D", "text": "Cricothyroid", "correct": false}], "correct_answer": "B. Posterior cricoarytenoid", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/536054310.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8(69).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are seen in the Horner’s syndrome, except :", "options": [{"label": "A", "text": "Drooping of upper eyelid", "correct": false}, {"label": "B", "text": "Enophthalmos", "correct": false}, {"label": "C", "text": "Dilated pupil", "correct": true}, {"label": "D", "text": "Loss of sweating of same sides of face", "correct": false}], "correct_answer": "C. Dilated pupil", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/9(66).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which cervical vertebra does not have a body?", "options": [{"label": "A", "text": "C1", "correct": true}, {"label": "B", "text": "C2", "correct": false}, {"label": "C", "text": "C3", "correct": false}, {"label": "D", "text": "C4", "correct": false}], "correct_answer": "A. C1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient complains of persistent numbness of the chin, lower lip and lower teeth. She further indicates that she has difficulty in chewing. Radiographic studies of the head demonstrate a small discrete mass in the infratemporal fossa. Which nerve has been compromised by the mass ?", "options": [{"label": "A", "text": "Buccal nerve", "correct": false}, {"label": "B", "text": "Lingual nerve", "correct": false}, {"label": "C", "text": "Auriculotemporal nerve", "correct": false}, {"label": "D", "text": "Inferior alveolar nerve", "correct": true}], "correct_answer": "D. Inferior alveolar nerve", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Spinal part of accessory nerve supplies :", "options": [{"label": "A", "text": "Pectoralis major", "correct": false}, {"label": "B", "text": "Pectoralis minor", "correct": false}, {"label": "C", "text": "Sternocleidomastoid", "correct": true}, {"label": "D", "text": "Deltoid", "correct": false}], "correct_answer": "C. Sternocleidomastoid", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/206390A14.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Internal arcuate fibers of medulla comes from:", "options": [{"label": "A", "text": "Dorsal nucleus of vagus", "correct": false}, {"label": "B", "text": "Hyposglossal nucleus", "correct": false}, {"label": "C", "text": "Nucleus of tractus solitaries", "correct": false}, {"label": "D", "text": "Nucleus gracilis and cuneatus", "correct": true}], "correct_answer": "D. Nucleus gracilis and cuneatus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Dorello’s canal transmits:", "options": [{"label": "A", "text": "Middle meningeal artery", "correct": false}, {"label": "B", "text": "Mandibular nerve", "correct": false}, {"label": "C", "text": "Superior alveolar branch of maxillary", "correct": false}, {"label": "D", "text": "Abducent nerve", "correct": true}], "correct_answer": "D. Abducent nerve", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Skin at the angle of jaw is supplied by:", "options": [{"label": "A", "text": "Mandibular branch of trigeminal", "correct": false}, {"label": "B", "text": "Maxillary branch of trigeminal", "correct": false}, {"label": "C", "text": "Lesser occipital", "correct": false}, {"label": "D", "text": "Greater auricular", "correct": true}], "correct_answer": "D. Greater auricular", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following substances is most likely to cause relaxation of LES and fundus of stomach during swallowing?", "options": [{"label": "A", "text": "Gastrin", "correct": false}, {"label": "B", "text": "Norepinephrine", "correct": false}, {"label": "C", "text": "Motilin", "correct": false}, {"label": "D", "text": "Nitric oxide", "correct": true}], "correct_answer": "D. Nitric oxide", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following has the maximum daily secretion?", "options": [{"label": "A", "text": "Salivary", "correct": false}, {"label": "B", "text": "Gastric", "correct": true}, {"label": "C", "text": "Pancreatic", "correct": false}, {"label": "D", "text": "Intestinal", "correct": false}], "correct_answer": "B. Gastric", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following hormones has nuclear receptors?", "options": [{"label": "A", "text": "Insulin", "correct": false}, {"label": "B", "text": "Cortisol", "correct": false}, {"label": "C", "text": "Aldosterone", "correct": false}, {"label": "D", "text": "Thyroid", "correct": true}], "correct_answer": "D. Thyroid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following water soluble hormones does not need a second messenger?", "options": [{"label": "A", "text": "Oxytocin", "correct": false}, {"label": "B", "text": "ADH", "correct": false}, {"label": "C", "text": "Insulin", "correct": true}, {"label": "D", "text": "Glucagon", "correct": false}], "correct_answer": "C. Insulin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following cause a mesangial cell contraction except", "options": [{"label": "A", "text": "Endothelin", "correct": false}, {"label": "B", "text": "Angiotensin II", "correct": false}, {"label": "C", "text": "Nor epinephrine", "correct": false}, {"label": "D", "text": "ANP", "correct": true}], "correct_answer": "D. ANP", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following events occur in the carotid bodies on exposure to hypoxia are listed in random order: (1) release of dopamine (2) excitation of afferent fibres of ninth nerve (3) depolarization of glomus cells (4) decreased potassium conductance through O2 sensitive potassium channels on glomus cells (5) opening of voltage gated calcium channels and calcium influx What is the correct sequence in which the above occur on exposure to hypoxia?", "options": [{"label": "A", "text": "1, 2, 3, 4, 5", "correct": false}, {"label": "B", "text": "2, 1, 3, 4, 5", "correct": false}, {"label": "C", "text": "4, 3, 5, 1, 2", "correct": true}, {"label": "D", "text": "4, 3, 5, 2, 1", "correct": false}], "correct_answer": "C. 4, 3, 5, 1, 2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Phospholamban in cardiac and smooth muscle cells is which of the following?", "options": [{"label": "A", "text": "Excitatory protein which increases SERCA activity", "correct": false}, {"label": "B", "text": "Inhibitory protein which decreases SERCA activity", "correct": true}, {"label": "C", "text": "Excitatory protein which increases Na+-Ca++ antiport", "correct": false}, {"label": "D", "text": "Inhibitory protein which decreases Na+-Ca++ antiport", "correct": false}], "correct_answer": "B. Inhibitory protein which decreases SERCA activity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following hormones is k/a “hydrocholeretic”?", "options": [{"label": "A", "text": "Gastrin", "correct": false}, {"label": "B", "text": "CCK", "correct": false}, {"label": "C", "text": "Secretin", "correct": true}, {"label": "D", "text": "GIP", "correct": false}], "correct_answer": "C. Secretin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Acclimatization to high altitude includes all of the following except", "options": [{"label": "A", "text": "Increased urinary excretion of bicarbonates", "correct": false}, {"label": "B", "text": "Shift of OHDC to the right", "correct": false}, {"label": "C", "text": "Increased secretion of erythropoietin", "correct": false}, {"label": "D", "text": "Decrease in the number of mitochondria", "correct": true}], "correct_answer": "D. Decrease in the number of mitochondria", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following will cause the OHDC to shift to the left?", "options": [{"label": "A", "text": "High altitude", "correct": false}, {"label": "B", "text": "Hemolyticanemia", "correct": false}, {"label": "C", "text": "Exercise", "correct": false}, {"label": "D", "text": "CO poisoning", "correct": true}], "correct_answer": "D. CO poisoning", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Maximum velocity of flow is seen in which of the following?", "options": [{"label": "A", "text": "Aorta", "correct": true}, {"label": "B", "text": "Arteries", "correct": false}, {"label": "C", "text": "Arterioles", "correct": false}, {"label": "D", "text": "Capillaries", "correct": false}], "correct_answer": "A. Aorta", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Lung volume at the end of normal expiration is which of the following?", "options": [{"label": "A", "text": "Residual volume", "correct": false}, {"label": "B", "text": "FRC", "correct": true}, {"label": "C", "text": "TLC", "correct": false}, {"label": "D", "text": "FVC", "correct": false}], "correct_answer": "B. FRC", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are features of local potentials except", "options": [{"label": "A", "text": "Graded responses", "correct": false}, {"label": "B", "text": "Produced by subthreshold stimuli", "correct": false}, {"label": "C", "text": "Can be excitatory or inhibitory", "correct": false}, {"label": "D", "text": "Self propagated", "correct": true}], "correct_answer": "D. Self propagated", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The receptors responsible for rapid, shallow breathing are", "options": [{"label": "A", "text": "Pulmonary stretch receptors", "correct": false}, {"label": "B", "text": "J receptors", "correct": true}, {"label": "C", "text": "Chemoreceptors", "correct": false}, {"label": "D", "text": "Muscle spindles in diaphragm", "correct": false}], "correct_answer": "B. J receptors", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which point in the figure given below corresponds with arterial blood in a severely anemic patient?", "options": [{"label": "A", "text": "Point A", "correct": false}, {"label": "B", "text": "Point B", "correct": false}, {"label": "C", "text": "Point C", "correct": false}, {"label": "D", "text": "Point D", "correct": true}], "correct_answer": "D. Point D", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/73681782.17.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statementsis NOT true about amylin?", "options": [{"label": "A", "text": "It is secreted by beta cells of pancreas", "correct": false}, {"label": "B", "text": "Ratio of insulin and amylin is 100:1", "correct": false}, {"label": "C", "text": "It enhances gastric emptying", "correct": true}, {"label": "D", "text": "It is a 37-residue peptide hormone", "correct": false}], "correct_answer": "C. It enhances gastric emptying", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the correct sequence of actin- myosin cross bridge cycling?", "options": [{"label": "A", "text": "Detachment of myosin head, power stroke, hydrolysis of ATP, re-cocking of myosin head", "correct": false}, {"label": "B", "text": "Hydrolysis of ATP, power stroke, detachment of myosin head, re-cocking of myosin head", "correct": false}, {"label": "C", "text": "Power stroke, detachment of myosin head, re-cocking of myosin head, hydrolysis of ATP", "correct": false}, {"label": "D", "text": "Power stroke, detachment of myosin head, hydrolysis of ATP, re-cocking of myosin head", "correct": true}], "correct_answer": "D. Power stroke, detachment of myosin head, hydrolysis of ATP, re-cocking of myosin head", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Decarboxylation reaction require:", "options": [{"label": "A", "text": "Riboflavin", "correct": false}, {"label": "B", "text": "Thiamine", "correct": true}, {"label": "C", "text": "Niacin", "correct": false}, {"label": "D", "text": "Biotin", "correct": false}], "correct_answer": "B. Thiamine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following aa replacement of Glutamine will not affect protein function :", "options": [{"label": "A", "text": "Glutamate", "correct": false}, {"label": "B", "text": "Asparagine", "correct": true}, {"label": "C", "text": "Alanine", "correct": false}, {"label": "D", "text": "Leucine", "correct": false}], "correct_answer": "B. Asparagine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Peroxidase enzyme is used in estimating?", "options": [{"label": "A", "text": "Haemoglobin", "correct": false}, {"label": "B", "text": "Ammonia", "correct": false}, {"label": "C", "text": "Creatinine", "correct": false}, {"label": "D", "text": "Glucose", "correct": true}], "correct_answer": "D. Glucose", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following is regarding proteoglycans except:", "options": [{"label": "A", "text": "Binds water", "correct": false}, {"label": "B", "text": "Made of amino sugar and amino acids", "correct": false}, {"label": "C", "text": "Are positively charged", "correct": true}, {"label": "D", "text": "Chondroitin sulfate is an example", "correct": false}], "correct_answer": "C. Are positively charged", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Insulin promotes lipogenesis by the following except:", "options": [{"label": "A", "text": "Decreasing cAMP", "correct": false}, {"label": "B", "text": "Increase glucose uptake in cell", "correct": false}, {"label": "C", "text": "Inhibiting pyruvate dehydrogenase", "correct": true}, {"label": "D", "text": "Increase acetyl CoA", "correct": false}], "correct_answer": "C. Inhibiting pyruvate dehydrogenase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are true about glutathione except:", "options": [{"label": "A", "text": "Converts hemoglobin to methemoglobin", "correct": true}, {"label": "B", "text": "Decreases free radicals", "correct": false}, {"label": "C", "text": "Helps in conjugation", "correct": false}, {"label": "D", "text": "Cofactor of various enzymes", "correct": false}], "correct_answer": "A. Converts hemoglobin to methemoglobin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Source of ATP in RBC cells:", "options": [{"label": "A", "text": "Fatty acid oxidation", "correct": false}, {"label": "B", "text": "Oxidative phosphorylation", "correct": false}, {"label": "C", "text": "NADPH peroxidase", "correct": false}, {"label": "D", "text": "EMP pathway", "correct": true}], "correct_answer": "D. EMP pathway", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In glycolysis, insulin affects all of the following enzymes EXCEPT:", "options": [{"label": "A", "text": "Phosphofructokinase", "correct": false}, {"label": "B", "text": "Pyruvate kinase", "correct": false}, {"label": "C", "text": "Glucokinase", "correct": false}, {"label": "D", "text": "Hexokinase", "correct": true}], "correct_answer": "D. Hexokinase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A lady developed severe hyperglycemia in pregnancy and it returned to normal after pregnancy with history of same in her mother and sister. What is the enzyme defect?", "options": [{"label": "A", "text": "Glucokinase", "correct": true}, {"label": "B", "text": "PFK", "correct": false}, {"label": "C", "text": "Aldolase", "correct": false}, {"label": "D", "text": "Enolase", "correct": false}], "correct_answer": "A. Glucokinase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Regarding synthesis of triacyl glycerol in adipose tissue, all of the following are true except:", "options": [{"label": "A", "text": "Synthesis form Dihydroxyacetone phosphate", "correct": false}, {"label": "B", "text": "Enzyme Glycerol kinase plays an important role", "correct": true}, {"label": "C", "text": "Enzyme Glycerol 3 phosphate dehydrogenase plays an important role", "correct": false}, {"label": "D", "text": "Phosphatidate is hydrolyzed", "correct": false}], "correct_answer": "B. Enzyme Glycerol kinase plays an important role", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Carrier of cholesterol in plasma is:", "options": [{"label": "A", "text": "LDL", "correct": true}, {"label": "B", "text": "VLDL", "correct": false}, {"label": "C", "text": "HDL", "correct": false}, {"label": "D", "text": "Chylomicrons", "correct": false}], "correct_answer": "A. LDL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 1-year-old Israeli child is brought to the pediatrician by his parents because they noticed that the child can no longer sit up, hold his head up, or recognize them anymore. The child

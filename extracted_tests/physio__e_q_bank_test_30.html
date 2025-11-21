@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Membrane Potentials</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Membrane Potentials</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                15 Questions | 15 Total Marks | 25 min Duration | ~100.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 15 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 25 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 15</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Membrane Potentials - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 15</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 15 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "The extracellular concentration of a positive ion (with valency1) is 10 mmol/L and its intracellular concentration is 10 mmol/L, the potential across the membrane using the Nernst equation is (mV):", "options": [{"label": "A", "text": "-60", "correct": false}, {"label": "B", "text": "-10", "correct": false}, {"label": "C", "text": "60", "correct": true}, {"label": "D", "text": "10", "correct": false}], "correct_answer": "C. 60", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>60 The potential across the membrane using the Nernst equation is +60mV. EMF (millivolts) = 1/z 61x log Concentration on one side/Concentration on another side. Where Z is valency . Deriving the numerical value: EMF=61*log 100/10 =61*log10. =61*1 (since log 10 =1) =61mV Deciding the charge: The higher potassium concentration in the extracellular fluid means the potassium ions diffuse into the cell. To prevent this, a positive potential is required inside the cell. Hence, the potential across the membrane using the Nernst equation is +60mV .</p>\n<p><strong>Highyeild:</strong></p><p>The Nernst equation is used to calculate the value of the equilibrium potential of a particular cell for a particular ion:- where Vm = equilibrium potential for any ion [V]; z = valence of the ion, [C]0= concentration of ion X outside of the cell [mol]; [C]i = concentration of ion X inside the cell [mol].</p>\n<p><strong>Extraedge:</strong></p><p>The table below summarizes the main direction of movement for various ions and the overall impact this has on the resting membrane potential of a neuron:- lon Overall direction of movement Overall impact on resting potential Potassium Extracellular Makes it more negative Sodium Intracellular Makes it more positive Chloride Intracellular Makes it more negative (small impact) Organic anions Cannot cross the membrane Makes it more negative (small impact) Stimulus starts the rapid change in voltage or action potential. In patch-clamp mode, sufficient current must be administered to the cell in order to raise the voltage above the threshold voltage to start membrane depolarization. Depolarization is caused by a rapid rise in membrane potential opening of sodium channels in the cellular membrane, resulting in a large influx of sodium ions. Membrane Repolarization results from rapid sodium channel inactivation as well as a large efflux of potassium ions resulting from activated potassium channels. Hyperpolarization is a lowered membrane potential caused by the efflux of potassium ions and closing of the potassium channels. Resting state is when membrane potential returns to the resting voltage that occurred before the stimulus occurred.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-year-old woman collapsed due to an anxiety attack. The Emergency Medical Team who arrives on the scene notes that she is hyperventilating and suspects that she is suffering from tetany, a continuous contraction of skeletal muscle fibers caused by an increase in the excitability of nerves and muscle membranes. The increased membrane excitability is caused by which of the following?", "options": [{"label": "A", "text": "Decreased release of inhibitory neurotransmitters from nerve terminals", "correct": false}, {"label": "B", "text": "Depolarization of the nerve and muscle membranes", "correct": true}, {"label": "C", "text": "Spontaneous release of calcium from the sarcoplasmic reticulum", "correct": false}, {"label": "D", "text": "Activation of sodium channels at more negative membrane potentials", "correct": false}], "correct_answer": "B. Depolarization of the nerve and muscle membranes", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Depolarization of the nerve and muscle membranes Membrane excitability is related to the ease with which depolarization opens channels.</p>\n<p><strong>Highyeild:</strong></p><p>The opening of the Na+ channel in response to depolarization is, in part, related to the extracellular Ca2+ concentration; the lower the extracellular Ca2+ concentration, the easier it is for Na+ channels to open when the membrane depolarizes. Hyperventilation (lowering arterial tension) decreases extracellular Ca2+ concentration by increasing arterial pH. When pH rises, H+ is released from plasma proteins in exchange for Ca2+, and ionized Ca2+ concentration decreases.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 32-year-old woman undergoing surgery for appendicitis develops malignant hyperthermia following halothane anesthesia. The life-threatening increase in metabolic rate and body temperature is attributed to a mutation of the ryanodine receptor in skeletal muscle, resulting in which of the following?", "options": [{"label": "A", "text": "Excess calcium is released from the sarcoplasmic reticulum (SR) during muscle contraction.", "correct": true}, {"label": "B", "text": "The rapid repetitive firing of the presynaptic terminals of motor neurons.", "correct": false}, {"label": "C", "text": "The inability of skeletal muscle cells to repolarize.", "correct": false}, {"label": "D", "text": "An increase in the refractory period of the motor neurons.", "correct": false}], "correct_answer": "A. Excess calcium is released from the sarcoplasmic reticulum (SR) during muscle contraction.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Excess calcium is released from the sarcoplasmic reticulum (SR) during muscle contraction. Malignant Hyperthermia is associated with a genetic defect in the RyR1Q calcium channel of the skeletal muscle sarcoplasmic reticulum that permits uncontrolled calcium release from the sarcoplasmic reticulum when precipitating drugs are given.</p>\n<p><strong>Highyeild:</strong></p><p>The ryanodine receptor or calcium release channel on the sarcoplasmic reticulum (SR) is normally opened when skeletal muscle is activated. The flow of calcium through the open ryanodine receptor binds to troponin and initiates muscle contraction. The metabolic activity accompanying muscle contraction can warm the body. If a mutation in the ryanodine receptor causes the uncontrolled release of calcium from the SR, the body temperature can rise to levels that cause brain damage.</p>\n<p><strong>Extraedge:</strong></p><p>Serotonin Syndrome: Serotonin syndrome occurs when an overdose of a single drug, or concurrent use of several drugs, results in excess serotonergic activity in the central nervous system. SHT2 receptors are thought to be involved. Dantrolene is of no value. Neuroleptic malignant syndrome: is idiosyncratic and appears to be associated with hypersensitivity to the parkinsonism-inducing effects of D2-blocking antipsychotics in certain individuals.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "At which point on the action potential shown in the diagram below is the membrane closest to the Na+ equilibrium potential?", "options": [{"label": "A", "text": "Point A", "correct": true}, {"label": "B", "text": "Point B", "correct": false}, {"label": "C", "text": "Point C", "correct": false}, {"label": "D", "text": "Point D", "correct": false}], "correct_answer": "A. Point A", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Point A The Na+ equilibrium potential is approximately +60 mV and is based on the ratio of the intracellular and extracellular Na+ concentrations. During an action potential, the peak of the action potential (point A) is close, but not equal, to the Na+ equilibrium potential.</p>\n<p><strong>Highyeild:</strong></p><p>The membrane potential doesn’t reach the Na+ equilibrium potential because the Na+ channels start to inactivate and the K+ channels begin to activate during the upstroke of the action potential. The increase in the Na+ influx leads to further A positive feedback cycle rapidly moves the membrane potential toward its peak value, which is close but not equal to the Na+ equilibrium potential.</p>\n<p><strong>Extraedge:</strong></p><p>What is an action potential? An action potential is a rapid rise and subsequent fall in voltage or membrane potential across a cellular membrane with a characteristic pattern. The stimulus starts the rapid change in voltage or action potential. In patch-clamp mode, sufficient current must be administered to the cell to raise the voltage above the threshold voltage to start membrane depolarization. Depolarization is caused by a rapid rise in membrane potential opening of sodium channels in the cellular membrane, resulting in a large influx of sodium ions. Membrane Repolarization results from rapid sodium channel inactivation as well as a large efflux of potassium ions resulting from activated potassium channels. Hyperpolarization is a lowered membrane potential caused by the efflux of potassium ions and the closing of the potassium channels. The resting state is when membrane potential returns to the resting voltage that occurred before the stimulus occurred.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Suppose a resting myocardial cell membrane is altered to be relatively more permeable to sodium than to potassium, then the resting membrane potential would be nearest to which of the following values?", "options": [{"label": "A", "text": "-96 mV", "correct": false}, {"label": "B", "text": "-90 mV", "correct": false}, {"label": "C", "text": "+60 mV", "correct": true}, {"label": "D", "text": "+134 mV", "correct": false}], "correct_answer": "C. +60 mV", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>+60 mV If a cell membrane is relatively permeable to one ion and impermeable to other ions , then the resting membrane potential of the cell will be near the equilibrium potential for the ion that it is more permeable. In this case, the membrane is most permeable to sodium, so the resting membrane potential will be closest to the sodium equilibrium potential, which is +60 mV. So, the correct answer is C and the rest of the other options are false.</p>\n<p><strong>Highyeild:</strong></p><p>The resting membrane potential of a neuron is usually -65 millivolts. The interior of the cell has a more negative charge as compared to the exterior of the cell. But when a stimulus arrives, the sodium channels of the neuron “open” to allow Na+ ions to move passively into the cell. This will make the neuron becomes less negative, i.e., -55 mV, which could further go beyond the threshold until it becomes positive (e.g., 30 mV).</p>\n<p><strong>Extraedge:</strong></p><p>Summary of resting potential values in different types of cells Cell Kinds Values Chondrocytes -8mV Skeletal muscle cells -95 mV Erythrocytes -8.4 mV Astroglia -80 to -90 mV Cochlea -15 to -40mV Neurons -60 to -70 mV Photoreceptors -40 mV Involuntary muscles -60 mV Smooth muscles of the aorta -45mV</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The true statement regarding the action potential in a nerve is:", "options": [{"label": "A", "text": "Depolarization is a result of the outward movement of potassium ions.", "correct": false}, {"label": "B", "text": "The action potential occurs due to the sudden opening of Na+ channels.", "correct": true}, {"label": "C", "text": "The action potential occurs when the potential reaches a threshold at -75 mV.", "correct": false}, {"label": "D", "text": "The resting membrane potential is -95 mV.", "correct": false}], "correct_answer": "B. The action potential occurs due to the sudden opening of Na+ channels.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>The action potential occurs due to the sudden opening of Na+ channels. The action potential occurs due to the sudden opening of Na+ channels- at the onset of the action potential, the sodium channels instantaneously become activated and allow up to a 5000-fold increase in sodium conductance.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option: A. The depolarization is a result of the outward movement of potassium ions-Depolarization Stage. At this time, the membrane suddenly becomes permeable to sodium ions, allowing tremendous numbers of positively charged sodium ions to diffuse to the interior of the axon. Option: C. The action potential occurs when the potential reaches a threshold at -65 mV. Option: D. The resting membrane potential is -90 mV. In neurons, the resting membrane potential is usually about -70 mV.</p>\n<p><strong>Extraedge:</strong></p><p>What is an action potential? An action potential is a rapid rise and subsequent fall in voltage or membrane potential across a cellular membrane with a characteristic pattern. The stimulus starts the rapid change in voltage or action potential. In patch-clamp mode, sufficient current must be administered to the cell to raise the voltage above the threshold voltage to start membrane depolarization. Depolarization is caused by a rapid rise in membrane potential opening of sodium channels in the cellular membrane, resulting in a large influx of sodium ions. Membrane Repolarization results from rapid sodium channel inactivation as well as a large efflux of potassium ions resulting from activated potassium channels. Hyperpolarization is a lowered membrane potential caused by the efflux of potassium ions and the closing of the potassium channels. The resting state is when membrane potential returns to the resting voltage that occurred before the stimulus occurred.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Gibbs-Donnan equilibrium explains the:", "options": [{"label": "A", "text": "Effect of one non-diffusible ion on the distribution of another non-diffusible ion.", "correct": false}, {"label": "B", "text": "Effect of one permeant ion on the distribution of another permeant ion.", "correct": false}, {"label": "C", "text": "Effect of a permeant ion on the distribution of non-diffusible ions.", "correct": false}, {"label": "D", "text": "Effect of a non-diffusible ion on the distribution of permeant ions.", "correct": true}], "correct_answer": "D. Effect of a non-diffusible ion on the distribution of permeant ions.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Effect of a non-diffusible ion on the distribution of permeant ions. Gibbs Donnan equilibrium explains the effect of non-diffusible ions on the distribution of permeant ions.</p>\n<p><strong>Highyeild:</strong></p><p>Donnan equilibrium across a cell membrane (schematic):- The Donnan effect is tactic pressure attributable to cations (Na+ and K+) attached to dissolved plasma proteins. In the simple model system above, Cl- will diffuse from 1 →2, and Na+ will follow to maintain electroneutrality. In compartment 2 then, Cl- will be present and [Na+]equil. > [Na]initial at Donnan equilibrium. Because of the asymmetrical distribution of the permeant ions, there must be a Vm that simultaneously satisfies their equilibrium distributions.</p>\n<p><strong>Extraedge:</strong></p><p>Gibbs-Donnan equilibrium explains the effect of a permeant ion on the distribution of non-diffusible ions. The equilibrium occurs when a semi-permeable membrane separates two solutions containing non-diffusible ions and permeant ions at different concentrations. The non-diffusible ions cannot cross the membrane, while the permeant ions can.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following would cause an immediate reduction in the amount of potassium leaking out of a cell?", "options": [{"label": "A", "text": "Increasing the permeability of the membrane to potassium", "correct": false}, {"label": "B", "text": "Hyperpolarizing the membrane potential", "correct": true}, {"label": "C", "text": "Decreasing the extracellular potassium concentration", "correct": false}, {"label": "D", "text": "Reducing the activity of the sodium-potassium pump", "correct": false}], "correct_answer": "B. Hyperpolarizing the membrane potential", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hyperpolarizing the membrane potential Hyperpolarizing the membrane makes the inside of the cell more negative and therefore, makes it more difficult for potassium to flow out of the cell.</p>\n<p><strong>Highyeild:</strong></p><p>The amount of potassium leaking out of the cell depends on its membrane potential, its concentration gradient, and its membrane conductance. According to the Nernst equation, the electrical gradient for K+ is inward and the concentration gradient is outward. Decreasing the extracellular potassium concentration would increase the flow of potassium out of the cell, as would increasing the permeability of the membrane to potassium. Altering the activity of the sodium-potassium pump or the extracellular sodium concentration has no immediate effect on the flow of potassium across the membrane. Decreasing the activity of the sodium-potassium pump will ultimately depolarize the membrane, however, resulting in an increased flow of potassium out of the cell.</p>\n<p><strong>Extraedge:</strong></p><p>Hyperpolarization is when the membrane potential becomes more negative at a particular spot on the neuron

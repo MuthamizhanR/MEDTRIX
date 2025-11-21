@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Nutrition</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Nutrition</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                50 Questions | 200 Total Marks | 60 min Duration | ~72.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 50 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 60 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 50</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Nutrition - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 50</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 50 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "The recommended daily energy intake of an adult pregnant woman with heavy work is:", "options": [{"label": "A", "text": "2100 kcal", "correct": false}, {"label": "B", "text": "2500 kcal", "correct": false}, {"label": "C", "text": "3000 kcal", "correct": true}, {"label": "D", "text": "2900 kcal", "correct": false}], "correct_answer": "C. 3000 kcal", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13544761699269041/13544761699269041.m3u8"}, {"text": "In calculating RDA for a particular nutrient, 2 SD are not added for:", "options": [{"label": "A", "text": "Iron", "correct": false}, {"label": "B", "text": "Calcium", "correct": false}, {"label": "C", "text": "Energy", "correct": true}, {"label": "D", "text": "Vitamin A", "correct": false}], "correct_answer": "C. Energy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69943201699269062/69943201699269062.m3u8"}, {"text": "For a 60 kg Indian male, the minimum daily protein requirement has been calculated to be 40 g (mean) & 10 (Standard deviation). The recommended daily allowance of protein would be:", "options": [{"label": "A", "text": "60 g/day", "correct": true}, {"label": "B", "text": "70 g/day", "correct": false}, {"label": "C", "text": "40 g/day", "correct": false}, {"label": "D", "text": "50 g/day", "correct": false}], "correct_answer": "A. 60 g/day", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/48237671699269079/48237671699269079.m3u8"}, {"text": "In 13-15 year female child, recommended daily protein intake (gm/kg/day) is:", "options": [{"label": "A", "text": "0.68", "correct": false}, {"label": "B", "text": "0.87", "correct": true}, {"label": "C", "text": "1", "correct": false}, {"label": "D", "text": "1.33", "correct": false}], "correct_answer": "B. 0.87", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/17095171699269097/17095171699269097.m3u8"}, {"text": "Reference weight of Indian men and women is:", "options": [{"label": "A", "text": "60 and 50 kg", "correct": false}, {"label": "B", "text": "55 and 50 kg", "correct": false}, {"label": "C", "text": "65 and 55 kg", "correct": true}, {"label": "D", "text": "60 and 55 kg", "correct": false}], "correct_answer": "C. 65 and 55 kg", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15959141699269126/15959141699269126.m3u8"}, {"text": "Which one of the following is the best indicator of protein quality for recommending the dietary protein requirement?", "options": [{"label": "A", "text": "Protein- efficiency ratio", "correct": false}, {"label": "B", "text": "Biological value", "correct": false}, {"label": "C", "text": "DIASS", "correct": true}, {"label": "D", "text": "Net protein utilization", "correct": false}], "correct_answer": "C. DIASS", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/32085261699269153/32085261699269153.m3u8"}, {"text": "The optimum calories to be provided by proteins should be:", "options": [{"label": "A", "text": "5-10%", "correct": false}, {"label": "B", "text": "10-15%", "correct": false}, {"label": "C", "text": "15-20%", "correct": true}, {"label": "D", "text": "20-30%", "correct": false}], "correct_answer": "C. 15-20%", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39554631699269198/39554631699269198.m3u8"}, {"text": "International food standards is:", "options": [{"label": "A", "text": "BIS standards", "correct": false}, {"label": "B", "text": "Codex alimentarius", "correct": true}, {"label": "C", "text": "Agmark standards", "correct": false}, {"label": "D", "text": "PFA standards", "correct": false}], "correct_answer": "B. Codex alimentarius", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/57880831699269222/57880831699269222.m3u8"}, {"text": "Highest protein content is in:", "options": [{"label": "A", "text": "Red gram", "correct": false}, {"label": "B", "text": "Black gram", "correct": false}, {"label": "C", "text": "Bengal gram", "correct": false}, {"label": "D", "text": "Soya bean", "correct": true}], "correct_answer": "D. Soya bean", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12915721699269238/12915721699269238.m3u8"}, {"text": "Limiting Amino acids in wheat are:", "options": [{"label": "A", "text": "Methionine and Lysine", "correct": false}, {"label": "B", "text": "Lysine and threonine", "correct": true}, {"label": "C", "text": "Threonine and methionine", "correct": false}, {"label": "D", "text": "Arginine and lysine", "correct": false}], "correct_answer": "B. Lysine and threonine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/65916161699269261/65916161699269261.m3u8"}, {"text": "What is known as “poor man’s meat”?", "options": [{"label": "A", "text": "Milk", "correct": false}, {"label": "B", "text": "Pulses", "correct": true}, {"label": "C", "text": "Fish", "correct": false}, {"label": "D", "text": "Egg", "correct": false}], "correct_answer": "B. Pulses", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/25856761699269277/25856761699269277.m3u8"}, {"text": "Biological value is maximum of:", "options": [{"label": "A", "text": "Egg", "correct": true}, {"label": "B", "text": "Milk", "correct": false}, {"label": "C", "text": "Soya bean", "correct": false}, {"label": "D", "text": "Pulses", "correct": false}], "correct_answer": "A. Egg", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19355751699269483/19355751699269483.m3u8"}, {"text": "Biological value of Rice protein is:", "options": [{"label": "A", "text": "52", "correct": false}, {"label": "B", "text": "67", "correct": true}, {"label": "C", "text": "80", "correct": false}, {"label": "D", "text": "100", "correct": false}], "correct_answer": "B. 67", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/30145251699269509/30145251699269509.m3u8"}, {"text": "Cereals and proteins are considered complementary since:", "options": [{"label": "A", "text": "Both are deficient in methionine", "correct": false}, {"label": "B", "text": "Cereals are deficient in methionine and pulses are deficient in lysine", "correct": false}, {"label": "C", "text": "Cereals are deficient in lysine and pulses are deficient in methionine", "correct": true}, {"label": "D", "text": "Both cereals and pulses contain threonine", "correct": false}], "correct_answer": "C. Cereals are deficient in lysine and pulses are deficient in methionine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/44628911699269527/44628911699269527.m3u8"}, {"text": "Amount of cereals provided in Mid- day meal program for upper primary school children is:", "options": [{"label": "A", "text": "50 grams", "correct": false}, {"label": "B", "text": "75 grams", "correct": false}, {"label": "C", "text": "125 grams", "correct": true}, {"label": "D", "text": "150 grams", "correct": false}], "correct_answer": "C. 125 grams", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/45687811699269549/45687811699269549.m3u8"}, {"text": "In assessing the nutrition status of community the following are used except :", "options": [{"label": "A", "text": "Mortality in 1-4 years age group", "correct": true}, {"label": "B", "text": "Low birth weight", "correct": false}, {"label": "C", "text": "Weight/ height index in preschool children", "correct": false}, {"label": "D", "text": "Percentage of pregnant lady with less than 9.5% Hb", "correct": false}], "correct_answer": "A. Mortality in 1-4 years age group", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/47727981699269571/47727981699269571.m3u8"}, {"text": "Nutritional status of community is measured by all except :", "options": [{"label": "A", "text": "Mid arm circumference in 0-1 year age group", "correct": true}, {"label": "B", "text": "Anemia detection in pregnancy", "correct": false}, {"label": "C", "text": "Child birth weight < 2500gms", "correct": false}, {"label": "D", "text": "Height and weight calculated in < 5 years age group", "correct": false}], "correct_answer": "A. Mid arm circumference in 0-1 year age group", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39143691699269588/39143691699269588.m3u8"}, {"text": "Under National programme for prevention of nutritional blindness , a child in the age group of 6-11 months is given a mega dose of vitamin A equal to :", "options": [{"label": "A", "text": "50,000 IU", "correct": false}, {"label": "B", "text": "1 Lakh IU", "correct": true}, {"label": "C", "text": "1.5 Lakh IU", "correct": false}, {"label": "D", "text": "2 lakh IU", "correct": false}], "correct_answer": "B. 1 Lakh IU", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31774601699269609/31774601699269609.m3u8"}, {"text": "Methylene blue test is used to detect:", "options": [{"label": "A", "text": "Micro oganisms", "correct": true}, {"label": "B", "text": "Lactose", "correct": false}, {"label": "C", "text": "Protein", "correct": false}, {"label": "D", "text": "Sugar", "correct": false}], "correct_answer": "A. Micro oganisms", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/8780331699269625/8780331699269625.m3u8"}, {"text": "Under national immunization schedule total dose of Vitamin A given to a Child is :", "options": [{"label": "A", "text": "15 lac IU", "correct": false}, {"label": "B", "text": "16 lac IU", "correct": false}, {"label": "C", "text": "19 lac IU", "correct": false}, {"label": "D", "text": "17 lac IU", "correct": true}], "correct_answer": "D. 17 lac IU", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74943471699269638/74943471699269638.m3u8"}, {"text": "Vitamin - A solution contains :", "options": [{"label": "A", "text": "25,000 IU per ml", "correct": false}, {"label": "B", "text": "50,000 IU per ml", "correct": false}, {"label": "C", "text": "1,00,000 IU per ml", "correct": true}, {"label": "D", "text": "2,00,000 IU per ml", "correct": false}], "correct_answer": "C. 1,00,000 IU per ml", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5827011699269651/5827011699269651.m3u8"}, {"text": "Xerophthalmia is a problem in a community if the prevalence of Bitot’s spots is more than", "options": [{"label": "A", "text": "1%", "correct": false}, {"label": "B", "text": "0.5%", "correct": true}, {"label": "C", "text": "5%", "correct": false}, {"label": "D", "text": "25%", "correct": false}], "correct_answer": "B. 0.5%", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56141521699269682/56141521699269682.m3u8"}, {"text": "Minimum amount of sunlight exposure necessary for adequate synthesis of vitamin D in the human body is :", "options": [{"label": "A", "text": "7 min", "correct": true}, {"label": "B", "text": "30 min", "correct": false}, {"label": "C", "text": "2 hrs", "correct": false}, {"label": "D", "text": "5 hrs", "correct": false}], "correct_answer": "A. 7 min", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/68061341699269701/68061341699269701.m3u8"}, {"text": "Compared with cow’s milk, mother’s milk has more :", "options": [{"label": "A", "text": "Lactose", "correct": true}, {"label": "B", "text": "Vitamin D", "correct": false}, {"label": "C", "text": "Protein", "correct": false}, {"label": "D", "text": "Fat", "correct": false}], "correct_answer": "A. Lactose", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34721401699269727/34721401699269727.m3u8"}, {"text": "Match list I correctly with List D and select your answer using the codes given below:", "options": [{"label": "A", "text": "A-I,B, III, CII , DIV", "correct": false}, {"label": "B", "text": "A-IV, B-III C-I, D-II", "correct": true}, {"label": "C", "text": "A-IV, BI, C-III , DII", "correct": false}, {"label": "D", "text": "A-I, B-III, C- IV , d-IV", "correct": false}], "correct_answer": "B. A-IV, B-III C-I, D-II", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/psm%20q584.png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/10647411699269747/10647411699269747.m3u8"}, {"text": "Fish is the source of all except :", "options": [{"label": "A", "text": "Iron", "correct": false}, {"label": "B", "text": "Iodine", "correct": true}, {"label": "C", "text": "Vitamin A", "correct": false}, {"label": "D", "text": "Phosphorus", "correct": false}], "correct_answer": "B. Iodine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24714231699269764/24714231699269764.m3u8"}, {"text": "Tomatoes are rich in :", "options": [{"label": "A", "text": "Oxalic acid", "correct": true}, {"label": "B", "text": "Citric Acid", "correct": false}, {"label": "C", "text": "Acetic acid", "correct": false}, {"label": "D", "text": "Formic acid", "correct": false}], "correct_answer": "A. Oxalic acid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23968361699269783/23968361699269783.m3u8"}, {"text": "Highest calorie content is found in :", "options": [{"label": "A", "text": "Banana", "correct": true}, {"label": "B", "text": "Apple", "correct": false}, {"label": "C", "text": "Guava", "correct": false}, {"label": "D", "text": "Orange", "correct": false}], "correct_answer": "A. Banana", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59348361699269815/59348361699269815.m3u8"}, {"text": "True about midday meal programme:", "options": [{"label": "A", "text": "Provides 1/3 the total energy requirement & 1/2 the total protein requirement in a child", "correct": true}, {"label": "B", "text": "Substitute for home diet", "correct": false}, {"label": "C", "text": "Main objective of this scheme is to eliminate malnutrition", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Provides 1/3 the total energy requirement & 1/2 the total protein requirement in a child", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76959351699269842/76959351699269842.m3u8"}, {"text": "Dietary changes advocated by WHO for prevention of heart diseases include all of the following except:", "options": [{"label": "A", "text": "Decrease in complex carbohydrate consumption", "correct": true}, {"label": "B", "text": "Reduction in fat intake to 20-30% of caloric intake", "correct": false}, {"label": "C", "text": "Consumption of saturated fats belimited to less than 10% of total energy intake", "correct": false}, {"label": "D", "text": "Reduction of cholesterol to below 100 mg per 1000 kcal/ day", "correct": false}], "correct_answer": "A. Decrease in complex carbohydrate consumption", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Endemic ascites is caused by :", "options": [{"label": "A", "text": "Aflatoxin", "correct": false}, {"label": "B", "text": "Sanguinarine", "correct": false}, {"label": "C", "text": "Pyrrolizidine", "correct": true}, {"label": "D", "text": "Ergot alkaloid", "correct": false}], "correct_answer": "C. Pyrrolizidine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35410681699269866/35410681699269866.m3u8"}, {"text": "BOAA contains which amino acid:", "options": [{"label": "A", "text": "Aspartate", "correct": false}, {"label": "B", "text": "Arginine", "correct": false}, {"label": "C", "text": "Alanine", "correct": true}, {"label": "D", "text": "Butyrate", "correct": false}], "correct_answer": "C. Alanine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54018041699269897/54018041699269897.m3u8"}, {"text": "Ingestion of which of the following can result in ergotism?", "options": [{"label": "A", "text": "Bajra", "correct": true}, {"label": "B", "text": "Maize", "correct": false}, {"label": "C", "text": "Kesari dal", "correct": false}, {"label": "D", "text": "Mustard", "correct": false}], "correct_answer": "A. Bajra", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/62651371699269914/62651371699269914.m3u8"}, {"text": "Argemona oil contamination of mustard oil can be detected by:", "options": [{"label": "A", "text": "Phosphatase test", "correct": false}, {"label": "B", "text": "Nitric acid test", "correct": true}, {"label": "C", "text": "Coliform test", "correct": false}, {"label": "D", "text": "Methylene blue test", "correct": false}], "correct_answer": "B. Nitric acid test", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/8682371699269950/8682371699269950.m3u8"}, {"text": "True regarding fluorosis symptom", "options": [{"label": "A", "text": "Mottling of dental enamel more than 1.5 mg/l", "correct": false}, {"label": "B", "text": "Skeletal fluorosis – 3 – 6 mg/l", "correct": false}, {"label": "C", "text": "Crippling fluorosis – more than 10 mg/l", "correct": false}, {"label": "D", "text": "All of these", "correct": true}], "correct_answer": "D. All of these", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/32016971699269975/32016971699269975.m3u8"}, {"text": "Level of Iodization of salt as per government rules:", "options": [{"label": "A", "text": "90 ppm at production level & 60 ppm consumer level", "correct": false}, {"label": "B", "text": "60 ppm at production level & 15 ppm at consumer level", "correct": false}, {"label": "C", "text": "30 ppm at production level & 60 ppm at consumer level", "correct": false}, {"label": "D", "text": "30 ppm at production level & 15 ppm at consumer level", "correct": true}], "correct_answer": "D. 30 ppm at production level & 15 ppm at consumer level", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/942501699269996/942501699269996.m3u8"}, {"text": "Iodized oil (usual dose of 1 mg i/m) gives protection for :", "options": [{"label": "A", "text": "3-4 weeks", "correct": false}, {"label": "B", "text": "3-4 months", "correct": false}, {"label": "C", "text": "3-4 years", "correct": true}, {"label": "D", "text": "10-12 years", "correct": false}], "correct_answer": "C. 3-4 years", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31879851699270018/31879851699270018.m3u8"}, {"text": "Daily requirement of iodine in adults is :", "options": [{"label": "A", "text": "50 mcg", "correct": false}, {"label": "B", "text": "100 mcg", "correct": false}, {"label": "C", "text": "150 mcg", "correct": true}, {"label": "D", "text": "200 mcg", "correct": false}], "correct_answer": "C. 150 mcg", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/65368861699270039/65368861699270039.m3u8"}, {"text": "Endemic cretinism is seen when iodine uptake is less than:", "options": [{"label": "A", "text": "5 micro gram/day", "correct": false}, {"label": "B", "text": "20 micro gram/day", "correct": true}, {"label": "C", "text": "50 micro gram/day", "correct": false}, {"label": "D", "text": "75 micro gram/day", "correct": false}], "correct_answer": "B. 20 micro gram/day", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36298901699270058/36298901699270058.m3u8"}, {"text": "True regarding fluorosis symptom:", "options": [{"label": "A", "text": "Mottling of dental enamel more than 1.5 mg/l", "correct": false}, {"label": "B", "text": "Skeletal fluorosis – 3 – 6 mg/l", "correct": false}, {"label": "C", "text": "Crippling fluorosis – more than 10 mg/l", "correct": false}, {"label": "D", "text": "All of these", "correct": true}], "correct_answer": "D. All of these", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Dental fluorosis is best seen in:", "options": [{"label": "A", "text": "Central & lateral incisors", "correct": false}, {"label": "B", "text": "Central incisors & 1st molars", "correct": true}, {"label": "C", "text": "1st& 2nd molars", "correct": false}, {"label": "D", "text": "Canines", "correct": false}], "correct_answer": "B. Central incisors & 1st molars", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/28141691699270116/28141691699270116.m3u8"}, {"text": "Deflouridation of water is done by which technique:", "options": [{"label": "A", "text": "Nalgonda", "correct": true}, {"label": "B", "text": "Nakpur", "correct": false}, {"label": "C", "text": "Patna", "correct": false}, {"label": "D", "text": "Kasauli", "correct": false}], "correct_answer": "A. Nalgonda", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/16418501699270132/16418501699270132.m3u8"}, {"text": "Adult non-pregnant female requires, calcium per day:", "options": [{"label": "A", "text": "400 mg", "correct": false}, {"label": "B", "text": "600 mg", "correct": false}, {"label": "C", "text": "800 mg", "correct": false}, {"label": "D", "text": "1000 mg", "correct": true}], "correct_answer": "D. 1000 mg", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29416741699270148/29416741699270148.m3u8"}, {"text": "Highest calcium concentration is present in:", "options": [{"label": "A", "text": "Dates", "correct": true}, {"label": "B", "text": "Guava", "correct": false}, {"label": "C", "text": "Amla", "correct": false}, {"label": "D", "text": "Mango", "correct": false}], "correct_answer": "A. Dates", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37807041699270166/37807041699270166.m3u8"}, {"text": "Egg are “reference protein” because:", "options": [{"label": "A", "text": "High caloric content", "correct": false}, {"label": "B", "text": "Increased protein / 100 gms", "correct": false}, {"label": "C", "text": "Increased biological value and positive NPU", "correct": true}, {"label": "D", "text": "Decreased digestibility coefficient", "correct": false}], "correct_answer": "C. Increased biological value and positive NPU", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6938171699270182/6938171699270182.m3u8"}, {"text": "Egg is poor in:", "options": [{"label": "A", "text": "Protein", "correct": false}, {"label": "B", "text": "Carbohydrate & vitamin C", "correct": true}, {"label": "C", "text": "Calcium & iron", "correct": false}, {"label": "D", "text": "Fats", "correct": false}], "correct_answer": "B. Carbohydrate & vitamin C", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53590691699270197/53590691699270197.m3u8"}, {"text": "Poor source of Iron is in :", "options": [{"label": "A", "text": "Butter", "correct": true}, {"label": "B", "text": "Green leafy vegetable", "correct": false}, {"label": "C", "text": "Jaggery", "correct": false}, {"label": "D", "text": "Meat", "correct": false}], "correct_answer": "A. Butter", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29788721699270220/29788721699270220.m3u8"}, {"text": "Daily requirement for dietary fiber by an adult is approx :", "options": [{"label": "A", "text": "1 gm", "correct": false}, {"label": "B", "text": "4 gms", "correct": false}, {"label": "C", "text": "40 gms", "correct": true}, {"label": "D", "text": "100 gms", "correct": false}], "correct_answer": "C. 40 gms", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6494851699270238/6494851699270238.m3u8"}, {"text": "All are examples of Food Fortification except:", "options": [{"label": "A", "text": "Iodization of salt", "correct": false}, {"label": "B", "text": "Vitamin A in Vanaspati", "correct": false}, {"label": "C", "text": "Fluoridation of water", "correct": false}, {"label": "D", "text": "Saffron colour in milk", "correct": true}], "correct_answer": "D. Saffron colour in milk", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59809281699270262/59809281699270262.m3u8"}, {"text": "Pasteurization by holder method is heating milk at:", "options": [{"label": "A", "text": "60° C for 45minutes", "correct": false}, {"label": "B", "text": "63° C for 30minutes", "correct": true}, {"label": "C", "text": "100° C for 15minutes", "correct": false}, {"label": "D", "text": "136° C for 15minutes", "correct": false}], "correct_answer": "B. 63° C for 30minutes", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64045521699270282/64045521699270282.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

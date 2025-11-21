@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Treatment of POAG</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Treatment of POAG</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                8 Questions | 8 Total Marks | 18 min Duration | ~135.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 8 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 18 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 8</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Treatment of POAG - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 8</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 8 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Various theories have been put forward to explain the flow of aqueous across the inner wall of Schlemm’s canal. Which of these theories have been grouped under passive filter mechanism theory Leaky pores in endothelial cells Contractile microfilaments in the endothelial cells Sondermann’s channels Vacuolation theory Select the correct answer from the given below ciode:", "options": [{"label": "A", "text": "1, 2 and 3", "correct": false}, {"label": "B", "text": "1 and 3", "correct": false}, {"label": "C", "text": "2 and 4", "correct": false}, {"label": "D", "text": "1, 2, 3 and 4", "correct": true}], "correct_answer": "D. 1, 2, 3 and 4", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>1, 2, 3 and 4 Passive filter mechanisms : Earlier it was believed that from the juxta canalicular space. The aqueous humor enters the Schlemm’s canal against slight resistance. These mechanisms were postulated which are now discarded and have become a part of historical interest only.</p>\n<p><strong>Highyeild:</strong></p><p>Composition of aqueous humor: Water- 99% Proteins-about 5-16 mg /dl whereas in plasma protein content is 6-7 mg/dl. A: G ratio is the same as that of the plasma IgG and IgM are present plasminogen and its activators are present.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option : A . Theory of the presence of leaky pores in endothelial cells forming the inner wall of Schlemm’s canal was proposed and grouped under passive filter mechanism theory. Option: B. Contractile microfilaments in the endothelial cells were suggested by some workers and grouped under the passive filter mechanism theory. Option: C. Sondermann’s channels were also suggested to be responsible for the aqueous outflow of the inner wall of Schlemm’s canal. Option: D. Vacuolation theory was one of the most accepted views till the recent past. According to it, transcellular spaces exist in the endothelial cells forming the inner wall of Schlemm’s canal. These open as a system of vacuoles and pores, primarily in response to pressure, and transport the aqueous from the juxta canalicular connective tissue to Schlemm’s canal.</p>\n<p><strong>Extraedge:</strong></p><p>Functions of Aqueous Humour : Maintainance of IOP. Metabolism of avascular structures of the eye. Optical function Clearing Function.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Intraoperative or postoperative use of drugs is frequently done to modulate wound healing post-glaucoma surgery. The following are true about the drugs used, except:", "options": [{"label": "A", "text": "BAPN (β-aminoproprionitrile), an inhibitor of lysyl oxidase, blocks collagen crosslinking", "correct": false}, {"label": "B", "text": "5-FU inhibits fibroblast proliferation by acting selectively on the S phase of the cell cycle", "correct": false}, {"label": "C", "text": "Mitomycin C is an alkylating agent that decreases DNA synthesis by causing DNA crosslinking", "correct": false}, {"label": "D", "text": "Colchicine acts by inhibiting fibroblast migration and proliferation", "correct": true}], "correct_answer": "D. Colchicine acts by inhibiting fibroblast migration and proliferation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Colchicine acts by inhibiting fibroblast migration and proliferation Colchicine affects collagen cross-linking and thereby decreases scar formation.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Beta-aminopropionitrile fumarate , an inhibitor of collagen cross-linking, is used topically in patients after filtration surgery for difficult cases of glaucoma (aphakic, repeat surgery, neovascular). Inhibition of collagen cross-linking may represent an alternative method to the use of injectable 5-fluorouracil to maintain the patency of filtration blebs. Option: B. If scar tissue blocks the exit of the surgically created channel, intraocular pressure rises and the operation fails. Antimetabolites such as 5-Fluorouracil (5-FU) are used to inhibit wound healing to prevent the conjunctiva from scarring down onto the sclera. Option: C. Mitomycin-C is an alkylating, antitumor antibiotic, generally used in surgery because of its ability to inhibit fibroblast proliferation and suppress vascular ingrowth—two parts of the healing process that can undercut the beneficial effect of a trabeculectomy bleb by producing scarring that stops aqueous outflow.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 46-year-old female who recently underwent filtration surgery presents with the following finding on follow-up. You suspect bleb failure. What is the most common cause of bleb failure?", "options": [{"label": "A", "text": "Bleb encapsulation (Tenon cyst formation)", "correct": false}, {"label": "B", "text": "Episcleral fibrosis", "correct": true}, {"label": "C", "text": "Late bleb leak", "correct": false}, {"label": "D", "text": "Closure of the internal sclerotomy", "correct": false}], "correct_answer": "B. Episcleral fibrosis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Episcleral fibrosis Retrospective studies have indicated that filtration surgery is more likely to be successful in older patients, patients without African heritage, and those without previous long-term medical therapy. The most frequent cause of failure after filtration surgery is bleb scarring due to episcleral fibrosis. This excessive healing response is largely due to the proliferation of fibroblasts and the production of collagen and glycosaminoglycans</p>\n<p><strong>Highyeild:</strong></p><p>The antimetabolite 5-FU has been used to modulate wound healing after filtration surgery. 5-FU inhibits fibroblast proliferation to prevent episcleral fibrosis.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Sub-tenon corticosteroid injections may be administered intra- or post-operatively for the avoidance of bleb failure. Option: C. It does not increase the risk of bleb failure. Option D - Selective applications of digital pressure to the bleb should also be considered to promote aqueous flow into the subconjunctival space, thereby elevating the filtration bleb.</p>\n<p><strong>Extraedge:</strong></p><p>Mitomycin C , an antitumor antibiotic isolated from Streptomyces caespitosus , also suppresses cellular proliferation. Both antimetabolites have been used to modify wound healing in glaucoma surgery.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "4 patients with different case scenarios are presented in the options below. Glaucoma implant surgery (aqueous shunt devices) would be indicated in the following circumstances:", "options": [{"label": "A", "text": "Previously failed filtration surgery with antimetabolites", "correct": false}, {"label": "B", "text": "Uveitic glaucoma", "correct": false}, {"label": "C", "text": "Congenital glaucoma patient with poor visual potential", "correct": true}, {"label": "D", "text": "Glaucoma patient with previous vitrectomy with scleral buckle", "correct": false}], "correct_answer": "C. Congenital glaucoma patient with poor visual potential", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Congenital glaucoma patient with poor visual potential Aqueous shunt devices are reserved for those glaucoma cases in which standard filtration surgery would fail or has already failed.</p>\n<p><strong>Highyeild:</strong></p><p>Therefore, glaucoma implant ¬surgery is indicated in the following situations: Failed trabeculectomy Active uveitis Neovascular glaucoma Inadequate conjunctiva The impending need for PK A tube shunt can be placed in the presence of a scleral buckle. In post-vitrectomy cases, the tube can be placed through the pars plana. It may not be wise to perform incisional surgery in an eye with poor visual potential given the risks and, at times, complicated postoperative course of tube shunt surgery.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 67-year-old male has been scheduled for surgical management of glaucoma with trabeculoplasty. For the management, selective laser trabeculoplasty (SLT) and argon laser trabeculoplasty (ALT) were considered. The advantages of selective laser trabeculoplasty (SLT) over ALT include all of the following:", "options": [{"label": "A", "text": "SLT is more effective at lowering IOP.", "correct": true}, {"label": "B", "text": "SLT uses a potentially repeatable laser.", "correct": false}, {"label": "C", "text": "SLT selectively targets pigmented TM cells.", "correct": false}, {"label": "D", "text": "General structure of TM intact post-SLT.", "correct": false}], "correct_answer": "A. SLT is more effective at lowering IOP.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>SLT is more effective at lowering IOP. Even though SLT is a promising new technology , further studies need to be done to prove that SLT is in fact better than ALT at decreasing IOP pressure; at best, SLT is currently equivalent to ALT at reducing IOP.</p>\n<p><strong>Highyeild:</strong></p><p>Contraindications of trabeculoplasty Narrow angles Presence of peripheral anterior synechiae Uveitis Advanced Glaucoma Developmental glaucoma</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. ALT patients can receive two treatments in a lifetime, whereas SLT patients can receive two treatments a year. Option: C. SLT works by irradiating and targeting only the melanin-containing cells in the trabecular meshwork, without causing thermal damage to adjacent non-pigmented trabecular meshwork cells and underlying trabecular beams. Option: D . When treated with SLT , a primarily biological response is induced in the trabecular meshwork. This response involves the release of cytokines , which trigger macrophage recruitment and other changes leading to IOP reduction. The laser beam bypasses surrounding tissue, leaving it undamaged by light. This is why, unlike ALT, SLT is repeatable several times.</p>\n<p><strong>Extraedge:</strong></p><p>Complications Transient IOP Elevation Iritis Peripheral anterior synechiae The membrane covers the entire trabecular meshwork.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The below image shows the laser technique for the prevention of blockage of the internal sclerotomy. Which of the following options is not an indication of this procedure?", "options": [{"label": "A", "text": "Iris Bombé", "correct": false}, {"label": "B", "text": "Neovascular glaucoma", "correct": true}, {"label": "C", "text": "Acute angle-closure glaucoma", "correct": false}, {"label": "D", "text": "Prophylaxis in an eye with narrow angles", "correct": false}], "correct_answer": "B. Neovascular glaucoma", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1685018958046-QTDO032007IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Neovascular glaucoma A peripheral iridectomy is created to prevent blockage of the internal sclerotomy.</p>\n<p><strong>Highyeild:</strong></p><p>Neovascular glaucoma is caused by the growth of new vessels into the angle. This growth requires pan-retinal photocoagulation to cause regression of the vessels, not a peripheral iridectomy.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. In iris bombé , synechiae between the iris and the lens block the normal flow of aqueous through the pupil into the anterior chamber . Because of this obstruction, fluid accumulates in the posterior chamber, causing the iris to bow forward and obstruct the angle. A laser peripheral iridotomy creates an alternate pathway for aqueous humor to flow from the posterior to the anterior chamber. Option: C. In acute-angle closure, the iris occludes the trabecular meshwork due to pupillary block. This may be relieved, in some cases, by a peripheral iridectomy. Option: D. Prophylactic iridectomies in eyes with narrow angles may prevent a subsequent attack of angle closure.</p>\n<p><strong>Extraedge:</strong></p><p>Treatment of Neovascular Glaucoma Reducing elevated IOP and treating the underlying cause. Surgical management -Panretinal Photocoagulation</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 69-year-old male was diagnosed with primary open-angle glaucoma and was treated with glaucoma filtration surgery. Adjunctive mitomycin C was used intraoperatively along with glaucoma filtration surgery. Postoperatively, the IOP of the patient remained stable in a range of 2 to 4 mm Hg followed by the development of choroidal effusions. Which of the following pathologic processes would not mandate surgical intervention?", "options": [{"label": "A", "text": "Impending failure of the bleb", "correct": false}, {"label": "B", "text": "Continued hypotony beyond 4 weeks", "correct": true}, {"label": "C", "text": "Kissing choroidal", "correct": false}, {"label": "D", "text": "Flat anterior chamber with corneal decompensation", "correct": false}], "correct_answer": "B. Continued hypotony beyond 4 weeks", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Continued hypotony beyond 4 weeks Hypotony and choroidal effusions can occur after glaucoma filtration surgery, especially if antimetabolites are used. Hypotony is the main cause of fluid accumulation, although the choroidal effusions in themselves exacerbate hypotony by reducing the aqueous humor production.</p>\n<p><strong>Highyeild:</strong></p><p>The therapeutic window of mitomycin C is especially small, meaning that the optimal therapeutic dose is not far from the toxic dose. Over-filtration can occur if excessive doses of mitomycin C are used intraoperatively.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Drainage of choroidal effusions should be considered with the apparent failure of the bleb. Option: C. For ‘kissing’ choroidal or uncontrolled IOP, aggressive management and surgical intervention should be preferred due to the narrow time window available before the complications set in Option: D . Drainage of choroidal effusions should also be considered with worsening cataracts or corneal decompensation.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The below image depicts the surgical intervention done in cases of glaucoma refractory to medical management or with risk factors warranting aggressive management. Compared with the argon laser, the Nd: YAG laser is associated with which one of the following with respect to this procedure?", "options": [{"label": "A", "text": "Late closure of the iridotomy", "correct": false}, {"label": "B", "text": "Fewer total applications", "correct": true}, {"label": "C", "text": "Less frequent bleeding with application", "correct": false}, {"label": "D", "text": "More extensive histologic damage to the treatment site", "correct": false}], "correct_answer": "B. Fewer total applications", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1685018958047-QTDO032009IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Fewer total applications In the early days of laser surgery ; however, the pulsed Nd: YAG laser is probably the more commonly used today In general, Nd: YAG laser iridotomies require fewer total applications with a marked reduction in total energy as compared with argon laser iridotomies.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Argon laser has the disadvantage of more iritis, pupillary distortion, and late closure of the iridotomy. Option: C. Clinically, the Nd: YAG laser has the disadvantage of frequent bleeding In some cases, it may be advantageous to use both lasers: the argon for its coagulative effects and the Nd: YAG for its disruptive properties . Option: D. Iridotomies created with an argon laser have more extensive early edema and tissue destruction at the margins of treatment histologically as compared with those created with the Nd: YAG laser.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

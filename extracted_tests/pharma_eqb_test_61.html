@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Opioids</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Opioids</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                20 Questions | 20 Total Marks | 30 min Duration | ~90.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 20 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 30 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 20</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Opioids - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 20</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 20 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A patient was put on morphine for cancer pain due to carcinoma of the pancreas. His pain got relieved initially, but now, after 3 weeks, the pain is not get relieved. The reason is:", "options": [{"label": "A", "text": "Decreased absorption of morphine", "correct": false}, {"label": "B", "text": "Upregulation of opioid receptors", "correct": false}, {"label": "C", "text": "Desensitization of opioid receptors", "correct": true}, {"label": "D", "text": "Increased elimination of morphine", "correct": false}], "correct_answer": "C. Desensitization of opioid receptors", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Desensitization of opioid receptors Chronic use of opioids leads to the development of tolerance. To get the same effect, we need to use a high drug dose. This is due to the desensitization of opioid receptors Tolerance develops to all the effects of morphine except Miosis, Constipation, and Convulsions.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Decreased absorption of morphine is a wrong statement Option: B . Opioid receptors get downregulated over the period Option: D. Increased elimination of morphine is a wrong statement.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Placebo works by releasing endorphins, which are endogenous opioids. These endorphins mainly act at:", "options": [{"label": "A", "text": "Mu receptor", "correct": true}, {"label": "B", "text": "Delta receptor", "correct": false}, {"label": "C", "text": "Kappa receptor", "correct": false}, {"label": "D", "text": "N/OFQ receptor", "correct": false}], "correct_answer": "A. Mu receptor", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Mu receptor The mu receptors are a class of receptors that neuromodulate different physiological functions, but above all, nociception but also stress, temperature, respiration, endocrine activity, gastrointestinal activity, memory, mood, and motivation because these receptors bind opioids and are called mu-opioid receptors (MORs).</p>\n<p><strong>Highyeild:</strong></p><p>Endogenous Opioids Are Endorphins Enkephalin Dynorphins Nociceptin Opioid receptors Affinity of endogenous opioids Mu Endomorphins-endorphin> Enkephalins-dynorphins Delta enkephalin -endorphin> dynorphins Kappa Dynorphin = endorphin>Enkephalins N/OFQ Nociceptin</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: B . Delta receptor- The ∆-opioid receptor, also known as delta opioid receptor or simply delta receptor, abbreviated DOR or DOP, is an inhibitory 7-transmembrane G-protein coupled receptor coupled to the G protein Gi/G0 and has enkephalins as its endogenous ligands. Optio n: C. Kappa receptor The κ-opioid receptor or kappa opioid receptor, abbreviated KOR or KOP for its ligand ketazocine, is a G protein-coupled receptor that in humans is encoded by the OPRK1 gene. Option: D. The N/OFQ is well accepted as a core component of the brain’s anti-stress system by counteracting the endogenous corticotropin-releasing factor (CRF) action. Emerging evidence shows that the N/OFQ-NOP receptor system regulates stress and addiction-related behavior.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Morphine is an opioid analgesic used to relieve visceral pain and cancer pain. In which of the following morphine should not be given in?", "options": [{"label": "A", "text": "Ischemic pain", "correct": false}, {"label": "B", "text": "Cancer pain", "correct": false}, {"label": "C", "text": "Biliary colic", "correct": true}, {"label": "D", "text": "Postoperative pain", "correct": false}], "correct_answer": "C. Biliary colic", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Biliary colic</p>\n<p><strong>Highyeild:</strong></p><p>Morphine Relaxes longitudinal smooth muscles and constricts circular muscles like in sphincters So it causes constipation and miosis. But in gall bladder, it constricts the sphincter of odd and increases biliary pressure, so not used in biliary colic. Atropine can treat this, but pure opioid antagonists are used to prevent morphine-induced biliary spasms. Morphine is used in other conditions mentioned in options, like ischemic pain (like mi), cancer pain, and postoperative pain.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A . Ischemic pain is classically associated with an insidious onset but can present in the acute or chronic setting. Treatments are aimed at improving perfusion to the affected tissue. Surgical options include repairing damaged vessels, bypassing diseased vessels, and performing thrombectomy or embolectom Option: B . Cancer pain: Pain in cancer may arise from a tumor compressing or infiltrating nearby body parts; from treatments and diagnostic procedures; or from skin, nerve, and other changes caused by a hormone imbalance or immune response. Option: D. Postoperative pain: Postoperative pain control aims to reduce the negative consequences associated with acute postsurgical pain and help the patient transition back to normal function. Traditionally, opioid analgesic therapy has served as the mainstay of treatment for acute postoperative pain.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An Intern gave a trauma patient with a head injury morphine to relieve a headache. But the senior resident told to intern that he shouldn’t have administered it. The reason is?", "options": [{"label": "A", "text": "Opioids induce retention of CO2", "correct": false}, {"label": "B", "text": "Opioids also can cause marked respiratory depression", "correct": false}, {"label": "C", "text": "Morphine interferes with the assessment of progress in head injury cases", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above As opioids induce retention of CO2, it increases intracranial tension, worsening the head injury. Therapeutic doses of opioids also can cause marked respiratory depression in these patients. Clinical manifestations like vomiting, miosis, and altered sensorium produced by morphine interfere with assessing progress in head injury cases.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Opioids induce retention of CO2 Option: B. Opioids also can cause marked respiratory depression Option: C. Morphine interferes with the assessment of progress in head injury cases</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An opioid addict overdosed on morphine through an IV route and was rushed to the emergency room. He had flaccidity, shallow and occasional breathing, cyanosis, pinpoint pupil, and a fall in BP. Which of the following is incorrect about acute morphine poisoning management?", "options": [{"label": "A", "text": "Naloxone is the DOC", "correct": false}, {"label": "B", "text": "No need to do gastric lavage when morphine is taken IV", "correct": true}, {"label": "C", "text": "Poisoning may occur accidentally or suicide or in drug abusers", "correct": false}, {"label": "D", "text": "Death is due to respiratory failure.", "correct": false}], "correct_answer": "B. No need to do gastric lavage when morphine is taken IV", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>No need to do gastric lavage when morphine is taken IV REASON- Gastric lavage with KMnO4 even if morphine is taken IV Options A, C, D-</p>\n<p><strong>Highyeild:</strong></p><p>Acute morphine poisoning Can occur accidentally or suicide or in drug abusers 50 mg of morphine i.m. produces serious toxicity in intolerant individuals The human lethal dose is estimated to be about 250 mg. Features of morphine poisoning include Stupor or coma, flaccidity, shallow and occasional breathing Cyanosis, pinpoint pupil Fall in BP and shock, convulsions Pulmonary edema Death is due to respiratory failure. Treatment: Supportive Gastric lavage with KMnO4, even if morphine is taken IV Lavage is indicated even when morphine has been injected. Being a primary drug, it is partitioned to the acid gastric juice, ionizes there, and does not diffuse back into the blood The specific antidote is Naloxone 0.4–0.8 mg i.v. Repeated every 2–3 min till respiration picks up Doesn’t depress respiration Depending on the response dose is repeated every 1–4 hours</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A . Naloxone is the DOC Option: C. Poisoning may occur accidentally or suicide or in drug abusers in opioid congeners Option: D . Death is due to respiratory failure in opioid poisonings.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient was put on morphine for cancer pain due to carcinoma of the pancreas. His pain was relieved, and the patient took around 6 doses of morphine to get rid of the pain. He came to the emergency room with pinpoint pupil and respiratory depression. The best drug to reverse this is?", "options": [{"label": "A", "text": "Methylnaltrexone", "correct": false}, {"label": "B", "text": "Buprenorphine", "correct": false}, {"label": "C", "text": "Naloxone", "correct": true}, {"label": "D", "text": "Methadone", "correct": false}], "correct_answer": "C. Naloxone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Naloxone Naloxone is an opioid antagonist. It is used in the treatment of opioid toxicity. It counters and blocks the unwanted effects of opioid overdose.</p>\n<p><strong>Highyeild:</strong></p><p>A case of morphine poisoning The specific antidote is Naloxone 0.4–0.8 mg i.v. Repeated every 2–3 min till respiration picks up Doesn’t depress respiration Depending on the response dose is repeated every 1–4 hours</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A . Methylnaltrexone is used to treat constipation caused by opioids. Option: B . Buprenorphine is used to treat opioid use disorder as a medication-assisted treatment. Option : D. Methadone is used primarily as substitution therapy for opioid dependence</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An opioid addict was bought to the psychiatry Department for de-addiction. The drug used for opioid dependence is:", "options": [{"label": "A", "text": "Naloxone", "correct": false}, {"label": "B", "text": "Clonidine", "correct": false}, {"label": "C", "text": "Methadone", "correct": true}, {"label": "D", "text": "Naltrexone", "correct": false}], "correct_answer": "C. Methadone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Methadone The maintenance Drug for Dependence on Opioids Is Methadone. Methadone is long-acting, prevents withdrawal effects during opioid deaddiction, and also decreases the euphoric effect(kick) of opioids. Methadone is a potent mu-receptor agonist, and it suppresses the symptoms of opioids. Withdrawal Tolerance and physical dependence occur only at a slow rate with methadone compared to morphine. It is administered once daily, as it is long-acting. On abrupt discontinuation, it produces only mild withdrawal signs and symptoms. Hence methadone is used as substitution therapy for opioid dependence. A drug to prevent relapse of addiction is naltrexone. Naltrexone blocks all opioid receptors. When the patient tries to retake opioids, he will not get a euphoric effect as all the receptors are already blocked by naltrexone. So without getting a euphoric effect, the patient will not be retaking opioids.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Naloxone is an opioid antagonist. It is used in the treatment of opioid toxicity. It counters and blocks the unwanted effects of opioid overdose. Option: B. Clonidine is a medicine for hypertension (high blood pressure). It lowers the blood pressure by relaxing the blood vessels. Lowering the blood pressure helps to prevent future strokes and heart attacks. Option: D. Naltrexone is used to treat opioid dependence and alcohol addiction. It works by blocking the euphoric feelings (highs) that Some people may experience after taking opiates and alcohol. This reduces the craving and helps you stay away from them.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient comes to the casualty with a painful stab wound. The junior resident gives pentazocine for the pain. Soon after administration, the patient experiences sweating, restlessness, and increased pain sensations. What is the most likely explanation for his symptoms?", "options": [{"label": "A", "text": "The patient is probably tolerant to pentazocine.", "correct": false}, {"label": "B", "text": "The patient is a morphine addict", "correct": true}, {"label": "C", "text": "Pentazocine was used at the wrong dose.", "correct": false}, {"label": "D", "text": "Pentazocine doesn’t cross the blood-brain barrier", "correct": false}], "correct_answer": "B. The patient is a morphine addict", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>The patient is a morphine addict</p>\n<p><strong>Highyeild:</strong></p><p>Pentazocine is қ- an agonist (analgesia, dysphoria, nightmares and visual hallucinations) μ-antagonist and partial μ-agonist (less respiratory depression) So it should not be given in an opioid addict, because it blocks mu receptor and causes opioid withdrawal symptoms like sweating, restlessness, and an increase in pain sensations Injected in morphine-dependent subjects, it precipitates withdrawal. In pentazocine-dependent subjects, naloxone precipitates withdrawal, but at higher doses.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A . The patient is probably tolerant to pentazocine. Option: C. Pentazocine was used at the wrong dose. Option: D. Pentazocine doesn’t cross the blood-brain barrier</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Tramadol is used in mild to moderate chronic and cancer pain. Which of the following statements is false about tramadol?", "options": [{"label": "A", "text": "Weak mu receptor agonist", "correct": false}, {"label": "B", "text": "Supplied as a racemic mixture for use", "correct": false}, {"label": "C", "text": "Inhibits serotonin and norepinephrine uptake", "correct": false}, {"label": "D", "text": "Tramadol-induced respiratory depression cannot be reversed by naloxone", "correct": true}], "correct_answer": "D. Tramadol-induced respiratory depression cannot be reversed by naloxone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Tramadol-induced respiratory depression cannot be reversed by naloxone Reason- Tramadol-induced respiratory depression can be reversed by naloxone, but tramadol-induced analgesia is not entirely reversible by naloxone</p>\n<p><strong>Highyeild:</strong></p><p>A synthetic codeine analog that is a weak MOR agonist Other mechanisms of its analgesic effect is produced by inhibition of uptake of norepinephrine and serotonin Effective for mild to moderate pain but less effective for severe and chronic pain Tramadol is as effective as meperidine in the treatment of labor pain and may cause less neonatal respiratory depression Tramadol induced respiratory depression can be reversed by naloxone but tramadol induced analgesia is not entirely reversible by naloxone Tramadol to be avoided with MAOIs and SSRIs</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Weak mu receptor agonist Option: B. Supplied as a racemic mixture for use Option: C. Inhibits serotonin and norepinephrine uptake</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What should be kept ready when we give narcotics to woman in term?", "options": [{"label": "A", "text": "Lidocaine", "correct": false}, {"label": "B", "text": "Naloxone", "correct": true}, {"label": "C", "text": "Diphenhydramine", "correct": false}, {"label": "D", "text": "Fentanyl", "correct": false}], "correct_answer": "B. Naloxone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Naloxone Remember: Naloxone used for Neonatal resuscitation if opioid used during labour.</p>\n<p><strong>Highyeild:</strong></p><p>FOR neonates, the initial dose is 10 μg/kg given intravenously, intramuscularly, or subcutaneously. Note: Naloxone is not used for Neonatal resuscitation if the mother is an opioid addict because of the precipitation of withdrawal in neonates. On the long-term addiction fetus is also dependent on opioids if you suddenly block the opioid receptor that will lead to opioid withdrawal.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Lidocaine is a local anesthetic agent. It is used during minor surgical procedures such as dental, oral, diagnostic, or other therapeutic procedures to anesthetize or numb the surgical area. It is also used to treat other skin, eye, or ear irritation to provide temporary relief. Option: C . Diphenhydramine treats sneezing, runny nose, itching, watery eyes, hives, rashes, itching, and other symptoms of allergies and the common cold. It is also used to suppress coughs, to treat motion sickness, and to induce sleep. Option: D. Fentanyl is a pain-relieving It effectively alleviates moderate to severe chronic ongoing pain. It should not be used in mild pain. It is prescribed only in cases where other alternative pain medications are inadequate.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Opioid antagonist carrying black box warning of increased incidence of myocardial infarction with prolonged use:", "options": [{"label": "A", "text": "Methylnaltrexone", "correct": false}, {"label": "B", "text": "Naloxegol", "correct": false}, {"label": "C", "text": "Alvimopan", "correct": true}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "C. Alvimopan", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Alvimopan</p>\n<p><strong>Highyeild:</strong></p><p>Carries a black-box warning about the increased incidence of myocardial infarction with prolonged use So it is available only for short-term use (15 doses) through a restricted program FDA-approved for the treatment of postoperative ileus in patients with less than 7 days of opioid exposure immediately before beginning alvimopan</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Methylnaltrexone is a medication that acts as a peripherally acting μ-opioid receptor antagonist that acts to reverse some of the side effects of opioid drugs such as constipation without significantly affecting pain relief Option: B . Naloxegol is a peripherally acting μ-opioid receptor antagonist developed by AstraZeneca, for the treatment of opioid-induced constipation. It was approved in 2014 in adult patients with chronic, non-cancer pain.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Drug to prevent relapse of opioid addiction is:", "options": [{"label": "A", "text": "Naloxone", "correct": false}, {"label": "B", "text": "Clonidine", "correct": false}, {"label": "C", "text": "Methadone", "correct": false}, {"label": "D", "text": "Naltrexone", "correct": true}], "correct_answer": "D. Naltrexone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Naltrexone</p>\n<p><strong>Highyeild:</strong></p><p>Drug to prevent relapse of addiction is naltrexone Naltrexone blocks all opioid receptors When the patient tries to take opioids again, he would not get a euphoric effect as all the receptors are already blocked by naltrexone. So without getting a euphoric effect patient will not take opioids again Methadone is long-acting and prevents withdrawal effects during opioid deaddiction and also decreases the euphoric effect(kick) of opioids</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Naloxone is an IV agent and short-acting, so not used for long term treatments O ption: B. Clonidine is not effective to prevent relapse of opioid addiction, It can help to overcome withdrawal symptoms but not to prevent relapse. O ption: C . Maintenance drug for dependence on opioids is Methadone</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Ipratropium bromide is absolutely contraindicated in:", "options": [{"label": "A", "text": "Asthma", "correct": false}, {"label": "B", "text": "COPD", "correct": false}, {"label": "C", "text": "Peptic ulcer", "correct": false}, {"label": "D", "text": "Urinary retention", "correct": true}], "correct_answer": "D. Urinary retention", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Urinary retention</p>\n<p><strong>Highyeild:</strong></p><p>Anti-cholinergic drugs have relaxant action on the ureter and urinary bladder, leading to urinary retention in older males with prostatic hypertrophy. However, the same can be beneficial in neurogenic bladder enuresis. Relaxation of the biliary tract is less marked and effects on the uterus are also minimal</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Asthma A lung disorder characterized by narrowing of the airways, the tubes which carry air into the lungs, which are inflamed and constricted, causing shortness of breath, wheezing, and cough. Option: B . COPD is a chronic inflammatory lung disease that causes obstructed airflow from the lungs. Symptoms include breathing difficulty, cough, mucus (sputum) production, and wheezing. Option: C . Peptic ulcers are open sores that develop on the inside lining of your stomach and the upper portion of your small intestine. The most common symptom of a peptic ulcer is stomach pain</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Enkephalin has high affinity on the following opioid receptors:", "options": [{"label": "A", "text": "Mu", "correct": false}, {"label": "B", "text": "Delta", "correct": true}, {"label": "C", "text": "Kappa", "correct": false}, {"label": "D", "text": "N/OFQ", "correct": false}], "correct_answer": "B. Delta", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Delta</p>\n<p><strong>Highyeild:</strong></p><p>Endogenous opioids are Endorphins enkephalin dynorphins nociceptin Opioid receptors Affinity of endogenous opioids Mu Delta. Карра Endomorphins-endorphin> enkephalins=dynorphins enkephalin endorphin> dynorphins Dynorphin = endorphin>enkephalins N/OFQ Nociceptin</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A . Mu : The mu receptors are a class of receptors that neuromodulate different physiological functions, but above all, nociception but also stress, temperature, respiration, endocrine activity, gastrointestinal activity, memory, mood, and motivation. Because these receptors bind opioids, they are also called mu-opioid receptors . Option: C. Kappa: The κ-opioid receptor or kappa opioid receptor, abbreviated KOR or KOP for its ligand ketazocine, is a G protein-coupled receptor that in humans is encoded by the OPRK1 gene. Option: D. N/OFQ: The nociceptin opioid peptide receptor (NOP), also known as the nociceptin/orphanin

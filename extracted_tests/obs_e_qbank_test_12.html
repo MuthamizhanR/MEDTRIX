@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Diabetes in Pregnancy</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Diabetes in Pregnancy</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                20 Questions | 20 Total Marks | 30 min Duration | ~90.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 20 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 30 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 20</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Diabetes in Pregnancy - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 20</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 20 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "The effects of diabetic mothers on infants are: Brain enlargement as a part of macrosomia Hypoglycemia in infant First-trimester abortion Unexplained fetal death Caudal regression Select the correct answer from the given below code:", "options": [{"label": "A", "text": "All except 1", "correct": true}, {"label": "B", "text": "2,3,5", "correct": false}, {"label": "C", "text": "All except 4", "correct": false}, {"label": "D", "text": "3,4,5", "correct": false}], "correct_answer": "A. All except 1", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All except 1 Macrosomia is a known complication of diabetes but brain enlargement is not Seen.</p>\n<p><strong>Highyeild:</strong></p><p>Effect of diabetes on pregnancy: During pregnancy During labor Puerperium Abortion Pre-eclampsia Polyhydramnios Preterm delivery Infections: (Urinary infection & vulvovaginal candidiasis) Ketoacidosis Prolongation of labour due to big baby Shoulder dystocia Genital tract trauma Increased chances of cesarean section Postpartum hemorrhage Puerperal sepsis Wound infection Lactation failure</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 20-Year-old woman with Type 1 diabetes presents at 32 weeks gestation in her first pregnancy with regular painful contractions, a closed cervix, and a positive fetal fibronectin test. What is the most appropriate management plan?", "options": [{"label": "A", "text": "Tocolysis with atosiban, no steroids, as the patient is diabetic", "correct": false}, {"label": "B", "text": "Antenatal steroids and additional insulin", "correct": false}, {"label": "C", "text": "Antenatal steroids and tocolysis with atosiban", "correct": false}, {"label": "D", "text": "Antenatal steroids, extra insulin, and tocolysis with atosiban", "correct": true}], "correct_answer": "D. Antenatal steroids, extra insulin, and tocolysis with atosiban", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Antenatal steroids, extra insulin, and tocolysis with atosiban In preterm labor, diabetes should not be considered a contraindication to antenatal steroids for fetal lung maturation or tocolysis. In women with insulin-treated diabetes who receive steroids for fetal lung maturation, given additional insulin according to an agreed protocol and monitored closely.</p>\n<p><strong>Highyeild:</strong></p><p>When to deliver Acc to ACOG Controlled on diet - expectant management upto 40 weeks + 6 days Controlled on medication - deliver at 39-39\" weeks Poorly controlled - deliver between 34-36 weeks, if no glycemic control inspite of hospitalization OR abnormal fetal testing Acc to NICE GDM on diet - delivery by 40 weeks GDM on insulin-deliver by 38 weeks Overt DM - deliver by 38 weeks Contraception of choice - IUCD</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 22-week gestational age woman presents to you with a blood glucose level of 206mg/dl after 50gm of OGTT after 1 hour. All of the following are known complications of this condition except", "options": [{"label": "A", "text": "Susceptibility for infection", "correct": false}, {"label": "B", "text": "Fetal hyperglycemia", "correct": false}, {"label": "C", "text": "Congenital malformations in the fetus", "correct": true}, {"label": "D", "text": "Neonatal hypoglycemia", "correct": false}], "correct_answer": "C. Congenital malformations in the fetus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Congenital malformations in the fetus In the given case, the female develops insulin resistance later in her pregnancy. It’s hence a case of gestational diabetes. Congenital malformations are associated with overt diabetes.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 25 -Year-old Primigravida with 26 weeks of gestation presents with a history of burning micturition and fever for three days. She has no comorbidities. She is on iron and calcium tablets. Her previous lab investigations and use are normal. On examination, P -85/min, BP-126/84mmHg, RR-12/min, saturation normal, temperature-99F. Abdominal examination shows fundus just above umbilicus, vertical lie, breech presentation, not engaged, FHR-140/min. Her urine test shows the presence of glucose and some WBC. Her RBS is 220 mg/dL. HbA1C was done and was 9 percent. The maternal effects of this condition on pregnancy are: Polyhydramnios Increased incidence of preeclampsia Abortion Preterm labor Select the correct answer from the given below code:", "options": [{"label": "A", "text": "Only 1 and 4", "correct": false}, {"label": "B", "text": "1, 3 and 4", "correct": false}, {"label": "C", "text": "2 and 4", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above In the given case, the female presents with burning micturition, fever, and high temperature, all suggesting UTI . Her urine test is positive for glucose which indicates glycosuria . UTI is associated with glycosuria/ Diabetes She develops these symptoms in the later part of her pregnancy, which gives the diagnosis of gestational diabetes . The complications of gestational diabetes are listed below :</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 26 -Year-old primigravida with 38 weeks of gestation presents with pain in the abdomen, backache, leak P/V, and show. She is a case of gestational diabetes on insulin. Her previous lab investigations and use are normal. On examination, P – 90/min, BP-136/84mmHg, saturation normal, RR-12/min, afebrile, pallor +, pedal edema upto ankle seen. Abdominal examination shows fundus just below xiphisternum, vertical lie, cephalic presentation, head engaged, contractions- 5/10mins. PV examination shows cervix soft, effaced, 5cm dilated, 2cm long, head at station +1, membranes absent. Fetal NST is normal. The labor was arrested, and the image is shown below. The reason could be", "options": [{"label": "A", "text": "Shoulder dystocia", "correct": false}, {"label": "B", "text": "Macrosomia", "correct": false}, {"label": "C", "text": "Both A & B", "correct": true}, {"label": "D", "text": "Fetal malformation", "correct": false}], "correct_answer": "C. Both A & B", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1685005118636-QTDG071006IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Both A & B In the given case, a female with gestational diabetes presents with an arrest in labor. The reason for arrest in labor could be macrosomia which is a complication of diabetes. Macrosomia is also associated with shoulder dystocia. Hence both options A and B are correct.</p>\n<p><strong>Highyeild:</strong></p><p>Fetal Complications in GDM : Congenital malformation Hyperglycemia Macrosomia Shoulder dystocia Abortions/IUD/stillbirth (due to sudden hypoglycemia)</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: D. Fetal malformation is generally associated with overt diabetes and NOT gestational diabetes.</p>\n<p><strong>Extraedge:</strong></p><p>SHOULDER DYSTOPIA DEFINITION : Head to body delivery time exceeding 60 seconds RISK FACTORS Diabetes mellitus Obesity Post datism Excess weight gain during pregnancy Other risk factors:- Pre-Labour Previous shoulder dystocia Macrosomia Diabetes mellitus Maternal body mass index > 30 Induction of labour Intra partum Prolonged first stage of labour Secondary arrest Prolonged second stage of labour Oxytocin augmentation Assisted vaginal delivery 47% of undelivered babies die in 5 minutes</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30-Year-oldprimigravida with 37 weeks of gestation presents with a history of pain in the abdomen and backache. She is a case of gestational diabetes and is on treatment. She has had regular ANC; her previous lab investigations and use are joint. On examination, P -84/min, saturation normal, afebrile, RR-13/min, BP-122/84mmHg, pallor +. The abdominal study shows fundus just below xiphisternum, vertical lie, cephalic presentation with engaged head, FHR-140/min, contractions- 4/10 mins. PV examination shows- the cervix soft, effaced, 3cm dilated, 2cm long, membranes intact, heat at station +1. NST was normal. Her RBS was 190 mg/dL. She had a standard vaginal delivery, and the baby weighed 3.7kg. The complications that could be seen in the neonate are: Hypoglycemia Hyperbilirubinemia Polycythemia Hypercalcemia Hypomagnesaemia Select the correct answer from the given below code:", "options": [{"label": "A", "text": "1, 2 and 3", "correct": false}, {"label": "B", "text": "1, 3 and 5", "correct": true}, {"label": "C", "text": "2, 4 and 5", "correct": false}, {"label": "D", "text": "2, 3 and 4", "correct": false}], "correct_answer": "B. 1, 3 and 5", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>1, 3 and 5 In the given question, a 30-year-old female with gestational diabetes has had a vaginal delivery, and the neonatal complications are asked. The fetal and neonatal complications are listed below : Fetal Neonatal • Congenital malformation • Hyperglycemia • Macrosomia • Shoulder dystocia •  Abortions/IUD/ stillbirth (due to sudden hypoglycemia . Prematurity • RDS (Respiratory distress syndrome) • Hypoglycemia • Hypocalcemia • Hypomagnesemia .}      Occur within 72 hrs of birth • Hypokalemia . • Hyperviscosity syndrome (hyper- bilirubinemia and polycythemia) Late effects : • Obesity . . Future diabetes. Cardiovascular disease</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 32-Year-old G3P2002 female presents for her postpartum visit. Her obstetrical history is significant for GDM, with her last pregnancy only ending in a term delivery of a 3 kg infant eight weeks ago. Her body mass index (BMI) is 24 kg/ m2. Besides the routine examination and Pap smear, what is your next step regarding this patient?", "options": [{"label": "A", "text": "Recommend fasting glucose and HbA1c every three years.", "correct": false}, {"label": "B", "text": "Recommend 3-hour 100-g GTT if she has a first-degree relative with DM", "correct": false}, {"label": "C", "text": "Recommend 2-hour 75-g GTT at this time", "correct": true}, {"label": "D", "text": "There is no intervention due to her optimal BMI", "correct": false}], "correct_answer": "C. Recommend 2-hour 75-g GTT at this time", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Recommend 2-hour 75-g GTT at this time In the given question, the female presents a history of gestational diabetes . All women with gestational DM should have a screening test at six weeks postpartum.</p>\n<p><strong>Extraedge:</strong></p><p>Time 75-g Glucose (1 step approach) Fasting 92 mg/dl One hour 180 mg/dl Two hours 153 mg/dl Three hours — WHO and IADPSG recommend using a single-step approach, which is both for screening and diagnosis. Here the patient is advised to free diet for 72 hrs, followed by a fasting sample. Then 75 gm glucose was given, and two samples were taken- after 1 hour and two hrs. In the single-step approach, even if one value is abnormal, GDM is diagnosed.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 41-Year-old woman has an oral glucose tolerance test (OGTT) at 28 weeks gestation in her fourth pregnancy. The results are as follows: Fasting plasma glucose: 105 mg/dl 2-hour plasma glucose: 180 mg/dl What is the correct diagnosis?", "options": [{"label": "A", "text": "Impaired glucose tolerance", "correct": false}, {"label": "B", "text": "Gestational diabetes", "correct": true}, {"label": "C", "text": "Maturity onset diabetes of the young (MODY)", "correct": false}, {"label": "D", "text": "Type 2 diabetes", "correct": false}], "correct_answer": "B. Gestational diabetes", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Gestational diabetes The criteria we follow to diagnose GDM is: Time 75-g Glucose (1 step approach) Fasting 92 mg/dl One hour 180 mg/dl Two hours 153 mg/dl Three hours — WHO and IADPSG recommend using a single-step approach, which is both for screening and diagnosis. Here the patient is advised to free diet for 72 hrs, followed by a fasting sample. Then 75 gm glucose was given, and two models were taken- after 1 hour and two hrs. In the single-step approach, even if one value is abnormal, GDM is diagnosed. Since the fasting level is more than 92 mg/dl , the case is Gestational</p>\n<p><strong>Extraedge:</strong></p><p>There are multiple criteria to diagnose GDM, which include Carpenter and Coustan , etc. It is recommended to learn only the WHO and IADPSG recommended single-step approach.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A G2 P1+0+0 diabetic mother is present at 32 weeks of pregnancy; there is a history of full-term fetal demise in the last pregnancy. Her vitals are stable, her blood sugar is well controlled, and the fetus is stable. Which among the following will be the most appropriate management?", "options": [{"label": "A", "text": "To induce at 38 weeks", "correct": true}, {"label": "B", "text": "To induce at 40 weeks", "correct": false}, {"label": "C", "text": "The cesarean section at 38 weeks", "correct": false}, {"label": "D", "text": "To wait for spontaneous delivery", "correct": false}], "correct_answer": "A. To induce at 38 weeks", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>To induce at 38 weeks In the given case, a female with GDM with a history of fetal demise presents with well-controlled sugar . The intrapartum management of gestational diabetes cases is as follows: Time of delivery Low risk patients-wait for spontaneous labor till maximum 40 weeks High risk patients-38 weeks- induce labor as IUD occurs mostly in last 2 weeks of pregnancy. Mode of delivery-vaginal delivery</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A GDM patient was started on lifestyle modification and exercise and was advised to follow up. During the follow-up after four weeks patients, fasting was 98 mg/dl. GTT at 1 hr was 142 mg/dl. How do you manage her?", "options": [{"label": "A", "text": "Rigorous lifestyle modification", "correct": false}, {"label": "B", "text": "There is no active intervention", "correct": false}, {"label": "C", "text": "Start metformin", "correct": false}, {"label": "D", "text": "Start insulin", "correct": true}], "correct_answer": "D. Start insulin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Start insulin In the given case, even after lifestyle modification , the fasting glucose levels of the patient are above 95 mg/dl. Metabolic goals during Pregnancy: Fasting < 95 mg/dl 1 hr PP < 140 mg/dl 2 hr PP < 120 mg/dl (average 100 mg/dl) HbA1c-6% . If these goals are not achieved, patients should be on Insulin . Rigorous lifestyle modification and metformin are given only when these goals are met.</p>\n<p><strong>Highyeild:</strong></p><p>WHEN TO DELIVER Acc to ACOG Controlled on diet - expectant management upto 40 weeks + 6 days Controlled on medication - deliver at 39-39 weeks Poorly controlled-deliver between 34-36 weeks, if no glycemic control inspite of hospitalization OR abnormal fetal testing Acc to NICE GDM on diet - delivery by 40 weeks GDM on insulin-deliver by 38 weeks Overt DM - deliver by 38 weeks Contraception of choice - IUCD</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A pregnant, diabetic female on oral hypoglycemics is shifted to insulin. All of the following are true, except:", "options": [{"label": "A", "text": "Insulin does not cross the placenta", "correct": false}, {"label": "B", "text": "During pregnancy, insulin requirement increases, and", "correct": false}, {"label": "C", "text": "Cannot be provided with sulphonylureas", "correct": false}, {"label": "D", "text": "Tolbutamide crosses placenta", "correct": true}], "correct_answer": "D. Tolbutamide crosses placenta", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Tolbutamide crosses placenta Diabetic females on oral hypoglycemics are shifted to insulin during pregnancy because: Insulin does not cross the placenta. Insulin requirement is increased in pregnancy which oral hypoglycemics cannot fulfill. Oral hypoglycemic drugs cross the placenta and have teratogenic Oral hypoglycemic drugs cause severe fetal hyperinsulinemia and hypoglycemia . Oral hypoglycemics aggravate neonatal hyperbilirubinemia by competing for albumin-binding sites. The only hypoglycemic drugs used during pregnancy are Metformin and Glyburide .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A pregnant, diabetic female on oral hypoglycemics is shifted to insulin. All the following are true, except", "options": [{"label": "A", "text": "Insulin does not cross the placenta", "correct": false}, {"label": "B", "text": "During pregnancy, insulin requirement increases and cannot be provided with sulphonylureas.", "correct": false}, {"label": "C", "text": "Tolbutamide crosses placenta", "correct": false}, {"label": "D", "text": "Tolbutamide causes PIH", "correct": true}], "correct_answer": "D. Tolbutamide causes PIH", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Tolbutamide causes PIH Some Important points regarding the treatment of GDM with insulin and OHA are: Insulin does not cross the placenta. Insulin requirement is increased in pregnancy which oral hypoglycemics cannot fulfill. Oral hypoglycemic drugs cross the placenta and have teratogenic Oral hypoglycemic drugs cause severe fetal hyperinsulinemia and hypoglycemia . Oral hypoglycemics aggravate neonatal hyperbilirubinemia by competing for albumin-binding sites. The only hypoglycemic drugs used during pregnancy are Metformin and Glyburide . Note: Tolbutamide is not associated with PIH. But even by ruling out options A, B, and C, we can reach the answer.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A woman with GDM delivered a male baby at 37 weeks gestation. Four hours after birth, three baby became dyspneic on doing two examinations more than an hour apart, following finding noted. Respiratory rate of more than 60 breaths/minute Nasal flaring Rib retraction Expiratory grunt, Central cyanosis. Chest X-ray shows a uniform reticulogranular pattern. Most probable diagnosis:", "options": [{"label": "A", "text": "Hyaline Membrane disease", "correct": true}, {"label": "B", "text": "Pneumothorax", "correct": false}, {"label": "C", "text": "Congenital heart disease", "correct": false}, {"label": "D", "text": "Diaphragmatic hernia", "correct": false}], "correct_answer": "A. Hyaline Membrane disease", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hyaline Membrane disease In the given case, a woman with GDM presents with a cyanotic picture, with a CXR showing a reticulogranular pattern (also known as ground glass opacity ) which favors a diagnosis of HMD . In GDM, Fetal hyperinsulinemia antagonizes the action of cortisol . Cortisol acts on type 2 pneumocytes and stimulates surfactant synthesis. So, the most likely diagnosis in this scenario is HMD, also known as RDS (Respiratory distress syndrome).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Glycosuria during a routine investigation of antenatal visits indicates that there is a need for", "options": [{"label": "A", "text": "Gestational diabetes treatment", "correct": false}, {"label": "B", "text": "Dietary control", "correct": false}, {"label": "C", "text": "Insulin treatment", "correct": false}, {"label": "D", "text": "Glucose tolerance test", "correct": true}], "correct_answer": "D. Glucose tolerance test", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Glucose tolerance test Glycosuria in Pregnancy: During pregnancy, the renal threshold for glucose is diminished . If a glucose tolerance test is done, glucose leaks out in the urine even though the blood sugar level is below 180 mg per 100 ml ( average renal threshold). Glycosuria is detected explicitly by testing a second fasting morning urine specimen , collected a little later after discarding the overnight urine. I am fasting glycosuria in the above sample if present is ominous . Glycosuria on one occasion before the 20th week and two or more events after that indicates a glucose tolerance test . Glycosuria occurring at any time during pregnancy with a positive history of diabetes or history of having a baby weighing 4 kg or more should be tested by GTT .</p>\n<p><strong>Extraedge:</strong></p><p>National diabetes Data group 100gm of glucose F→ <105 mg/dL 1 hr→ <190 mg/dL 2 hr→ 165 mg/dL 3 hr→ 145 mg/DL If any two valves abnormal → Gestational DM If any one valve abnormal → impaired Glucose tolerance DIPSI → Diabetes in pregnancy study group India → Irrespective of meal status 75 gm of glucose ↓ Measure after 2 hours 140 mg/dL→ Gestational DM (GDM) <126 mg/dL → Normal 126-139 mg/dLIGT 140-199 mg/dL GDM 200 mg/dL → Overt DM ADA (AMERICAN DIABETES ASSOCIATION) → Previous 72 hr normal meal → Overnight fasting 75 gms of glucose F<92 mg/dL 1hr < 180 mg/dL 2hr < 153 mg/dL If any one valve abnormal →→ Gestational DM</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Management Of GDM includes all of the following except -", "options": [{"label": "A", "text": "Diet modification - 3 Major and 3 Minor meals in between majors.", "correct": false}, {"label": "B", "text": "Exercises like aerobic, brisk walking, and isometric exercises of the upper body are recommended.", "correct": false}, {"label": "C", "text": "Start insulin as soon as GDM is detected.", "correct": true}, {"label": "D", "text": "OHA(oral hypoglycemic agents) like Metformin and Glyburide are safe during pregnancy.", "correct": false}], "correct_answer": "C. Start insulin as soon as GDM is detected.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Start insulin as soon as GDM is detected. Insulin is not started immediately after detection of GDM. 1st STEP in GDM is Diet modification and exercises ( Option A and B ) Metabolic Goal - FBS - < 95mg/dl 1hr PP- < 140mg/dl 2hr PP- <120mg/dl If Blood sugar remains abnormal beyond 2-3 weeks after diet modification and exercises Then Insulin is given.</p>\n<p><strong>Highyeild:</strong></p><p>WHEN TO DELIVER Acc to ACOG Controlled on diet - expectant management upto 40 weeks+6 days Controlled on medication - deliver at 39-39\" weeks Poorly controlled-deliver between 34-36 weeks, if no glycemic control inspite of hospitalization OR abnormal fetal testing Acc to NICE GDM on diet - delivery by 40 weeks GDM on insulin - deliver by 38 weeks Overt DM - deliver by 38 weeks Contraception of choice - IUCD</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: D. OHA, Like Metformin and Glyburide, are safe in pregnancy . Both drugs cross the placenta. However, no teratogenic effect has been observed as yet. Glibenclamide appears to be superior when compared to metformin.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The most common congenital malformation is seen in newborns with overt diabetes. VSD- Ventricular Septal Defect NTD- Neural Tube Defect TGA- Transposition of great vessels", "options": [{"label": "A", "text": "Sacral agenesis", "correct": false}, {"label": "B", "text": "VSD", "correct": true}, {"label": "C", "text": "NTD", "correct": false}, {"label": "D", "text": "TGA", "correct": false}], "correct_answer": "B. VSD", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>VSD Most common system involved = Cardiovascular system. 2nd und most common system involved = Nervous system Most common anomalies = VSD, ASD, TGA, Anencephaly, Spinabifida In cardiac anomalies M/C is VSD but most specific is TGA. Anomaly most specific for gestational diabetes is Caudal regression syndrome/sacral agenesis. Congenital anomalies are seen in overt diabetes and not gestational diabetes Investigation of choice to predict the risk of congenital anomalies in diabetic patients-HbA1C Investigation of choice to detect the risk of congenital anomalies in diabetic patients-USG</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Pregnancy is a diabetogenic state because A). Increase in insulin resistance in pregnancy B). Increase in hormones like hpl(human placental lactogen), estrogen, progesterone, and cortisol C). Altered gluconeogenesis/ carbohydrate metabolism D). Increased lipolysis Choose the correct combination among the following:", "options": [{"label": "A", "text": "An only", "correct": false}, {"label": "B", "text": "A and B", "correct": false}, {"label": "C", "text": "B, C and D", "correct": false}, {"label": "D", "text": "All the above", "correct": true}], "correct_answer": "D. All the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All the above Pregnancy is a diabetogenic state because of: nic state because of: Insulin resistance Production of Human Placental Lactogen (HPL) Increased production of cortisol, estrogen, and progesterone Increased destruction of insulin by Kidneys and j Increased lipolysis Altered gluconeogenesis Statement A and B. In pregnancy, an increase in anti-insulin hormones like hPL, estrogen, progesterone, and cortisol leads to increased insulin resistance in the mother. NOTE: HCG has no major role in insulin resistance. Statement C. There are alterations in gluconeogenesis/ carbohydrate metabolism in the mother due to insulin resistance Statement D . With the \" accelerated starvation \" concept, there is rapid activation of lipolysis with a short period of fasting. NOTE: hPL is secreted by the placenta maximally around 24-28 weeks, so gestational diabetes was seen around 24-28 weeks.</p>\n<p><strong>Highyeild:</strong></p><p>Pregnancy is a diabetogenic state. 1. Increased insulin resistance in pregnancy → Human placental lactogen →→ Anti- insulin ↑ses (24-28 weeks) →Estrogen, Progesterone, cortisol → Anti-insulin ↑se 2. Altered gluconeogenesis (↓sed) 3. Altered lipolysis (↑sed) 4. ↑sed insulin secretion</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The commonest congenital anomaly seen in pregnancy with diabetes mellitus is:", "options": [{"label": "A", "text": "Multicystic kidneys", "correct": false}, {"label": "B", "text": "Oesophageal atresia", "correct": false}, {"label": "C", "text": "Neural tube defect", "correct": true}, {"label": "D", "text": "Duodenal atresia", "correct": false}], "correct_answer": "C. Neural tube defect", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Neural tube defect Remember: Most common system involved = Cardiovascular system. 2nd und most common system involved = Nervous system Most common anomalies = VSD, ASD, TGA, Anencephaly, Spinabifida In cardiac anomalies M/C is VSD but most specific is TGA. Anomaly most specific for gestational diabetes is Caudal regression syndrome/sacral agenesis. Congenital anomalies are seen in overt diabetes and not gestational diabetes Investigation of choice to predict the risk of congenital anomalies in diabetic patients-HbA1C Investigation of choice to detect the risk of congenital anomalies in diabetic patients-USG.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following Anomaly in the fetus is specifically associated with?", "options": [{"label": "A", "text": "Rh negative pregnancy", "correct": false}, {"label": "B", "text": "Overt DM", "correct": true}, {"label": "C", "text": "Pre-eclampsia", "correct": false}, {"label": "D", "text": "Hypothyroidism", "correct": false}], "correct_answer": "B. Overt DM", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1685005121644-QTDG071027IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Overt DM Given image is of a boot-shaped heart associated with TOF. TOF is a congenital heart disease that is associated with Overt diabetes. Gestational diabetes : High sugar levels in a pregnant female due to insulin resistance on or after 24 weeks of gestation. Overt diabetes: When a diabetic female conceives, it is called overt diabetes. In this case, the sugar levels are high even in the first trimester. Concept: Organogenesis occurs in the first trimester . So congenital malformations occur when the sugar levels are high in the first trimester, i.e., in the case of overt diabetes, NOT gestational diabetes.</p>\n<p><strong>Highyeild:</strong></p><p>OVERT DM HbA1c <5.6 → Tab folic acid 4mg → NT scan + double marker → Quadraple marker → 18-20 weeks - TIFFA (level II scan) →20 weeks-fetal ECHO</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "True about diabetes in pregnancy are all except:", "options": [{"label": "A", "text": "Glucose challenge test is done between 24-28 weeks", "correct": false}, {"label": "B", "text": "50 gm of sugar is given for screening test", "correct": false}, {"label": "C", "text": "Insulin resistance improves with pregnancy", "correct": true}, {"label": "D", "text": "Diabetes control before conception is important to prevent malformation", "correct": false}], "correct_answer": "C. Insulin resistance improves with pregnancy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Insulin resistance improves with pregnancy hPL is secreted by the placenta maximally around 24-28 weeks, so gestational diabetes is seen around 24-28 weeks. In other words, insulin resistance increases (not improves) with pregnancy .</p>\n<p><strong>Highyeild:</strong></p><p>Pregnancy is a diabetogenic state because of: nic state because of: Insulin resistance Production of Human Placental Lactogen (HPL) Increased production of cortisol, estrogen, and progesterone Increased destruction of insulin by Kidneys and j Increased lipolysis Altered gluconeogenesis NOTE: HCG has no significant role in insulin resistance.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. The glucose challenge test is the screening test for GDM, which is performed between 24 and 28 weeks of gestation Option: B. The screening test for diabetes is performed by orally administering 50 g of glucose irrespective of the previous meal and measuring venous plasma glucose 1 hour later. Option D: Malformations are associated with overt So, diabetic control before conception is essential.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

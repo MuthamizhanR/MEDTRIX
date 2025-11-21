@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Pharmacology - INI CET NOV 2021</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Pharmacology - INI CET NOV 2021</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                22 Questions | 22 Total Marks | 32 min Duration | ~87.27 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 22 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 32 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 22</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Pharmacology - INI CET NOV 2021 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 22</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 22 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "If the elimination constant rate of a drug is 0.05/hr, what is the half-life of this drug?", "options": [{"label": "A", "text": "20 hr", "correct": false}, {"label": "B", "text": "6.5 hr", "correct": false}, {"label": "C", "text": "13.8 hr", "correct": true}, {"label": "D", "text": "7.5 hr", "correct": false}], "correct_answer": "C. 13.8 hr", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>13.8 hr</p>\n<p><strong>Highyeild:</strong></p><p>The half-life of a drug is the time taken for the plasma concentration of a drug to reduce to half its original value. The actual half-life of a drug varies from person to person, because it depends on a number of different patient- and drug-specific variables. These affect how well a particular drug is distributed around a person’s body (volume of distribution), or how fast a person excretes that drug (drug clearance). For example, the IV drug gentamicin, which is cleared through the kidneys, has a half-life of 2-3 hours in a young person with no kidney disease, but over 24 hours in somebody with severe kidney disease. Half-life elimination is graphically represented with elimination curves that track the amount of a drug in the body over time, typically with time on the independent axis and drug plasma concentration on the dependent axis, as shown in Figure below. Total drug exposure over time is represented in these graphs as the integral area under the curve (AUC). Elimination curves are useful for determining if a drug indeed follows first-order kinetics, in which case the curve should follow a logarithmic decay according to the integrated rate law of first-order reactions (Equation 1). After solving the differential equation, one can obtain the half-life equation that is commonly tested on and used in clinical practice (Equation 2). From this equation, one can quickly determine the half-life of a drug, given its predetermined rate constant k.</p>\n<p><strong>Extraedge:</strong></p><p>Equation 1: ln[Ao]/[A]=kt Equation 2: t-half= 0.693/k Equation 3: t-half= 0.693*Vd/CL, where Vd is the volume of distribution and CL is clearance Here, by putting the values in equation 2, t 1/2 = 0.693/0.05=13.8 hr.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient who is on phenytoin for seizure disorder was prescribed sucralfate 4 times a day for peptic ulcer. What should be the minimum duration between consumption of two drugs?", "options": [{"label": "A", "text": "120 mins", "correct": true}, {"label": "B", "text": "60 mins", "correct": false}, {"label": "C", "text": "30 mins", "correct": false}, {"label": "D", "text": "90 mins", "correct": false}], "correct_answer": "A. 120 mins", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>120 mins</p>\n<p><strong>Highyeild:</strong></p><p>Sucralfate is a complex aluminium hydroxide salt of a sulphated disaccharide used in the treatment of peptic ulceration. It binds with proteins in the ulcer base to form a chemical barrier to further erosion. It acts in an acidic environment with pH<4 and thus possibly inhibits the absorption of drugs like phenytoin, cimetidine, ketoconazole, etc. Thus, a gap of at least 2 hrs should be maintained between these drugs. Sucralfate should NOT be combined with Al containing antacids (Magnesium aluminum silicate) since Magnesium aluminum silicate reacts with acid in the stomach to increase the pH. Also, since sucralfate produces viscous gel like product and leads to constipation, it could l/t bezoar formation or Aluminium overload (in renal failure patients).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following drug is the only medication useful in preventing disability progression in a patient with primary progressive multiple sclerosis?", "options": [{"label": "A", "text": "Ocrelizumab", "correct": true}, {"label": "B", "text": "Natalizumab", "correct": false}, {"label": "C", "text": "Siponimod", "correct": false}, {"label": "D", "text": "Rituximab", "correct": false}], "correct_answer": "A. Ocrelizumab", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ocrelizumab</p>\n<p><strong>Highyeild:</strong></p><p>Ocrelizumab is a humanized anti-CD20 monoclonal antibody which was recently approved for the treatment of adults with relapsing multiple sclerosis (RMS) or primary progressive multiple sclerosis (PPMS). It is a novel high-efficacy disease-modifying therapy for RMS that is more effective than interferon β-1a and also a valuable new treatment option for delaying progression in early PPMS. It offers a convenient once every 6 months treatment regimen, with no need for routine monitoring. Mitoxantrone can also be used; however it is less preferred due to risk of cardiotoxicity.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following cephalosporins can increase the effect of warfarin resulting in raised INR and increased risk of bleeding?", "options": [{"label": "A", "text": "Cefoperazone", "correct": true}, {"label": "B", "text": "Cefixime", "correct": false}, {"label": "C", "text": "Ceftobiprole", "correct": false}, {"label": "D", "text": "Ceftazidime.", "correct": false}], "correct_answer": "A. Cefoperazone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cefoperazone</p>\n<p><strong>Highyeild:</strong></p><p>Cephalosporins containing an N-methylthiotetrazole (NMTT) side chain are mainly the second-generation (cefamandole, cefbuperazone, cefmetazole, cefminox, cefotetan) and third-generation cephalosporins (cefmenoxime, cefoperazone, moxalactam). NMTT-cephalosporins [side chains of N-methylthiotetrazole (latamoxef, cefmenoxime, cefoperazone, cefotetan, cefamandole)] or methyl-thiadiazol-cephalosporins (cefazolin)  are known to cause hemostatic abnormalities, such as bleeding, prothrombin time (PT) prolongation, and hypoprothrombinemia, due to the chemical structure of the NMTT, which interferes with vitamin K metabolism. This is because these drugs inhibit Vit. K epoxide reductase in liver, which acts as a major enzyme for Vit. K dependent carboxylation; essential for the functioning of coagulation actors.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following anti-epileptic drug is used in treatment of neuropathic pain? Gabapentin Lamotrigine Carbamazepine Pregabalin Select the correct answer from the given below code:", "options": [{"label": "A", "text": "1,3,4", "correct": true}, {"label": "B", "text": "1,2,3", "correct": false}, {"label": "C", "text": "1,2", "correct": false}, {"label": "D", "text": "1,3", "correct": false}], "correct_answer": "A. 1,3,4", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>1,3,4 First-line agents include tricyclic antidepressants, duloxetine, pregabalin and controlled-release oxycodone. Other medications include carbamazepine, gabapentin, lamotrigine and tramadol.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Carbamazepine ↑ refractory period of voltage-gated Na + channels Likely binds to the inactivated state, inhibiting action potential generation First-line for trigeminal neuralgia Also used for bipolar disorders Lamotrigine Blocks voltage-gated Na + channels and glutamate receptors Safe in pregnancy compared to other AEDs. Gabapentin Inhibit voltage-gated Ca 2+ channel via α2δ subunit Structurally similar to GABA Also used for peripheral neuropathy/neuropathic pain Pregabalin Subtly reduces the synaptic release of several neurotransmitters, apparently by binding to alpha2-delta subunits, and possibly accounting for its actions in vivo to reduce neuronal excitability and seizures.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Dose of carbetocin for post-partum hemorrhage is?", "options": [{"label": "A", "text": "150mcg im over 2min", "correct": false}, {"label": "B", "text": "100mcg iv over 1min", "correct": true}, {"label": "C", "text": "200 mcg iv over 1min", "correct": false}, {"label": "D", "text": "50mcg iv over 2min", "correct": false}], "correct_answer": "B. 100mcg iv over 1min", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>100mcg iv over 1min Several different uterotonic drugs have been used for PPH include ergometrine, misoprostol, carbetocin, oxytocin, and the combinations of misoprostol plus oxytocin and ergometrine plus oxytocin.</p>\n<p><strong>Highyeild:</strong></p><p>Oxytocin (10IU, IV/IM) is the most widely used uterotonic drug: 1 st line At low doses, it produces rhythmic uterine contractions that are indistinguishable in frequency, force and duration from those observed during spontaneous labour, but at higher dosages, it causes sustained uterine contractions Oxytocin has a favourable side‐effect profile Ergometrine and methylergometrine (200 μg, IM/IV) are ergot alkaloids that increase the uterine muscle tone by causing sustained uterine contractions. However, ergometrine and methylergometrine are vasoconstrictive and increase the risk of hypertension postpartum, unstable in heat with an unpredictable bioavailability, which precludes oral use. Misoprostol (400 or 600 μg, PO) is a prostaglandin E1 analogue, which is licensed for the prevention and treatment of gastric ulcers. It is well known for its off‐label use as a uterotonic agent. Oral and sublingual routes have the advantage of rapid onset of action, while the vaginal and rectal routes result in prolonged activity and greater bioavailability Carbetocin (100 μg IM/IV) is a newer long‐acting synthetic analogue of oxytocin with agonist properties. After intravenous injection, it produces sustained uterine contractions within two minutes, lasting for approximately six minutes followed by rhythmic contractions for 60 minutes Carbetocin is heat stable and the side‐effect profile appears to be similar to oxytocin Oxytocin and ergometrine FDC (5 IU, 500 μg, IM)</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which dose of dopamine act preferably on β1 receptors?", "options": [{"label": "A", "text": "Less than 2mcg/kg/min", "correct": false}, {"label": "B", "text": "2 to 10 mcg/kg/min", "correct": true}, {"label": "C", "text": "10-20 mcg/kg/min", "correct": false}, {"label": "D", "text": "More than 20 mcg/kg/min", "correct": false}], "correct_answer": "B. 2 to 10 mcg/kg/min", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>2 to 10 mcg/kg/min</p>\n<p><strong>Highyeild:</strong></p><p>Dopamine is a peripheral vasostimulant used to treat low blood pressure, low heart rate, and cardiac arrest. Low infusion rates (0.5 to 2 micrograms/kg per minute) act on the visceral vasculature to produce vasodilation, including the kidneys, resulting in increased urinary flow. It is beneficial to manage hypotension, low cardiac output, and inadequate organ perfusion (often indicated by low urine production). Intermediate infusion rates (from 2 to 10 micrograms/kg/min) stimulate myocardial contractility and increase electrical conductivity in the heart leading to increased cardiac output. Higher doses cause vasoconstriction and increased blood pressure via the adrenergic receptors alpha-1, beta-1, and beta-2, potentially leading to poor peripheral circulation. DA receptors are further classified either as D1-class (D1 and D5) or D2-class (D2, D3, D4). Activation of the D1 receptors on smooth muscle, the proximal renal tubule, and cortical collecting duct increase diuresis. D2 receptors are located pre-synaptically on the renal nerves and within the glomeruli and adrenal cortex. The activation of these nerves results in decreased renal sodium and water excretion. Apomorphine is a DA receptor agonist and may have similar activation on these DA receptors. Adrenergic receptors also bind DA increasing arterial smooth muscle contraction and cardiac sinoatrial node conductivity, which explains its cardiac therapeutic benefits.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Mechanism of action of Remdesivir is inhibition of?", "options": [{"label": "A", "text": "RNA dependent RNA polymerase", "correct": true}, {"label": "B", "text": "DNA dependent RNA polymerase", "correct": false}, {"label": "C", "text": "Viral protease enzyme", "correct": false}, {"label": "D", "text": "Cell wall synthesis", "correct": false}], "correct_answer": "A. RNA dependent RNA polymerase", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>RNA dependent RNA polymerase</p>\n<p><strong>Highyeild:</strong></p><p>Coronaviruses use an RdRp enzyme to carry out replication and transcription of their RNA genome1. The RdRp consists of three non-structural protein (nsp) subunits, the catalytic subunit nsp12 and the accessory subunits nsp8 and nsp7. The active form of remdesivir acts as a nucleoside analog and inhibits the RNA-dependent RNA polymerase (RdRp) of coronaviruses including SARS-CoV-2. Remdesivir is incorporated by the RdRp into the growing RNA product and allows for addition of three more nucleotides before RNA synthesis stalls.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents with bleeding and hemarthrosis after he was prescribed some medication 1 week back. Which of the following drugs could have possibly caused this condition?", "options": [{"label": "A", "text": "Ceftriaxone", "correct": false}, {"label": "B", "text": "Cefoperazone", "correct": true}, {"label": "C", "text": "Ceftazidime", "correct": false}, {"label": "D", "text": "Cefixime", "correct": false}], "correct_answer": "B. Cefoperazone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cefoperazone</p>\n<p><strong>Highyeild:</strong></p><p>NMTT-cephalosporins [side chains of N-methylthiotetrazole (latamoxef, cefmenoxime, cefoperazone, cefotetan, cefamandole)] or methyl-thiadiazole-cephalosporins (cefazolin)  are known to cause hemostatic abnormalities, such as bleeding, prothrombin time (PT) prolongation, and hypoprothrombinemia, due to the chemical structure of the NMTT, which interferes with vitamin K metabolism. This is because these drugs inhibit Vit. K epoxide reductase in liver, which acts as a major enzyme for Vit. K dependent carboxylation; essential for the functioning of coagulation actors.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is novel antidepressant?", "options": [{"label": "A", "text": "Lurasidone", "correct": false}, {"label": "B", "text": "Asenapine", "correct": false}, {"label": "C", "text": "Blonanserin", "correct": false}, {"label": "D", "text": "Vilazodone", "correct": true}], "correct_answer": "D. Vilazodone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Vilazodone</p>\n<p><strong>Highyeild:</strong></p><p>The selective serotonin reuptake inhibitor (SSRI) and 5-HT1A receptor partial agonist Vilazodone is a novel antidepressant, currently approved for the treatment of major depressive disorder (MDD) in adults, is also effective in relieving anxiety symptoms in patients with generalized anxiety disorder. Lurasidone is an antipsychotic medication used to treat schizophrenia and bipolar disorder . In bipolar disorder, it may be used together with a mood stabilizer such as lithium or valproate . Asenapine is a sublingual psychotropic agent. The exact mechanism of action is unknown . However, it has been suggested that the efficacy of asenapine in schizophrenia is mediated through a combination of antagonist activity at D2 and 5-HT2A receptors. Blonanserin is an atypical antipsychotic used for the treatment of schizophrenia in adult patients who have failed to respond to the first line treatment.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In 14 month old patient with Hib pneumonia, the resident doctor was planning to give ampicillin but shifted to ceftriazone. Why?", "options": [{"label": "A", "text": "Cotrimoxazole DOC but patient allergic to sulfa drugs", "correct": false}, {"label": "B", "text": "Hib modifies protein binding sites hence resistance to ampicillin", "correct": false}, {"label": "C", "text": "Hib produces B lactamase hence resistance to ampicillin", "correct": true}, {"label": "D", "text": "Ceftriaxone better IV drug than ampicillin", "correct": false}], "correct_answer": "C. Hib produces B lactamase hence resistance to ampicillin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hib produces B lactamase hence resistance to ampicillin</p>\n<p><strong>Highyeild:</strong></p><p>Intrinsic efflux resistance mechanisms in Hemophilus influenza type B limit the activity of the macrolides, azalides, and ketolides. β-Lactamase production is highly prevalent worldwide and is associated with resistance to ampicillin and amoxicillin. Strains with alterations in penicillin binding proteins, particularly PBP3 (β-lactamase negative ampicillin resistant and β-lactamase positive amoxicillin-clavulanate resistant), are increasing in prevalence, with increasing resistance to ampicillin, amoxicillin, amoxicillin-clavulanate, and many cephalosporins, limiting the efficacy of expanded-spectrum cephalosporins against meningitis and of many oral cephalosporins against other diseases. Most strains remain susceptible to the carbapenems, which are not affected by penicillin binding protein changes, and the quinolones. influenzae type b is a common bacterial cause of childhood pneumonia and bacteremia between 6 months and 5 years of age. High-dose amoxicillin (90 mg/kg of body weight/day), either alone or with the addition of clavulanic acid, is the first-line drug of choice for empirical treatment of outpatients with childhood pneumonia. Recommended empirical therapy for inpatients includes ceftriaxone or cefotaxime to provide coverage for non-penicillin-susceptible Streptococcus pneumoniae and β-lactamase-positive influenzae .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient of chronic liver cirrhosis presents with ascites. Which of the following is the best diuretic to be used in this patient?", "options": [{"label": "A", "text": "Furosemide", "correct": false}, {"label": "B", "text": "Chlorothiazide", "correct": false}, {"label": "C", "text": "Triamterene", "correct": false}, {"label": "D", "text": "Eplerenone", "correct": true}], "correct_answer": "D. Eplerenone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Eplerenone</p>\n<p><strong>Highyeild:</strong></p><p>Eplerenone and spironolactone are equally effective in management of ascites due to liver cirrhosis but side effect profile of eplerenone scores over Spironolactone. Cirrhosis and HF are disorders with a common pathophysiology of decreased effective arterial blood volume with resultant stimulation of the renin-angiotensin-aldosterone system (RAAS), sympathetic nervous system, and arginine vasopressin causing increased sodium and water retention. This arterial underfilling is caused by splanchnic vasodilatation in cirrhosis and decreased cardiac output in HF. In cirrhotic patients with refractory ascites, the standard of first-line care is mineralocorticoid antagonist (eg, spironolactone in doses up to 400 mg/day)</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is centrally acting opioid antitussive agent?", "options": [{"label": "A", "text": "Ambroxol", "correct": false}, {"label": "B", "text": "Levorphanol", "correct": false}, {"label": "C", "text": "Diphenoxylate", "correct": false}, {"label": "D", "text": "Levopropoxyphene", "correct": true}], "correct_answer": "D. Levopropoxyphene", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Levopropoxyphene</p>\n<p><strong>Highyeild:</strong></p><p>Antitussives are used for effective symptomatic relief of dry or non-productive cough. First generation anti-histamines like chlorpheniramine and centrally acting opioid derivatives like codeine are often used alone or in combination in the management of nonspecific cough. Sedation caused by these is valuable, particularly if the cough is disturbing the sleep. Other centrally acting antitussives include chlophedianol, levopropoxyphene, and noscapine in the nonnarcotic group and hydrocodone, hydromorphone, methadone, and morphine in the narcotic group.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following drugs improves bioavailability and prolongs duration of action of saquinavir?", "options": [{"label": "A", "text": "Vitamin C", "correct": false}, {"label": "B", "text": "Remdesivir", "correct": false}, {"label": "C", "text": "Ritonavir", "correct": true}, {"label": "D", "text": "Cimetidine", "correct": false}], "correct_answer": "C. Ritonavir", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ritonavir</p>\n<p><strong>Highyeild:</strong></p><p>Saquinavir is a peptide-like substrate analogue that binds to the protease active site and inhibits the activity of the enzyme HIV protease; which is required for the proteolytic cleavage of viral polyprotein precursors into individual functional proteins found in infectious HIV. While its efficacy was initially limited by exceptionally poor oral bioavailability (approximately 4%), its current indications require the co-administration of ritonavir - a potent enzyme inhibitor - that increases the bioavailability and subsequent serum concentrations of saquinavir, thus dramatically improving antiviral activity. Ritonavir is recommended as an agent to boost other protease inhibitors. This is because ritonavir blocks the CYP3A4 pathway in the liver, which is involved in the metabolising of other protease inhibitors . This leads to higher blood concentrations of these drugs and their slower clearance from the body.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is mechanism of action of cyclosporine?", "options": [{"label": "A", "text": "mTOR inhibitor", "correct": false}, {"label": "B", "text": "Calcineurine inhibitor", "correct": true}, {"label": "C", "text": "IL-2 receptor antagonist.", "correct": false}, {"label": "D", "text": "TNF-alpha inhibitor.", "correct": false}], "correct_answer": "B. Calcineurine inhibitor", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Calcineurine inhibitor</p>\n<p><strong>Highyeild:</strong></p><p>Cyclosporine is an immunosuppressive agent used to treat organ rejection post-transplant. It also has use in certain other autoimmune diseases, treatment of organ rejection in kidney, liver, and heart allogeneic transplants, rheumatoid arthritis when the condition has not adequately responded to methotrexate. Also, it is a second-line agent for ALS and graft vs. host disease. The mechanism of action of cyclosporine is as a calcineurin inhibitor, a cytochrome P450 3A4 inhibitor, and a P-glycoprotein inhibitor. Cyclosporin A (CsA) inhibits the synthesis of interleukins (IL), including IL-2, which is essential for the self-activation of T lymphocytes (LT) and their differentiation. Cyclosporine is effective due to specific and reversible inhibition of immunocompetent lymphocytes in the G0 and G1-phase of the cell cycle. The T-helper cell is the primary target, although it may also suppress T-suppressor cells. The LT-B-lymphocyte (LB) co-operation is essential for activation of LB; the latter also gets inhibited. In addition, research has demonstrated that CsA had an inhibiting effect on CD4+ CD25+ Tregs, which might block the host immune tolerance potentiality.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Category A/B/C/D/X of drugs is based on?", "options": [{"label": "A", "text": "Safety in pregnancy", "correct": true}, {"label": "B", "text": "Dose adjustment in renal failure", "correct": false}, {"label": "C", "text": "over the counter use of drug", "correct": false}, {"label": "D", "text": "Therapeutic index and safety", "correct": false}], "correct_answer": "A. Safety in pregnancy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Safety in pregnancy</p>\n<p><strong>Table:</strong></p><p>#MANTRA FDA Classification of Drug Safety During Pregnancy Category A Controlled studies in women fail to demonstrate a risk to the fetus in the first trimester (and there is no evidence of risk in later trimesters), and the possibility of fetal harm appears remote. Category B Either animal reproduction studies have not demonstrated a fetal risk but there are no controlled studies in pregnant women, or animal reproduction studies have shown an adverse effect (other than a decrease in fertility) that was not confirmed in controlled studies in women in the first trimester (and there is no evidence of risk in later trimesters). Category C Either studies in animals have revealed adverse effects on the fetus (teratogenic or embryocidal or other) and there are no controlled studies in women, or studies in women and animals are not available. Drugs should be given only if the potential benefit justifies the potential risk to the fetus. Category D There is positive evidence of human fetal risk, but the benefits from use in pregnant women may be acceptable despite the risk (e.g., if the drug is needed in a life-threatening situation or for a serious disease in which safer drugs cannot be used or are ineffective). Category X Studies in animals or human beings have demonstrated fetal abnormalities or there is evidence of fetal risk based on human experience, and the risk of the use of the drug in pregnant women clearly outweighs any possible benefit. The drug is contraindicated in women who are or may become pregnant. FDA = U.S. Food and Drug Administration.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Definition of resistant hypertension is usage of 3 or more drugs, one which should be:", "options": [{"label": "A", "text": "Diuretics", "correct": true}, {"label": "B", "text": "Alpha blockers", "correct": false}, {"label": "C", "text": "Reserpine", "correct": false}, {"label": "D", "text": "Alpha methyl dopa", "correct": false}], "correct_answer": "A. Diuretics", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Diuretics Definition of Terms associated with Hypertension Hypertension in Adults (≥18 y/0) 1. defined as any one of the following: a. systolic blood pressure ≥140 mmHg b. diastolic blood pressure ≥90 mmHg c. taking antihypertensive medications 2. Clinically, hypertension may be defined as that level of blood pressure at which the institution of therapy reduces blood pressure-related morbidity and mortality. 3. defined as sustained systolic BP elevation of ≥140 mm Hg, OR sustained DBP elevation of ≥90 mm Hg, based on measurements done during at least 2 visits taken at least 1 week apart JNC on Prevention, Detection, Evaluation and Treatment of HPN 7th Report (JNC VII) OR hypertension in one visit but with evidence of target organ damage. Resistant Hypertension refers to patients with blood pressures persistently >140/90 mmHg despite taking three or more antihypertensive agents, including a diuretic Secondary Hypertension A specific cause of hypertension can be established a. 10-15% of patients a specific cause of hypertension can be established b. specific causes amenable to definitive surgical treatment includes -- renal artery constriction, coarctation of the aorta, pheochromocytoma, Cushing

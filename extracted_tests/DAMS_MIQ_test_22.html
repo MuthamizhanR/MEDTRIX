@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Pharmacology Miq Series</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Pharmacology Miq Series</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                20 Questions | 80 Total Marks | 30 min Duration | ~90.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 20 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 30 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 20</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Pharmacology Miq Series - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 20</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 20 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A patient with extensively drug-resistant TB is started on a regimen including pretomanid. Which best describes pretomanid?", "options": [{"label": "A", "text": "ATP synthase inhibitor", "correct": false}, {"label": "B", "text": "Folic acid synthesis inhibitor", "correct": false}, {"label": "C", "text": "RNA polymerase inhibitor", "correct": false}, {"label": "D", "text": "Nitroimidazole active against TB", "correct": true}], "correct_answer": "D. Nitroimidazole active against TB", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-year-old woman with BMI 38 kg/m² is prescribed tirzepatide. What is unique about this agent?", "options": [{"label": "A", "text": "Selective SGLT1 inhibitor", "correct": false}, {"label": "B", "text": "Acts only on GLP-1 receptor", "correct": false}, {"label": "C", "text": "Dual GLP-1 and GIP receptor agonist", "correct": true}, {"label": "D", "text": "Inhibits lipase", "correct": false}], "correct_answer": "C. Dual GLP-1 and GIP receptor agonist", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old man with a history of diabetes presents with a painful, erythematous lesion on the thigh with purulent discharge. Culture grows MRSA. Which is the most appropriate oral antibiotic?", "options": [{"label": "A", "text": "Vancomycin", "correct": false}, {"label": "B", "text": "Dicloxacillin", "correct": false}, {"label": "C", "text": "Linezolid", "correct": true}, {"label": "D", "text": "Ceftriaxone", "correct": false}], "correct_answer": "C. Linezolid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 26-year-old woman with postpartum depression is given recently approved drug zuranolone. Which of the following is true regarding zuranolone?", "options": [{"label": "A", "text": "Acts on serotonin 5-HT1A receptor", "correct": false}, {"label": "B", "text": "Fast-acting NMDA antagonist", "correct": false}, {"label": "C", "text": "GABA-A receptor modulator with oral dosing", "correct": true}, {"label": "D", "text": "NMDA inhibitor", "correct": false}], "correct_answer": "C. GABA-A receptor modulator with oral dosing", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 58-year-old man presents with sudden-onset joint pain in the big toe. Arthrocentesis shows negatively birefringent crystals. He has CKD stage 3. Which is the best acute treatment?", "options": [{"label": "A", "text": "Indomethacin", "correct": false}, {"label": "B", "text": "Allopurinol", "correct": false}, {"label": "C", "text": "Colchicine", "correct": true}, {"label": "D", "text": "Febuxostat", "correct": false}], "correct_answer": "C. Colchicine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 32-year-old man with chest pain is found to have ST elevations in leads V1–V4. He has a history of cocaine use. He is given aspirin and nitrates. Which medication should be avoided?", "options": [{"label": "A", "text": "Morphine", "correct": false}, {"label": "B", "text": "Atorvastatin", "correct": false}, {"label": "C", "text": "Clopidogrel", "correct": false}, {"label": "D", "text": "Metoprolol", "correct": true}], "correct_answer": "D. Metoprolol", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 74-year-old woman with atrial fibrillation and creatinine clearance of 20 mL/min needs anticoagulation. She has no history of bleeding or falls. Which is the most appropriate oral anticoagulant?", "options": [{"label": "A", "text": "Rivaroxaban", "correct": false}, {"label": "B", "text": "Dabigatran", "correct": false}, {"label": "C", "text": "Enoxaparin", "correct": false}, {"label": "D", "text": "Warfarin", "correct": true}], "correct_answer": "D. Warfarin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 75-year-old man presents with palpitations and shortness of breath. ECG reveals atrial fibrillation with rapid ventricular response (HR 138 bpm). He has a history of CHF with preserved EF. Which is the best initial rate-control agent?", "options": [{"label": "A", "text": "Digoxin", "correct": false}, {"label": "B", "text": "Metoprolol", "correct": true}, {"label": "C", "text": "Diltiazem", "correct": false}, {"label": "D", "text": "Ivabradine", "correct": false}], "correct_answer": "B. Metoprolol", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old woman with ASCVD is intolerant to statins due to myopathy. LDL remains elevated at 140 mg/dL. You consider Inclisiran. What is Inclisiran’s mechanism?", "options": [{"label": "A", "text": "Inhibits ATP citrate lyase", "correct": false}, {"label": "B", "text": "Inhibits cholesterol absorption", "correct": false}, {"label": "C", "text": "Monoclonal antibody against PCSK9", "correct": false}, {"label": "D", "text": "siRNA that blocks PCSK9 synthesis", "correct": true}], "correct_answer": "D. siRNA that blocks PCSK9 synthesis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 54-year-old woman with schizophrenia develops resting tremor, rigidity, and bradykinesia 2 months after starting Risperidone. Which of the following is the most appropriate treatment?", "options": [{"label": "A", "text": "Propranolol", "correct": false}, {"label": "B", "text": "Benztropine", "correct": true}, {"label": "C", "text": "Carbidopa/levodopa", "correct": false}, {"label": "D", "text": "Tetrabenazine", "correct": false}], "correct_answer": "B. Benztropine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-year-old woman with severe eosinophilic asthma has frequent exacerbations despite ICS and LABA. Her eosinophil count is 480/µL. Which of the following is the best biologic therapy?", "options": [{"label": "A", "text": "Omalizumab", "correct": false}, {"label": "B", "text": "Lecanemab", "correct": false}, {"label": "C", "text": "Mepolizumab", "correct": true}, {"label": "D", "text": "Mycophenolate mofetil", "correct": false}], "correct_answer": "C. Mepolizumab", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 29-year-old woman on fluoxetine for depression wants to switch to phenelzine due to lack of response. How long should you wait before starting phenelzine?", "options": [{"label": "A", "text": "28 days", "correct": true}, {"label": "B", "text": "3 days", "correct": false}, {"label": "C", "text": "7 days", "correct": false}, {"label": "D", "text": "14 days", "correct": false}], "correct_answer": "A. 28 days", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old man with epilepsy is taking phenytoin. His plasma drug levels are increasing disproportionately to the dose. Which pharmacokinetic property explains this?", "options": [{"label": "A", "text": "First-order elimination", "correct": false}, {"label": "B", "text": "Zero-order elimination", "correct": true}, {"label": "C", "text": "High extraction ratio", "correct": false}, {"label": "D", "text": "Saturable protein binding", "correct": false}], "correct_answer": "B. Zero-order elimination", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient on dabigatran develops GI bleeding. What is the most specific antidote?", "options": [{"label": "A", "text": "Vitamin K", "correct": false}, {"label": "B", "text": "Andexanet alfa", "correct": false}, {"label": "C", "text": "Idarucizumab", "correct": true}, {"label": "D", "text": "Tranexamic acid", "correct": false}], "correct_answer": "C. Idarucizumab", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 42-year-old woman with bipolar disorder on lithium is admitted for dehydration and vomiting. She becomes confused, ataxic, and tremulous. Which factor most likely precipitated her symptoms?", "options": [{"label": "A", "text": "Increased GFR", "correct": false}, {"label": "B", "text": "Use of acetaminophen", "correct": false}, {"label": "C", "text": "Use of hydrochlorothiazide", "correct": true}, {"label": "D", "text": "Liver enzyme induction", "correct": false}], "correct_answer": "C. Use of hydrochlorothiazide", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 48-year-old man with alcohol use disorder has abstained from drinking for 3 weeks. He is motivated to stay sober and asks for help preventing relapse. Which of the following is best?", "options": [{"label": "A", "text": "Disulfiram", "correct": false}, {"label": "B", "text": "Naltrexone", "correct": true}, {"label": "C", "text": "Lorazepam", "correct": false}, {"label": "D", "text": "Bupropion", "correct": false}], "correct_answer": "B. Naltrexone", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 52-year-old woman with metastatic triple-negative breast cancer (TNBC) is having Trop-2 positive refractory TNBC. What is the best drug to treat this case?", "options": [{"label": "A", "text": "Olaparib", "correct": false}, {"label": "B", "text": "Pembrolizumab", "correct": false}, {"label": "C", "text": "Sacituzumab govitecan", "correct": true}, {"label": "D", "text": "Abemaciclib", "correct": false}], "correct_answer": "C. Sacituzumab govitecan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old man with metastatic colon cancer is found to have a KRAS G12C mutation. Which novel drug may be used?", "options": [{"label": "A", "text": "Cetuximab", "correct": false}, {"label": "B", "text": "Panitumumab", "correct": false}, {"label": "C", "text": "Sotorasib", "correct": true}, {"label": "D", "text": "Osimertinib", "correct": false}], "correct_answer": "C. Sotorasib", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 4-month-old girl is diagnosed with spinal muscular atrophy (SMA type I). You consider onasemnogene abeparvovec. What is the mechanism?", "options": [{"label": "A", "text": "RNA splicing enhancer of SMN2", "correct": false}, {"label": "B", "text": "Anti-sense oligonucleotide", "correct": false}, {"label": "C", "text": "Gene therapy replacing SMN1", "correct": true}, {"label": "D", "text": "HDAC inhibitor", "correct": false}], "correct_answer": "C. Gene therapy replacing SMN1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-year-old man presents with a 10-year history of recurrent migraines characterized by pulsatile unilateral headache, photophobia, and nausea. He typically has 16 attacks per month which last for more than 5-6 hours and uses sumatriptan during acute episodes, which offers partial relief. Due to frequent attacks, his neurologist advised prophylaxis. What is the most likely mechanism of action of this therapy in migraine prophylaxis?", "options": [{"label": "A", "text": "Inhibition of voltage-gated sodium channels", "correct": false}, {"label": "B", "text": "Blockade of CGRP receptor", "correct": false}, {"label": "C", "text": "Inhibition of presynaptic acetylcholine release", "correct": true}, {"label": "D", "text": "Activation of serotonin 5-HT1F receptors", "correct": false}], "correct_answer": "C. Inhibition of presynaptic acetylcholine release", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

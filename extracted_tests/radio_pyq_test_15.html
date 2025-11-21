@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Radiology - INICET MAY 2024</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Radiology - INICET MAY 2024</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                7 Questions | 7 Total Marks | 17 min Duration | ~145.71 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 7 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 17 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 7</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Radiology - INICET MAY 2024 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 7</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 7 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Patient presented with stab wound over right chest. A Supine CXR / CXR AP view image given below. What is the diagnosis?", "options": [{"label": "A", "text": "Right hemothorax", "correct": true}, {"label": "B", "text": "Right pneumothorax", "correct": false}, {"label": "C", "text": "Pulmonary contusion", "correct": false}, {"label": "D", "text": "Diaphragmatic rupture", "correct": false}], "correct_answer": "A. Right hemothorax", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1726933057351-QT53IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Right hemothorax The radiograph shows a meniscus-shaped fluid level in the pleural space. This is because blood and other fluids form a curve due to gravity. The pleural space where blood accumulates will appear as an area of increased opacity (whiteness) on the X-ray Hence the diagnosis is hemothorax</p>\n<p><strong>Highyeild:</strong></p><p>A hemothorax , literally means blood within the chest, is a term usually used to describe a pleural effusion due to accumulation of blood. If a hemothorax occurs concurrently with a pneumothorax it is then termed a hemopneumothorax. A tension hemothorax refers to hemothorax that results from massive intrathoracic bleeding, causing ipsilateral lung compression and mediastinal displacement Radiographic features- Opacity in the Pleural Space: The pleural space where blood accumulates will appear as an area of increased opacity) on the X-ray. This is because blood is denser than air and thus blocks more X-ray photons. Meniscus Sign: In cases of significant hemothorax, you might see a meniscus-shaped fluid level in the pleural space. This is because blood and other fluids form a curve due to gravity. This sign is often more prominent in upright or lateral views. Loss of Normal Lung Contours: The normal lung markings may become obscured by the dense opacity of blood. This can make the lung fields appear less distinct or less well-defined. Possible Mediastinal Shift: In severe cases of hemothorax, the accumulation of blood can push structures in the mediastinum (such as the heart and trachea) towards the opposite side of the chest. Blunting of the Costophrenic Angles: The costophrenic angles, where the diaphragm meets the rib cage, might appear blunted or obscured due to the presence of fluid or blood</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: B. Right Pneumothorax: Air in Pleural Space: Appears as a dark (radiolucent) area on the X-ray due to the presence of air. In a supine X-ray, this may be seen as a crescent of air under the chest wall or along the anterior chest. Option: C. Pulmonary Contusion: Appears as irregular, patchy opacities or infiltrates within the lung parenchyma, indicating edema and bleeding within lung tissue, rather than a distinct opacity in the pleural space. Status post bilateral chest tube placement with resolution of right hemopneumothorax and left pneumothorax and development of right pulmonary contusion. Option: D. Diaphragmatic Rupture: May show displacement of abdominal organs into the thoracic cavity or an elevated hemidiaphragm. On X-ray, there may be visible herniation of abdominal organs into the thoracic cavity, which is not a feature of hemothorax.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following contrast agents is safe to use in renal failure patients?", "options": [{"label": "A", "text": "Gadolinium contrast used in MRI", "correct": false}, {"label": "B", "text": "lodinated ionic contrast agent", "correct": false}, {"label": "C", "text": "lodinated non-ionic contrast agent ast agent", "correct": false}, {"label": "D", "text": "Ultrasound contrast agent", "correct": true}], "correct_answer": "D. Ultrasound contrast agent", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ultrasound contrast agent Ultrasound contrast agents are composed of microbubbles filled with gas encapsulated by a shell. These agents are safe for use in patients with renal failure because they are eliminated via exhalation through the lungs rather than through renal filtration. This makes them ideal for patients with compromised renal function as they do not burden the kidneys.</p>\n<p><strong>Highyeild:</strong></p><p>Ultrasound contrast agents are composed of microbubbles encapsulated with gas and stabilized by a shell, typically consisting of substances like sulfur hexafluoride or perfluorocarbons enclosed in albumin or phospholipids. These microbubbles enhance ultrasound imaging by resonating in response to ultrasound waves, amplifying the signal reflected back to the transducer. This mechanism significantly improves the visualization of blood flow dynamics, aiding in the assessment of cardiac function, vascular perfusion, and abdominal pathology such as liver lesions or renal perfusion. Additionally, they play a crucial role in oncologic imaging by highlighting tumor vascularity and monitoring treatment response One of the notable advantages of ultrasound contrast agents is their safety profile. Unlike iodinated or gadolinium-based contrast agents used in other imaging modalities, ultrasound contrast agents are not nephrotoxic and do not rely on renal excretion for elimination. This makes them particularly suitable for patients with renal impairment who may be at risk of contrast-induced nephropathy . They are administered intravenously and exhibit a transient enhancement, providing real-time imaging capabilities during procedures. Despite their efficacy, ultrasound contrast agents have limitations, including reduced penetration in areas with excessive gas or bone, which may hinder visualization beyond certain depths. Nonetheless, their ability to improve diagnostic accuracy and safety profile underscores their importance in modern medical imaging practices.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Gadolinium contrast used in MRI: Gadolinium-based contrast agents (GBCAs) are primarily eliminated by the kidneys. In patients with renal failure, there is an increased risk of nephrogenic systemic fibrosis (NSF), a rare but serious condition. Option: B. Iodinated ionic contrast agent: Iodinated contrast agents used in CT scans and some types of angiography are also eliminated through renal excretion. In patients with renal failure, these agents can worsen kidney function and increase the risk of contrast-induced nephropathy (CIN). Option: C. Iodinated non-ionic contrast agent: Non-ionic iodinated contrast agents are safer than ionic contrast agents in terms of reducing the risk of adverse reactions. However, they are still eliminated through renal excretion and carry a risk of causing contrast-induced nephropathy (CIN) in patients with renal impairment.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Mt. Fuji sign is seen in?", "options": [{"label": "A", "text": "Tension pneumomediastinum", "correct": false}, {"label": "B", "text": "Tension pneumothorax", "correct": false}, {"label": "C", "text": "Tension pneumoperitoneum", "correct": false}, {"label": "D", "text": "Tension Pneumocephalus", "correct": true}], "correct_answer": "D. Tension Pneumocephalus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Tension Pneumocephalus Tension pneumocephalus occurs when there is an accumulation of air under pressure within the cranial vault, often due to trauma or surgical procedures involving the head or sinuses. The air accumulation can cause compression of the brain tissue, leading to neurological symptoms and characteristic radiographic findings such as the Mt. Fuji sign.</p>\n<p><strong>Highyeild:</strong></p><p>Tension pneumocephalus is a neurosurgical emergency that occurs when subdural air causes a mass effect over the underlying brain parenchyma, often from a ball-valve mechanism causing one-way entry of air into the subdural space Clinical presentation Tension pneumocephalus has a varied clinical presentation : severe restlessness deteriorating consciousness focal neurological deficits cardiac arrest Radiographic features- Initially, subdural air compresses the frontal lobes resulting in the peaking sign. As it progresses the frontal lobes become separated creating a characteristic appearance, aptly termed the Mount Fuji sign An additional reported sign of tension pneumocephalus is the presence of multiple small air bubbles in the subarachnoid space. This has been referred to as the air bubble sign These features are, however, not pathognomonic for tension pneumocephalus and can be seen in patients with normal intracranial pressures. Regardless of the exact pattern of intracranial gas, clinical deterioration is the key indicator for surgical intervention.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Tension pneumomediastinum : This involves air accumulation in the mediastinum, typically due to trauma or rupture of the tracheobronchial tree. Option: B. Tension pneumothorax : This refers to air accumulation under pressure in the pleural cavity, causing compression of the lung and mediastinal structures. Option: C. Tension pneumoperitoneum : This involves air under pressure in the peritoneal cavity, often seen in conditions like perforated bowel or iatrogenic causes.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements is correct about CT scan?", "options": [{"label": "A", "text": "CT score of water is 0", "correct": true}, {"label": "B", "text": "CT consists of unfiltered x-ray beams", "correct": false}, {"label": "C", "text": "It is the investigation of choice for gallstones", "correct": false}, {"label": "D", "text": "20mSv for NCCT head", "correct": false}], "correct_answer": "A. CT score of water is 0", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>CT score of water is 0 In CT imaging, a scale called Hounsfield units (HU) is used to measure the radiodensity of various tissues and substances. Water has a Hounsfield unit value of 0, which serves as a reference point. This means that on a CT scan, the radiodensity of pure water is assigned a value of 0 HU</p>\n<p><strong>Highyeild:</strong></p><p>The HU values aid radiologists in interpreting CT scans by providing a quantitative measure of tissue density. This helps in diagnosing and characterizing conditions, as well as in differentiating between types of tissues and lesions. Normalization : HU values are normalized against water, making it a useful reference point. This normalization simplifies comparison across different CT scanners and imaging studies. Reconstruction and Calibration : CT scanners are calibrated to ensure that the HU values are accurate and consistent. Variations in calibration can affect the precision of HU measurements and subsequently impact diagnostic accuracy.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. CT consists of unfiltered x-ray beams- CT (Computed Tomography) Uses x-ray beams that are passed through the body and are detected after passing through tissue. These x-ray beams are filtered to remove low-energy x-rays, which helps to reduce patient dose and improve image quality. Option: C. It is the investigation of choice for gallstones CT scan is not typically the first-line investigation for gallstones. Ultrasound is usually the initial imaging modality of choice for detecting gallstones due to its high sensitivity and specificity for this purpose. Option: D. 20mSv for NCCT head This statement is incorrect. The effective dose of a non-contrast CT (NCCT) scan of the head is typically much lower than 20 mSv. It is usually in the range of 1-2 mSv</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following structures is the arrow pointing to?", "options": [{"label": "A", "text": "Anterior end of rib", "correct": true}, {"label": "B", "text": "Costal cartilage", "correct": false}, {"label": "C", "text": "Posterior end of rib", "correct": false}, {"label": "D", "text": "Descending/Right pulmonary artery", "correct": false}], "correct_answer": "A. Anterior end of rib", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1726933066943-QT174IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Anterior end of rib Anterior ribs identification Costal Cartilage Transition: The anterior ribs will show a transition from bone to costal cartilage. On a PA X-ray, the anterior ends of the ribs may appear as more radiolucent areas compared to the dense bone of the rib shaft. Costal Cartilage Location: Anterior ribs typically end at or near the costal cartilage, which is visible as a less dense (darker) area in the X-ray image. Compare with Posterior Ribs: Posterior Rib Characteristics: The posterior ribs will appear steeper and more oblique due to their attachment to the vertebrae. These will be positioned more laterally and closer to the spine compared to the anterior ribs.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the fracture site in the X-ray shown below:", "options": [{"label": "A", "text": "5th & 6th rib", "correct": false}, {"label": "B", "text": "6th and 7th rib", "correct": true}, {"label": "C", "text": "5th, 6th & 7th rib", "correct": false}, {"label": "D", "text": "7th and 8th rib", "correct": false}], "correct_answer": "B. 6th and 7th rib", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1726933058703-QT190IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>6th and 7th rib The fracture is noted involving the 6th and 7th posterior ribs</p>\n<p><strong>Highyeild:</strong></p><p>How to Identify Rib Fractures: Examine the Continuity of the Rib Cage: Look at the continuity of the rib bones. Fractures typically appear as breaks or discontinuities in the normally smooth, continuous lines of the rib bones. Check for Displacement: Fractures can sometimes cause segments of the rib to be displaced. Look for any misalignment or displacement of the rib segments which can indicate a fracture. Look for Fracture Lines: A fracture line may appear as a thin, dark line across the rib bone where the cortex (outer layer of the bone) is interrupted.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the normal anatomical variation given in the following CT image:", "options": [{"label": "A", "text": "Tracheal diverticulum", "correct": false}, {"label": "B", "text": "Esophageal duplication", "correct": false}, {"label": "C", "text": "Aberrant right subclavian artery", "correct": true}, {"label": "D", "text": "Right aortic arch", "correct": false}], "correct_answer": "C. Aberrant right subclavian artery", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1726933059409-QT191IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Aberrant right subclavian artery This is a relatively c ommon anatomical variation where the right subclavian artery originates from the left side of the aortic arch instead of the usual right side. It then courses posterior to the esophagus and can sometimes compress the esophagus, but it is often asymptomatic and discovered incidentally on imaging.</p>\n<p><strong>Highyeild:</strong></p><p>Aberrant right subclavian arteries (ARSA) , also known as arteria lusoria , are among the commonest aortic arch anomalies. Course Instead of being the first branch (with the right common carotid as the brachiocephalic artery), it arises on its own as the fourth branch, distal to the left subclavian artery. It then hooks back to reach the right side with its relationship to the esophagus variable 80% posterior to the esophagus 15% between esophagus and trachea 5% anterior to the trachea Clinical presentation They are often asymptomatic, but ~10% of people may complain of tracheo-esophageal symptoms, almost always as dysphagia, termed dysphagia lusoria Associations aneurysmal dilatation (aberrant subclavian arterial aneurysms) of the proximal portion of an aberrant right subclavian artery can occur, a pouch-like aneurysmal dilatation is called a diverticulum of Kommerell if there is a retro-esophageal course it can get compressed between the esophagus and the vertebra the incidence of stenosis/occlusion in this segment is higher Trisomy 21 , trisomy 18 and other chromosomal defects</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Tracheal Diverticulum: This is a pouch or sac that forms on the wall of the trachea. It is a rare condition and can be congenital or acquired. On imaging, it appears as a well-defined outpouching from the trachea Option: B. Esophageal Duplication: This is a rare congenital anomaly where there is an extra segment or duplication of the esophagus, which can be cystic or tubular. On imaging, it may appear as an extra, cystic structure adjacent to the esophagus. Option: D. Right Aortic Arch: A right aortic arch is a variation where the aortic arch curves to the right instead of the usual left. It often accompanies a mirrored branching pattern of the great vessels Mirror-image right aortic arch. This contrast-enhanced axial CT scan at the level of the aortic arch demonstrates a right sided-aortic arch. There is no retro tracheal, retroesophageal aberrant left subclavian artery. This is the mirror-image variety with a high association with congenital heart disease.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

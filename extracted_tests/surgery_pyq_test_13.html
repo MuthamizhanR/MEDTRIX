@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Surgery - INI CET NOV 2022 (Part -B)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Surgery - INI CET NOV 2022 (Part -B)</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                16 Questions | 16 Total Marks | 26 min Duration | ~97.5 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 16 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 26 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 16</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Surgery - INI CET NOV 2022 (Part -B) - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 16</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 16 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Vessels ligated in the surgical management of carcinoma of the proximal part of the transverse colon?", "options": [{"label": "A", "text": "Ileocolic, right colic , right branch Of middle colic artery", "correct": false}, {"label": "B", "text": "Ileocolic, right colic, the trunk of middle colic artery", "correct": false}, {"label": "C", "text": "Only middle colic artery", "correct": true}, {"label": "D", "text": "Ileocolic, the trunk of middle colic, left colic.", "correct": false}], "correct_answer": "C. Only middle colic artery", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Only middle colic artery Surgical management of carcinoma of the proximal part of transverse colon involves the ligation of the above and basal part of the middle colic artery. Location Type of surgery Artery ligated Caecum/ascending colon right hemicolectomy ileocolic, right colic and right branch of middle colic Hepatic flexure/transverse extended right hemicolectomy above + base of middle colic Splenic/descending left hemicolectomy left branch of middle colic, left colic and some sigmoid branches Sigmoid low anterior resection/sigmoid colectomy sigmoid branches Vascular supply of colon: Types of colorectal surgery</p>\n<p><strong>Highyeild:</strong></p><p>Colorectal cancer Colorectal cancer is the second most common cause of cancer death in the UK, with approximately 42,000 new cases diagnosed each year. Colon cancer represents about two-thirds of cases, while rectal cancer accounts for the remaining one-third. Men are more affected than women, with 56% of cases occurring in men. The adenoma-carcinoma sequence is the prevailing theory on how most colorectal cancers develop. The APC gen e is mutated early in carcinogenesis and is present in two-thirds of colonic adenomas. K-ras mutations are more commonly found in larger lesions, indicating a later occurrence in the mutagenesis process. The p53 gene is frequently mutated in carcinomas but not in adenomas, making it a marker of invasion.</p>\n<p><strong>Extraedge:</strong></p><p>A recent international consortium identified four consensus molecular subtypes (CMSs) of colorectal cancer based on gene expression analysis in over 4000 patients. CMS1 is characterized by MSI , a feature of Lynch syndrome , which may occur sporadically, mainly in right-sided tumors. CMS2 is characterized by WNT and MYC signaling activation . CMS3 is characterized by metabolic dysregulation. CMS4 is characterized by transforming growth factor beta activation.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 42-year-old lady with a lump in the breast with no skin changes or nipple retraction. On histology, fibroadenoma appearance was detected. What is the BIRADS score? (SET - B)", "options": [{"label": "A", "text": "BIRADS 1", "correct": false}, {"label": "B", "text": "BIRADS 1 & 2", "correct": false}, {"label": "C", "text": "BIRADS 2, 3, 4", "correct": false}, {"label": "D", "text": "BIRADS 2", "correct": true}], "correct_answer": "D. BIRADS 2", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>BIRADS 2 Fibroadenoma is a benign tumor of the breast. Without skin changes or nipple retraction, it is classified as BIRADS 2 BIRADS - Breast Imaging Reporting and Data System Category Definition Follow-up 0 Incomplete assessment Additional imaging 1 Negative Annual screening 2 Benign finding Annual screening 3 Probably benign 6 monthly mammograms for 2 years 4 Suspicious of malignancy Biopsy 5 Highly suggestive of malignancy Appropriate action 6 Biopsy proven malignancy Appropriate treatment</p>\n<p><strong>Highyeild:</strong></p><p>Fibroadenoma is the most common cause of breast lump in women aged 15-25 years. It results from lobular hyperplasia and usually grows to 2-3 cm in size, surrounded by a well-defined capsule. A clinically typical fibroadenoma confirmed on ultrasonography may be observed without a biopsy, but a biopsy is necessary if the patient is over 25 or if there are atypical features on ultrasonography. Antiestrogen drugs like tamoxifen and ormeloxifene have shown regression effects. Giant fibroadenomas can occur during puberty, and they can be enucleated through a submammary incision if they are over 5 cm in diameter. The risk ratio of cancer with fibroadenoma ranges from 5-1.7 if simple to 3.4-3.7 with epithelial hyperplasia. If a complex fibroadenoma with a family history is present, the risk ratio for cancer is 3.0-4.0, particularly lobular carcinoma.</p>\n<p><strong>Extraedge:</strong></p><p>Surgical excision is necessary for patients over 30 years, with suspicious imaging features like micro-lobulation, atypia on histology, size >5 cm, family history of breast cancer, and patient preference. Excision in the elderly should include a rim of normal tissue as it may contain malignancy or a phyllodes tumor.</p>\n<p><strong>Table:</strong></p><p>#MANTRA Breast Imaging Reporting and Database System (BI-RADS). Category Assessment Probability of malignancy Follow-up recommendation 0 Assessment is incomplete Not applicable Need for additional imaging evaluation and/or prior mammograms for comparison 1 Negative Essentially 0% Routine annual screening mammography (for women over age 40) 2 Benign finding(s) Essentially 0% Routine annual screening mammography (for women over age 40) 3 Probably benign finding >0% but $2% Initial short-term follow-up (usually 6 months) examination 4 Suspicious abnormality: 4a: Findings needing intervention with a low suspicion for malignancy 4b: Intermediate suspicion of malignancy 4c: Findings of moderate concern, with high suspicion for malignancy >2 to ≤10% >10% to 50% >50% to <95% Biopsy should be considered 5 Highly suggestive of malignancy >95% Requires biopsy or surgical treatment 6 Known biopsy-proven malignancy Not applicable Category reserved for lesions identified on imaging study with biopsy proof of malignancy prior to definitive therapy</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the approximate outer diameter in mm of the given catheter?", "options": [{"label": "A", "text": "4 mm", "correct": false}, {"label": "B", "text": "6 mm", "correct": true}, {"label": "C", "text": "8 mm", "correct": false}, {"label": "D", "text": "10 mm", "correct": false}], "correct_answer": "B. 6 mm", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1694628639958-QTDSPYQ052IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>6 mm The given image shows a red coloured Foley catheter which denotes 18 Fr. French size divided by 3 gives the approximate outer diameter of the tube which is 6 mm. Foley catheter Foley catheter is a thin sterile tube inserted into the bladder to drain urine. As it can be left in the bladder for long periods of time, it is also known as an indwelling catheter. French scale corresponds to the outer diameter in millimetres. French size divided by 3 gives the approximate outer diameter of the catheter. Colour code of the Foley catheter is the colour at the balloon port</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the focal lesion on CT abdomen:", "options": [{"label": "A", "text": "Focal nodular hyperplasia", "correct": false}, {"label": "B", "text": "Hydatid cyst", "correct": true}, {"label": "C", "text": "Liver Abscess", "correct": false}, {"label": "D", "text": "Hepatocellular carcinoma", "correct": false}], "correct_answer": "B. Hydatid cyst", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1694628640290-QTDSPYQ053IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hydatid cyst Fluid density cyst with peripheral focal areas of calcification is seen on radiology. Septa and daughter cysts may be visualized. The water-lily sign indicates a cyst with a floating, undulating membrane caused by a detached endocyst. May also show hyperdense internal septa within a cyst showing a spoke wheel pattern. Hydatid cyst classification Based on morphology the cyst can be classified into four different types Type I: simple cyst with no internal architecture type II: cyst with daughter cyst(s) and matrix type IIa: round daughter cysts at the periphery type IIb: larger, irregularly shaped daughter cysts occupying almost the entire volume of the mother cyst type IIc: oval masses with scattered calcifications and occasional daughter cysts type III: calcified cyst (dead cyst) type IV: complicated cyst, e.g. ruptured cyst</p>\n<p><strong>Highyeild:</strong></p><p>Hydatid disease is caused by the tapeworm Echinococcus granulosus in its larval or cyst stage, which lives in canids and infects intermediate hosts such as sheep, cattle, pigs, and humans. The tapeworm sheds approximately 500 ova into the bowel of the canid host, and the infected ova-containing feces of dogs contaminate grass and farmland, which are then ingested by intermediate hosts. The liberated ovum burrows through the intestinal mucosa and is carried by the portal vein to the liver, where it develops into an adult cyst, with 70% of hydatid cysts forming in the liver. Hydatid disease is most common in sheep-raising areas , where dogs have access to infected offal, including South Australia, New Zealand, Africa, Greece, Spain, and the Middle East. Diagnosis of hydatid disease is based on the findings of an enzyme-linked immunosorbent assay (ELISA) for echinococcal antigens, and results are positive in approximately 85% of infected patients. Ultrasonography and CT scanning of the abdomen are both quite sensitive for detecting hydatid cysts.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A: Focal nodular hyperplasia is a benign liver lesion that is composed of a proliferation of hyperplastic hepatocytes surrounding a central stellate scar. Option C: Liver abscesses appear as peripherally enhancing, centrally hypoattenuating lesions. Option D: Hepatocellular carcinoma shows a focal nodule with early enhancement on the arterial phase with rapid washout of contrast on the portal venous phase of a three-phase contrast scan. MRI of HCC generally demonstrates high signal intensity on T2 imaging.</p>\n<p><strong>Extraedge:</strong></p><p>The treatment of hydatid disease treatment is surgically based unless the cysts are small or the patient is not a suitable candidate for surgical resection. Medical treatment with albendazole relies on drug diffusion through the cyst membrane, and surgical resection involving laparoscopic or open complete cyst removal with the instillation of a scolicidal agent is preferred and usually curative. Echinococcus multilocularis occurs in the Northern Hemispher e and can infect the liver similarly to E chinococcus granulosus, although the cysts are multilocular. Infection of the lung with Echinococcus multilocularis also is common (alveolar echinococcosis). Treatment of Echinococcus multilocularis consists of albendazole, but infection in the lung produces a more generalized granulomatous reaction and often requires resection.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Drug gave preoperatively in thyroid surgery to prevent bleeding:", "options": [{"label": "A", "text": "Propranolol", "correct": false}, {"label": "B", "text": "Iodides", "correct": true}, {"label": "C", "text": "Propylthiouracil", "correct": false}, {"label": "D", "text": "Methimazole", "correct": false}], "correct_answer": "B. Iodides", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Iodides Supersaturated iodine (SSI) preparations are widely recommended before thyroidectomy in an attempt to reduce the vascularity of the gland.</p>\n<p><strong>Highyeild:</strong></p><p>Iodine can be given with carbimazole or beta-adrenergic blocking drugs before surgery When used alone, iodide produces only a transient remission and may reduce vascularity, which slightly improves safety However, the use of iodine preparations is not universal because more effective alternatives are available Iodine provides an extra measure of safet y in case the morning dose of the beta-adrenergic blocking drug is missed on the day of the operation.</p>\n<p><strong>Extraedge:</strong></p><p>Traditional preparation for thyroidectomy aims to achieve biochemical euthyroidism in the patient Outpatient preparation is preferred, but hospital admission may be necessary in rare cases Coordination with an endocrinologist is essential for care Carbimazole is the preferred medication for preparation, with a dose of 30-40mg per day \" Block and replace\" regimen can be used after achieving euthyroidism Iodides alone are not recommended for preoperative treatment Beta-adrenergic blocking drugs, such as propranolol , can be used to abolish clinical manifestations of the toxic state Propranolol should be administered at 40mg three times daily, but larger doses may be necessary Beta-adrenergic blocking drugs do not interfere with thyroid hormone synthesis The extent of resection depends on various factors, including the size of the gland, patient age, surgeon experience, risk of recurrent toxicity, and the wish to avoid postoperative thyroid replacement.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "For safe resection of the proximal transverse colon, which arteries need to be ligated to achieve oncological safety:", "options": [{"label": "A", "text": "Ileocolic artery, Right branch of Middle colic artery", "correct": false}, {"label": "B", "text": "Ileocolic artery, Right branch of the middle colic artery and trunk of middle colic artery", "correct": true}, {"label": "C", "text": "Middle colic artery", "correct": false}, {"label": "D", "text": "Ileocolic artery, Trunk of the middle colic artery, left branch of middle colic artery", "correct": false}], "correct_answer": "B. Ileocolic artery, Right branch of the middle colic artery and trunk of middle colic artery", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ileocolic artery, Right branch of the middle colic artery and trunk of middle colic artery The superior mesenteric artery (SMA) and the inferior mesenteric artery (IMA) provide blood supply to the colon. Communication between these two vessels happens via the marginal artery, which runs parallel to the length of the entire colon. Hence proximal transverse colon supplied by Middle colic Rt colic Ileo colic</p>\n<p><strong>Highyeild:</strong></p><p>During resection of the proximal transverse colon, it

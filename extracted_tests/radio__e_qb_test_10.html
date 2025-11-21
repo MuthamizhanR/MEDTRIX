@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Mammography</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Mammography</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                16 Questions | 16 Total Marks | 26 min Duration | ~97.5 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 16 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 26 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 16</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Mammography - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 16</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 16 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Two women of age 30 and 48 years come for screening for breast tumour. They were Tested with two different tests. Which of these represent correctly the test done respectively on these women?", "options": [{"label": "A", "text": "MRI and Mammography", "correct": true}, {"label": "B", "text": "Mammography and USG", "correct": false}, {"label": "C", "text": "USG and CT", "correct": false}, {"label": "D", "text": "CT scan and MRI", "correct": false}], "correct_answer": "A. MRI and Mammography", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>MRI and Mammography Routine Screening for breast cancer done for women above the age of 40 years. Preferred modality above the age of 40 years is mammography but below 40 years because of high density of breast tissue preferred modality is USG. USG Is IOC for any cystic pathology in breast tissue as well as to investigate any mass below the age of 40 years.</p>\n<p><strong>Highyeild:</strong></p><p>Mammography is the process of using low-energy X-rays to examine the human breast for diagnosis and screening. The goal of mammography is the early detection of breast cancer, typically through detection of characteristic masses or microcalcifications .</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. MRI done in high-risk patients or recurrent breast cancer since mammography and USG are poor in distinguishing postoperative scar from fresh cancer. Option: C. USG image of invasive breast cancer. Option: D. CT scan is not preferred modality for breast tissue since CT is better for bones and calcification but not soft tissue.</p>\n<p><strong>Extraedge:</strong></p><p>In general, there are two main types of mammograms: Digital mammography in 2D. Digital mammography in 3D (digital breast tomosynthesis).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 46-year-old woman presents with mass in left breast which is non-mobile and non-tender on palpation. On examination, retraction of nipple was noticed with overlying skin changes. Following clinical examination mammography was done as a part of triple assessment. Which is most commonly the target for mammography?", "options": [{"label": "A", "text": "Molybdenum", "correct": true}, {"label": "B", "text": "Tungsten", "correct": false}, {"label": "C", "text": "Gold", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Molybdenum", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Molybdenum Molybdenum target is used because it produces a low-energy spectrum with peaks of 17.5 and 19.6 kiloelectron volts (keV) , providing high contrast. A tungsten target is less desirable because it produces higher energies. The spectrum is refined further by adding a filter to reduce the proportion of radiation above and below the desired range. Molybdenum/molybdenum is the most frequently used combination of target/filter</p>\n<p><strong>Highyeild:</strong></p><p>In conventional mammography, molybdenum (Mo) and rhodium (Rh) have usually been used as target and filter materials. However, with digital detectors and their energy responses, other choices have been introduced, such as tungsten (W), aluminum (Al), and silver (Ag).</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Tungsten - rarely used as target material Option: C. Gold - not preferred for target material</p>\n<p><strong>Extraedge:</strong></p><p>In digital mammography, a molybdenum/molybdenum spectrum delivers the lowest dose for a 2 cm breast, but gives the highest dose for thicker breasts. Tungsten/rhodium or rhodium/aluminium spectra provide the lowest doses at greater thicknesses.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old woman came for routine screening of breast cancer and underwent mammography. Identify the view of following image:", "options": [{"label": "A", "text": "MLO", "correct": true}, {"label": "B", "text": "CC view", "correct": false}, {"label": "C", "text": "Paddle view", "correct": false}, {"label": "D", "text": "Lateral view", "correct": false}], "correct_answer": "A. MLO", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/questionImage-1692001792356-QTDR003003IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>MLO Mammography has mainly two views mediolateral oblique (MLO) and craniocaudal(CC) views. Other addition views include paddle view and true lateral view.</p>\n<p><strong>Highyeild:</strong></p><p>The MLO view is taken with the x-ray beam directed from superomedial to inferolateral, usually at an angle of 30 to 60 degrees, with compression applied obliquely across the chest wall, perpendicular to the long axis of the pectoralis major muscle. The MLO projection is the only projection in which all the breast tissue can be demonstrated on a single image. For the CC view, the x-ray beam travels from superior to inferior. Positioning is achieved by pulling the breast up and forward away from the chest wall, with compression applied from above</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - A is for MLO view and B is for CC view. CC view image Paddle view and true lateral view are not routinely done.</p>\n<p><strong>Extraedge:</strong></p><p>Screening mammography refers to an examination of an asymptomatic woman to detect clinically occult breast cancer. The screening examination includes two views of the breast, sometimes referred to as the “standard views” : a mediolateral oblique and a craniocaudal view</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old woman come with complaint of breast mass since 1 year. On examination the mass was present in the upper outer quadrant of the breast. Which is the best next radiological investigation for her?", "options": [{"label": "A", "text": "MLO view mammography", "correct": true}, {"label": "B", "text": "CC view mammography", "correct": false}, {"label": "C", "text": "USG", "correct": false}, {"label": "D", "text": "CT scan", "correct": false}], "correct_answer": "A. MLO view mammography", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>MLO view mammography Preferred investigation above 40 years of age is mammography so USG and CT scan are not the next best radiological investigation. To visualise upper outer quadrant of breast that involve axillary tail best view is MLO. In CC view axillary tail is diﬃcult to visualise.</p>\n<p><strong>Highyeild:</strong></p><p>In screening digital mammography , each breast is typically imaged with two different views, i.e., the mediolateral oblique (MLO) view and cranial caudal (CC) view . The MLO view is taken from the center of the chest outward, while the CC view is taken from above the breast</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. CC view mammography -  axillary tail is diﬃcult to visualise. Option: C. USG Option: D. CT scan Mammography  is better investigation here as compare to usg and CT scan.</p>\n<p><strong>Extraedge:</strong></p><p>The mediolateral oblique (MLO) view is one of the two standard mammographic views, alongside the craniocaudal (CC) view. It is the most important projection as it allows depiction of most breast tissue.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A young lactating woman present with complaint of high-grade fever, Well-defined fluctuant lump in the aﬀected breast. Pain in the aﬀected breast. Redness, swelling, and tenderness in an area of the breast. Her mammography was done and the following image was obtained. Identify the condition?", "options": [{"label": "A", "text": "Fibroadenoma", "correct": false}, {"label": "B", "text": "Inflammatory breast cancer", "correct": false}, {"label": "C", "text": "Breast cysts", "correct": true}, {"label": "D", "text": "Fat necrosis", "correct": false}], "correct_answer": "C. Breast cysts", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/questionImage-1691995062670-QTDR003005IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Breast cysts Above clinical scenario is suggestive of breast abscess. Breast cyst is more common in lactating females. On mammography they are seen as well-defined, round or oval masses. Sometimes a characteristic halo is visible on mammography. Ultrasound also demonstrates well-defined margins, with an oval or round shape.</p>\n<p><strong>Highyeild:</strong></p><p>Breast cysts develop as a result of fluid accumulation inside the glands in the breasts. Breast cysts may be defined by their size: Microcysts may be seen during imaging tests, such as mammography or ultrasound, but are too small to feel.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Fibroadenoma - Fibroadenoma on mammography, fibroadenomas are seen as well-defined, rounded or oval masses . Coarse calcifications may develop within fibroadenomas called popcorn calcification. Option: B. Inflammatory breast cancer - Carcinomas typically appear as ill-defined or spiculated masses on mammography. Option: D. Fat necrosis - Fat necrosis appears as egg shell calcification on mammography.</p>\n<p><strong>Extraedge:</strong></p><p>Cysts appearance  on a mammogram Breast cyst on ultrasound On a mammogram, they can sometimes be seen as a smooth, round mass in the breast tissue. On ultrasound, they are usually smooth, round and black. Sometimes cysts do not have these typical features and they are difficult to distinguish from solid (non-fluid) lesions just by looking.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 20 year old lady presents with c/o mass in left breast which is firm, smooth, rubbery and has a well-defined shape, painless, moving easily under her skin when examined. Identify the correct mammography finding for the above mentioned scenario ?", "options": [{"label": "A", "text": "Popcorn calcification", "correct": true}, {"label": "B", "text": "Egg shell calcification", "correct": false}, {"label": "C", "text": "Broken needle calcification", "correct": false}, {"label": "D", "text": "Lead pipe calcification", "correct": false}], "correct_answer": "A. Popcorn calcification", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Popcorn calcification The given clinical scenario and age group is suggestive of fibroadenoma. Fibroadenoma present as popcorn calcification on mammography</p>\n<p><strong>Highyeild:</strong></p><p>Egg shell calcification are characteristic of fat necrosis Broken needle and lead pipe calcification are characteristic of duct ectasia which is usually bilateral. EXTRA POINT : Fibroadenomas must be distinguished from well-circumscribed carcinomas; this is done by percutaneous biopsy. Phyllodes tumour can also have a similar appearance to fibroadenoma , leading to diagnostic difficulties</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Egg shell calcification - characteristic of fat necrosis Option: C. Broken needle calcification -characteristic of duct ectasia Option: D. Lead pipe calcification - Seen in traumatic fat necrosis</p>\n<p><strong>Extraedge:</strong></p><p>Fat necrosis within the breast is a pathological process that occurs when there is saponification of local fat. It is a benign inflammatory process and is becoming increasingly common with the greater use of breast-conserving surgery and mammoplasty procedures.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 65 year old woman with a history of breast cancer in right breast operated 1 year back come for follow up checkup and her mammography was done as shown in image. What should be done in this patient?", "options": [{"label": "A", "text": "Excision or wider sampling from the area of suspect", "correct": true}, {"label": "B", "text": "Continue regular follow up", "correct": false}, {"label": "C", "text": "Do USG", "correct": false}, {"label": "D", "text": "Do CT scan", "correct": false}], "correct_answer": "A. Excision or wider sampling from the area of suspect", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1687324982730-QTDR003007IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Excision or wider sampling from the area of suspect Given image demonstrate A surveillance mammogram on a patient who has undergone a previous wide excision for a screen-detected cancer. The surgical scar (arrow) contains an area of lucency and coarse calcifications indicating associated fat necrosis. A small spiculate mass is demonstrated adjacent to the surgical scar (arrowhead); So,next step should be Excision or wider sampling from the area of suspect(Epithelial atypia, DCIS and invasive carcinoma may be found in association with radial scars and so excision or wider sampling is recommended.).</p>\n<p><strong>Highyeild:</strong></p><p>Usg and mammography won’t diﬀerentiate between scar and breast cancer. MRI is preferred investigation to diﬀerentiate surgical scar from mass, thus excluding the other options.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Continue regular follow up - Excision is needed as cancer can be suspected . Option: C. Do USG- won’t diﬀerentiate between scar and breast cancer. Option: D. Do CT scan - usually not done</p>\n<p><strong>Extraedge:</strong></p><p>Tissue around the lump is also removed. This surgery is called an excisional breast biopsy, or lumpectomy. When a noncancerous tumor such as a fibroadenoma of the breast is removed, this is also called an excisional breast biopsy, or a lumpectomy.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30 year old lady present with complain of mass in left breast and history of trauma few days back. Mammography was done as shown in image? Identify the condition:", "options": [{"label": "A", "text": "Fat necrosis", "correct": true}, {"label": "B", "text": "Duct ectasia", "correct": false}, {"label": "C", "text": "Fibroadenoma", "correct": false}, {"label": "D", "text": "Fibrocystic disease", "correct": false}], "correct_answer": "A. Fat necrosis", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1687324982818-QTDR003008IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Fat necrosis Fat necrosis is a frequently encountered cause of benign calcifications, particularly when there is a history of trauma or previous surgery . It may present as ‘egg shell’ calcifications within the wall of an oil cyst or as coarse dystrophic calcifications associated with areas of scarring.</p>\n<p><strong>Highyeild:</strong></p><p>Fibroadenoma present with popcorn calcification as shown Duct ectasia appears as broken needle on mammography Fibrocystic disease give teacup appearance</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Duct ectasia - Broken needle calcification Option: C. Fibroadenoma - popcorn calcification Option: D. Fibrocystic disease- Tea cup appearance</p>\n<p><strong>Extraedge:</strong></p><p>Fat necrosis within the breast is a pathological process that occurs when there is saponification of local fat. It is a benign inflammatory process and is becoming increasingly common with the greater use of breast-conserving surgery and mammoplasty procedures.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45 year old woman come with complaint greenish nipple discharge from both nipples Tenderness in the nipple or surrounding breast tissue (areola). Redness of the nipple and areolar tissue. A breast lump or thickening near the clogged duct. Identify the correct mammography image:", "options": [{"label": "A", "text": "A", "correct": true}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "A. A", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1687324982876-QTDR003009IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>A Duct ectasia Image A shows broken needle appearance which is suggestive of duct ectasia</p>\n<p><strong>Highyeild:</strong></p><p>Ductal ectasia is often asymptomatic, especially when benign . However, patients with ductal ectasia may present with nonspecific breast symptoms: nipple discharge nipple retraction pain/tenderness palpable mass</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Image B is suggestive of egg shell calcification of fat necrosis Image C is suggestive of teacup appearance of fibrocystic disease. Image D is suggestive of postoperative scar.</p>\n<p><strong>Extraedge:</strong></p><p>Mammary duct ectasia occurs when one or more milk ducts beneath your nipple widens. The duct walls may thicken, and the duct may fill with fluid. The milk duct may become blocked or clogged with a thick, sticky substance</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 65 year old lady present with mass in left breast since 1 year which is increasing in size. Mass was fixed, not mobile and associated with skin changes. Skin changes are defined as peau d orange appearance. Her mammography was done . Identify the mammography finding:", "options": [{"label": "A", "text": "Egg shell calcification", "correct": false}, {"label": "B", "text": "Popcorn calcification", "correct": false}, {"label": "C", "text": "Small cluster of indeterminate calcification", "correct": true}, {"label": "D", "text": "Rod shaped and branching calcification", "correct": false}], "correct_answer": "C. Small cluster of indeterminate calcification", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1687324982881-QTDR003010IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Small cluster of indeterminate calcification Given Mammographic image shows small cluster of indeterminate calcification which is suggestive of breast cancer. Clustered calcification is more suggestive of cancer as compared to scattered calcification.</p>\n<p><strong>Highyeild:</strong></p><p>Grouped (or clustered) calcifications , which are defined as at least five calcifications with- in 1 cm3 of tissue, are most often of interme- diate concern for malignancy of the breast. Linear calcifications, which suggest deposits in a duct, are suspicious for malignancy</p>\n<p><strong>Random:</strong></p><p>Explanation for other options: - Egg shell calcification suggestive of fat necrosis Popcorn calcification more suggestive of fibroadenoma Rod shaped or branching calcification suggestive of duct ectasia or DCIS.</p>\n<p><strong>Extraedge:</strong></p><p>Smaller breast calcifications, known as microcalcifications , may appear in patterns. If several calcifications look like a line or are clustered together as a small group, they are suggestive of cancer. These patients need additional testing. For calcifications that look suspicious, patients need additional tests.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 40 year old woman come for regular screening for breast cancer and her mammography was suggestive of localised lesion in right breast but on further investigation the result was false positive. A new technique was develop to reduce false positivity rate of mammography. Technique named digital breast tomosynthesis. Which is incorrect statement for DBT?", "options": [{"label": "A", "text": "DBT is a mammography technique producing thin slice images reducing the effects of tissue superimposition", "correct": false}, {"label": "B", "text": "DBT can improve sensitivity and specificity of breast cancer screening by increasing cancer detection rates", "correct": false}, {"label": "C", "text": "DBT is replacing the traditional spot compression view", "correct": false}, {"label": "D", "text": "None of the above", "correct": true}], "correct_answer": "D. None of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>None of the above All above statements are correct One of the limitations of mammography is that it produces a 2D radiographic view of what is a 3D structure and, as a consequence, cancers may not be detected due to overlapping normal glandular tissue obscuring the presence of a tumour, leading to false negative interpretations. This is a particular issue in women with a denser background glandular pattern, typically younger, pre-menopausal women, where the sensitivity of mammography for detecting malignancy may be below 50%. In addition, lesions may be simulated by the superimposition of normal tissue, leading to false positive interpretations and unnecessary recalls following screening mammography. Breast tomosynthesis (DBT) is a digital mammographic technique which aims to alleviate these issues. It produces thin slices through the breast, reconstructed from multiple low-dose projections acquired at different angles of the x-ray tube.</p>\n<p><strong>Highyeild:</strong></p><p>SUMMARY BOX: Digital Breast Tomosynthesis DBT is a mammographic technique producing thin slice images through the breast, reducing the effects of tissue superimposition DBT can improve the sensitivity and specificity of breast cancer screening by increasing cancer detection rates and reducing recall rates • DBT is replacing the traditional spot compression view in the work-up of screen detected abnormalities</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A. D BT is a mammography technique producing thin slice images reducing the effects of tissue superimposition Option B . DBT can improve sensitivity and specificity of breast cancer screening by increasing cancer detection rates Option C . DBT is replacing the traditional spot compression view Options A,B,C all are correct.</p>\n<p><strong>Extraedge:</strong></p><p>Tomosynthesis or “3D” mammography is a new type of digital x-ray mammogram which creates 2D and 3D-like pictures of the breasts. This tool improves the ability of mammography to detect early breast cancers, and decreases the number of women “called back” for additional tests for findings that are not cancers.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 65 year old lady come with mass in right breast and later on mammography BIRAD 5 was present. Biopsy was suggested. Which of the following is incorrect statement?", "options": [{"label": "A", "text": "Mammographic or USG guided biopsy can be done", "correct": false}, {"label": "B", "text": "USG guided biopsy is preferred over mammographic guided", "correct": false}, {"label": "C", "text": "Mammographic guided biopsy can

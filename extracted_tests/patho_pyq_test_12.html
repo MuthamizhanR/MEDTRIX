@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Pathology - INI CET NOV 2022 (PART A)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Pathology - INI CET NOV 2022 (PART A)</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                17 Questions | 17 Total Marks | 27 min Duration | ~95.29 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 17 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 27 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 17</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Pathology - INI CET NOV 2022 (PART A) - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 17</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 17 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A patient presented to medicine opd with anxiety and palpitation. Ecg is given below which among the following is not used in the treatment of the condition given below?", "options": [{"label": "A", "text": "Adenosine", "correct": true}, {"label": "B", "text": "Metoprolol", "correct": false}, {"label": "C", "text": "Amiodarone", "correct": false}, {"label": "D", "text": "Diltiazem", "correct": false}], "correct_answer": "A. Adenosine", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692188755391-QTDPPYQ090IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Adenosine Multifocal atrial tachycardia (MAT) is a cardiac arrhythmia caused by multiple sites of competing atrial activity. It is characterised by an irregular atrial rate greater than 100 beats per minute (bpm) . Atrial activity is well organised, with at least 3 morphologically distinct P waves, irregular P-P intervals, and an isoelectric baseline between the P waves Recent guidelines recommend the use of beta-blockers and CCB for rate control and ongoing management of MAT. Adenosine is not used for MAT</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Hb is 5gm/dl and absolute reticulocyte count percentage is 9%. Calculate corrected reticulocyte count:", "options": [{"label": "A", "text": "5", "correct": false}, {"label": "B", "text": "4", "correct": false}, {"label": "C", "text": "4.5", "correct": false}, {"label": "D", "text": "3", "correct": true}], "correct_answer": "D. 3", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>3 Corrected Reticulocyte count = Reticulocyte % * Actual Hb / Normal Hb So, CRC = 9 * 5/15 = 3</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 49 years old female, presents with breast Lump, which of the following finding is in accordance with Basal like Breast cancer:", "options": [{"label": "A", "text": "ER +, PR +, Her2neu -", "correct": false}, {"label": "B", "text": "ER+, PR-, Her2 -", "correct": false}, {"label": "C", "text": "ER-, PR-, Her2 +", "correct": false}, {"label": "D", "text": "ER-, PR-, Her2 -", "correct": true}], "correct_answer": "D. ER-, PR-, Her2 -", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>ER-, PR-, Her2 - Basal-like or triple-negative breast cancer on immunohistochemical staining is ER-, PR- and HER2- Immunohistochemistry staining : Positive staining is indicated by the presence of brown-colored tissue. The estrogen receptor (ER) and progesterone receptor (PR) are both nuclear receptors, so the nucleus is stained brown if positive. The human epidermal growth factor receptor type 2 (HER2) is a membrane receptor, so the cell membrane is stained brown if positive. Molecular subtypes ER PR Her-2-Neu Luminal A + + - Double + ve breast cancer. Best Prognosis Luminal B + + + Triple+ ve breast cancer Basal cell type - - - Triple-ve breast cancer Her-2-Neu type - - + Worst Prognosis</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An Elderly patient on a vegetarian diet presented with palor and easy fatiguability. Blood smear showed findings of macrocytic anemia. Other lab findings are given below. Elevated homocysteine and normal methylmalonic acid levels. Megaloblastic anemia present. HB - 9 gm/dl , MCV - 112 fl. Identify diagnosis:", "options": [{"label": "A", "text": "Biotin deficiency", "correct": false}, {"label": "B", "text": "B12 deficiency", "correct": false}, {"label": "C", "text": "Folate deficiency", "correct": true}, {"label": "D", "text": "B2", "correct": false}], "correct_answer": "C. Folate deficiency", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Folate deficiency The given clinical scenario of macrocytic anemia in a vegetarian with elevated homocysteine levels is due to megaloblastic anemia, which can be caused by the deficiency of vitamin B12 or folic acid. Vitamin B12 deficiency is associated with raised serum methylmalonic acid (MMA) levels, which are normal in this patient; hence, folic acid deficiency is the cause of megaloblastic anemia in this patient. Folic acid deficiency is associated with the following clinical and laboratory findings: Raised MCV (normal range: 80-100 fL) - macrocytosis Normal MCHC (normal range: 33-36 g/dL) Increased MCH Decreased reticulocyte count Elevated homocysteine level Normal MMA level</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following is a histopathological image of thyroi?. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Medullary Carcinoma Thyroid", "correct": true}, {"label": "B", "text": "Follicular CA Thyroid", "correct": false}, {"label": "C", "text": "Thyroglossal Cyst", "correct": false}, {"label": "D", "text": "Papillary CA Thyroid", "correct": false}], "correct_answer": "A. Medullary Carcinoma Thyroid", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692188760048-QTDPPYQ094IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Medullary Carcinoma Thyroid The given histopathological image shows Polygonal cells with abundant cytoplasm and amyloid deposition which suggests the diagnosis of Medullary carcinoma thyroid. It is a type of thyroid cancer that arises from the parafollicular or C-cells of the thyroid gland. It is associated with the production of calcitonin , which can lead to the deposition of amyloid within the tumor stroma.</p>\n<p><strong>Highyeild:</strong></p><p>Medullary carcinoma Arises from parafollicular “C cells” which produce and secrete calcitonin, a hormone that regulates calcium metabolism. It can be sporadic or hereditary and is usually more aggressive than papillary or follicular carcinom Histology: Sheets of polygonal cells in amyloid stromatolites Associated with MEN2A and 2B (RET mutations) Immunohistochemistry: MTC cells typically stain positive for calcitonin, chromogranin, and synaptophysin. Calcitonin and serotonin secreted by MTC are responsible for diarrhoea https://images.app.goo.gl/38xY1qaxBrqDd5vy9</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B. Follicular Carcinoma Thyroid: It is a type of thyroid cancer that originates from follicular cells. It typically forms follicles and lacks the deposition of amyloid within the stroma. Option C. Thyroglossal Cyst: It is a developmental anomaly that occurs due to the persistence of a remnant of the thyroglossal duct. It does not involve the presence of polygonal cells or amyloid stroma. Option D. Papillary Carcinoma Thyroid: It is the most common type of thyroid cancer and is characterized by papillary structures and nuclear changes. It does not typically show the deposition of amyloid in the stroma.</p>\n<p><strong>Extraedge:</strong></p><p>Secretions of Medullary thyroid cancer Calcitonin CEA: Carcinoembryonic antigen Calcitonin gene-related peptide Histaminidase Prostaglandins E2 and F2 alpha Serotonin</p>\n<p><strong>Table:</strong></p><p>#MANTRA Types of thyroid cancer and their histopathological findings</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following are correctly matched with the criteria for minimum number of lymph nodes required for pathological staging? CA stomach - 10 CA colon - 12 CA gall bladder - 6 CA breast - 15 Choose the correct answer from below code:", "options": [{"label": "A", "text": "1,2,3", "correct": false}, {"label": "B", "text": "2,3", "correct": true}, {"label": "C", "text": "1,2,3,4", "correct": false}, {"label": "D", "text": "2,3,4", "correct": false}], "correct_answer": "B. 2,3", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>2,3 Pathological staging can be determined when a patient has surgery to remove a tumor. Pathological staging combines the results of both the clinical staging with the surgical results. Clinical staging determines how much cancer there is based on physical examination, imaging tests, and biopsies of affected areas.</p>\n<p><strong>Highyeild:</strong></p><p>The minimum number of lymph nodes to be examined for effective staging are: Gall bladder carcinoma -           6 lymph nodes Risk factors: Gallstones, obesity, older age, being female, certain genetic conditions, and exposure to certain chemicals Symptoms : Abdominal pain, jaundice, nausea, vomiting,weight loss. Breast carcinoma -           10 lymph nodes It is the most common cancer among women worldwide and can also affect men. Risk factors: Family history, certain genetic mutations (e.g., BRCA1 and BRCA2), hormonal factors, obesity, alcohol consumption, and reproductive history. Symptoms : Lump or thickening in the breast, changes in breast size or shape, nipple discharge, breast pain, or skin changes. Colon carcinoma -           12 lymph nodes It typically starts as a growth called a polyp that may become cancerous over time. Risk factors: Family history, personal history of polyps or inflammatory bowel disease, unhealthy lifestyle habits, and certain genetic conditions. Symptoms: Changes in bowel habits, rectal bleeding, abdominal discomfort, unintended weight loss, and fatigue. Stomach carcinoma -           16 lymph nodes Risk factors: Helicobacter pylori infection, a diet high in salted, smoked, or pickled foods, smoking, family history, and certain genetic conditions. Symptoms: Abdominal pain, indigestion, unintentional weight loss, loss of appetite, nausea, and vomiting. Hence, the correct option is B.2,3.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A, C & D are Incorrect</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Metastatic calcification can be seen in all these conditions except:", "options": [{"label": "A", "text": "Renal Failure", "correct": false}, {"label": "B", "text": "Vit D Deficiency", "correct": true}, {"label": "C", "text": "Accumulation of calcium phosphate", "correct": false}, {"label": "D", "text": "Hyperparathyroidism", "correct": false}], "correct_answer": "B. Vit D Deficiency", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Vit D Deficiency Pathologic calcification is the abnormal tissue deposition of calcium salts, together with smaller amounts of iron, magnesium, and other mineral salts. It is of two types namely metastatic and dystrophic calcification. Metastatic calcification is the deposition of calcium salts in otherwise normal tissues. Metastatic calcification refers to a type of soft tissue calcification caused by elevated serum calcium salts Typical locations for metastatic calcification include the lungs and kidneys but the condition can also occur in the liver and heart. Aetiology Chemotherapy Chronic renal failure Milk-alkali syndrome Multiple myeloma Osteolysis from malignant metastasis Primary and secondary hyperparathyroidism Sarcoidosis Vitamin D intoxication</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Maximum amplitude in thromboelastography image is by?", "options": [{"label": "A", "text": "Platelet", "correct": true}, {"label": "B", "text": "Extrinsic Pathway", "correct": false}, {"label": "C", "text": "Intrinsic Pathway", "correct": false}, {"label": "D", "text": "vWD", "correct": false}], "correct_answer": "A. Platelet", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692188771950-QTDPPYQ097IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Platelet Thromboelastography (TEG) is a hemostatic assay that measures the  viscoelastic properties of whole blood clot formation under low shear stress. TEG shows the interaction of platelets with the coagulation cascade Specific parameters represent the 3 phases of the cell-based model of haemostasis: initiation, amplification, and propagation R value = reaction time (s)- time of latency from start of test to initial fibrin formation (amplitude of 2mm)-initiation phase- dependent on clotting factors K = kinetics (s)- time taken to achieve a certain level of clot strength (amplitude of 20mm)- amplification phase- dependent on fibrinogen alpha = angle (slope of line between R and K)- measures the speed at which fibrin build up and cross-linking takes place, hence assesses the rate of clot formation- propagation phase-dependent on fibrinogen TMA = time to maximum amplitude(s) MA = maximum amplitude (mm)-represents the ultimate strength of the fibrin clot; i.e. overall stability of the clot- dependent on platelets (80%) and fibrin (20%) A30 or LY30 = amplitude at 30 minutes-percentage decrease in amplitude at 30 minutes post-MA- fibrinolysis phase</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the instrument shown below:", "options": [{"label": "A", "text": "Klima Needle", "correct": true}, {"label": "B", "text": "Salah’s Needle", "correct": false}, {"label": "C", "text": "Islam Needle", "correct": false}, {"label": "D", "text": "Jamshidi bone marrow biopsy needle", "correct": false}], "correct_answer": "A. Klima Needle", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692188773734-QTDPPYQ098IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Klima Needle Klima needle- guard with screw along the length of the needle Most commonly used for obtaining bone marrow aspirates from the sternum Option B  : Salah needle- guard with screw along the side Most commonly used for obtaining bone marrow aspirates from the sternum are the Salah and Klima needle Islam Needle A new bone marrow biopsy needle with core securing device. Jamshidi needle It is a cylindrical needle with a tapered cutting tip. The tapered end reduces the potential of crush artifacts. It is the most commonly used needle for performing bone marrow biopsies</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Cancer is associated with:", "options": [{"label": "A", "text": "E6,E7", "correct": true}, {"label": "B", "text": "E5, E6", "correct": false}, {"label": "C", "text": "E4, E1", "correct": false}, {"label": "D", "text": "E7,E1", "correct": false}], "correct_answer": "A. E6,E7", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692188775413-QTDPPYQ099IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>E6,E7 HPV is a double-stranded DNA, non enveloped virus primarily spread through sexual contact HPV types 16 and 18 are high-risk subtypes for developing a malignancy E6 Genes of HPV : Inactivate p53 E7 Gene : Inactivate RB gene L1 (Capsid protein) is associated with vaccine production HPV 16 is the most carcinogenic and accounts for 55 to 60% of cervical cancers worldwide . HPV 18 is the second most carcinogenic and accounts for 10 to 15% of cervical cancer . Most malignant is also HPV 18 Risk factors such as smoking, immunocompromised state, or HIV infection likely lead to persistence of HPV infection and an increased risk for the development of CIN Colposcopy with directed biopsy is the preferred method for evaluation of an abnormal pap smear result. \"Co-testing\" combines cytology and HPV testing for high-risk types</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 19 years old girl presents with a 6 month old swelling that moves with deglutition and shows strap muscle invasion. What is the diagnosis:", "options": [{"label": "A", "text": "PTC", "correct": true}, {"label": "B", "text": "MTC", "correct": false}, {"label": "C", "text": "Follicular Adenoma", "correct": false}, {"label": "D", "text": "Thyroglossal Cyst", "correct": false}], "correct_answer": "A. PTC", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692188776970-QTDPPYQ100IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>PTC The given clinical scenario and histopathological image showing papillary structures and the presence of Orphan Annie nuclei (nuclei with clear chromatin and grooves) suggests the diagnosis of Papillary Thyroid carcinoma (PTC). It is the most common type of thyroid cancer , especially in young patients. It often presents as a thyroid nodule or swelling and may show movement with swallowing.</p>\n<p><strong>Highyeild:</strong></p><p>Papillary thyroid carcinoma It is the most common type of thyroid cancer, accounting for about 80% of all cases. Associated with a number of genetic alterations, including BRAF and NTRK1 mutations and RET/PTC rearrangements. Other risk factors: Childhood irradiation and thyroglossal cysts, Family history of thyroid cancer, and certain genetic syndromes such as Cowden syndrome and familial adenomatous polyposis. Histological feature: Papillary architecture Psammoma bodies Nuclear grooves and pseudo inclusions Orphan Annie’s eye nuclei Fibrovascular cores Present as a solitary nodule or as a multifocal disease involving both lobes of the thyroid gland. Prognosis: Excellent: a 10-year survival rate of greater than 95%.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B. MTC: It (Medullary Thyroid Carcinoma) is a less common type of thyroid cancer that arises from the parafollicular or C-cells of the thyroid gland. It typically does not exhibit the papillary structures or Orphan Annie nuclei seen in the image. Option C. Follicular Adenoma: It is a benign tumor of the thyroid gland and is not associated with the presence of papillary structures or Orphan Annie nuclei. Option D. Thyroglossal Cyst: It is a developmental anomaly that occurs due to the persistence of a remnant of the thyroglossal duct. It does not involve the presence of papillary structures or Orphan Annie nuclei.</p>\n<p><strong>Extraedge:</strong></p><p>Variants of papillary thyroid carcinoma Variant Features Follicular ●       Most common ●       Follicular architecture, nuclear features of PTC Tall-cell ●       Cells have a height 2 times the width ●       Seen in elderly ●       Extrathyroidal extension ●       More aggressive, poorer prognosis Diffuse-sclerosing ●       Diffuse fibrosis ●       Seen in young people ●       Lymph nodes metastasis present ●       Lacks BRAF mutation Cribriform ●       Associated with familial adenomatous polyposis ●       Beta-date in mutation Columnar-cell ●       Tall columnar cells ●       Pseudostratification of nuclei ●       Minimal papillary structures Solid ●       Seen in children ●       Associated with Chernobyl nuclear accident</p>\n<p><strong>Table:</strong></p><p>#MANTRA Types of thyroid cancer and their histopathological findings</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Match the following: Select the correct option: Select the correct answer from given below code:", "options": [{"label": "A", "text": "A-1, B-2, C-3, D-4", "correct": false}, {"label": "B", "text": "C-1, D-2, A-3, B-4", "correct": false}, {"label": "C", "text": "D-1, A-2, D-3, C-4", "correct": false}, {"label": "D", "text": "A-2, B-1, C-3, D-4", "correct": true}], "correct_answer": "D. A-2, B-1, C-3, D-4", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/questionImage-1704541638963-pyq.JPG111.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>A-2, B-1, C-3, D-4 All of the following points given above are macrophages . The correct option is A-2, B-1, C-3, D-4. Macrophages are specialized cells involved in the detection, phagocytosis and destruction of bacteria and other harmful organisms. In addition, they can also present antigens to T cells and initiate inflammation by releasing molecules (known as cytokines) that activate other cells Macrophages migrate to and circulate within almost every tissue , patrolling for pathogens or eliminating dead cells. The table below describes the location and function of a few different macrophage populations</p>\n<p><strong>Highyeild:</strong></p><p>Type of macrophage Location Function Alveolar macrophage / Dust cell Lung alveoli Phagocytosis of small particles, dead cells or bacteria. Initiation and control of immunity to respiratory pathogens Kupffer cells Liver Initiate immune responses and hepatic tissue remodeling. Microglia Central nervous system Elimination of old or dead neurons and control of immunity in the brain. Splenic macrophages (marginal zone, metallophilic and red pulp macrophages) Spleen marginal zone, red and white pulp Elimination of dysfunctional or old red blood cells. Clara cell Small airways and Trachea Non ciliated secretory cells, has multiple lung protective functions Parietal cells Stomach Gastric acid secretion</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- A-1, B-2, C-3, D-4: Incorrect C-1, D-2, A-3, B-4: Incorrect D-1, A-2, D-3, C-4: Incorrect</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with bare lymphocytic disease, graft vs host reaction does not occur due to:", "options": [{"label": "A", "text": "Complement Deficiency", "correct": false}, {"label": "B", "text": "MHC class I Deficiency on Lymphocytes", "correct": false}, {"label": "C", "text": "Deficiency of CD4 T Lymphocytes", "correct": false}, {"label": "D", "text": "MHC class II Deficiency on Lymphocytes", "correct": true}], "correct_answer": "D. MHC class II Deficiency on Lymphocytes", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>MHC class II Deficiency on Lymphocytes Bare lymphocyte syndrome , a severe combined immunodeficiency due to loss of major histocompatibility complex (MHC) class II gene expression , is caused by inherited mutations in the genes encoding the heterotrimeric transcription factor RFX (RFX-B, RFX5, and RFXAP) and the class II transactivator CIITA MHC class II genes encode heterodimeric glycoproteins that present antigens to CD4+ T cells to initiate the acquired arm of the immune response. They are also crucial for determining the repertoire of CD4+ T cells during positive and negative selection in the thymus. Patients with BLS typically present in the first year of life with recurrent infections and have reduced levels of CD4+ T cells. Their humoral immune response is severely impaired as well, and most patients die before reaching puberty</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Egg-shell calcification is seen in all of the following except?", "options": [{"label": "A", "text": "Silicosis", "correct": false}, {"label": "B", "text": "Sarcoidosis", "correct": false}, {"label": "C", "text": "Metastatic Lymph Node", "correct": true}, {"label": "D", "text": "Post- Radiation Therapy Lymph-Nodes", "correct": false}], "correct_answer": "C. Metastatic Lymph Node", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Metastatic Lymph Node Egg-shell calcification refers to the deposition of calcified material around the periphery of a structure, giving it the appearance of an eggshell. It is not typically seen in metastatic lymph nodes.</p>\n<p><strong>Highyeild:</strong></p><p>Causes of egg-shell calcification Silicosis (most common) Sarcoidosis Post radiotherapy Post-irradiation lymphoma Histoplasmosis Blastomycosis Amyloidosis Tuberculosis https://images.app.goo.gl/tDnzFusX5ZyEqs7y9</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A. Silicosis: A lung disease caused by the inhalation of silica dust, resulting in the formation of egg-shell calcifications around the silicotic nodules. Option B. Sarcoidosis: A systemic granulomatous disease that can involve multiple organs, including the lungs, where egg-shell calcification can be observed around the granulomas. Option D. Post-Radiation Therapy Lymph Nodes: Following radiation therapy, the lymph nodes can develop calcifications, including egg-shell calcification, as a result of the tissue response to radiation.</p>\n<p><strong>Table:</strong></p><p>#MANTRA Pneumoconiosis</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following are poor prognostic factors of B cell leukemia Age < 1 year Hyperdiploidy t(4;11) t(9;22) Choose the correct answer from below code:", "options": [{"label": "A", "text": "a, b,", "correct": false}, {"label": "B", "text": "a, c, d", "correct": true}, {"label": "C", "text": "a, b, c, d", "correct": false}, {"label": "D", "text": "b, c, d", "correct": false}], "correct_answer": "B. a, c, d", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>a, c, d Prognostic factors in ALL Determinants Favourable Unfavourable WBC Counts <10,000 >2,00,000 Age 2-10 years <1yr,>10yr Gender Female Male Ethnicity white Black Node, liver, splenomegaly Absent Massive Testicular enlargement Absent Present CNS involvement Absent Csf blast and pleocytosis FAB Type L1 L2 Cytogenetics T(12:21)(TEL-AML1) Trsomies 4,10,17 t(9;22)(bcr-abl) 1(4:11)(MLL-AF4) Ploidy Hyperdipoidy Hypodiploidy Time to remission <14days >28days</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statement about sirtuin is not correct:", "options": [{"label": "A", "text": "It Increase Life Span", "correct": false}, {"label": "B", "text": "Stimulated by Nicotinamide", "correct": true}, {"label": "C", "text": "Increase Insulin Sensitivity and Support Glucose Metabolism", "correct": false}, {"label": "D", "text": "It has Histone Deacetylase Activity and cause Chromatin Condensation", "correct": false}], "correct_answer": "B. Stimulated by Nicotinamide", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Stimulated by Nicotinamide Sirtuins are a class of proteins that possess either mono-ADP-ribosyltransferase or deacetylase activity. They have been shown to slow down the aging process. Sirtuins promote the expression of several genes whose products increase longevity. These include proteins that: Reduce apoptosis Stimulate protein folding Inhibit the harmful effects of oxygen-free radicals Increase insulin sensitivity and glucose metabolism (maybe targeted for the treatment of diabetes) Ensure that damaged DNA is not propagated, preventing the accumulation of mutations Promotes replicative senescence under chronic stress Sirtuins level increases by caloric restriction and are present in red wine. Nicotinamide inhibits sirtuins through the so-called base exchange pathway</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which interleukin not involved in TH 1:", "options": [{"label": "A", "text": "IL 4", "correct": true}, {"label": "B", "text": "IFN gamma", "correct": false}, {"label": "C", "text": "IL 12", "correct": false}, {"label": "D", "text": "IL 2", "correct": false}], "correct_answer": "A. IL 4", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>IL 4 Dendritic cells and macrophages present antigens to T helper cells (TH) after which they differentiate into TH1 and TH2 cells. They are responsible for cell-mediated and humoral immune responses, respectively. IL-12 is secreted by macrophages and promotes the proliferation of TH1 cells. TH1 cells secrete: IL-2 which activates natural killer cells (NK cells) and cytotoxic T cells Interferon gamma which stimulates macrophages and is also responsible for delayed hypersensitivity along with TGF beta.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

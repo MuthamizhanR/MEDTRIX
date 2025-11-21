@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Histology</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Histology</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                28 Questions | 28 Total Marks | 38 min Duration | ~81.43 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 28 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 38 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 28</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Histology - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 28</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 28 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "What is the histological appearance of vaginal mucosa", "options": [{"label": "A", "text": "Stratified squamous", "correct": true}, {"label": "B", "text": "Columnar", "correct": false}, {"label": "C", "text": "Simple squamous", "correct": false}, {"label": "D", "text": "Cuboidal", "correct": false}], "correct_answer": "A. Stratified squamous", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/40457261697973774/40457261697973774.m3u8"}, {"text": "Stratified squamous epithelium is seen at all the following sites except:", "options": [{"label": "A", "text": "Skin", "correct": false}, {"label": "B", "text": "Vagina", "correct": false}, {"label": "C", "text": "Esophagus", "correct": false}, {"label": "D", "text": "Gallbladder", "correct": true}], "correct_answer": "D. Gallbladder", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/73449431697960915/73449431697960915.m3u8"}, {"text": "Serous demilunes is present in?", "options": [{"label": "A", "text": "Serous glands", "correct": false}, {"label": "B", "text": "Mucous glands", "correct": false}, {"label": "C", "text": "Mixed glands", "correct": true}, {"label": "D", "text": "All salivary glands", "correct": false}], "correct_answer": "C. Mixed glands", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36646591697961126/36646591697961126.m3u8"}, {"text": "Subcapsular sinuses are seen in", "options": [{"label": "A", "text": "Spleen", "correct": false}, {"label": "B", "text": "Thymus", "correct": false}, {"label": "C", "text": "Thyroid", "correct": false}, {"label": "D", "text": "Lymph node", "correct": true}], "correct_answer": "D. Lymph node", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4434091697974739/4434091697974739.m3u8"}, {"text": "Collagen found in hyaline cartilage is", "options": [{"label": "A", "text": "Type I", "correct": false}, {"label": "B", "text": "Type II", "correct": true}, {"label": "C", "text": "Type IV", "correct": false}, {"label": "D", "text": "Type V", "correct": false}], "correct_answer": "B. Type II", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64460691697962091/64460691697962091.m3u8"}, {"text": "Dense regular collagen is found in all except -", "options": [{"label": "A", "text": "Ligament", "correct": false}, {"label": "B", "text": "Periosteum", "correct": true}, {"label": "C", "text": "Aponeurosis", "correct": false}, {"label": "D", "text": "Tendon", "correct": false}], "correct_answer": "B. Periosteum", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/28498561697962452/28498561697962452.m3u8"}, {"text": "The lower two thirds of the following hematoxylin and eosin stained specimen is similar in appearance to which of the following structures", "options": [{"label": "A", "text": "Articular disc", "correct": false}, {"label": "B", "text": "Pinna", "correct": false}, {"label": "C", "text": "Epiphyseal plate", "correct": true}, {"label": "D", "text": "Intervertebral disc", "correct": false}], "correct_answer": "C. Epiphyseal plate", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/3801293q47gnrlantmy.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24184811697962509/24184811697962509.m3u8"}, {"text": "Epithelial lining of esophagus is", "options": [{"label": "A", "text": "Cuboidal", "correct": false}, {"label": "B", "text": "Columnar", "correct": false}, {"label": "C", "text": "Stratified squamous non- keratinized", "correct": true}, {"label": "D", "text": "Stratified squamous keratinized", "correct": false}], "correct_answer": "C. Stratified squamous non- keratinized", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/7630681697962610/7630681697962610.m3u8"}, {"text": "Gland of brunner’s is found in :", "options": [{"label": "A", "text": "Jejunum", "correct": false}, {"label": "B", "text": "Duodenum", "correct": true}, {"label": "C", "text": "Ileum", "correct": false}, {"label": "D", "text": "All", "correct": false}], "correct_answer": "B. Duodenum", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35233091697962635/35233091697962635.m3u8"}, {"text": "True about epithelium lining hard palate is-", "options": [{"label": "A", "text": "Keratinised squamous epithelium", "correct": true}, {"label": "B", "text": "Non-keratinised squamous with submucosa and minor salivary glands", "correct": false}, {"label": "C", "text": "Non-keratinised squamous without submucosa and minor salivary glands", "correct": false}, {"label": "D", "text": "Non-keratinised cuboidal", "correct": false}], "correct_answer": "A. Keratinised squamous epithelium", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Correct Answer (A)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35020911698506619/35020911698506619.m3u8"}, {"text": "Space of disse is seen in", "options": [{"label": "A", "text": "Spleen", "correct": false}, {"label": "B", "text": "Lymph node", "correct": false}, {"label": "C", "text": "Liver", "correct": true}, {"label": "D", "text": "Bone", "correct": false}], "correct_answer": "C. Liver", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Correct Answer (C)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the marked structure:", "options": [{"label": "A", "text": "Basket cells", "correct": false}, {"label": "B", "text": "Purkinje cells", "correct": true}, {"label": "C", "text": "Golgi cells", "correct": false}, {"label": "D", "text": "Granular cell", "correct": false}], "correct_answer": "B. Purkinje cells", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/10(456).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/28(163).jpg"], "explanation": "<p><strong>Correct Answer (B)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77862701698504226/77862701698504226.m3u8"}, {"text": "Which of the following papilla is marked in the given picture?", "options": [{"label": "A", "text": "Foliate papilla", "correct": false}, {"label": "B", "text": "Filiform papilla", "correct": false}, {"label": "C", "text": "Fungiform papilla", "correct": false}, {"label": "D", "text": "Circumvallate papilla", "correct": true}], "correct_answer": "D. Circumvallate papilla", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8(468).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/18(302).jpg"], "explanation": "<p><strong>Correct Answer (D)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74383791698504029/74383791698504029.m3u8"}, {"text": "Given histology picture is of which of the following?", "options": [{"label": "A", "text": "Elastic Cartilage", "correct": false}, {"label": "B", "text": "Fibro Cartilage", "correct": true}, {"label": "C", "text": "Articulating Hyaline Cartilage", "correct": false}, {"label": "D", "text": "Non Articulating Hyaline Cartilage", "correct": false}], "correct_answer": "B. Fibro Cartilage", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5(634).jpg"], "explanation_images": [], "explanation": "<p><strong>Correct Answer (B)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60345341698502718/60345341698502718.m3u8"}, {"text": "Identify the marked structure in the given Picture ?", "options": [{"label": "A", "text": "Islets of Langerhans", "correct": true}, {"label": "B", "text": "Lymphatic nodules", "correct": false}, {"label": "C", "text": "Demilunes", "correct": false}, {"label": "D", "text": "Glomeruli", "correct": false}], "correct_answer": "A. Islets of Langerhans", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/6(521).jpg"], "explanation_images": [], "explanation": "<p><strong>Correct Answer (A)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36402531698502755/36402531698502755.m3u8"}, {"text": "Stellate cells in liver are seen at which location?", "options": [{"label": "A", "text": "Sinsuoids", "correct": false}, {"label": "B", "text": "Space of disse", "correct": true}, {"label": "C", "text": "Space of Mall", "correct": false}, {"label": "D", "text": "Canaliculi", "correct": false}], "correct_answer": "B. Space of disse", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/74_1(22).jpg"], "explanation": "<p><strong>Correct Answer (B)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/62347871701777448/62347871701777448.m3u8"}, {"text": "Difference between Exocrine pancreas and parotid gland is:-", "options": [{"label": "A", "text": "Presence of Serous acini with Acidophilic tip", "correct": false}, {"label": "B", "text": "Serous acinus supported by basal lamina", "correct": false}, {"label": "C", "text": "Absence of striated duct", "correct": true}, {"label": "D", "text": "Apical acinar villi", "correct": false}], "correct_answer": "C. Absence of striated duct", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/75_1(25).jpg"], "explanation": "<p><strong>Correct Answer (C)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74350771701777470/74350771701777470.m3u8"}, {"text": "Predominant cells present at the isthmus of Gastric pits are?", "options": [{"label": "A", "text": "Mucus Cells", "correct": false}, {"label": "B", "text": "Chief Cells", "correct": false}, {"label": "C", "text": "Parietal cells", "correct": false}, {"label": "D", "text": "Stem cells", "correct": true}], "correct_answer": "D. Stem cells", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/76_1(11).jpg"], "explanation": "<p><strong>Correct Answer (D)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/10654381701777486/10654381701777486.m3u8"}, {"text": "Transitional epithelium is present in all of the following places except", "options": [{"label": "A", "text": "Renal pelvis", "correct": false}, {"label": "B", "text": "Ureter", "correct": false}, {"label": "C", "text": "Membranous urethra", "correct": true}, {"label": "D", "text": "Minor calyx", "correct": false}], "correct_answer": "C. Membranous urethra", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Correct Answer (C)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14449331701777507/14449331701777507.m3u8"}, {"text": "Identify the structure in the following histological image-", "options": [{"label": "A", "text": "Leydig cells of testis", "correct": false}, {"label": "B", "text": "Pancreatic islet cells", "correct": false}, {"label": "C", "text": "Hassall’s corpuscles", "correct": false}, {"label": "D", "text": "Glomerulus", "correct": true}], "correct_answer": "D. Glomerulus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3(23).png"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3_1(5).png"], "explanation": "<p><strong>Correct Answer (D)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is correct match? 1 –Aldosterone 2 –Epinephrine/Norepinephrine 3 –Sex Steroid 4 –Cortisol", "options": [{"label": "A", "text": "A-1, B-2, C-3, D-4", "correct": false}, {"label": "B", "text": "A-1, B-4, C-3, D-2", "correct": true}, {"label": "C", "text": "A-2, B-1, C-4, D-3", "correct": false}, {"label": "D", "text": "A-3, B-2, C-1, D-4", "correct": false}], "correct_answer": "B. A-1, B-4, C-3, D-2", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7(186).png"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8(177).png"], "explanation": "<p><strong>Correct Answer (B)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19808951721393194/19808951721393194.m3u8"}, {"text": "Which of the following is the function of marked layer?", "options": [{"label": "A", "text": "Gluconeogenesis", "correct": false}, {"label": "B", "text": "sex hormones secretion", "correct": false}, {"label": "C", "text": "Immune cell modulation", "correct": false}, {"label": "D", "text": "Sodium & water retention", "correct": true}], "correct_answer": "D. Sodium & water retention", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(847).png"], "explanation_images": [], "explanation": "<p><strong>Correct Answer (D)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Post ovulation the oocyte is", "options": [{"label": "A", "text": "Primary oocyte arrested in prophase - I", "correct": false}, {"label": "B", "text": "Primary oocyte arrested in prophase - II", "correct": false}, {"label": "C", "text": "Secondary oocyte arrested in prophase - II", "correct": false}, {"label": "D", "text": "Secondary oocyte arrested in metaphase - II", "correct": true}], "correct_answer": "D. Secondary oocyte arrested in metaphase - II", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Correct Answer (D)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74168211725256750/74168211725256750.m3u8"}, {"text": "Fracture at which of the following site affects the longitudinal growth of a bone", "options": [{"label": "A", "text": "Epiphyseal plate", "correct": true}, {"label": "B", "text": "Diaphysis", "correct": false}, {"label": "C", "text": "Epiphysis", "correct": false}, {"label": "D", "text": "Metaphysis", "correct": false}], "correct_answer": "A. Epiphyseal plate", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Correct Answer (A)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/55527391725256765/55527391725256765.m3u8"}, {"text": "Match the columns based on marked areas", "options": [{"label": "A", "text": "A-3, B-1, C-2, D-4", "correct": true}, {"label": "B", "text": "A-4, B-1, C-2, D-3", "correct": false}, {"label": "C", "text": "A-3, B-2, C-1, D-4", "correct": false}, {"label": "D", "text": "A-1, B-3, C-2, D-4", "correct": false}], "correct_answer": "A. A-3, B-1, C-2, D-4", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(872).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27570911725256788/27570911725256788.m3u8"}, {"text": "A neonate has presented with failure to pass the meconium. The structure absent in the pathology lie in which of the following layers. Choose the correct answer.", "options": [{"label": "A", "text": "A,B", "correct": false}, {"label": "B", "text": "B,C", "correct": true}, {"label": "C", "text": "C,D", "correct": false}, {"label": "D", "text": "B,C", "correct": false}], "correct_answer": "B. B,C", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7(273).png"], "explanation_images": [], "explanation": "<p><strong>Correct Answer (B)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/20034641725256806/20034641725256806.m3u8"}, {"text": "Which type of tongue papillae lacks taste buds", "options": [{"label": "A", "text": "Fungiform", "correct": false}, {"label": "B", "text": "Filliform", "correct": true}, {"label": "C", "text": "Circumvalate", "correct": false}, {"label": "D", "text": "Foliate", "correct": false}], "correct_answer": "B. Filliform", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Correct Answer (B)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76506581725256822/76506581725256822.m3u8"}, {"text": "This type of epithelium is seen in", "options": [{"label": "A", "text": "Ureter", "correct": true}, {"label": "B", "text": "Trachea", "correct": false}, {"label": "C", "text": "Duodenum", "correct": false}, {"label": "D", "text": "Gall bladder", "correct": false}], "correct_answer": "A. Ureter", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8(260).png"], "explanation_images": [], "explanation": "<p><strong>Correct Answer (A)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54784651725256833/54784651725256833.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

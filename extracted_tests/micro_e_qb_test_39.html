@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Parasitic Encephalitis</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Parasitic Encephalitis</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                12 Questions | 12 Total Marks | 22 min Duration | ~110.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 12 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 22 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 12</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Parasitic Encephalitis - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 12</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 12 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 40-year male was admitted to the hospital with a history of loss of consciousness, emesis, headache, photophobia, and blurry vision. MRI showed a solitary 2 cm mass in the posterior left temporal lobe. A biopsy showed that the mass contained necrotizing inflammation with trophozoites, morphologically different from any of the species previously found in association with infection in humans. Although the type of organism causing the infection was not identified at the time, the patient underwent surgical excision of the tumor-like mass and received antibiotic therapy, and recovered without any neurologic sequelae. The causative agent was later identified as Sappinia diploid on the basis of distinct morphological features in hematoxylin-eosin-stained brain sections and by transmission electron microscopy images of sections from the brain lesion. Which of the following is the locomotive organ of a causative organism?", "options": [{"label": "A", "text": "Pseudopodia", "correct": true}, {"label": "B", "text": "Flagella", "correct": false}, {"label": "C", "text": "Cilia", "correct": false}, {"label": "D", "text": "No locomotive organ", "correct": false}], "correct_answer": "A. Pseudopodia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Pseudopodia Sappinia species is a new Free-living amoeba characterized by causing Amoebic encephalitis like another free-living amoeba. They have Pseudopodia as their locomotive organs.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B. Flagella are microscopic hair-like structures involved in the locomotion of a cell. The word “flagellum” means “whip”. The flagella have a whip-like appearance that helps to propel a cell through the liquid. Some special flagella are used in few organisms as sensory organs that can sense changes in pH and temperature. Option C. Cilia are small, slender, hair-like structures present on the surface of all mammalian cells. They are primitive in nature and could be single or many. Cilia play a major role in locomotion found on the protozoans such as paramecium and help them in locomotion Option D. Locomotive organ is required for the movement of the bacteria.</p>\n<p><strong>Extraedge:</strong></p><p>Free-living amebas are protozoa that live independently in soil or water and do not require a human or animal host. They rarely cause disease, in contrast to the parasitic ameba Entamoeba histolytica, which is a common cause of intestinal infection (amebiasis. It is acquired by fecal-oral transmission.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 26 years old pregnant female, G2P1 during the 13th week of pregnancy for a routine Antenatal check-up. This was her second pregnancy and she had a history of previous cesarean delivery. Her history was negative although she reported that she was taking care of a cat recently. Sabin Fieldman dye test was positive. The patient was admitted to our center. Physical examination during admission was normal. Her initial serologic tests were: IgG 249 IU/ml (normal range 0-6 IU/ml), IgG avidity 0.010% (normal range 0-0.2%), IgM >160 IU/ml (normal range 0-10 IU/ml). Tests were repeated and additionally, IgA was measured. The new laboratory results were: IgG > 400 IU/ml, IgG avidity 4.4%, IgM 63 IU/ml, and IgA 13 IU/ml. In view of these findings, an amniocentesis was conducted at 15 weeks in order to examine whether the fetus was affected. PCR-DNA test of the amniotic fluid was negative. Although there was no evidence of vertical transmission the infection was confirmed and the patient received treatment with spiramycin 1gm three times a day (t.i.d.). In case the infection is transmitted from mother to child a characteristic triad of the disease in the newborn includes all the following?", "options": [{"label": "A", "text": "Chorioretinitis", "correct": false}, {"label": "B", "text": "Hydrocephalus", "correct": false}, {"label": "C", "text": "Intracranial calcification", "correct": false}, {"label": "D", "text": "Sensory neuronal hearing loss", "correct": true}], "correct_answer": "D. Sensory neuronal hearing loss", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Sensory neuronal hearing loss Sensorineural hearing loss is not associated with a triad of congenital toxoplasmosis.</p>\n<p><strong>Highyeild:</strong></p><p>Toxoplasmosis in Pregnancy Abortion Overt disease. The symptoms vary widely, the classical triad of Congenital Toxoplasmosis is Hydrocephalus Intracranial calcification Chorioretinitis Subclinical infection: no symptoms at birth Late onset symptoms (most common in the eyes: Chorioretinitis) No symptoms at all</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Options A, B & C. The classical triad of congenital toxoplasmosis is chorioretinitis (most common) hydrocephalus and intracranial calcifications.it does not include Sensory neural hearing loss.</p>\n<p><strong>Extraedge:</strong></p><p>Cytomegalovirus (CMV) retinitis is a viral infection of the retina of the eye resulting in inflammation. Cytomegalovirus is a large herpes-type virus commonly found in humans that can cause serious infections in people with impaired immunity.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A previously healthy 23-year-old woman presented with altered sensorium with a history of severe headaches, saw “flashing lights,” and had a purulent nasal discharge for 2days. She gives a history of swimming with friends in a nearby local pond. Which of the following parasites should have been considered in the diagnosis? She had no prior history of travel outside of the India.", "options": [{"label": "A", "text": "P. falciparum", "correct": false}, {"label": "B", "text": "T. gondii", "correct": false}, {"label": "C", "text": "E. histolytica", "correct": false}, {"label": "D", "text": "Naegleria fowleri", "correct": true}], "correct_answer": "D. Naegleria fowleri", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Naegleria fowleri History of swimming, clinical features of Primary meningoencephalitis suggestive of acute amoebic meningoencephalitis caused by free-living amoebae like N. fowleri. (Habitant-fresh warm water)</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A. Falciparum malaria causes cerebral malaria Option B. Gondii causes toxoplasmosis Option C. Entamoeba hemolytic causes amoebic dysentery.</p>\n<p><strong>Extraedge:</strong></p><p>Naegleria fowleri, colloquially known as a \"brain-eating amoeba\", is a species of the genus Naegleria, belonging to the phylum Percolozoa, which is technically not classified as a true amoeba, but a shapeshifting amoeboflagellate excavate.[1] It is a free-living, bacteria-eating microorganism that can be pathogenic, causing an extremely rare, sudden, severe, and usually fatal brain infection called naegleriasis or primary amoebic meningoencephalitis (PAM).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 26 years female presented with redness of eyes; foreign body sensation & corneal ulcer followed by usage of contact lenses. Saline mount scrapings of the cornea revealed cysts with polyhedral inner walls & irregular outer wall morphology. Which of the following is most likely the causative organism", "options": [{"label": "A", "text": "Acanthamoeba", "correct": true}, {"label": "B", "text": "Entamoeba histolyticum", "correct": false}, {"label": "C", "text": "Naegleria fowleri", "correct": false}, {"label": "D", "text": "Giardia lamblia", "correct": false}], "correct_answer": "A. Acanthamoeba", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1687505013673-QTDV013006IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Acanthamoeba History of usage of contact lenses with keratitis and description of organism suggestive of acanthamoeba keratitis caused by acanthamoeba. Ring ulcers of the cornea are characteristic & usually associated with contact lens users.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B. Entamoeba histolytic causes amoebic dysentery. Option C. Naegleria fowleri causes primary amoebic meningoencephalitis. Option D. Giardia lamblia causes diarrhea</p>\n<p><strong>Extraedge:</strong></p><p>Bacterial keratitis can advance through four stages: progressive infiltration, active ulceration, regression, and healing.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 20-year-old man visiting Europe dives into a secluded natural pool. He later develops meningoencephalitis localized to the base of his brain. The causative organism is found to be the free-living amoeba, Naegleria fowleri. Which of the following structures did he probably damage during the dive?", "options": [{"label": "A", "text": "Cribriform plate", "correct": true}, {"label": "B", "text": "Lacrimal bone", "correct": false}, {"label": "C", "text": "Mandible", "correct": false}, {"label": "D", "text": "Nasal bone", "correct": false}], "correct_answer": "A. Cribriform plate", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cribriform plate Naegleria fowleri , colloquially known as th e \"brain-eating amoeba \", is a species of the genus Naegleria, belonging to the phylum Percolozoa, which is technically not classified as true amoeba, but a shape-shifting ameboflagellate excavate.</p>\n<p><strong>Highyeild:</strong></p><p>Infections most often occur when water containing N. fowleri is inhaled through the nose, where it then enters the nasal and olfactory nerve tissue, traveling to the brain through the cribriform plate (option A). Fowleri normally eats bacteria, but during human infections, the trophozoites consume astrocytes and neurons.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B, C & D. Fowleri infections occurs when it travels to the brain through the cribriform plate hence they are incorrect.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Eosinophilic meningitis is caused by:", "options": [{"label": "A", "text": "Gnathostoma spiral", "correct": false}, {"label": "B", "text": "Naegleria", "correct": false}, {"label": "C", "text": "Toxocara canis", "correct": false}, {"label": "D", "text": "Angiostrongylus cantonensis", "correct": true}], "correct_answer": "D. Angiostrongylus cantonensis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Angiostrongylus cantonensis Angiostrongylus cantonensis is a parasitic nematode that causes angiostrongyliasis, the most common cause of eosinophilic meningitis i n Southeast Asia and the Pacific Basin. The nematode commonly resides in the pulmonary arteries of rats, giving it the common name rat lungworm.</p>\n<p><strong>Highyeild:</strong></p><p>Angiostrongylus is a parasitic nematode that can cause severe gastrointestinal or central nervous system disease in humans, depending on the species. Angiostrongylus cantonensis, which is also known as the rat lungworm, causes eosinophilic meningitis and is prevalent in Southeast Asia and tropical Pacific islands. Angiostrongylus Eosinophilic Meningitis is caused by human infection with larvae of the rat lungworm, Angiostrongylus cantonensis. The clinical presentation includes a spectrum of diseases, from meningitis through radiculitis, cranial nerve abnormalities, ataxia, encephalitis, coma, and rarely death.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A. Gnathostoma spiral-Nematode. Cause Ganathostomiasis. Option B. Naegleria- cause Primary Amebic Encephalitis. Option C. Toxocara canis- cause Toxoplasmosis.</p>\n<p><strong>Extraedge:</strong></p><p>The initial sign of acute strongyloidiasis, if noticed at all, is a localized pruritic, erythematous rash at the site of skin penetration. Patients may then develop tracheal irritation and a dry cough as the larvae migrate from the lungs up through the trachea.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Cerebral malaria most commonly attends infection with which of the following?", "options": [{"label": "A", "text": "Plasmodium vivax", "correct": false}, {"label": "B", "text": "Plasmodium malariae", "correct": false}, {"label": "C", "text": "Plasmodium falciparum", "correct": true}, {"label": "D", "text": "Plasmodium ovale", "correct": false}], "correct_answer": "C. Plasmodium falciparum", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Plasmodium falciparum Cerebral malaria is the most sever e neurological complication of infection with Plasmodium falciparum malaria. It is a clinical syndrome characterized by coma and asexual forms of the parasite on peripheral blood smears .</p>\n<p><strong>Highyeild:</strong></p><p>In most cases, malaria deaths are related to one or more serious complications, including Cerebral malaria. If parasite-filled blood cells block small blood vessels in your brain (cerebral malaria), swelling of your brain or brain damage may occur. Cerebral malaria may cause seizures and coma.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Options A, B & D. Vivax, P. malariae, and P Ovale invade either old or young red blood cells but not both. It causes relatively low-grade and less severe parasitemia as compared to P. Falciparum and do not commonly lead to severe and frequently fatal complications such as cerebral malaria, algid malaria, malaria hyperpyrexia, and blackwater fever.</p>\n<p><strong>Extraedge:</strong></p><p>The significant complications of malaria are cerebral malaria, severe malarial anemia, and nephrotic syndrome (NS). Additional complications include: Bilious remittent fever presents with abdominal pain and persistent vomiting that may lead to severe dehydration, jaundice, and dark urine.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 36-year-old man with AIDS develops right-sided weakness involving the lower, but not the upper, limb. MRI Magnetic Resonance Imaging scans reveal a ring-enhancing lesion within the white matter of the left frontal lobe. A biopsy shows coagulative necrosis of brain parenchyma with macrophage-rich chronic inflammatory infiltration admixed with microscopic cysts that contain characteristic bradyzoites. Which is the most common source of this type of infection?", "options": [{"label": "A", "text": "Anopheles mosquitoes", "correct": false}, {"label": "B", "text": "Bird droppings", "correct": false}, {"label": "C", "text": "Cats", "correct": true}, {"label": "D", "text": "Cooling systems", "correct": false}], "correct_answer": "C. Cats", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cats Diagnosis- Toxoplasmosis MC Source- Cats Poor lower-limb strength is common in patients with long-term HIV infection.</p>\n<p><strong>Highyeild:</strong></p><p>Multiple ring‐enhancing lesions in HIV-positive patients are seen at advanced stages of immunosuppression. Differential diagnosis primarily includes tuberculoma, primary CNS lymphoma, and toxoplasmosis. Sometimes, it may be due to bacterial or fungal abscesses. Ring-enhancing lesions in the brain can also be seen in primary CNS lymphoma which often causes diagnostic confusion. A ring-enhancing brain lesion in AIDS patients has a broad differential diagnosis— cerebral toxoplasmosis, primary central nervous system (CNS) lymphoma. In the brain, it can occur with an early brain abscess as well as in Nocardia infections associated with lung cavitary lesions.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Options A, B, and D. Are not the source of Toxoplasmosis.</p>\n<p><strong>Extraedge:</strong></p><p>Toxoplasmosis Multiple or solitary(14%) areas of abnormal low attenuation Regions affected - Basal ganglia, Thalamus, Brainstem No subarachnoid spread Surrounding yasogenic edema and mass effect Calcification (after treatment)</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Neurocysticercosis, the following are true except:", "options": [{"label": "A", "text": "Not acquired by eating contaminated vegetables", "correct": true}, {"label": "B", "text": "Caused by reverse peristalsis leading to the internal development of egg", "correct": false}, {"label": "C", "text": "Acquired by oro-fecal route", "correct": false}, {"label": "D", "text": "Acquired by autoinfection", "correct": false}], "correct_answer": "A. Not acquired by eating contaminated vegetables", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Not acquired by eating contaminated vegetables It is acquired by eating contaminated vegetables containing the eggs of the parasite. or a person harboring adult worms may autoinfect himself or reverse peristalsis may throw gravid segments back into the stomach.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B & D. A person harboring adult worms may autoinfect himself or reverse peristalsis may throw gravid segments back into the stomach. Option C. infection can be acquired by oro-fecal route via contaminated vegetables containing the eggs of the parasite</p>\n<p><strong>Extraedge:</strong></p><p>Neurocysticercosis is a preventable parasitic infection caused by larval cysts (enclosed sacs containing the immature stage of a parasite) of the pork tapeworm (Taenia solium). The larval cysts can infect various parts of the body causing a condition known as cysticercosis.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Encephalitis is caused by which parasite:", "options": [{"label": "A", "text": "Acanthamoeba", "correct": true}, {"label": "B", "text": "Entamoeba histolytica", "correct": false}, {"label": "C", "text": "Echinococcus", "correct": false}, {"label": "D", "text": "Escherichia coli", "correct": false}], "correct_answer": "A. Acanthamoeba", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Acanthamoeba Granulomatous amoebic encephalitis (GAE) is caused by a free-living amoeba, Acanthamoeba spp. The disease occurs in debilitated/ immunosuppressed Mode of infection is the inhalation of a cyst or trophozoite in an infected aerosol followed by dissemination to the blood from the lungs.</p>\n<p><strong>Highyeild:</strong></p><p>Prolonged chronic course unlike Primary amoebic meningitis caused by Naegleria fowler .Diagnosis often requires a brain biopsy as CSF may be negative for trophozoites or cysts. Another species is Balamuthia mandrillaris.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B. Entamoeba histolytica is an anaerobic parasitic protozoa. It infects humans and other primates causing amoebiasis Option C. Echinococcus is a small, three-segmented tapeworm found only in the intestine of dogs and other canids. The larva develops in hydatid The liver is the most common site where compression, atrophy, portal hypertension from mechanical obstruction, and cirrhosis can occur Option D. coli is the most common cause of urinary tract infections and it also causes diarrhea, sepsis, and meningitis.</p>\n<p><strong>Extraedge:</strong></p><p>Amebic encephalitis is a rare but lethal central nervous system infection caused by free-living amoebae found in freshwater, lakes, and rivers. There are two types of amebic encephalitis, namely primary meningoencephalitis (PAM) and granulomatous amebic encephalitis (GAE).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Acute primary amoebic meningoencephalitis, true is:", "options": [{"label": "A", "text": "Meningitis caused by Acanthamoeba sp. Is acute in nature", "correct": false}, {"label": "B", "text": "Diagnosed by trophozoite in CSF", "correct": true}, {"label": "C", "text": "Caused by fecal-oral transmission", "correct": false}, {"label": "D", "text": "CNS infection was seen in immunocompromised persons", "correct": false}], "correct_answer": "B. Diagnosed by trophozoite in CSF", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Diagnosed by trophozoite in CSF Motile trophozoites can be demonstrated in wet mount preparation of CSF .</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A & D. Primary Amoebic Meningoencephalitis is caused by a free-living amoeba, Naeglaria fowleri in healthy young adults. Option C. Infection is acquired by nasal contamination during swimming in fresh hot water bodies like ponds, river, swimming pools, or lakes.</p>\n<p><strong>Extraedge:</strong></p><p>symptoms of primary amoebic encephalitis The following symptoms usually develop within three to seven days of infection: high fever. severe and persistent headache. neck stiffness. confusion, hallucinations. Sleepiness sore throat. nausea and vomiting. disturbances of taste and smell.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 44 year old IV drug abuser was taken to the hospital in a state of high grade fever and drowsiness. The clinician suspected it to be CNS infection and ordered a CSF analysis. The opening pressure was raised and no organisms were seen on routine stain. Considering his immunocompromised status, he ordered a special stain and results came out were positive. Choose the incorrect statement.", "options": [{"label": "A", "text": "This is a urease negative, phenol oxidase positive yeast like fungus.", "correct": true}, {"label": "B", "text": "India Ink stain is use to stain the organism.", "correct": false}, {"label": "C", "text": "Eucalyptus trees are the reservoir for one the varieties of pathogen.", "correct": false}, {"label": "D", "text": "Bird seed agar and Niger seed agar is used for the culture of microbe.", "correct": false}], "correct_answer": "A. This is a urease negative, phenol oxidase positive yeast like fungus.", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1687505018418-QTDV013016IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>This is a urease negative, phenol oxidase positive yeast like fungus. Cryptococcus species are urease positive, phenoloxidase positive, true yeasts and causes infection in immunodeficiency and immune compromised patients. (IV drug abuser’s, MSM, sex workers etc).</p>\n<p><strong>Highyeild:</strong></p><p>Cryptococcal meningitis is a fungal infection caused by Cryptococcus neoformans, which is often found in bird droppings. If breathed in, the spores can multiply and spread from the lungs to the membranes that cover the brain or spinal cord, causing meningitis.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B. It is capsulated organism and capsule shows Maltese cross appearance on polarising microscope. Option C. For var gatti - Eucalyptus trees are reservoir, and for var grubii, pegeion feces are reservoir. Option D. Bird seed agar and Niger seed agar is used for the culture of microbe and it shows black colonies on them.</p>\n<p><strong>Extraedge:</strong></p><p>Drugs used to treat cryptococcal meningitis Only three antifungal drugs have reliable efficacy in vivo: intravenous amphotericin B, oral flucytosine and oral fluconazole.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

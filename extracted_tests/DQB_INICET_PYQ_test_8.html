@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Medicine Inicet Pyq</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Medicine Inicet Pyq</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                266 Questions | 616 Total Marks | 276 min Duration | ~62.26 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 266 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 276 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 266</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Medicine Inicet Pyq - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 266</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 266 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Infertlitiy in karatgener:", "options": [{"label": "A", "text": "Asthenozoospermia", "correct": true}, {"label": "B", "text": "Oligospermia", "correct": false}, {"label": "C", "text": "Blockage of epididymis", "correct": false}, {"label": "D", "text": "Undescended testes", "correct": false}], "correct_answer": "A. Asthenozoospermia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Vitamin D toxicity induced hypercalcemia is treated by:", "options": [{"label": "A", "text": "Chloroquine", "correct": false}, {"label": "B", "text": "Hydroxychloroquine", "correct": false}, {"label": "C", "text": "Dexamethasone", "correct": true}, {"label": "D", "text": "Ketoconazole", "correct": false}], "correct_answer": "C. Dexamethasone", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12557321704880105/12557321704880105.m3u8"}, {"text": "A 56-years-old female had gradually diminishing visual field. She was found to have to a pituitary mass and underwent Trans-sphenoidal hypophysectomy. Now she has low ACTH, TSH, FSH and LH. Which of the following hormone supplements will not be given?", "options": [{"label": "A", "text": "Glucocorticoids", "correct": false}, {"label": "B", "text": "Mineralocorticoids", "correct": true}, {"label": "C", "text": "Levothyroxine", "correct": false}, {"label": "D", "text": "Estradiol", "correct": false}], "correct_answer": "B. Mineralocorticoids", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Addison disease is commonly associated with:", "options": [{"label": "A", "text": "Autoimmune adrenalitis", "correct": true}, {"label": "B", "text": "Adrenocortical carcinoma", "correct": false}, {"label": "C", "text": "Hypernephroma", "correct": false}, {"label": "D", "text": "Medullary carcinoma of thyroid", "correct": false}], "correct_answer": "A. Autoimmune adrenalitis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with diabetes has blood glucose 160 mg/dl. What will be the best non pharmacologic management advice?", "options": [{"label": "A", "text": "at least 80 g dietary fibre", "correct": false}, {"label": "B", "text": "less than 5000 mg/dl salt intake", "correct": false}, {"label": "C", "text": "fats in diet with not more than 30 %calories", "correct": true}, {"label": "D", "text": "cholesterol <100mg", "correct": false}], "correct_answer": "C. fats in diet with not more than 30 %calories", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Bone fracture seen with which anti diabetes medicine", "options": [{"label": "A", "text": "Canagliflozin", "correct": true}, {"label": "B", "text": "Rosiglitazone", "correct": false}, {"label": "C", "text": "Repaglinide", "correct": false}, {"label": "D", "text": "Voglibose", "correct": false}], "correct_answer": "A. Canagliflozin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A Patient presents with prognathism, enlarged hand & feet. Most likely transcription factor involved in the disorder is:", "options": [{"label": "A", "text": "SF-1", "correct": false}, {"label": "B", "text": "DAX -1", "correct": false}, {"label": "C", "text": "GATA -2", "correct": false}, {"label": "D", "text": "Pit-1", "correct": true}], "correct_answer": "D. Pit-1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Causes of secondary hyper parathyroidism are all EXECEPT?", "options": [{"label": "A", "text": "Vitamin D deficiency", "correct": false}, {"label": "B", "text": "GI malabsorption", "correct": false}, {"label": "C", "text": "Chronic kidney disease", "correct": false}, {"label": "D", "text": "Parathyroid adenoma", "correct": true}], "correct_answer": "D. Parathyroid adenoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not true about SIADH ?", "options": [{"label": "A", "text": "Serum Na<135 meg/L", "correct": false}, {"label": "B", "text": "Euvolumia", "correct": false}, {"label": "C", "text": "Urine Na <20", "correct": true}, {"label": "D", "text": "Urine osm >100", "correct": false}], "correct_answer": "C. Urine Na <20", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Regarding mycoplasma pneumonia all are true except", "options": [{"label": "A", "text": "Serology is important", "correct": false}, {"label": "B", "text": "Culture is not recommended for routine diagnosis", "correct": false}, {"label": "C", "text": "Responds to coamoxiclav", "correct": true}, {"label": "D", "text": "Lung infiltrates are seen", "correct": false}], "correct_answer": "C. Responds to coamoxiclav", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/1996301701945308/1996301701945308.m3u8"}, {"text": "Next step to be done in a case of 50 year old chronic smoker with mild recurrent hemoptysis without fever or weight loss. Chest Xray is normal", "options": [{"label": "A", "text": "Cect chest", "correct": true}, {"label": "B", "text": "Fibre optic bronchoscope", "correct": false}, {"label": "C", "text": "Bronchography Single", "correct": false}, {"label": "D", "text": "MRI", "correct": false}], "correct_answer": "A. Cect chest", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/46329261701945325/46329261701945325.m3u8"}, {"text": "High anion gap is found in", "options": [{"label": "A", "text": "Metabolic alkalosis", "correct": false}, {"label": "B", "text": "Metabolic acidosis", "correct": true}, {"label": "C", "text": "Respiratory alkalosis", "correct": false}, {"label": "D", "text": "Respiratory acidosis", "correct": false}], "correct_answer": "B. Metabolic acidosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35599111701945343/35599111701945343.m3u8"}, {"text": "Which of the following is not seen in aspergillosis", "options": [{"label": "A", "text": "Cavity", "correct": false}, {"label": "B", "text": "Pleural effusion", "correct": true}, {"label": "C", "text": "Ground glass opacity", "correct": false}, {"label": "D", "text": "Wedge shaped consolidation", "correct": false}], "correct_answer": "B. Pleural effusion", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Bed ridden patient aspirates. Lung segment involved", "options": [{"label": "A", "text": "Right upper lobe apical", "correct": false}, {"label": "B", "text": "Right upper lobe posterior", "correct": true}, {"label": "C", "text": "Right lower lobe medial", "correct": false}, {"label": "D", "text": "Right lower lobe posterior", "correct": false}], "correct_answer": "B. Right upper lobe posterior", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "To Diagnose Acid Base Disorder Which Of The Following Is Required 1. Ph Of Arterial Blood 2. Ph Of Venous Blood 3. Po2 Of Venous Blood 4. Pco2 Of Venous Blood Select the correct answer from the given below code:", "options": [{"label": "A", "text": "1,2", "correct": false}, {"label": "B", "text": "1,4", "correct": true}, {"label": "C", "text": "1,3,4", "correct": false}, {"label": "D", "text": "1, 2, 3, 4", "correct": false}], "correct_answer": "B. 1,4", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Patient Had Nasal Polyp, Recurrent Sinusitis, Nodular Pulmonary Cavitary Changes And Renal Disease. Next Step In Your Evaluation Would Be ?", "options": [{"label": "A", "text": "Anca And Rule Out Vasculitis", "correct": true}, {"label": "B", "text": "Bronchoalveolar Lavage", "correct": false}, {"label": "C", "text": "Echocardiography", "correct": false}, {"label": "D", "text": "Endobronchial Biopsy", "correct": false}], "correct_answer": "A. Anca And Rule Out Vasculitis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61426021701945363/61426021701945363.m3u8"}, {"text": "Identify the pathology in the given flow volume curve:", "options": [{"label": "A", "text": "Fixed distal airway obstruction", "correct": false}, {"label": "B", "text": "Fixed central airway obstruction", "correct": true}, {"label": "C", "text": "Variable intrathoracic obstruction", "correct": false}, {"label": "D", "text": "Variable extrathoracic obstruction", "correct": false}], "correct_answer": "B. Fixed central airway obstruction", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/image-20230402185449-4.png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/68737101701945392/68737101701945392.m3u8"}, {"text": "Which of the following drug is known to decrease mortality in critically ill COVID pt?", "options": [{"label": "A", "text": "Remdesivir", "correct": false}, {"label": "B", "text": "Hydroxychloroquine", "correct": false}, {"label": "C", "text": "Toclizumab", "correct": false}, {"label": "D", "text": "Dexamethasone", "correct": true}], "correct_answer": "D. Dexamethasone", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/25863361701945406/25863361701945406.m3u8"}, {"text": "Match column A & B and select answer using the code given below", "options": [{"label": "A", "text": "2. 3. 1. 5", "correct": false}, {"label": "B", "text": "2. 1. 4. 5", "correct": true}, {"label": "C", "text": "2. 5. 3. 4", "correct": false}, {"label": "D", "text": "4. 1. 3. 5", "correct": false}], "correct_answer": "B. 2. 1. 4. 5", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Capture(1174).JPG"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Dugs not used in severe COVID 19 pts", "options": [{"label": "A", "text": "Dexamethasone", "correct": false}, {"label": "B", "text": "Remdesivir", "correct": false}, {"label": "C", "text": "Low molecular weight heparin", "correct": false}, {"label": "D", "text": "HCQ", "correct": true}], "correct_answer": "D. HCQ", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76041721701945421/76041721701945421.m3u8"}, {"text": "IDENTIFY THE FOLLOWING OXYGEN DELIVERY DEVICE", "options": [{"label": "A", "text": "Simple face mask", "correct": false}, {"label": "B", "text": "High flow nasal canula", "correct": true}, {"label": "C", "text": "Non invasive ventilation", "correct": false}, {"label": "D", "text": "Venturi mask", "correct": false}], "correct_answer": "B. High flow nasal canula", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/image-20230402190038-1.png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "HOPSITAL ADMISSION CRITERIA FOR COVID PT:", "options": [{"label": "A", "text": "Multiple comorbidities", "correct": false}, {"label": "B", "text": "Spo2 <92%", "correct": false}, {"label": "C", "text": "Respiratory rate >25/min", "correct": false}, {"label": "D", "text": "Pressure in the chest", "correct": true}], "correct_answer": "D. Pressure in the chest", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "TRUE REGARDING COPD SPIROMETRY PARAMETERS. WHICH OF THE FOLLOWING IS INCREASED a. FeV1/FVC b. Residual volume c. FRC d. TLC", "options": [{"label": "A", "text": "ABCD", "correct": false}, {"label": "B", "text": "Only a & b", "correct": false}, {"label": "C", "text": "Only abc", "correct": false}, {"label": "D", "text": "Only bcd", "correct": true}], "correct_answer": "D. Only bcd", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/47893161701945461/47893161701945461.m3u8"}, {"text": "ALL ARE CAUSES OF HIGH ANIONGAP ACIDOSIS EXCEPT", "options": [{"label": "A", "text": "RENAL FAILURE", "correct": false}, {"label": "B", "text": "LACTIC ACIDOSIS", "correct": false}, {"label": "C", "text": "RENAL ACIDURIA", "correct": true}, {"label": "D", "text": "ASPIRIN", "correct": false}], "correct_answer": "C. RENAL ACIDURIA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/55531421701945477/55531421701945477.m3u8"}, {"text": "Most commonly seen in case of covid", "options": [{"label": "A", "text": "Diffuse alveolar damage", "correct": true}, {"label": "B", "text": "Endothelial injury", "correct": false}, {"label": "C", "text": "Fibrin thrombus", "correct": false}, {"label": "D", "text": "Pulmonary infarction", "correct": false}], "correct_answer": "A. Diffuse alveolar damage", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/62805571701945489/62805571701945489.m3u8"}, {"text": "A 30/F with history of mucopurulent sputum and cough 2 years with following CT features. Diagnosis?", "options": [{"label": "A", "text": "Hydratid cyst", "correct": false}, {"label": "B", "text": "Cystic bronchiectasis", "correct": true}, {"label": "C", "text": "Sarcoidosis", "correct": false}, {"label": "D", "text": "Cystic fibrosis", "correct": false}], "correct_answer": "B. Cystic bronchiectasis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/image-20230402190357-3.png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76456531701945511/76456531701945511.m3u8"}, {"text": "Which is correct regarding ILD", "options": [{"label": "A", "text": "Honeycombing is common pattern in nsip", "correct": false}, {"label": "B", "text": "Respiratory bronchiolitis has strong association with smoking UIP Honey combin", "correct": true}, {"label": "C", "text": "Idiopathic pulmonary fibrosis has poor response to steroids", "correct": false}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "B. Respiratory bronchiolitis has strong association with smoking UIP Honey combin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/1369461701945524/1369461701945524.m3u8"}, {"text": "IDENTIFY QUADRANT “A” in the graph", "options": [{"label": "A", "text": "Met Alkalosis", "correct": false}, {"label": "B", "text": "Acute Resp Acidosis", "correct": false}, {"label": "C", "text": "Met Acidosis", "correct": true}, {"label": "D", "text": "Acute Resp Alkalosis", "correct": false}], "correct_answer": "C. Met Acidosis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/image-20230402190546-4.png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Causes of central cyanosis are all except-", "options": [{"label": "A", "text": "Methemoglobinemia", "correct": false}, {"label": "B", "text": "Pulmonary arteriovenous fistula", "correct": false}, {"label": "C", "text": "Hypothermia", "correct": true}, {"label": "D", "text": "High altitude", "correct": false}], "correct_answer": "C. Hypothermia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67990461704880128/67990461704880128.m3u8"}, {"text": "Which of the following will have hypoxia with normal mm alveolar arterial gradient?", "options": [{"label": "A", "text": "Shunt", "correct": false}, {"label": "B", "text": "V/Q mismatch", "correct": false}, {"label": "C", "text": "Hypoventilation", "correct": true}, {"label": "D", "text": "Alveolar membrane disease", "correct": false}], "correct_answer": "C. Hypoventilation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A female with primary pulmonary hypertension with NYHA class II has negative vaso-reactive test. Which of the following is next step in management", "options": [{"label": "A", "text": "lloprost", "correct": false}, {"label": "B", "text": "Ambrisentan", "correct": true}, {"label": "C", "text": "IV Epoprostenol", "correct": false}, {"label": "D", "text": "Amlodipine", "correct": false}], "correct_answer": "B. Ambrisentan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23669741701945537/23669741701945537.m3u8"}, {"text": "Calculate the anion gap from the following information: Na+= 137 mmol/L K+= 4 mmol/L Cl- = 110mmol/L HCO 3-=15mmol/L", "options": [{"label": "A", "text": "22 mmol/L", "correct": false}, {"label": "B", "text": "16 mmol/L", "correct": false}, {"label": "C", "text": "10 mmol/L", "correct": false}, {"label": "D", "text": "12 mmol/L", "correct": true}], "correct_answer": "D. 12 mmol/L", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most common pulmonary manifestation of SLE:", "options": [{"label": "A", "text": "Shrinking Lung", "correct": false}, {"label": "B", "text": "Pleuritis", "correct": true}, {"label": "C", "text": "Intra alveolar hemorrhage", "correct": false}, {"label": "D", "text": "Interstitial inflammation", "correct": false}], "correct_answer": "B. Pleuritis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following most associated with respiratory alkalosis:", "options": [{"label": "A", "text": "Assisted control mode ventilation", "correct": true}, {"label": "B", "text": "Controlled mandatory", "correct": false}, {"label": "C", "text": "Pressure controlled", "correct": false}, {"label": "D", "text": "SIMV", "correct": false}], "correct_answer": "A. Assisted control mode ventilation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient 60-years-old man present with renal failure develops vomiting and restless in ICU ABG Analysis showed Na+-145, Cl-=100 HCO3--25, PaCO2=40 and pH= 7.40. What is the most likely metabolic abnormality?", "options": [{"label": "A", "text": "High Anion gap metabolic acidosis with metabolic alkalosis", "correct": true}, {"label": "B", "text": "Normal ABG", "correct": false}, {"label": "C", "text": "Normal anion gap, metabolic acidosis", "correct": false}, {"label": "D", "text": "High Anion gap metabolic acidosis with normal metabolic acidosis", "correct": false}], "correct_answer": "A. High Anion gap metabolic acidosis with metabolic alkalosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69821041704880140/69821041704880140.m3u8"}, {"text": "Reno pulmonary involvement include: A. Good pasture Syndrome B. Leptospira C. Hanta virus D. Wegener

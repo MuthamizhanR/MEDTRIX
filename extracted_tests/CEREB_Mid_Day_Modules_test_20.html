@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Mid Day Module (Ent 2)   2025 01 23</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Mid Day Module (Ent 2)   2025 01 23</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                50 Questions | 200 Total Marks | 60 min Duration | ~72.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 50 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 60 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 50</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Mid Day Module (Ent 2)   2025 01 23 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 50</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 50 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which of the following structures is not a part of the middle ear cleft?", "options": [{"label": "A", "text": "Eustachian tube", "correct": false}, {"label": "B", "text": "Mastoid air cells", "correct": false}, {"label": "C", "text": "Aditus to mastoid antrum", "correct": false}, {"label": "D", "text": "Internal auditory canal", "correct": true}], "correct_answer": "D. Internal auditory canal", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-05-19%20142729.jpg"], "explanation": "<p><strong>Ans. D) Internal auditory canal</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The middle ear cleft includes the Eustachian tube, middle ear cavity, aditus, mastoid antrum, and mastoid air cells.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 5</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 5</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements regarding the lateral wall of the middle ear is correct?", "options": [{"label": "A", "text": "It is formed by the round window", "correct": false}, {"label": "B", "text": "Scutum is located on the medial wall of the middle ear", "correct": false}, {"label": "C", "text": "Tympanic membrane forms the lateral wall of the middle ear", "correct": true}, {"label": "D", "text": "Scutum is part of the posterior wall of the middle ear", "correct": false}], "correct_answer": "C. Tympanic membrane forms the lateral wall of the middle ear", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-05-17%20185841_LgY1VIO.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-05-19%20142904.jpg"], "explanation": "<p><strong>Ans. C) Tympanic membrane forms the lateral wall of the middle ear</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The lateral wall of the middle ear is formed by the tympanic membrane and the scutum, which is often eroded in cholesteatoma.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 5</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 5</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following correctly describes MacEwen’s triangle, a key surgical landmark in mastoid surgery?", "options": [{"label": "A", "text": "It is used to identify the facial recess, which lies 1.5 cm deep to it", "correct": false}, {"label": "B", "text": "It is bounded by the posterosuperior meatal wall, zygomatic arch, and sigmoid sinus", "correct": false}, {"label": "C", "text": "It helps identify the mastoid antrum, which lies approximately 1.5 cm deep to it", "correct": true}, {"label": "D", "text": "It is bordered superiorly by the parietal eminence and anteriorly by the Eustachian tube", "correct": false}], "correct_answer": "C. It helps identify the mastoid antrum, which lies approximately 1.5 cm deep to it", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-05-19%20143458.jpg"], "explanation": "<p><strong>Ans. C) It helps identify the mastoid antrum, which lies approximately 1.5 cm deep to it</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ MacEwen’s triangle is a surface landmark bounded by the posterosuperior meatal wall, temporal line, and a posterior tangent to the external canal, used to identify the mastoid antrum located approximately 1.5 cm deep to it.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 5,6</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 5,6</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "How is the stapes footplate attached to the oval window of the cochlea?", "options": [{"label": "A", "text": "By fibrous bands at two points of contact", "correct": false}, {"label": "B", "text": "By the annular ligament circumferentially along its periphery", "correct": true}, {"label": "C", "text": "Through a direct bony fusion with the vestibule", "correct": false}, {"label": "D", "text": "By a fluid seal formed by the round window membrane", "correct": false}], "correct_answer": "B. By the annular ligament circumferentially along its periphery", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_YlETaMS.jpeg"], "explanation": "<p><strong>Ans. B) By the annular ligament circumferentially along its periphery</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The stapes footplate is attached to the oval window via the annular ligament in a circumferential manner, allowing sound transmission to the inner ear.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 86</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 86</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient develops sweating and flushing over the cheek while eating, following parotid gland surgery. Frey’s syndrome is suspected. Which of the following nerves is involved in the aberrant reinnervation responsible for this condition?", "options": [{"label": "A", "text": "Chorda tympani", "correct": false}, {"label": "B", "text": "Auriculotemporal nerve", "correct": true}, {"label": "C", "text": "Greater auricular nerve", "correct": false}, {"label": "D", "text": "Nerve to mylohyoid", "correct": false}], "correct_answer": "B. Auriculotemporal nerve", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-05-19%20144616.jpg"], "explanation": "<p><strong>Ans. B) Auriculotemporal nerve</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Frey’s syndrome results from aberrant regeneration of auriculotemporal nerve fibres that originally carried secretomotor supply to the parotid gland.</li><li>➤ Parasympathetic pathway to the parotid gland :-</li><li>➤ Parasympathetic pathway to the parotid gland :-</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 8</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 8</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following best describes the principle and interpretation of the Stenger test in a patient suspected of feigning unilateral hearing loss?", "options": [{"label": "A", "text": "A patient with true unilateral deafness hears sound only in the affected ear when both ears are stimulated", "correct": false}, {"label": "B", "text": "A malingerer will deny hearing any sound when the stimulus is stronger in the \"deaf\" ear and weaker in the normal ear", "correct": true}, {"label": "C", "text": "The test is used to confirm bilateral conductive hearing loss using tuning forks of different frequencies", "correct": false}, {"label": "D", "text": "A positive Stenger test confirms the diagnosis of sensorineural hearing loss in both ears", "correct": false}], "correct_answer": "B. A malingerer will deny hearing any sound when the stimulus is stronger in the \"deaf\" ear and weaker in the normal ear", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) A malingerer will deny hearing any sound when the stimulus is stronger in the \"deaf\" ear and weaker in the normal ear</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The Stenger test is used to detect unilateral malingering; if a patient denies hearing when a louder tone is presented to the \"deaf\" ear, it indicates feigned hearing loss (positive Stenger test).</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 22</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 22</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45yr old female presented with gradual onset progressive hearing loss in the right ear associated with pulsatile tinnitus. The tympanic membrane appeared reddish. TFT showed Rinne was negative on the right side, positive on the left and Weber lateralised to the right. Tinnitus temporarily ceased with carotid pressure and auscultation over mastoid revealed an audible bruit. Most likely diagnosis:", "options": [{"label": "A", "text": "ASOM", "correct": false}, {"label": "B", "text": "Glomus Jugulare", "correct": true}, {"label": "C", "text": "Acoustic Neuroma", "correct": false}, {"label": "D", "text": "Otosclerosis", "correct": false}], "correct_answer": "B. Glomus Jugulare", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. ASOM (Acute Suppurative Otitis Media): This condition typically presents with rapid onset ear pain, fever, and hearing loss . The presentation of pulsatile tinnitus, a reddish tympanic membrane, and a bruit over the mastoid are not characteristic of ASOM.</li><li>• Option A. ASOM (Acute Suppurative Otitis Media):</li><li>• rapid onset</li><li>• ear pain, fever,</li><li>• hearing loss</li><li>• Option C. Acoustic Neuroma (Vestibular Schwannoma): This is a benign tumor of the cranial nerve VIII ( vestibulocochlear nerve ). It typically presents with gradual hearing loss and tinnitus but does not produce a reddish tympanic membrane or an audible bruit. Also, acoustic neuroma usually causes sensorineural hearing loss, not conductive hearing loss.</li><li>• Option C. Acoustic Neuroma (Vestibular Schwannoma):</li><li>• benign tumor</li><li>• cranial nerve VIII</li><li>• vestibulocochlear nerve</li><li>• gradual hearing loss</li><li>• tinnitus</li><li>• sensorineural hearing loss,</li><li>• Option D. Otosclerosis: Here, conductive hearing loss with intact tympanic membrane is noted but tinnitus is seen in only few people. And tinnitus, if present, is not pulsatile. Aquino sign is not seen here.</li><li>• Option D. Otosclerosis:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Glomus jugulare in patients presenting with pulsatile tinnitus, conductive hearing loss (as indicated by negative Rinne and lateralization of Weber to the affected side ), a reddish tympanic membrane , and an audible bruit over the mastoid .</li><li>➤ Glomus jugulare</li><li>➤ pulsatile tinnitus, conductive hearing loss</li><li>➤ negative Rinne and lateralization of Weber</li><li>➤ affected side</li><li>➤ reddish tympanic membrane</li><li>➤ audible bruit</li><li>➤ mastoid</li><li>➤ Ref : P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 109</li><li>➤ :</li><li>➤ P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 109</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements about the galvanic test is correct?", "options": [{"label": "A", "text": "It helps differentiate cochlear from vestibular dysfunction", "correct": false}, {"label": "B", "text": "It is useful to localize lesions within the vestibular nerve versus end organ", "correct": true}, {"label": "C", "text": "The test is performed with the patient seated and eyes open", "correct": false}, {"label": "D", "text": "Normally, the patient sways away from the side of anodal stimulation", "correct": false}], "correct_answer": "B. It is useful to localize lesions within the vestibular nerve versus end organ", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) It is useful to localize lesions within the vestibular nerve versus end organ</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The galvanic test is a vestibular assessment that helps differentiate end organ (labyrinthine) lesions from vestibular nerve lesions by evaluating postural sway in response to anodal stimulation.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 44</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 44</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements regarding distraction techniques used in pediatric hearing assessment is correct?", "options": [{"label": "A", "text": "Distraction test is reliable only after 12 months of age when the child develops speech", "correct": false}, {"label": "B", "text": "It uses pure tone audiometry to assess hearing thresholds in infants", "correct": false}, {"label": "C", "text": "It is used around 6–7 months of age when the child begins to localize sound", "correct": true}, {"label": "D", "text": "Only high-frequency sounds are used, such as 8 kHz rattles or whistles", "correct": false}], "correct_answer": "C. It is used around 6–7 months of age when the child begins to localize sound", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_bSypO2o.png"], "explanation": "<p><strong>Ans. C) It is used around 6–7 months of age when the child begins to localize sound</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Distraction testing is performed at 6–7 months of age to assess hearing by observing the child’s head-turning response to various sound stimuli presented out of sight.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 118</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 118</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements about the Threshold Tone Decay Test is correct?", "options": [{"label": "A", "text": "A tone of 1000 Hz is presented at 20 dB above threshold for 60 seconds to assess cochlear pathology", "correct": false}, {"label": "B", "text": "A decay of more than 25 dB suggests a cochlear lesion", "correct": false}, {"label": "C", "text": "A tone of 4000 Hz is presented at 5 dB above threshold, and intensity is increased until the patient can hear it continuously for 60 seconds", "correct": true}, {"label": "D", "text": "The test is primarily used to assess the presence of middle ear pathology", "correct": false}], "correct_answer": "C. A tone of 4000 Hz is presented at 5 dB above threshold, and intensity is increased until the patient can hear it continuously for 60 seconds", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_fSsxmfL.png"], "explanation": "<p><strong>Ans. C) A tone of 4000 Hz is presented at 5 dB above threshold, and intensity is increased until the patient can hear it continuously for 60 seconds</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The Threshold Tone Decay Test detects retrocochlear lesions by measuring how much above threshold a 4000 Hz tone must be presented for the patient to hear it continuously for 60 seconds.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 26</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 26</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following correctly describes the division of the vestibular system?", "options": [{"label": "A", "text": "The central vestibular system includes the utricle, saccule, and semicircular ducts", "correct": false}, {"label": "B", "text": "The peripheral vestibular system is responsible for integrating impulses with other sensory systems", "correct": false}, {"label": "C", "text": "The central vestibular system includes vestibular nuclei and their connections within the CNS", "correct": true}, {"label": "D", "text": "The peripheral vestibular system includes the cochlea and auditory nerve", "correct": false}], "correct_answer": "C. The central vestibular system includes vestibular nuclei and their connections within the CNS", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_uDTnFHJ.png"], "explanation": "<p><strong>Ans. C) The central vestibular system includes vestibular nuclei and their connections within the CNS</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The central vestibular system consists of vestibular nuclei and fibre tracts in the CNS, which integrate vestibular impulses to maintain body balance.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 17</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 17</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements correctly explains the importance of phase differential between the oval and round windows in the auditory system?", "options": [{"label": "A", "text": "Sound waves reach both oval and round windows simultaneously to enhance perilymph vibration", "correct": false}, {"label": "B", "text": "Ossicular chain delivers sound preferentially to the round window for cochlear stimulation", "correct": false}, {"label": "C", "text": "Phase differential ensures compression at the oval window coincides with compression at the round window", "correct": false}, {"label": "D", "text": "Phase differential prevents cancellation of waves and ensures perilymph movement by offsetting compression and rarefaction", "correct": true}], "correct_answer": "D. Phase differential prevents cancellation of waves and ensures perilymph movement by offsetting compression and rarefaction", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_SYp5Or1.png"], "explanation": "<p><strong>Ans. D) Phase differential prevents cancellation of waves and ensures perilymph movement by offsetting compression and rarefaction</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Phase differential between the oval and round windows ensures alternate compression and rarefaction, preventing cancellation of waves and enabling perilymph movement for effective hearing.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 13.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 13.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements best describes the physiological basis for body equilibrium?", "options": [{"label": "A", "text": "Visual input is the only component responsible for body balance in static posture", "correct": false}, {"label": "B", "text": "The vestibular system acts independently and is unaffected by somatosensory inputs", "correct": false}, {"label": "C", "text": "Body equilibrium is maintained by a push-pull system between bilateral vestibular inputs, corrected by reflexes like vestibulo-ocular and vestibulospinal", "correct": true}, {"label": "D", "text": "Loss of equilibrium is only seen during rapid movement, not in static imbalance", "correct": false}], "correct_answer": "C. Body equilibrium is maintained by a push-pull system between bilateral vestibular inputs, corrected by reflexes like vestibulo-ocular and vestibulospinal", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Body equilibrium is maintained by a push-pull system between bilateral vestibular inputs, corrected by reflexes like vestibulo-ocular and vestibulospinal</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Equilibrium is maintained by a bilateral vestibular push-pull system integrated with visual and somatosensory input, corrected by reflexes like vestibulo-ocular and vestibulospinal responses.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 18</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 18</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements about the Short Increment Sensitivity Index (SISI) test is correct?", "options": [{"label": "A", "text": "SISI score is typically high in retrocochlear lesions like vestibular schwannoma", "correct": false}, {"label": "B", "text": "The test uses a continuous tone presented at threshold level with 5 dB increments", "correct": false}, {"label": "C", "text": "A SISI score between 70–100% is highly suggestive of cochlear pathology", "correct": true}, {"label": "D", "text": "Conductive hearing loss usually shows a SISI score above 70%", "correct": false}], "correct_answer": "C. A SISI score between 70–100% is highly suggestive of cochlear pathology", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_VlRtKrZ.png"], "explanation": "<p><strong>Ans. C) A SISI score between 70–100% is highly suggestive of cochlear pathology</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ A SISI score of 70–100% is indicative of cochlear pathology , helping differentiate it from retrocochlear and conductive causes of hearing loss.</li><li>➤ cochlear pathology</li><li>➤ retrocochlear</li><li>➤ conductive</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 26</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 26</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements about Autoimmune Inner Ear Disease (AIED) is correct?", "options": [{"label": "A", "text": "AIED typically presents with sudden, unilateral conductive hearing loss", "correct": false}, {"label": "B", "text": "Methotrexate is the first-line treatment for all patients diagnosed with AIED", "correct": false}, {"label": "C", "text": "Presence of anti-heat shock protein 70 (anti-Hsp70) antibodies may correlate with steroid responsiveness", "correct": true}, {"label": "D", "text": "Progression is defined as a threshold shift of 5 dB at any frequency on follow-up audiograms", "correct": false}], "correct_answer": "C. Presence of anti-heat shock protein 70 (anti-Hsp70) antibodies may correlate with steroid responsiveness", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Presence of anti-heat shock protein 70 (anti-Hsp70) antibodies may correlate with steroid responsiveness</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Presence of anti-Hsp70 antibodies in autoimmune inner ear disease may correlate with active disease and steroid responsiveness, aiding in diagnosis and treatment planning.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 36</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 36</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following findings during a Hallpike manoeuvre is most suggestive of benign paroxysmal positional vertigo (BPPV) due to a peripheral cause?", "options": [{"label": "A", "text": "Immediate onset of nystagmus, direction changing, non-fatiguable", "correct": false}, {"label": "B", "text": "Nystagmus with no vertigo and variable direction in each head position", "correct": false}, {"label": "C", "text": "Nystagmus with 2–20 second latency, fixed direction toward the undermost ear, and fatiguable", "correct": true}, {"label": "D", "text": "Nystagmus lasting over 1 minute, present in straight head-hanging position only", "correct": false}], "correct_answer": "C. Nystagmus with 2–20 second latency, fixed direction toward the undermost ear, and fatiguable", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Nystagmus with 2–20 second latency, fixed direction toward the undermost ear, and fatiguable</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ BPPV is indicated by nystagmus with a latency of 2–20 seconds, fixed direction toward the undermost ear, and fatiguability on repeated Hallpike manoeuvre testing.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 42</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 42</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following findings is most consistent with midline cerebellar dysfunction?", "options": [{"label": "A", "text": "Adiadochokinesia and abnormal finger–nose test", "correct": false}, {"label": "B", "text": "Dysmetria and rebound phenomenon", "correct": false}, {"label": "C", "text": "Truncal ataxia and wide-based gait", "correct": true}, {"label": "D", "text": "Hemiplegia with spasticity and positive Babinski sign", "correct": false}], "correct_answer": "C. Truncal ataxia and wide-based gait", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Truncal ataxia and wide-based gait</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Midline cerebellar dysfunction typically presents with truncal ataxia, wide-based gait, falls in any direction, and difficulty turning while walking.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 42</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 42</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements regarding cochlear function and auditory transduction is correct?", "options": [{"label": "A", "text": "All frequencies stimulate the entire length of the basilar membrane uniformly", "correct": false}, {"label": "B", "text": "Shearing between basilar and tectorial membranes distorts hair cells, initiating cochlear microphonics", "correct": true}, {"label": "C", "text": "Low-frequency sounds stimulate the basal turn of the cochlea, while high frequencies reach the apex", "correct": false}, {"label": "D", "text": "The primary auditory neurons are multipolar and located in the cochlear nuclei", "correct": false}], "correct_answer": "B. Shearing between basilar and tectorial membranes distorts hair cells, initiating cochlear microphonics", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_WsT4PwG.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/image_f2pFK6N.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/image_IVmROAw.png"], "explanation": "<p><strong>Ans. B) Shearing between basilar and tectorial membranes distorts hair cells, initiating cochlear microphonics</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Shearing between the basilar and tectorial membranes distorts hair cells, generating cochlear microphonics and initiating auditory transduction based on frequency-specific displacement along the basilar membrane.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 13</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 13</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements about Visual Reinforcement Audiometry (VRA) is correct?", "options": [{"label": "A", "text": "VRA is best suited for children above 3 years of age", "correct": false}, {"label": "B", "text": "VRA involves conditioning the child to turn toward sound, reinforced by visual stimuli like flashing lights or animated toys", "correct": true}, {"label": "C", "text": "VRA uses only bone conduction testing as headphones are not well tolerated by infants", "correct": false}, {"label": "D", "text": "VRA cannot determine hearing thresholds using standard audiometric techniques", "correct": false}], "correct_answer": "B. VRA involves conditioning the child to turn toward sound, reinforced by visual stimuli like flashing lights or animated toys", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_CJzJ8JS.png"], "explanation": "<p><strong>Ans. B) VRA involves conditioning the child to turn toward sound, reinforced by visual stimuli like flashing lights or animated toys</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Visual Reinforcement Audiometry (VRA) is used in children aged 6 months to 2 years to assess hearing by conditioning head-turning responses to sound, reinforced with visual stimuli.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 118</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 118</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements regarding the cold-air caloric test is correct?", "options": [{"label": "A", "text": "It is preferred over water caloric testing in patients with intact tympanic membranes", "correct": false}, {"label": "B", "text": "It uses warm air to stimulate the cochlear portion of the inner ear", "correct": false}, {"label": "C", "text": "It is contraindicated in tympanic membrane perforation", "correct": false}, {"label": "D", "text": "It is a qualitative vestibular test using cooled air through a Dundas Grant tube", "correct": true}], "correct_answer": "D. It is a qualitative vestibular test using cooled air through a Dundas Grant tube", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) It is a qualitative vestibular test using cooled air through a Dundas Grant tube</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The cold-air caloric test is a qualitative vestibular test used when the tympanic membrane is perforated, utilizing cooled air delivered through a Dundas Grant tube.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 43</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 43</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Based on the development timeline of ear structures, which of the following completes its development latest during fetal life?", "options": [{"label": "A", "text": "Pinna", "correct": false}, {"label": "B", "text": "External auditory meatus", "correct": false}, {"label": "C", "text": "Cochlea", "correct": false}, {"label": "D", "text": "Middle ear", "correct": true}], "correct_answer": "D. Middle ear", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_D7MAz95.png"], "explanation": "<p><strong>Ans. D) Middle ear</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Among the ear structures, the middle ear completes its development last—by the 30th week of gestation.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 12</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 12</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements regarding the auditory neural pathway is correct?", "options": [{"label": "A", "text": "Spiral ganglion is located in the modiolus of the cochlea and contains multipolar neurons", "correct": false}, {"label": "B", "text": "The auditory cortex is located in the inferior frontal gyrus (Brodmann area 4)", "correct": false}, {"label": "C", "text": "Each ear is represented only in the contralateral cerebral hemisphere", "correct": false}, {"label": "D", "text": "The axons of bipolar neurons in the spiral ganglion form the cochlear nerve and terminate in the dorsal and ventral cochlear nuclei", "correct": true}], "correct_answer": "D. The axons of bipolar neurons in the spiral ganglion form the cochlear nerve and terminate in the dorsal and ventral cochlear nuclei", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_FlNn3yb.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/image_jGcaypE.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/image_8WIxqGm.png"], "explanation": "<p><strong>Ans. D) The axons of bipolar neurons in the spiral ganglion form the cochlear nerve and terminate in the dorsal and ventral cochlear nuclei</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The cochlear nerve arises from bipolar neurons in the spiral ganglion and projects to the dorsal and ventral cochlear nuclei, with the auditory pathway ascending bilaterally through E. COLI-MA to the auditory cortex in Brodmann area 41.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 13.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 13.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not a function of the Eustachian tube?", "options": [{"label": "A", "text": "Clearance of middle ear secretions via mucociliary action", "correct": false}, {"label": "B", "text": "Protection of middle ear from nasopharyngeal pressure and secretions", "correct": false}, {"label": "C", "text": "Equalization of pressure across tympanic membrane", "correct": false}, {"label": "D", "text": "Continuous drainage of perilymph from the inner ear", "correct": true}], "correct_answer": "D. Continuous drainage of perilymph from the inner ear", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_uOxGGcT.png"], "explanation": "<p><strong>Ans. D) Continuous drainage of perilymph from the inner ear</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The Eustachian tube ventilates the middle ear, protects it from nasopharyngeal secretions and pressure, and clears secretions via mucociliary action.</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 58</li><li>➤ Ref: P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 58</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements is TRUE regarding the comparison between canal wall up and canal wall down mastoidectomy procedures?", "options": [{"label": "A", "text": "Canal wall up procedure has a lower rate of residual disease and does not require a second-look surgery", "correct": false}, {"label": "B", "text": "Canal wall down procedure provides a normal meatal appearance and allows unrestricted swimming", "correct": false}, {"label": "C", "text": "Canal wall up procedure preserves a normal meatus and is better suited for patients requiring hearing aids", "correct": true}, {"label": "D", "text": "Canal wall down procedure requires second-look surgery to rule out cholesteatoma recurrence", "correct": false}], "correct_answer": "C. Canal wall up procedure preserves a normal meatus and is better suited for patients requiring hearing aids", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_eK6c3jX.png"], "explanation": "<p><strong>Ans. C) Canal wall up procedure preserves a normal meatus and is better suited for patients requiring hearing aids</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Canal wall up mastoidectomy maintains normal meatal anatomy and allows easier use of hearing aids, but has a higher risk of residual disease, while canal wall down is safer for disease clearance but has limitations in swimming and hearing aid fitting.</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 73</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 73</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 65-year-old man presents with unilateral hearing loss. Otoscopic examination reveals a dull tympanic membrane and fluid behind it, suggestive of otitis media with effusion (OME). What should be the next best step in management?", "options": [{"label": "A", "text": "Prescribe antihistamines and decongestants", "correct": false}, {"label": "B", "text": "Evaluate the nasopharynx to rule out carcinoma", "correct": true}, {"label": "C", "text": "Insert a grommet after myringotomy", "correct": false}, {"label": "D", "text": "Perform tympanoplasty", "correct": false}], "correct_answer": "B. Evaluate the nasopharynx to rule out carcinoma", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Evaluate the nasopharynx to rule out carcinoma</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Unilateral otitis media with effusion in an elderly patient should prompt evaluation for nasopharyngeal carcinoma, especially in the Fossa of Rosenmüller.</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 251</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 251</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements correctly describes Schuller’s view in radiological imaging of the temporal bone?", "options": [{"label": "A", "text": "It uses a 15° cephalocaudal beam and does not show the attic or antrum clearly", "correct": false}, {"label": "B", "text": "It is primarily used to assess nasopharyngeal tumors extending into the Eustachian tube", "correct": false}, {"label": "C", "text": "It shows the key area of the mastoid including antrum and upper attic, using a 30° cephalocaudal beam", "correct": true}, {"label": "D", "text": "The sagittal plane is perpendicular to the film and the internal and external auditory canals are separated", "correct": false}], "correct_answer": "C. It shows the key area of the mastoid including antrum and upper attic, using a 30° cephalocaudal beam", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-05-21%20132158.png"], "explanation": "<p><strong>Ans. C) It shows the key area of the mastoid including antrum and upper attic, using a 30° cephalocaudal beam</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Schuller’s view uses a 30° cephalocaudal beam with the sagittal plane parallel to the film and is useful for visualizing the mastoid antrum, attic, and sinodural angle, making it ideal for assessing mastoiditis, cholesteatoma, and petrous fractures.</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 433</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 433</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 5-year-old child presents with complaints of fever, severe earache, vomiting, and reduced hearing. Otoscopic examination reveals a bulging, red tympanic membrane with loss of landmarks, and a yellow spot is visible. What stage of Acute Suppurative Otitis Media (ASOM) is this child most likely in?", "options": [{"label": "A", "text": "Stage of tubal occlusion", "correct": false}, {"label": "B", "text": "Stage of presuppuration", "correct": false}, {"label": "C", "text": "Stage of suppuration", "correct": true}, {"label": "D", "text": "Stage of resolution", "correct": false}], "correct_answer": "C. Stage of suppuration", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_JA7DEqn.png"], "explanation": "<p><strong>Ans. C) Stage of suppuration</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The suppurative stage of ASOM is marked by bulging tympanic membrane, yellow spot, severe earache, and high fever , indicating accumulation of pus in the middle ear.</li><li>➤ suppurative stage of ASOM</li><li>➤ bulging tympanic membrane, yellow spot, severe earache, and high fever</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 62</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 62</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following theories of cholesteatoma origin involves retraction pocket formation due to invagination of tympanic membrane epithelium?", "options": [{"label": "A", "text": "Ruedi’s theory", "correct": false}, {"label": "B", "text": "Wittmaack’s theory", "correct": true}, {"label": "C", "text": "Sade’s theory", "correct": false}, {"label": "D", "text": "Habermann’s theory", "correct": false}], "correct_answer": "B. Wittmaack’s theory", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Wittmaack’s theory</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Wittmaack’s theory explains cholesteatoma formation due to retraction pocket of tympanic membrane epithelium invaginating into the middle ear.</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 67</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 67</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the instrument shown in the image and select the correct statement regarding its use:", "options": [{"label": "A", "text": "Lempert’s curette – used for removal of bony septa and granulations in mastoid surgery", "correct": true}, {"label": "B", "text": "Freer’s elevator – used to elevate tympanomeatal flap", "correct": false}, {"label": "C", "text": "Myringotome – used for incision in tympanic membrane", "correct": false}, {"label": "D", "text": "Mollison’s retractor – used for soft tissue retraction in postaural mastoidectomy", "correct": false}], "correct_answer": "A. Lempert’s curette – used for removal of bony septa and granulations in mastoid surgery", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_JMoZ7gV.png"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_OV2WsbJ.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/image_7VvhZIB.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/image_Mfer4ld.png"], "explanation": "<p><strong>Ans. A) Lempert’s curette – used for removal of bony septa and granulations in mastoid surgery</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Lempert’s curette is used in mastoidectomy to remove bony septa and granulation tissue from the mastoid air cells.</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 452</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 452</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old man with chronic ear infection develops sudden severe vertigo, vomiting, and complete hearing loss in one ear. Examination reveals spontaneous nystagmus with the quick component directed to the opposite ear. He appears toxic. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Diffuse serous labyrinthitis", "correct": false}, {"label": "B", "text": "Diffuse suppurative labyrinthitis", "correct": true}, {"label": "C", "text": "Meniere’s disease", "correct": false}, {"label": "D", "text": "Vestibular neuronitis", "correct": false}], "correct_answer": "B. Diffuse suppurative labyrinthitis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Diffuse suppurative labyrinthitis</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Diffuse suppurative labyrinthitis presents with severe vertigo, vomiting, complete hearing loss, and spontaneous nystagmus toward the healthy side, and requires urgent antibiotic therapy and possible surgical intervention.</li><li>➤ Diffuse suppurative labyrinthitis</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 81</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 81</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 12-year-old child with a recent history of chronic otitis media presents with severe headache, diplopia, and episodes of blurred vision. Fundoscopy shows papilloedema. CSF examination reveals an opening pressure of 310 mm H₂O but normal cell counts, proteins, sugars, and sterile cultures. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Pyogenic meningitis", "correct": false}, {"label": "B", "text": "Otitic hydrocephalus", "correct": true}, {"label": "C", "text": "Subdural abscess", "correct": false}, {"label": "D", "text": "Tuberculous meningitis", "correct": false}], "correct_answer": "B. Otitic hydrocephalus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Otitic hydrocephalus</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Otitic hydrocephalus presents with raised intracranial pressure and normal CSF findings, typically due to lateral sinus thrombosis following middle ear infection.</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 85</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 85</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the instrument shown in the image and select the correct statement regarding its use:", "options": [{"label": "A", "text": "Freer’s elevator – used for raising tympanomeatal flap in tympanoplasty", "correct": false}, {"label": "B", "text": "MacEwen’s curette and cell seeker – used in mastoid surgery to explore air cells and remove septa", "correct": true}, {"label": "C", "text": "Lempert’s curette – used to remove nasal polyps in outpatient setting", "correct": false}, {"label": "D", "text": "Mollison’s retractor – used to retract skin flaps in neck dissection", "correct": false}], "correct_answer": "B. MacEwen’s curette and cell seeker – used in mastoid surgery to explore air cells and remove septa", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_q6LC33V.png"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_fkX5RX4.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/image_SlWSRyY.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/image_gMdItxh.png"], "explanation": "<p><strong>Ans. B) MacEwen’s curette and cell seeker – used in mastoid surgery to explore air cells and remove septa</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ MacEwen’s curette and cell seeker is a dual-ended instrument used in mastoid surgery to explore air cells and remove bony septa or granulations.</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 452</li><li>➤ Ref:- P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 452</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following signs and symptoms are not true with the respective stage of Acute Suppurative Otitis Media?", "options": [{"label": "A", "text": "Suppuration – Excruciating Earache, Deafness and Bulging TM with pus, CHL", "correct": false}, {"label": "B", "text": "PreSuppuration – Throbbing Pain, Deafness and Cartwheel TM, CHL", "correct": false}, {"label": "C", "text": "Resolution – Ear Discharge and patient starts to feel Better, Perforation in Antero-Inferior Quadrant, CHL improves", "correct": false}, {"label": "D", "text": "All above options are correct", "correct": true}], "correct_answer": "D. All above options are correct", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/12/22/picture14_3Si7dgp.jpg"], "explanation": "<p><strong>Ans. D) All above options are correct</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A . Suppuration Stage: During this stage of Acute Suppurative Otitis Media (ASOM), there is typically excruciating earache , hearing loss (deafness) , and a bulging tympanic membrane (TM) with visible pus . The hearing loss in this case is usually conductive hearing loss (CHL) due to the middle ear being filled with pus , which hinders the movement of the TM and the ossicles.</li><li>• Option A</li><li>• Suppuration Stage:</li><li>• stage</li><li>• Acute Suppurative Otitis Media</li><li>• typically excruciating earache</li><li>• hearing loss (deafness)</li><li>• bulging tympanic membrane (TM)</li><li>• visible pus</li><li>• hearing loss</li><li>• conductive hearing loss (CHL)</li><li>• middle ear</li><li>• filled with pus</li><li>• hinders</li><li>• Option B . Presuppuration Stage : This stage precedes the suppuration and is characterized by throbbing ear pain and deafness . The TM often appears red and inflamed , sometimes described as a \"cartwheel\" appearance , and there is usually CHL due to the Eustachian tube dysfunction and the accumulation of fluid in the middle ear.</li><li>• Option B</li><li>• Presuppuration Stage</li><li>• precedes</li><li>• suppuration</li><li>• characterized by</li><li>• throbbing ear pain</li><li>• deafness</li><li>• red</li><li>• inflamed</li><li>• \"cartwheel\" appearance</li><li>• usually CHL</li><li>• Eustachian tube dysfunction</li><li>• accumulation of fluid</li><li>• Option C . Resolution Stage : In the resolution stage, the patient often starts to feel better , and there might be ear discharge due to the perforation of the TM . The perforation is typically seen in the antero-inferior quadrant . With the release of pus through the perforation, the pressure in the middle ear decreases , leading to an improvement in CHL .</li><li>• Option C</li><li>• Resolution Stage</li><li>• starts to feel better</li><li>• ear discharge</li><li>• perforation of the TM</li><li>• antero-inferior quadrant</li><li>• release of pus</li><li>• through</li><li>• pressure</li><li>• middle ear decreases</li><li>• leading</li><li>• improvement in CHL</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The progression of Acute Suppurative Otitis Media through different stages - tubal occlusion (retracted TM, mild ear pain & block), presuppuration ( throbbing pain, deafness, cartwheel TM appearance, CHL ), suppuration ( excruciating earache, deafness, bulging TM with pus, CHL ), and resolution (ear discharge, improvement in symptoms, perforation in the antero-inferior quadrant of TM, improvement in CHL).</li><li>➤ progression</li><li>➤ Acute Suppurative Otitis Media</li><li>➤ tubal occlusion (retracted TM, mild ear pain & block), presuppuration</li><li>➤ throbbing pain, deafness, cartwheel TM appearance, CHL</li><li>➤ suppuration</li><li>➤ excruciating earache, deafness, bulging TM with pus, CHL</li><li>➤ resolution (ear discharge, improvement in symptoms, perforation in the antero-inferior quadrant of TM, improvement in CHL).</li><li>➤ Ref : P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 62, 63</li><li>➤ Ref : P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 62, 63</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify?", "options": [{"label": "A", "text": "Acute Suppurative Otitis Media", "correct": false}, {"label": "B", "text": "Chronic Suppurative Otitis Media", "correct": false}, {"label": "C", "text": "Serous Otitis Media", "correct": true}, {"label": "D", "text": "Adhesive Otitis Media", "correct": false}], "correct_answer": "C. Serous Otitis Media", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/12/23/1548.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/04/image_ArbhHDI.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/04/picture1.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/04/image.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/04/431517_1_en_4_fig3_html.png"], "explanation": "<p><strong>Ans. C) Serous Otitis Media</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A . In ASOM, the tympanic membrane typically appears red and bulging due to the presence of pus in the middle ear . It is associated with acute infection and symptoms such as ear pain, fever , and possibly otorrhea if perforation occurs. The image does not show these features.</li><li>• Option A</li><li>• tympanic membrane</li><li>• appears red</li><li>• bulging</li><li>• presence of pus</li><li>• middle ear</li><li>• acute infection</li><li>• symptoms</li><li>• ear pain, fever</li><li>• possibly otorrhea</li><li>• Option B . CSOM is characterized by persistent ear discharge through a perforated tympanic membrane and a long-standing infection . The tympanic membrane may show granulation tissue or a visible perforation . The image does not show signs of active discharge or perforation.</li><li>• Option B</li><li>• persistent ear discharge</li><li>• perforated tympanic membrane</li><li>• long-standing infection</li><li>• show granulation tissue</li><li>• visible perforation</li><li>• Option D . This condition is characterized by a retracted tympanic membrane that has become thin and atrophic , causing it to adhere to the ossicles and/or inner ear structures . The image shows a retracted tympanic membrane with a parchment-like appearance and scarring , which are hallmarks of adhesive otitis media .</li><li>• Option D</li><li>• characterized</li><li>• retracted tympanic membrane</li><li>• become thin</li><li>• atrophic</li><li>• adhere</li><li>• ossicles</li><li>• inner ear structures</li><li>• retracted tympanic membrane</li><li>• parchment-like appearance</li><li>• scarring</li><li>• hallmarks</li><li>• adhesive otitis media</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In Serous otitis media, a dull, amber-colored tympanic membrane is present due to the presence of serous fluid in the middle ear. There may be an air-fluid level or bubbles seen behind the tympanic membrane.</li><li>➤ Serous otitis media,</li><li>➤ dull, amber-colored tympanic membrane</li><li>➤ presence</li><li>➤ serous fluid</li><li>➤ air-fluid level</li><li>➤ bubbles</li><li>➤ behind</li><li>➤ tympanic membrane.</li><li>➤ Ref : P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 64</li><li>➤ Ref : P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 64</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 6-yr-old child presents with recurrent URTI with mouth breathing and failure to grow with high arched palate and impaired hearing. His tympanogram showed b type curve. He should be managed by", "options": [{"label": "A", "text": "Myringotomy", "correct": false}, {"label": "B", "text": "Myringotomy + Grommet Insertion", "correct": false}, {"label": "C", "text": "Grommet Insertion only", "correct": false}, {"label": "D", "text": "Adenoidectomy + Grommet Insertion", "correct": true}], "correct_answer": "D. Adenoidectomy + Grommet Insertion", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Adenoidectomy + Grommet Insertion</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A . Myringotomy involves making an incision in the tympanic membrane to relieve pressure and drain fluid . While it can provide temporary relief , it does not address the underlying problem of Eustachian tube dysfunction, which is likely in this case given the recurrent upper respiratory tract infections (URTI) and mouth breathing.</li><li>• Option A</li><li>• making an incision</li><li>• tympanic membrane</li><li>• relieve pressure</li><li>• drain fluid</li><li>• provide temporary relief</li><li>• Option B. Myringotomy with grommet insertion would address the middle ear effusion as evidenced by the type B tympanogram (indicative of fluid in the middle ear ), but it may not be enough if there is significant adenoid hypertrophy contributing to Eustachian tube dysfunction and recurrent URTIs.</li><li>• Option B.</li><li>• address the middle ear effusion</li><li>• evidenced</li><li>• type B tympanogram</li><li>• fluid in the middle ear</li><li>• Option C . Grommet insertion alone would address the middle ear effusion and associated hearing impairment , but it would not treat the probable adenoid hypertrophy that is causing mouth breathing and recurrent URTIs.</li><li>• Option C</li><li>• address the middle ear effusion</li><li>• associated hearing impairment</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In a child with recurrent URTIs, mouth breathing , and a type B tympanogram , adenoid hypertrophy is a likely contributing factor. Thus, management should include both adenoidectomy to address the adenoid hypertrophy and grommet insertion to resolve the middle ear effusion and associated hearing loss .</li><li>➤ child with recurrent URTIs, mouth breathing</li><li>➤ type B tympanogram</li><li>➤ adenoid hypertrophy</li><li>➤ both adenoidectomy</li><li>➤ address</li><li>➤ adenoid hypertrophy</li><li>➤ grommet insertion</li><li>➤ resolve</li><li>➤ middle ear effusion</li><li>➤ associated hearing loss</li><li>➤ Ref : P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 65</li><li>➤ Ref : P.L Dhingra Diseases of Ear Nose and Throat and Head and Neck Surgery 6 th Edition, pg 65</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28-year-old man presents to the emergency department complaining of sudden onset vertigo, nausea, and hearing loss in his right ear following a deep scuba diving session earlier in the day. He denies any recent upper respiratory infections, otalgia, or discharge from the ear. On examination, you note horizontal nystagmus and a negative Rinne test on the affected side. The tympanic membrane is intact without signs of inflammation or effusion. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Meniere

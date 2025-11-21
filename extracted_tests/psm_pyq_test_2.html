@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>PSM - AIIMS MAY 2018</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">PSM - AIIMS MAY 2018</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                9 Questions | 9 Total Marks | 19 min Duration | ~126.67 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 9 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 19 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 9</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">PSM - AIIMS MAY 2018 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 9</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 9 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Sample size of samples A, Band C are 500, 800 and 1000 respectively. Which sample has the highest margin of error?", "options": [{"label": "A", "text": "Sample A", "correct": true}, {"label": "B", "text": "Sample B", "correct": false}, {"label": "C", "text": "Sample C", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Sample A", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1694673914186-QTDCPYQ183IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Sample A I n the above question, Sample A with the least sample size (i.e., 500) has the highest margin of error, while sample C with the greatest sample size (i.e., 1000) has the least margin of error.</p>\n<p><strong>Highyeild:</strong></p><p>Sampling Errors: If we take repeated samples from the same population, the results obtained from one sample will differ to some extent from the results of another sample. This type of variation of a statistic from one sample to another is called sampling error. It occurs because data were gathered from a sample rather than from the entire population. Presuming that the sampling procedure favoured all the individuals’ in the population equally to come to the sample, the factors that influence the sampling error are: –  Size of the sample and –  Natural variability of the individual readings. As the size of the sample increases, sampling error will decrease. Standard Error (SE): SE is a measure of variability of sample statistic from the population parameter. Standard Error (SE) of the Mean: If “n” number of samples of the same size are taken from the same population randomly and repeatedly, each sample will have its own sample mean which would vary to an extent from each other and from the population mean. The sample means would be normally distributed around the population mean (µ) and the mean of the sample means practically is the same as the population mean (µ). Thus standard deviation of the sample means is a measure of the “Sampling Error” or “measure of chance variation” SE of mean is the Standard deviation of the sample means. Standard Error of the mean is calculated by the formula, –  SE of mean = Standard deviation (SD)/√Sample size –  SE of mean = SD/√n From the formula, it could be inferred that greater the standard deviation, greater will be the standard error. Similarly, smaller the sample size greater will be the standard error. SE can be minimized by reducing SD and by taking a large sample.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Options B, C and D are false.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is an absolute contraindication for usage of Copper- T?", "options": [{"label": "A", "text": "Fibroid uterus", "correct": false}, {"label": "B", "text": "Unmotivated person", "correct": false}, {"label": "C", "text": "Menorrhagia", "correct": false}, {"label": "D", "text": "Previous ectopic pregnancy", "correct": true}], "correct_answer": "D. Previous ectopic pregnancy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Previous ectopic pregnancy</p>\n<p><strong>Highyeild:</strong></p><p>Contraindications for Intra-Uterine Contraceptive Devices (IUDs): Absolute contraindication Relative contraindication •  Suspected pregnancy •  Pelvic inflammatory disease •  Vaginal bleeding of undiagnosed etiology •  Cancer of the cervix, uterus or adnexa and other pelvic tumors •  Previous ectopic pregnancy •  Anemia •  Menorrhagia •  History of PID since last pregnancy •  Purulent cervical discharge •  Congenital malformations of uterine cavity •  Uterine fibroids •  Unmotivated person</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Options A, B and C are false.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient from a north-eastern state was diagnosed to have p\" falciparum malaria. What is the most appropriate treatment for this patient?", "options": [{"label": "A", "text": "Artesunate + Chloroquine + Primaquine", "correct": false}, {"label": "B", "text": "Artemether + Sulfadoxine + Pyrimethamine", "correct": false}, {"label": "C", "text": "Artemether + Lumefantrine + Primaquine", "correct": true}, {"label": "D", "text": "Chloroquine + Primaquine", "correct": false}], "correct_answer": "C. Artemether + Lumefantrine + Primaquine", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Artemether + Lumefantrine + Primaquine</p>\n<p><strong>Highyeild:</strong></p><p>Treatment of uncomplicated P. falciparum malaria: Artemisinin Combination Therapy (ACT) - In all Indian states except North-eastern states: (ACT= AS + SP). Day 1: Artesunate (4 mg/kg) + [Sulfadoxine (25 mg/kg) + Pyrimethamine (1.25 mg/kg)] Day 2: Artesunate (4 mg/kg) + Primaquine (0.75 mg/kg) Day 3: Artesunate (4 mg/kg) In North-eastern states (Arunachal Pradesh, Assam, Manipur, Meghalaya, Mizoram, Nagaland, and Tripura): (ACT= AL) Due to the recent reports of resistance to Sulfadoxine and Pyrimethamine in North-eastern states for falciparum malaria, the presently recommended ACT is fixed dose combination (FDC) of Artemether–Lumefantrine (AL) as per age-specific and weight-based dose schedule. Day 1: Artemether-Lumefantrine (AL) twice daily Day 2: Artemether-Lumefantrine (AL) twice daily + Primaquine (0.75 mg/kg) Day 3: Artemether-Lumefantrine (AL) twice daily Age group Weight band Total dose of AL Artemether/ Lumefantrine Schedule of FDC of AL for 3 days No. of tablets in a pack Color code of the pack >5 months 5–14 kg 20 mg/120 mg 1 BD 6 Yellow >3 to <9 years 15–24kg 40 mg/240 mg 2 BD 12 Green >9 to <14 25–34 kg 60 mg/360 mg 3 BD 18 Red >14 years >34 kg 80 mg/480 mg 4 BD 24 White (1 FDC of AL = Artemether 20 mg + Lumefantrine 120 mg)</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Options A, B and D are false.</p>\n<p><strong>Extraedge:</strong></p><p>Contraindications: ACT is contraindicated in first trimester of pregnancy and for children weighing <5 kg. Primaquine is contraindicated in pregnant women, infants and known G6PD deficient individuals.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following can be analyzed with chi-Square test except?", "options": [{"label": "A", "text": "Sex and stage of cancer", "correct": false}, {"label": "B", "text": "Heart rate/min and age", "correct": true}, {"label": "C", "text": "Benign or malignant, and type of surgery", "correct": false}, {"label": "D", "text": "Age group and cancer stage", "correct": false}], "correct_answer": "B. Heart rate/min and age", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Heart rate/min and age In the given question, all options except heart rate/minute and age are of qualitative variables (nominal or ordinal).</p>\n<p><strong>Highyeild:</strong></p><p>Qualitative variables are usually presented in frequencies or count. Chi square test is used to compare any difference or association between two qualitative variables. Heart rate/minute and age are quantitative variables where chi square test cannot be applied.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Options A, C and D are false.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "How many infants should be registered with a health worker working in sub center?", "options": [{"label": "A", "text": "100", "correct": true}, {"label": "B", "text": "50", "correct": false}, {"label": "C", "text": "200", "correct": false}, {"label": "D", "text": "110", "correct": false}], "correct_answer": "A. 100", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>100</p>\n<p><strong>Highyeild:</strong></p><p>One Health Sub center in India caters 5000 populations in plain areas whereas in difficult and hilly areas it caters 3000 As per SRS data September 2017, birth rate in India is 20.4/1000 population and infant mortality rate (IMR) is 34/1000 live birth. Estimated no. of infants in a health Sub center covering 5000 populations can be calculated as follows: No. of live birth = Birth rate × Population/1000 = 20.4 × 5000/1000 = 102 Infant mortality for Sub center = No. of live birth × IMR/1000 = 102 × 34/1000 = 3.5 (for calculation purpose we assume it 4) Therefore, total number of infants = 102 – 4 = 98</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Options B, C and D are false.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following nerve can be biopsied for diagnosis of leprosy?", "options": [{"label": "A", "text": "Axillary nerve", "correct": false}, {"label": "B", "text": "Ulnar cutaneous nerve", "correct": true}, {"label": "C", "text": "Saphenous nerve", "correct": false}, {"label": "D", "text": "Sciatic nerve", "correct": false}], "correct_answer": "B. Ulnar cutaneous nerve", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ulnar cutaneous nerve</p>\n<p><strong>Highyeild:</strong></p><p>Nerve Biopsy in Leprosy: When clinical and bacteriological examinations do not yield a diagnosis, histopathological examination of the affected nerves may be necessary in leprosy. It allows a more accurate classification of the disease. It also gives information about the bacterial content of the skin. The peripheral nerves most commonly affected in leprosy are: –  Ulnar, Lateral Popliteal and Posterior Tibial nerve. –  Other nerves, which may be affected are - Facial, Trigeminal, Median and Radial. Pure neuritic leprosy: (Indian Classification of Leprosy) –  According to Indian studies, pure neuritic leprosy constitutes about 4–18% of leprosy patients. It is reportedly higher in South India comprising up to 18% of new cases. –  Pure neuritic leprosy is more common in men and is most common in the 15–30 age group. –  Cases show pure nerve involvement but do not have any skin lesions and they are bacteriologically AFB negative. –  In pure neuritic leprosy, in general, upper limb nerves are more commonly involved, of which ulnar nerve is the most common. –  In the lower limb, lateral popliteal nerve is the most common nerve involved, followed by the posterior tibial and sural nerves. –  However, any nerve trunk or cutaneous nerve can be involved by pure neuritic leprosy, e.g., supraorbital, great auricular, dorsal cutaneous branches of radial, ulnar and superficial peroneal (musculocutaneous) nerve. –  Selective involvement of the facial nerve branches are also reported. –  Mononeuritis is the most common presentation of pure neuritic leprosy. Clinical presentation of pure neuritic leprosy: –  When to suspect: In endemic countries such as India, the presence of “mononeuritis” or “mononeuritis multiplex”, along with tender enlarged nerves should always raise a suspicion of the diagnosis. Clinical diagnosis: –        Thickened peripheral nerve trunk, tenderness and sensory impairment associated with absence of skin lesions and negative skin smears for acid fast bacilli.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Options A, C and D are false.</p>\n<p><strong>Extraedge:</strong></p><p>The common nerves and sites where nerve biopsy is performed are: Superficial sensory radial nerve branch at the wrist. Ulnar cutaneous nerve near the ulnar border of base of the hand and sural nerve near the ankle.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Under National Health Mission which committee makes plan for village health?", "options": [{"label": "A", "text": "Panchayat Health Committee (PHC)", "correct": false}, {"label": "B", "text": "Village Health Planning and Management Committee (VHPMC)", "correct": false}, {"label": "C", "text": "Village Health Sanitation and Nutrition Committee (VHSNC)", "correct": true}, {"label": "D", "text": "Rogi Kalyan Samiti", "correct": false}], "correct_answer": "C. Village Health Sanitation and Nutrition Committee (VHSNC)", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Village Health Sanitation and Nutrition Committee (VHSNC)</p>\n<p><strong>Highyeild:</strong></p><p>VHSNC: The VHSNC is a sub-committee or a standing committee of the Gram Panchayat. The VHSNC acts as a platform for convergence between different departments and committees at village level. The VHSNCs shall be supported to develop village health plans to ensure convergent action on social determinants of health, ensure access to health services, especially of the more marginalized sections in the village, and support the organization of the Village. Health and Nutrition Day. The VHSNC will also monitor the services provided by the Anganwadi Worker, the ASHA, and the Sub center. Rogi Kalyan Samiti (RKS): Also known as patient welfare committee or hospital management society. This is a registered society whose members act as trustees to manage the affairs of the hospital and is responsible for upkeep of the facilities and ensure provision of better facilities to the patients in the hospital. (in PHCs, CHCs and DHs).</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Options A, B and D are false.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the estimated number of infants under a health worker of a Sub center area in a year?", "options": [{"label": "A", "text": "50", "correct": false}, {"label": "B", "text": "100", "correct": false}, {"label": "C", "text": "150", "correct": true}, {"label": "D", "text": "200", "correct": false}], "correct_answer": "C. 150", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>150</p>\n<p><strong>Highyeild:</strong></p><p>Calculation of the annual target population and monthly target for immunization: Since infants are the target population for immunization, calculating the number of new-born’s expected in a year gives the annual target population for a program in an area. Annual target population = (total population) × (% infants in population or expected birth rate) The percentage of infants in the population, or the expected birth rate, should be obtained from local data. If a specific local percentage is not available, the suggestion here is to use 3% as an estimate for session planning. Divide the annual target population by 12 to get the monthly newborn/infant target: Monthly target population = (annual target population)/12 Use of the most precise and area specific percentage (available or measured), for calculating the number of infants is preferred.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Options A, B and C are false.</p>\n<p><strong>Extraedge:</strong></p><p>Estimation of number of Infants in a Sub center area: The population norms for a Sub center in plains, as per the IPHS is 5000. Estimated no. of Infants (Y) in a Sub center area (If CBR data is unavailable): Y = 3% of the annual Population of the Sub center area Y = 3 × 5000 = 150 100 Expected no. of Infants (Y) born in a year in a Sub center area (If CBR data is available): Example: when CBR = 15/1000 population Y = Crude Birth Rate × Population of the Sub center area 1000 Y = 15 × 5000 = 75 1000</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "As per the National Immunization Schedule, which of the following vaccines are indicated at the first visit for immunization of a 13 months old child who was previously unimmunized?", "options": [{"label": "A", "text": "BCG, OPV 1st dose, Pentavalent 1st dose, Rota virus 1st dose, fIPV 1st dose, PCV 1st dose and measles 1st dose", "correct": false}, {"label": "B", "text": "OPV 1st dose, Pentavalent 1st dose, flPV 1st dose and measles 1st dose", "correct": false}, {"label": "C", "text": "BCG, OPV 1st dose, DPT 1st dose and measles 1st dose", "correct": false}, {"label": "D", "text": "DPT 1st dose, OPV 1st dose, and Measles 1st dose", "correct": true}], "correct_answer": "D. DPT 1st dose, OPV 1st dose, and Measles 1st dose", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>DPT 1st dose, OPV 1st dose, and Measles 1st dose</p>\n<p><strong>Highyeild:</strong></p><p>Age limits for different vaccines in NIS: According to National Immunization Schedule some vaccines have an upper age limit for administration. These vaccines should not be administered once that age limit is crossed. Vaccine Maximum age limit for vaccination BCG Till 1 year of age Hep-B - “Birth” dose Within 24 hours OPV - “0” dose Within 15 days OPV Till 5 year of age Measles or MR Till 5 year of age DPT Till 7 year of age JE (in endemic areas) Till 15 year of age Criteria for Pentavalent, IPV, PCV and Rotavirus vaccines in NIS: If at least 1 dose of these vaccines is given before 1 year of age, then the remaining doses can be administered and schedule must be completed irrespective of the age of child. If the first dose is not administered before 1 year of age, then these vaccines cannot be administered to the child under UIP. Therefore, vaccines that are indicated for a 13 months old child who was previously unimmunized are - OPV 1st dose; DPT: 1st dose; and Measles/MR: 1st dose.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Options A, B and C are false.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

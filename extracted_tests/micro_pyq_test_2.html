@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Microbiology - AIIMS JUNE 2020</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Microbiology - AIIMS JUNE 2020</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                21 Questions | 21 Total Marks | 31 min Duration | ~88.57 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 21 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 31 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 21</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Microbiology - AIIMS JUNE 2020 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 21</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 21 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A child develops septic shock following meningitis. On examination the child has a petechial rash as shown in the figure. Which of the following is a gram negative diplococcus that can be the likely etiology?", "options": [{"label": "A", "text": "Pseudomonas aeruginosa", "correct": false}, {"label": "B", "text": "Neisseria meningitidis", "correct": true}, {"label": "C", "text": "Streptococcus pneumoniae", "correct": false}, {"label": "D", "text": "E. coli", "correct": false}], "correct_answer": "B. Neisseria meningitidis", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692792431170-QTDVPYQ080IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Neisseria meningitidis Gram negative diplococci is Neisseria meningitis which causes Meningitis in children along with petechial rash so the answer to this question would be option B.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The condition in Liver (hepatic periportal fibrosis) is caused by :", "options": [{"label": "A", "text": "Schistosoma Mansoni", "correct": true}, {"label": "B", "text": "Schistosoma Japonicum", "correct": false}, {"label": "C", "text": "Schistosoma Hematobium", "correct": false}, {"label": "D", "text": "Clonorchis Sinensis", "correct": false}], "correct_answer": "A. Schistosoma Mansoni", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692792433119-QTDVPYQ081IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Schistosoma Mansoni Schistosoma mansoni: In schistosomiasis mansoni a range of chronic lesions is found, from scattered granulomas of the intestinal tract to gross hepatic periportal fibrosis (Symmers’ pipe-stem fibrosis; bilharzial clay pipe stem fibrosis ) ( Image below). Because of varying localization of the mature S. mansoni worms, focal granulomas and fibrosis may occur in any part of the intestinal tract, but these are found most frequently in the rectosigmoid colon because the preferred habitat of adult S. mansoni is in the tributaries of the inferior mesenteric vein. These lesions can lead to clinical symptoms of diarrhea, hematochezia and abdominal pain. Pathology in the small bowel is not as severe as that in the large gut. In late-stage infections, particularly in Egypt and Brazil, autopsy studies suggest a shift in egg deposition from the colon to the small intestine. Periportal fibrosis (‘pipestem fibrosis’) is the classic pathological hepatic lesion of intestinal schistosomiasis.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Isotype switching occurs in?", "options": [{"label": "A", "text": "Helper T cells", "correct": false}, {"label": "B", "text": "Cytotoxic T cells", "correct": false}, {"label": "C", "text": "B cell", "correct": false}, {"label": "D", "text": "Activated B cells", "correct": true}], "correct_answer": "D. Activated B cells", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Activated B cells Each plasma cell is derived from an antigen-stimulated B cell and secretes antibodies that recognize the same antigen that was bound by the BCR to initiate the response. Polysaccharides and lipids stimulate secretion mainly of IgM antibody. Protein antigens, by virtue of CD40L- and cytokine-mediated helper T-cell actions, induce the production of antibodies of different classes, or isotypes (IgG, IgA, IgE ), a process called isotype switching. Helper T cells also stimulate the production of antibodies with high affinities for the antigen. This process, called affinity maturation, improves the quality of the humoral immune response. These two processes are initiated when activated B cells that receive signals from helper T cells during responses to protein antigens migrate into follicles and begin to proliferate to form germinal centers , which are the major sites of isotype switching and affinity maturation. The helper T-cells that stimulate these processes in B lymphocytes also migrate to and reside in the germinal centers and are called T follicular helper (TFH) cells.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Where would the eggs of helminths be concentrated by formalin ether method shown in the Image?", "options": [{"label": "A", "text": "Layer A", "correct": false}, {"label": "B", "text": "Layer B", "correct": false}, {"label": "C", "text": "Layer C", "correct": false}, {"label": "D", "text": "Layer D", "correct": true}], "correct_answer": "D. Layer D", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692792433751-QTDVPYQ083IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Layer D In formaline ether sedimentation technique , one gram of stool was emulsified in 7ml of 10% formal saline and it was kept for 10 minutes for fixation. It was then strained through wire gauze. The filtrate was added to 3 ml of ether and it was centrifuged at 3000 rpm for 1 minute. It was allowed to settle. The supernatant was removed and a wet mount was made of the deposit to look for parasites at magnification of 100 and 400. Image: Formol Ether Sedimentation Method</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the vector in given disease cycle:", "options": [{"label": "A", "text": "Hard tick", "correct": false}, {"label": "B", "text": "Soft tick", "correct": false}, {"label": "C", "text": "Louse", "correct": false}, {"label": "D", "text": "Trombiculid mite", "correct": true}], "correct_answer": "D. Trombiculid mite", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692792434088-QTDVPYQ084IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Trombiculid mite The lifecycle shown is that of scrub typhus. Scrub typhus (caused by Orientia Tsutsugamushi ) is transmitted by chiggers (mites ). It is endemic in areas of Asia and Australia, and it has recently emerged in South Korea, Chile, and areas of China. Fever, headache, myalgia, and cough are usual symptoms, sometimes accompanied by a characteristic eschar and associated lymphadenopathy from the chigger bite.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Type 4 Hypersensitivity reaction in due to:", "options": [{"label": "A", "text": "Innate immune response", "correct": false}, {"label": "B", "text": "Antibody mediated", "correct": false}, {"label": "C", "text": "Cell mediated", "correct": true}, {"label": "D", "text": "Immune complex mediated", "correct": false}], "correct_answer": "C. Cell mediated", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cell mediated Hypersensitivity reactions can be classified on the basis of the underlying immunologic mechanism (Table below). This classification is of value in distinguishing the manner in which an immune response causes tissue injury and disease, and the accompanying pathologic and clinical manifestations. The main types of hypersensitivity reactions are as follows: In immediate hypersensitivity (type I hypersensitivity), the injury is caused by Th2 cells, IgE antibodies, and mast cells and other leukocytes. Mast cells release mediators that act on vessels and smooth muscle and Proinflammatory cytokines that recruit inflammatory cells. In antibody-mediated disorders (type II hypersensitivity), secreted IgG and IgM antibodies injure cells by promoting their phagocytosis or lysis and injure tissues by inducing inflammation. Antibodies may also interfere with cellular functions and cause disease without tissue injury. In immune complex–mediated disorders (type III hypersensitivity), IgG and IgM antibodies bind antigens usually in the circulation, and the antigen-antibody complexes deposit in tissues and induce inflammation. The leukocytes that are recruited (neutrophils and monocytes) produce tissue damage by release of lysosomal enzymes and generation of toxic free radicals. In cell-mediated immune disorders (type IV hypersensitivity), T lymphocytes (Th1 and Th17 cells and CD8+ CTLs) are the cause of the tissue injury Type Immune Mechanisms Histopathologic Lesions Prototypical Disorders Immediate (type I) hypersensitivity Production of IgE antibody immediate release of vasoactive amines and other mediators from mast cells; later recruitment of inflammatory cells Vascular dilation, edema, smooth muscle contraction, mucus production, tissue injury. inflammation Anaphylaxis; allergies: bronchial asthma (atopic forms) Antibody-mediated (type II) hypersensitivity Production of IgG, IgM → binds to antigen on target cell or tissue → phagocytosis or lysis of target cell by activated complement or Fc receptors; recruitment of leukocytes Phagocytosis and lysis of cells; inflammation; in some diseases, functional derangements without cell or tissue injury Autoimmune hemolytic anemia; Goodpasture syndrome Immune complex- mediated (type III) hypersensitivity Deposition of antigen-antibody complexes →→ complement activation → recruitment of leukocytes by complement products and Fc receptors → release of enzymes and other toxic molecules Inflammation, necrotizing vasculitis (fibrinoid necrosis) Systemic lupus erythematosus: some forms of glomerulonephritis; serum sickness; Arthus reaction Cell-mediated (type IV) hypersensitivity Activated T lymphocytes→ (1) release of cytokines, inflammation and macrophage activation; (2) T cell-mediated cytotoxicity Perivascular cellular infiltrates; edema; granuloma formation; cell destruction Contact dermatitis; multiple sclerosis; type I diabetes; tuberculosis</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are features of Mycoplasma pneumonia except?", "options": [{"label": "A", "text": "Can be cultured on cell free medium", "correct": false}, {"label": "B", "text": "Amoxiclav is effective", "correct": true}, {"label": "C", "text": "Bilateral infiltrates can be seen on chest X-ray", "correct": false}, {"label": "D", "text": "Antibodies are useful for diagnosis", "correct": false}], "correct_answer": "B. Amoxiclav is effective", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Amoxiclav is effective There are more than 200 known species in the class of Mollicutes (cell wall–free bacteria ). At least 16 of these species are thought to be of human origin; others have been isolated from animals and plants. In humans, four species are of primary importance: Mycoplasma pneumoniae causes pneumonia and has been associated with joint and other infections. Mycoplasma hominis sometimes causes postpartum fever and has been found with other bacteria in uterine tube infections. Ureaplasma urealyticum is a cause of nongonococcal urethritis in men and is associated with lung disease in pre- mature infants of low birth weight. Mycoplasma genitalium is closely related to M pneumoniae and has been associated with urethral and other urogenital infections. Other members of the genus Mycoplasma are pathogens of the respiratory and urogenital tracts and joints of humans and animals. Culture of mycoplasmas that cause disease in humans requires media with serum, a metabolic substrate such as glucose or urea, and growth factors such as yeast extract. There is no one medium that is optimal for all the species because of different properties and substrate requirements . [It can grow on cell free media] Chest radiograph — The radiographic features of M. pneumoniae pneumonia are generally similar to those seen with other atypical or viral pneumonias. The most common radiographic findings on chest radiograph are reticulonodular and/or p atchy opacities, which can be unilateral or bilateral . Other findings may include a thickened bronchial shadow, streaks of interstitial infiltrates, and areas of atelectasis. Nodular infiltrates and hilar adenopathy are less common Serology Antibodies develop in humans infected with mycoplasmas and can be demonstrated by several methods. CF tests can be performed with glycolipid antigens extracted with chloroform–methanol from cultured mycoplasmas. M pneumoniae and M genitalium are serologically cross-reactive using CF tests. Amoxiclav (Amoxicillin + Clavulanic acid) are cell wall inhibitors. These drugs cannot act on Mycoplasma as it lacks a cell wall.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "False about Weil

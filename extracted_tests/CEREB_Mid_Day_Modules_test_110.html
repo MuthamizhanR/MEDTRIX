@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Mid Day Module (Pyqs, Mixed Bag 45)   2025 04 24</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Mid Day Module (Pyqs, Mixed Bag 45)   2025 04 24</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                40 Questions | 160 Total Marks | 50 min Duration | ~75.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 40 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 50 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 40</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Mid Day Module (Pyqs, Mixed Bag 45)   2025 04 24 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 40</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 40 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Calculate the ECF volume in a volunteer in whom 10 gm of mannitol was injected in venous blood. At equilibrium urinary excretion of mannitol was found to be 10% and the plasma concentration of mannitol was 65 mg/100 ml? In a volunteer, 10 grams of mannitol was injected into the venous blood. At equilibrium, the urinary excretion of mannitol was found to be 10% and the plasma concentration of mannitol was measured at 65 mg/100 ml. Calculate the extracellular fluid (ECF) volume based on this information. ( INICET Nov 2020)", "options": [{"label": "A", "text": "14L", "correct": true}, {"label": "B", "text": "10L", "correct": false}, {"label": "C", "text": "281", "correct": false}, {"label": "D", "text": "20L", "correct": false}], "correct_answer": "A. 14L", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/05/29/screenshot-2024-05-29-114650.jpg"], "explanation": "<p><strong>Ans. A) 14L</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The extracellular fluid (ECF) volume can be calculated by using the dilution principle, taking into account the amount of marker substance injected, the amount excreted, and the plasma concentration of the marker.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the primary identification made by a CBNAAT or GeneXpert? (FMGE JANUARY 2024)", "options": [{"label": "A", "text": "Mycobacterium tuberculosis", "correct": false}, {"label": "B", "text": "MTB + Rifampicin resistance", "correct": true}, {"label": "C", "text": "MTB + Rifampicin resistance + Isoniazid resistance", "correct": false}, {"label": "D", "text": "MTB + Rifampicin resistance + Ethambutol resistance", "correct": false}], "correct_answer": "B. MTB + Rifampicin resistance", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/05/27/screenshot-2024-05-27-121409.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/05/27/screenshot-2024-05-27-121441.jpg"], "explanation": "<p><strong>Ans.</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• The Cartridge-Based Nucleic Acid Amplification Test (CBNAAT), also known as GeneXpert, is a molecular diagnostic test used for the detection of Mycobacterium tuberculosis (MTB) and its resistance to the anti-tubercular drug rifampicin.</li><li>• The key points are:</li><li>• The key points are:</li><li>• CBNAAT or GeneXpert is a molecular method based on real-time PCR that can detect the presence of MTB. (Detection  limit  à about 131 bacilli/mL of specimen) In addition to detecting MTB, it can also detect resistance to the drug rifampicin by identifying mutations in the rpoB gene, which is associated with rifampicin resistance CBNAAT/GeneXpert primarily identifies the presence of MTB and rifampicin resistance.</li><li>• CBNAAT or GeneXpert is a molecular method based on real-time PCR that can detect the presence of MTB. (Detection  limit  à about 131 bacilli/mL of specimen)</li><li>• In addition to detecting MTB, it can also detect resistance to the drug rifampicin by identifying mutations in the rpoB gene, which is associated with rifampicin resistance</li><li>• CBNAAT/GeneXpert primarily identifies the presence of MTB and rifampicin resistance.</li><li>• Other Options:</li><li>• Other</li><li>• Options:</li><li>• Option A. Mycobacterium tuberculosis: While CBNAAT can detect the presence of MTB, it also provides information on rifampicin resistance, making this option incomplete.</li><li>• Option A. Mycobacterium tuberculosis:</li><li>• Option C. MTB + Rifampicin resistance + Isoniazid resistance: CBNAAT does not directly detect resistance to isoniazid, another first-line anti-tubercular drug.</li><li>• Option C. MTB + Rifampicin resistance + Isoniazid resistance:</li><li>• Option D. MTB + Rifampicin resistance + Ethambutol resistance: CBNAAT does not detect resistance to ethambutol, another first-line anti-tubercular drug.</li><li>• Option D. MTB + Rifampicin resistance + Ethambutol resistance:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The Cartridge-Based Nucleic Acid Amplification Test (CBNAAT or GeneXpert) is a molecular diagnostic tool that primarily identifies the presence of Mycobacterium tuberculosis (MTB) and its resistance to the anti-tubercular drug rifampicin by detecting mutations in the rpoB gene.</li><li>➤ Additional Information –</li><li>➤ Additional Information –</li><li>➤ Laboratory Diagnosis</li><li>➤ Laboratory Diagnosis</li><li>➤ Direct microscopy by acid-fast staining Kinyoun’s Cold acid-fast Staining Fluorescence Staining Culture Methods Conventional Media Automated Liquid Culture  à BACTEC MGIT Molecular Methods Polymerase Chain reaction (PCR) Automated real Time PCR  à  CBNAAT, TrueNat</li><li>➤ Direct microscopy by acid-fast staining</li><li>➤ Kinyoun’s Cold acid-fast Staining</li><li>➤ Fluorescence Staining</li><li>➤ Culture Methods Conventional Media Automated Liquid Culture  à BACTEC MGIT</li><li>➤ Conventional Media Automated Liquid Culture  à BACTEC MGIT</li><li>➤ Conventional Media</li><li>➤ Automated Liquid Culture  à BACTEC MGIT</li><li>➤ Molecular Methods</li><li>➤ Polymerase Chain reaction (PCR)</li><li>➤ Polymerase Chain reaction (PCR)</li><li>➤ Automated real Time PCR  à  CBNAAT, TrueNat</li><li>➤ Automated real Time PCR  à  CBNAAT, TrueNat</li><li>➤ RNTCP diagnostic algorithm -</li><li>➤ RNTCP diagnostic algorithm -</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the sinus marked in the given image: (FMGE JANUARY 2023)", "options": [{"label": "A", "text": "Ethmoid sinus", "correct": false}, {"label": "B", "text": "Maxillary sinus", "correct": true}, {"label": "C", "text": "Frontal sinus", "correct": false}, {"label": "D", "text": "Sphenoid sinus", "correct": false}], "correct_answer": "B. Maxillary sinus", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/07/07/picture30.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/07/07/picture31.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/07/07/picture32.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/07/07/picture33.jpg"], "explanation": "<p><strong>Ans. B. Maxillary sinus</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Ethmoid Sinus : Located between the nose and the eyes, within the ethmoid bone. It is a collection of small air cells. Frontal Sinus : Located above the eyes, in the frontal bone. These are typically well above the maxillary sinuses. Sphenoid Sinus : Located deeper and more centrally behind the nasal cavity, in the sphenoid bone. Maxillary Sinus: Located beneath the orbits, on either side of the nose.</li><li>➤ Ethmoid Sinus : Located between the nose and the eyes, within the ethmoid bone. It is a collection of small air cells.</li><li>➤ Ethmoid Sinus</li><li>➤ Frontal Sinus : Located above the eyes, in the frontal bone. These are typically well above the maxillary sinuses.</li><li>➤ Frontal Sinus</li><li>➤ Sphenoid Sinus : Located deeper and more centrally behind the nasal cavity, in the sphenoid bone.</li><li>➤ Sphenoid Sinus</li><li>➤ Maxillary Sinus: Located beneath the orbits, on either side of the nose.</li><li>➤ Maxillary Sinus:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the type of inhibition exhibited by A. (NEET PG 2024)", "options": [{"label": "A", "text": "Competitive inhibition", "correct": true}, {"label": "B", "text": "Uncompetitive inhibition", "correct": false}, {"label": "C", "text": "Mixed inhibition", "correct": false}, {"label": "D", "text": "Non-competitive inhibition", "correct": false}], "correct_answer": "A. Competitive inhibition", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/09/06/whatsapp-image-2024-05-31-at-120830.jpg"], "explanation_images": [], "explanation": "<p><strong>Ans.  A) Competitive inhibition</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Competitive inhibition is identified by an increased Km and unchanged Vmax, with intersecting lines on the y-axis of the Lineweaver-Burk plot</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "At the Urban Primary Health Centre (U-PHC), you are in charge of managing hypertension clinic services. You have 50 patients transferred from another healthcare unit for hypertension management; 40 of these patients are prescribed amlodipine (5mg, daily) and 10 are on lisinopril (10mg, daily) due to contraindications with amlodipine. Considering the need for continuous treatment and potential increases in patient numbers, calculate the number of tablets needed for the next month and determine the appropriate reorder factor. (INICET MAY 2021)", "options": [{"label": "A", "text": "1000, rf= 3", "correct": false}, {"label": "B", "text": "1200, rf=2", "correct": false}, {"label": "C", "text": "1600, rf= 3", "correct": false}, {"label": "D", "text": "3000, rf= 2", "correct": true}], "correct_answer": "D. 3000, rf= 2", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) 3000, rf=2</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Reorder Factor (rf): A reorder factor of 2 is commonly used for monthly resupply scenarios to account for unexpected increases in patient count or dosage adjustments, ensuring no interruption in patient care.</li><li>➤ Reorder Factor (rf): A reorder factor of 2 is commonly used for monthly resupply scenarios to account for unexpected increases in patient count or dosage adjustments, ensuring no interruption in patient care.</li><li>➤ Reorder Factor (rf):</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Phototherapy converts bilirubin to? (INICET NOV 2020)", "options": [{"label": "A", "text": "Stercobilin", "correct": false}, {"label": "B", "text": "Lumirubin", "correct": true}, {"label": "C", "text": "Biliverdin", "correct": false}, {"label": "D", "text": "Urobilin", "correct": false}], "correct_answer": "B. Lumirubin", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/13/90_Do8nZuQ.jpg"], "explanation": "<p><strong>Ans. B) Lumirubin</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Phototherapy converts bilirubin into lumirubin, a water-soluble isomer that can be excreted by the kidneys, making it an effective treatment for neonatal jaundice.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 70-year-old patient presented with cough, fatigability, and weight loss. He was diagnosed with squamous cell carcinoma (SCC) on bronchoscopy. The resected specimen had a hilar lymph node that was 1cm in size and showed a black pigment. What is the black pigment likely to be? (NEET PG 2021)", "options": [{"label": "A", "text": "Anthracotic pigment", "correct": true}, {"label": "B", "text": "Melanin", "correct": false}, {"label": "C", "text": "Lipochrome", "correct": false}, {"label": "D", "text": "Hemosiderin", "correct": false}], "correct_answer": "A. Anthracotic pigment", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/13/picture1_gmIujwz.jpg"], "explanation": "<p><strong>Ans. A) Anthracotic pigment</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Anthracotic pigment, resulting from the deposition of carbon particles, is the most likely cause of the black pigment observed in the hilar lymph node of a patient with squamous cell carcinoma. This is common in individuals exposed to high levels of environmental pollution or occupational hazards involving carbon particles.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient has adult respiratory distress syndrome. Which of the following is the action of IL-8 in the pathogenesis in this patient? (NEET PG 2024)", "options": [{"label": "A", "text": "Endothelial injury", "correct": false}, {"label": "B", "text": "Neutrophil activation", "correct": true}, {"label": "C", "text": "Fibrin deposition", "correct": false}, {"label": "D", "text": "Macrophage activation", "correct": false}], "correct_answer": "B. Neutrophil activation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Neutrophil activation</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ IL-8 is a key mediator in ARDS that promotes neutrophil activation, which plays a major role in the amplification of inflammation and lung injury in the disease process.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Match the Dermatological disorders in Column A with their respective investigations in Column B: (INICET MAY 2024)", "options": [{"label": "A", "text": "1-b, 2-c, 3-a, 4-d", "correct": true}, {"label": "B", "text": "1-b, 2-d, 3-a, 4-c", "correct": false}, {"label": "C", "text": "1-d, 2-c, 3-b, 4-a", "correct": false}, {"label": "D", "text": "1-d, 2-c, 3-a, 4-b", "correct": false}], "correct_answer": "A. 1-b, 2-c, 3-a, 4-d", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/09/screenshot-2024-07-09-115026.png"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/09/screenshot-2024-07-09-115210.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/09/screenshot-2024-07-09-115344.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/09/screenshot-2024-07-09-115449.png"], "explanation": "<p><strong>Ans. A) 1-b, 2-c, 3-a, 4-d</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Correct matches:</li><li>• Correct matches:</li><li>• 1. Tinea : Tinea infections, also known as dermatophytosis, are fungal infections of the skin, hair, or nails. The diagnosis is commonly made by performing a potassium hydroxide (KOH) mount of skin scrapings, which reveals fungal hyphae under a microscope.</li><li>• 1. Tinea</li><li>• 2. Lepromatous leprosy : This form of leprosy is diagnosed using a slit skin smear, where a sample from the skin lesion is stained and examined for the presence of acid-fast bacilli (Mycobacterium leprae).</li><li>• 2. Lepromatous leprosy</li><li>• 3. Lupus vulgaris : Lupus vulgaris is a form of cutaneous tuberculosis. The diagnosis often involves a biopsy of the lesion, which shows granulomatous inflammation with caseation necrosis and the presence of acid-fast bacilli.</li><li>• 3. Lupus vulgaris</li><li>• 4. Allergic dermatitis : Allergic contact dermatitis is diagnosed using a patch test, where suspected allergens are applied to the skin under occlusive patches to observe for a delayed hypersensitivity reaction.</li><li>• 4. Allergic dermatitis</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Tinea is diagnosed with a KOH mount, lepromatous leprosy with a slit skin smear, lupus vulgaris with a biopsy, and allergic dermatitis with a patch test.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient comes with a history of asthma and sinusitis. On looking into his medical records, you notice this has been attributed to Samter

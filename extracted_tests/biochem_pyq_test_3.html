@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Biochemistry - AIIMS MAY 2O19</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Biochemistry - AIIMS MAY 2O19</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                14 Questions | 14 Total Marks | 24 min Duration | ~102.86 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 14 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 24 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 14</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Biochemistry - AIIMS MAY 2O19 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 14</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 14 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Assertion (A): Central dogma says DNA is transcribed into RNA which is subsequently translated into proteins Reason (R): Retrovirus show reverse transcriptase of central dogma where RNA is first converted to DNA which is then transcribed to RNA, which is subsequently translated into proteins", "options": [{"label": "A", "text": "Both Assertion and Reasons are independently true and the Reason is the correct explanation for the Assertion", "correct": false}, {"label": "B", "text": "Both Assertion and Reasons are independently true, but the Reason is not the correct explanation for the Assertion", "correct": true}, {"label": "C", "text": "Assertion is independently true, but the Reasons is independently a false", "correct": false}, {"label": "D", "text": "Assertion is independently a false, but the Reasons is independently a true", "correct": false}], "correct_answer": "B. Both Assertion and Reasons are independently true, but the Reason is not the correct explanation for the Assertion", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Both Assertion and Reasons are independently true, but the Reason is not the correct explanation for the Assertion Assertion: Central dogma of protein synthesis is DNA to RNA and translation from RNA to protein DNA → RNA → Protein Reason: Reverse transcriptase converts RNA to DNA and then normal process of  DNA to RNA to proteins happens. RNA → DNA → RNA → Protein This reversal of central dogma occurs in retro viruses. Retro viruses have their genome as RNA and because they have reverse transcriptase enzyme, which converts RNA to DNA. There is no link between these two processes. Both are independent phenomenon, but they can occur in same cell. For example, in retrovirus both processes happen but have no influence on each other.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is true regarding the impact of the following on cardiac diseases??", "options": [{"label": "A", "text": "Vitamin E deficiency will not cause cardiac ischemia/ problems", "correct": false}, {"label": "B", "text": "Vitamin C deficiency can cause impaired cardiac health", "correct": true}, {"label": "C", "text": "Folate has proven role in preventing cardiac illness", "correct": false}, {"label": "D", "text": "Vitamin E worsens CAD", "correct": false}], "correct_answer": "B. Vitamin C deficiency can cause impaired cardiac health", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Vitamin C deficiency can cause impaired cardiac health Vitamin C also due to its antioxidant role prevent heart diseases. So its deficiency can cause impaired cardiac health. (Textbook of medical biochemistry by Dinesh puri page 386)</p>\n<p><strong>Random:</strong></p><p>Explaination for incorrect options:- Option A. (False) Vit E has anti-atherogenic role. Hence Vit E deficiency can cause cardiac problems. Option D. Vit E due to antioxidant properties decreases the risk of CAD. It protects against oxidation of low-density lipoprotein and decreases the deposition of atherogenic oxidized low-density lipoprotein in arterial walls. Option C. Folate has main role in the one carbon donor THF synthesis which is mainly involved in synthesis of nucleic acids and amino acids. It has no proven role in cardiac illness. However, it can cause anemia.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following doesn’t happen in 5’ to 3’ direction?", "options": [{"label": "A", "text": "Transcription", "correct": false}, {"label": "B", "text": "DNA replication", "correct": false}, {"label": "C", "text": "DNA repair", "correct": false}, {"label": "D", "text": "RNA Editing", "correct": true}], "correct_answer": "D. RNA Editing", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>RNA Editing RNA editing RNA editing is the special post transcriptional modification in which differential RNA processing occurs. It occurs in 3’→5’ direction It occurs in only few cells of the body, it is also called chemical modification of RNA, in which mostly Cytosine gets converted to Uracil. e.g.: - formation of Apo B48 protein in intestinal cells from gene Apo B100,</p>\n<p><strong>Random:</strong></p><p>Explaination for incorrect options:- In DNA Replication whenever synthesis occurs new nucleotide is added to 3’end hence replication occur in 5’to 3’ direction. In transcription also, RNA is getting synthesized in 5’ to 3’ direction Hence, DNA replication, removal of primer during replication, repair and transcription occurs in 5’ to 3’ direction.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Chimeric DNA is used for:", "options": [{"label": "A", "text": "Paternity test", "correct": false}, {"label": "B", "text": "Maternity test", "correct": false}, {"label": "C", "text": "Personal identification", "correct": false}, {"label": "D", "text": "Organ transplantation", "correct": true}], "correct_answer": "D. Organ transplantation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Organ transplantation Chimerism is a condition whereby a person has not one but two complete genomes (sets of DNA) in their body. One genome is found in one region or organ(s), while the other genome can be predominant in other organs or tissues Chimerism testing (engraftment analysis) is performed for patients who have received a hematopoietic stem cell transplant. The test involves identifying the genetic profiles of the recipient and of the donor and then evaluating the extent of mixture in the recipient’s blood or bone marrow. First, DNA is isolated from the recipient and potential donor before the transplant and analysis is performed to determine whether the genetic markers unique to the donor and the recipient have sufficient power to distinguish the donor from the recipient. Next, after the transplant takes place, the performance of the transplant engraftment is assessed by evaluating the donor versus recipient contribution of white blood cells in post-transplant blood or bone marrow specimens obtained from the recipient</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A bodybuilder starts eating raw eggs for protein. He developed fatigue on moderate exercise. The doctor prescribes a vitamin. Which enzyme is deficient in him?", "options": [{"label": "A", "text": "Glucose 6 Phosphatase", "correct": false}, {"label": "B", "text": "Pyruvate Carboxylase", "correct": true}, {"label": "C", "text": "PEPCK", "correct": false}, {"label": "D", "text": "Glycogen Phosphorylase", "correct": false}], "correct_answer": "B. Pyruvate Carboxylase", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Pyruvate Carboxylase Raw eggs contain protein Avidin → tightly binds to Biotin (vit B7) and is excreted along with biotin Biotin is required for all carboxylases ; all carboxylases requires ATP also . So, enzyme affected is carboxylase which requires Biotin as coenzyme Pyruvate Carboxylase is the first enzyme of gluconeogenesis, Regarding other options: Glycogen Phosphorylase RLE of Glycogenolysis requires vitamin B6 pyridoxal phosphate no relation with glycogen phosphorylase and egg avidin Glucose 6 phosphatase Common enzyme in gluconeogenesis and glycogenolysis. Deficiency lead to hypoglycemia and that is called Von Gierke’s disease (Type 1 glycogen storage disease). Von Gierke’s disease is the most common glycogen storage disease especially in children.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following shows functional assessment of B1 deficiency:", "options": [{"label": "A", "text": "RBC Transketolase", "correct": true}, {"label": "B", "text": "RBC Glutathione reductase", "correct": false}, {"label": "C", "text": "Serum Thiamine levels", "correct": false}, {"label": "D", "text": "RBC Glutathione Peroxidase", "correct": false}], "correct_answer": "A. RBC Transketolase", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>RBC Transketolase Thiamine (vitamin B1) Deficiency Lab diagnosis of Thiamine deficiency is assessed by Erythrocyte transketolase activity. Thiamine (Vitamin B1) is the marker for transketolase enzyme which is involved in HMP pathway Activity of Transketolase is measured (not the quantity). As HMP pathway occurs in RBC’s Transketolase enzyme is abundantly present in RBC’s. There is no importance of checking serum thiamine (Option c) instead we check enzyme activity. RBC Glutathione reductase is an enzyme in HMP pathway in RBC (Option b). This enzyme is involved in the formation of reduced glutathione (GSH) Reduced glutathione (GSH) is required for destroying H 2 O 2 , which normally accumulates in RBC Glutathione reductase require Vitamin B 2 , Thus RBC glutathione reductase is the marker for vitamin B 2 deficiency. Enzyme Transaminase activity in checked for Pyridoxine (Vitamin B6) deficiency Note: If Relation between thiamine and energy is asked then mark enzyme of Link reaction and TCA, because pyruvate dehydrogenase of Link reaction and α ketoglutarate dehydrogenase of TCA cycle, they give energy and they are required vitamins, both link reaction and TCA requires 4 B-complex vitamins B1, B2, B3 and B5.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which modification will not lead to change in biological activity of the hormone given in picture?", "options": [{"label": "A", "text": "Interchange of A1 & A4", "correct": false}, {"label": "B", "text": "Interchange of B29 and B 30", "correct": true}, {"label": "C", "text": "Interchange of A 5 & A6", "correct": false}, {"label": "D", "text": "Breaking disulphide linkages", "correct": false}], "correct_answer": "B. Interchange of B29 and B 30", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1696334889819-QTDBPYQ077IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Interchange of B29 and B 30 Insulin aspart (Novolog) has a B28 amino acid proline substitution with aspartic acid . Insulin glulisine (Apidra) has two amino acid substitutions and differs from human insulin in that B3 asparagine is replaced by lysine, and B29 lysine is replaced by glutamic acid . Breaking that disulfide bond would facilitate the denaturation of the protein. Amino acid comparison of insulin between selected species* Species Peptide chain and amino acid number A8 A10 A18 B30 Feline Ala Val His Ala Bovine Ala Val Asn Ala Porcine/Canine Thr lle Asn Ala Human Thr lle Asn Thr Ala-Alanine; Asn-Asparagine; His-Histidine; lle-Isoleucine; Thr-Threonine; Val-Valine Remember : All mammalian insulins irrespective of the species of origin bind with a similar affinity to insulin receptors and initiate post-receptor events in terms of autophosphorylation. 2</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is false regarding reducing activation energy?", "options": [{"label": "A", "text": "Decreased entropy", "correct": false}, {"label": "B", "text": "Desolvation of active site", "correct": false}, {"label": "C", "text": "Conformational change in the active site of enzyme at or after the time of binding of substrate to enzyme", "correct": false}, {"label": "D", "text": "Complementarity of active site of enzyme and substrate", "correct": true}], "correct_answer": "D. Complementarity of active site of enzyme and substrate", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Complementarity of active site of enzyme and substrate The energy derived from enzyme-substrate interaction is called binding energy, G B . Binding energy is a major source of free energy used by enzymes to lower the activation energies of reactions. An enzyme completely complementary to its substrate would be a very poor enzyme (option-D) while an enzyme, which is flexible (Option -C) has more chances to make the substrates reach the transition state hence maximizes the binding energy.</p>\n<p><strong>Random:</strong></p><p>Explaination for incorrect options:- Hence statement in Option D can be considered as false regarding reducing the activation energy. Option B. The active sites of enzymes usually occur in clefts and crevices in the protein. This design has the effect of excluding bulk solvent (water), which would otherwise reduce the catalytic activity of the enzyme. The substrate molecule is desolvated upon binding, and shielded from bulk solvent in the enzyme active site. Option A: Entropy reduction – enzymes bring the substrates molecules very close and helps to reduce the entropy. This facilitates the product formation by increasing number of effective collisions between substrate molecules hence helps in catalysis.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The graph shown below is the titration curve of a biochemical compound. Which of the following statement is true?", "options": [{"label": "A", "text": "The maximum buffering capacity of the compound is represented by points A and B.", "correct": true}, {"label": "B", "text": "The points A and B represent the range of maximum ionization of the carboxyl and amino group", "correct": false}, {"label": "C", "text": "The compound has three ionizable side chains", "correct": false}, {"label": "D", "text": "The compound has one ionizable group", "correct": false}], "correct_answer": "A. The maximum buffering capacity of the compound is represented by points A and B.", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1696334889905-QTDBPYQ079IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>The maximum buffering capacity of the compound is represented by points A and B. This curve shown is similar to titration curve of histidine with three parts The maximum buffering capacity happens at the point of pK of different groups which is midpoint of vertical part of curve and hence, points A and B (option a is true) The compound has only one ionizable side chain group as in histidine (option c is false) The compound has three ionizable groups (option d is false) Point A and B represent 50% ionization of carboxyl and amino groups (option b is false)</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following TCA cycle intermediate is a part of heme metabolism?", "options": [{"label": "A", "text": "Alpha ketoglutarate", "correct": false}, {"label": "B", "text": "Fumarate", "correct": false}, {"label": "C", "text": "Succinyl CoA", "correct": true}, {"label": "D", "text": "Malate", "correct": false}], "correct_answer": "C. Succinyl CoA", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Succinyl CoA The first step of heme synthesis uses succinyl CoA which is an intermediate of TCA. Heme synthesis It occurs in Mitochondria + cytoplasm (So, doesn’t occurs in RBC)</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The catalytic efficiency of enzyme is best expressed by which of the following kinetic constants:", "options": [{"label": "A", "text": "Kcat/Km", "correct": true}, {"label": "B", "text": "Km/Kcat", "correct": false}, {"label": "C", "text": "Km/Ka", "correct": false}, {"label": "D", "text": "Ka/Km", "correct": false}], "correct_answer": "A. Kcat/Km", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Kcat/Km The kinetic parameters k cat and K m are useful for the study and comparison of different enzymes, with simple or complex reaction mechanisms. k cat and K m are used as an estimate for the kinetic efficiency of enzymes, but either parameter alone is insufficient for this purpose. For instance, two enzymes catalyzing different reactions may have the same k cat (turnover number), yet the rates of the uncatalyzed reactions may be different and thus the rate enhancements brought about by the enzymes may differ greatly. Hence, the best way to measure the catalytic efficiencies of different enzymes is to compare the ratio Kcat/Km for the two reactions. This parameter, is called the specificity constant , is the rate constant for the conversion of E + S to E + P  when [S] << K m.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Type of mutation seen in sickle cell anaemia:", "options": [{"label": "A", "text": "Insertion", "correct": false}, {"label": "B", "text": "Deletion", "correct": false}, {"label": "C", "text": "Point mutation", "correct": true}, {"label": "D", "text": "Frameshift mutations", "correct": false}], "correct_answer": "C. Point mutation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Point mutation Sickle-cell anemia The occurrence of the disease sickle-cell anemia due to a single base alteration (CTC + CAC in DNA, and CAG + GUC in RNA) is a classic example of point mutations. The result is that glutamate at the 6th position of B-chain of haemoglobin is replaced by valine. This happens since the altered codon GUG of mRNA codes for valine instead of glutamate. Insertion Deletion If Not in the multiple of 3 then it will lead to shifting of the frame of codon called as frame shift. Other examples of point mutation: -</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In which of the inheritance, if father is affected no offspring is affected, but if mother affected, all offspring affected?", "options": [{"label": "A", "text": "Mitochondrial", "correct": true}, {"label": "B", "text": "X linked recessive", "correct": false}, {"label": "C", "text": "Autosomal dominant", "correct": false}, {"label": "D", "text": "Autosomal recessive", "correct": false}], "correct_answer": "A. Mitochondrial", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Mitochondrial In all the offspring, mitochondria is derived only from mother. Hence, any mutation in mother mitochondria will also be transferred to its offsprings. So in mitochondrial gene inheritance if mother is affected all offspring will be affected.</p>\n<p><strong>Random:</strong></p><p>Explaination for incorrect options:- In case of X-linked disease there is no male to male transmission. In Y linked – father will transmit disease to all his sons. In autosomal inheritance, there is equal frequency of these disease in male and female Additional information: Mitochondrial disease has high incidence as mitochondrial DNA repair cannot occur, introns not present, and there is continuous exposure to the oxygen free radicals of ETC. Due to these few reasons mitochondrial DNA damage have more chances of mutations in mitochondrial DNA as compared to nuclear DNA.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Hepcidin decreases iron absorption by inhibiting?", "options": [{"label": "A", "text": "Divalent metal transporter", "correct": false}, {"label": "B", "text": "Hephaestin", "correct": false}, {"label": "C", "text": "Ferroportin", "correct": true}, {"label": "D", "text": "Transferrin", "correct": false}], "correct_answer": "C. Ferroportin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ferroportin Hepcidin Hepcidin regulates iron metabolism. It mainly regulates iron entry in circulation. By inhibiting ferroportin, hepcidin reduces dietary iron absorption. The iron release from macrophages is also reduced by ferroportin inhibition. So, increased hepcidin activity is responsible for reduced iron availability. Increased hepcidin will lead to anemia. Decreased hepcidin leads to iron overload Hepcidin synthesis and secretion by the liver is controlled by iron stores within macrophages, inflammation, hypoxia, and erythropoiesis.</p>\n<p><strong>Random:</strong></p><p>Explaination for incorrect options:- Divalent metal transporter- absorbs divalent metal ions from intestine especially Ferrous. Hephaestin – involved in homeostasis of iron & copper. Transferrin is a protein which is responsible for the transport of Iron</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

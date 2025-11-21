@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Hematology</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Hematology</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                37 Questions | 96 Total Marks | 47 min Duration | ~76.22 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 37 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 47 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 37</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Hematology - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 37</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 37 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "To monitor iron overload in long standing thalassemias, which is the best investigation?", "options": [{"label": "A", "text": "Liver iron measurement by MRI", "correct": true}, {"label": "B", "text": "Cardiac iron measurement by MRI", "correct": false}, {"label": "C", "text": "Serum Free iron measurment", "correct": false}, {"label": "D", "text": "Bone marrow ferritin levels after BM aspiration", "correct": false}], "correct_answer": "A. Liver iron measurement by MRI", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59490001700921181/59490001700921181.m3u8"}, {"text": "A 3 year old male child was brought to OPD with complaints of short stature and poor growth. On examination, you noticed multiple brown Café-au-lait spots on the body & bony abnormalities involving the radial bone & thumb. Which among the following investigations will NOT be helpful in diagnosis?", "options": [{"label": "A", "text": "Chromosomal breakage test", "correct": false}, {"label": "B", "text": "Complementation test", "correct": false}, {"label": "C", "text": "Gene sequencing", "correct": false}, {"label": "D", "text": "DKC-1 gene detection", "correct": true}], "correct_answer": "D. DKC-1 gene detection", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/999671700921191/999671700921191.m3u8"}, {"text": "An 18-month-old toddler has microcytic anemia. Which dietary history finding best explains this?", "options": [{"label": "A", "text": "Lack of fresh vegetables in the diet", "correct": false}, {"label": "B", "text": "Intake of inadequate amounts of fruit juice", "correct": false}, {"label": "C", "text": "Intake of excessive amounts of vitamin C", "correct": false}, {"label": "D", "text": "Intake of large amounts of unmodified cow’s milk", "correct": true}], "correct_answer": "D. Intake of large amounts of unmodified cow’s milk", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74889761700921202/74889761700921202.m3u8"}, {"text": "Congenital cause of hypercoagulable states includes all except?", "options": [{"label": "A", "text": "Protein C deficiency", "correct": false}, {"label": "B", "text": "Protein S deficiency", "correct": false}, {"label": "C", "text": "MTHFR mutation", "correct": false}, {"label": "D", "text": "Lupus anticoagulant", "correct": true}], "correct_answer": "D. Lupus anticoagulant", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/32565121700921212/32565121700921212.m3u8"}, {"text": "Mode of inheritance of congenital sideroblastic anemia is?", "options": [{"label": "A", "text": "Sporadic", "correct": false}, {"label": "B", "text": "X-linked recessive", "correct": true}, {"label": "C", "text": "Autosomal dominant", "correct": false}, {"label": "D", "text": "Autosomal recessive", "correct": false}], "correct_answer": "B. X-linked recessive", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/57374521700921223/57374521700921223.m3u8"}, {"text": "Kostmann’s syndrome-treatment is :", "options": [{"label": "A", "text": "Anti-thymocyte globulin+ cyclosporin", "correct": false}, {"label": "B", "text": "Anti- thymocyte globulin + cycloporin +GM-CSF", "correct": false}, {"label": "C", "text": "G-CSF", "correct": true}, {"label": "D", "text": "GM- CSF", "correct": false}], "correct_answer": "C. G-CSF", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/46369361700921237/46369361700921237.m3u8"}, {"text": "Treatment of choice in Diamond-Blackfananemia is?", "options": [{"label": "A", "text": "IVIG", "correct": false}, {"label": "B", "text": "Erythropoietin", "correct": false}, {"label": "C", "text": "Corticosteroids", "correct": true}, {"label": "D", "text": "Azathioprine", "correct": false}], "correct_answer": "C. Corticosteroids", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36116761700921248/36116761700921248.m3u8"}, {"text": "Most common cause of bacterial meningitis in a child with CSF rhinorrhea?", "options": [{"label": "A", "text": "Streptococcus agalactiae", "correct": false}, {"label": "B", "text": "Streptococcus pneumoniae", "correct": true}, {"label": "C", "text": "Escherichia coli", "correct": false}, {"label": "D", "text": "Staphylococcus aureus", "correct": false}], "correct_answer": "B. Streptococcus pneumoniae", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/45565841700921372/45565841700921372.m3u8"}, {"text": "A child suffering from iron deficiency anemia was started on oral iron therapy. When will the peak reticulocytosis anticipated after starting iron?", "options": [{"label": "A", "text": "2-3 days", "correct": false}, {"label": "B", "text": "3-5 days", "correct": false}, {"label": "C", "text": "5-7 days", "correct": true}, {"label": "D", "text": "10-14 days", "correct": false}], "correct_answer": "C. 5-7 days", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/59040889.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63945131700921403/63945131700921403.m3u8"}, {"text": "A 9-year-old boy comes with elevation of both PT and APTT. What is the diagnosis?", "options": [{"label": "A", "text": "Defect in extrinsic pathway", "correct": false}, {"label": "B", "text": "Defect in Intrinsic pathway", "correct": false}, {"label": "C", "text": "Platelet function defect", "correct": false}, {"label": "D", "text": "Defect in common pathway", "correct": true}], "correct_answer": "D. Defect in common pathway", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/40618331700921413/40618331700921413.m3u8"}, {"text": "Neonate with blood group incompatibility not causing clinical hemolysis is?", "options": [{"label": "A", "text": "Bombay blood group", "correct": false}, {"label": "B", "text": "Kelly", "correct": false}, {"label": "C", "text": "Duff", "correct": false}, {"label": "D", "text": "Lewis", "correct": true}], "correct_answer": "D. Lewis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37778491700921428/37778491700921428.m3u8"}, {"text": "A12-year-old child having microcytic hypochromic anemiahas blood picture showing Hb >40 gm/l, serum iron levels 20, transferrin saturation 40%,ferritin >800.The likely diagnosis is?", "options": [{"label": "A", "text": "Iron deficiency anemia", "correct": false}, {"label": "B", "text": "Hemochromatosis", "correct": false}, {"label": "C", "text": "Atransferrinemia", "correct": true}, {"label": "D", "text": "DMT1 gene mutation", "correct": false}], "correct_answer": "C. Atransferrinemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74606051700921441/74606051700921441.m3u8"}, {"text": "The type of disease having severe thrombocytopenia with decreased vWF and mildly decreased factor 8 levels in blood is?", "options": [{"label": "A", "text": "Type 1", "correct": false}, {"label": "B", "text": "Type 2A", "correct": false}, {"label": "C", "text": "Type 3", "correct": false}, {"label": "D", "text": "Pseudo-vWD", "correct": true}], "correct_answer": "D. Pseudo-vWD", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/11103421700921453/11103421700921453.m3u8"}, {"text": "In a child with Hemophilia A, the joint earliest affected in life by hemarthrosis is:", "options": [{"label": "A", "text": "Knee", "correct": false}, {"label": "B", "text": "Ankle", "correct": true}, {"label": "C", "text": "Hip", "correct": false}, {"label": "D", "text": "Elbow", "correct": false}], "correct_answer": "B. Ankle", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39594641700921463/39594641700921463.m3u8"}, {"text": "The most common presentation of G6PD deficiency is:", "options": [{"label": "A", "text": "Acute hemolytic crisis", "correct": false}, {"label": "B", "text": "Gallstones", "correct": false}, {"label": "C", "text": "Progressive pallor", "correct": false}, {"label": "D", "text": "Asymptomatic", "correct": true}], "correct_answer": "D. Asymptomatic", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19171711700921475/19171711700921475.m3u8"}, {"text": "A 7 year old child had acute viral illness, followed by sudden appearance of non-palpable petechiae and purpura on the body. There was mild splenomegaly but no hepatomegaly. On investigations, Platelet count was 80000/mm3. CRP and TLC were elevated. Presence of which among the following rules out ITP as the likely cause?", "options": [{"label": "A", "text": "Non-palpable lesions", "correct": false}, {"label": "B", "text": "Elevation of CRP", "correct": false}, {"label": "C", "text": "Age of the child", "correct": false}, {"label": "D", "text": "Presence of splenomegaly", "correct": true}], "correct_answer": "D. Presence of splenomegaly", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/21361471700921487/21361471700921487.m3u8"}, {"text": "What shall be the most common haematological abnormality seen in the child shown in picture?", "options": [{"label": "A", "text": "Aplastic anemia", "correct": false}, {"label": "B", "text": "Thrombocytopenia only", "correct": true}, {"label": "C", "text": "IMML", "correct": false}, {"label": "D", "text": "PNH", "correct": false}], "correct_answer": "B. Thrombocytopenia only", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/463550619.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5191541700921499/5191541700921499.m3u8"}, {"text": "Transient myeloproliferative disorder of newborn is seen in association with-", "options": [{"label": "A", "text": "Turner syndrome", "correct": false}, {"label": "B", "text": "Down’s syndrome", "correct": true}, {"label": "C", "text": "Neurofibromatosis", "correct": false}, {"label": "D", "text": "Ataxia telangectasia", "correct": false}], "correct_answer": "B. Down’s syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/66182981700921511/66182981700921511.m3u8"}, {"text": "The most common physical manifestation of Fanconi anemia is?", "options": [{"label": "A", "text": "Hyperpigmentation", "correct": true}, {"label": "B", "text": "Short stature", "correct": false}, {"label": "C", "text": "Ear anomalies", "correct": false}, {"label": "D", "text": "Hypogonadism", "correct": false}], "correct_answer": "A. Hyperpigmentation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/543421700921524/543421700921524.m3u8"}, {"text": "What is the therapeutic dose of elemental iron in childhood iron-deficiency anemia?", "options": [{"label": "A", "text": "1-3 mg/kg/day", "correct": false}, {"label": "B", "text": "3-6 mg/kg/day", "correct": true}, {"label": "C", "text": "6-12 mg/kg/day", "correct": false}, {"label": "D", "text": "12-15 mg/kg/day", "correct": false}], "correct_answer": "B. 3-6 mg/kg/day", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41031751700921551/41031751700921551.m3u8"}, {"text": "The hematological abnormality seen in orotic aciduria is?", "options": [{"label": "A", "text": "Microcytic anemia", "correct": false}, {"label": "B", "text": "Macrocytic anemia", "correct": true}, {"label": "C", "text": "Hemolysis", "correct": false}, {"label": "D", "text": "Thrombosis", "correct": false}], "correct_answer": "B. Macrocytic anemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/20446511700921631/20446511700921631.m3u8"}, {"text": "The following may present as hemolytic disease of the newborn:", "options": [{"label": "A", "text": "Hereditary spherocytosis", "correct": true}, {"label": "B", "text": "Sickle cell trait", "correct": false}, {"label": "C", "text": "Dubin Johnson syndrome", "correct": false}, {"label": "D", "text": "Rotor syndrome", "correct": false}], "correct_answer": "A. Hereditary spherocytosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/72615071700921645/72615071700921645.m3u8"}, {"text": "A 9-year-old African-American child is brought to the energy room complaining of painful swelling in his hands and feet, as well as abdominal pain. He is feverish [39°C (102.2°F)] and tachycardiac (140 beats per minute). He has not been exposed to any known infectious diseases. His eyes appear icteric, and his liver is enlarged. Of the choices below, which is a likely diagnosis?", "options": [{"label": "A", "text": "Sickle cell disease", "correct": true}, {"label": "B", "text": "Acute lymphocytic leukemia", "correct": false}, {"label": "C", "text": "Henoch-Schonlein purpura", "correct": false}, {"label": "D", "text": "Aplastic anemia", "correct": false}], "correct_answer": "A. Sickle cell disease", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/57143561700921658/57143561700921658.m3u8"}, {"text": "Decreased LAP score is found in?", "options": [{"label": "A", "text": "Leukaemoid reaction", "correct": false}, {"label": "B", "text": "Myelofibrosis", "correct": false}, {"label": "C", "text": "Pernicious anemia", "correct": true}, {"label": "D", "text": "Polycythemia", "correct": false}], "correct_answer": "C. Pernicious anemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5897081700921670/5897081700921670.m3u8"}, {"text": "Non-hematologic manifestations of iron-deficiency in children include all except?", "options": [{"label": "A", "text": "Cognitive defects", "correct": false}, {"label": "B", "text": "ADHD", "correct": true}, {"label": "C", "text": "Pagophagia", "correct": false}, {"label": "D", "text": "Pica", "correct": false}], "correct_answer": "B. ADHD", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9015821700921683/9015821700921683.m3u8"}, {"text": "Not true regarding Rogers syndrome?", "options": [{"label": "A", "text": "Thiamine responsive megaloblastic anemia", "correct": false}, {"label": "B", "text": "Conductive deafness", "correct": true}, {"label": "C", "text": "Diabetes mellitus", "correct": false}, {"label": "D", "text": "Autosomal recessive inheritance", "correct": false}], "correct_answer": "B. Conductive deafness", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56371911700921697/56371911700921697.m3u8"}, {"text": "What is characteristic of Gray platelet syndrome?", "options": [{"label": "A", "text": "Absence of Alpha granules", "correct": true}, {"label": "B", "text": "Absence of Gamma granules", "correct": false}, {"label": "C", "text": "Abnormal platelet aggregation in response to ristocetin", "correct": false}, {"label": "D", "text": "Pre-malignant condition", "correct": false}], "correct_answer": "A. Absence of Alpha granules", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/80181700921708/80181700921708.m3u8"}, {"text": "All of the following are true of childhood ITP except-", "options": [{"label": "A", "text": "Prolonged clotting time", "correct": true}, {"label": "B", "text": "Preceded by viral infection", "correct": false}, {"label": "C", "text": "Increased bone marrow megakaryocytes", "correct": false}, {"label": "D", "text": "VIG useful in severe cases", "correct": false}], "correct_answer": "A. Prolonged clotting time", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/42675831700921721/42675831700921721.m3u8"}, {"text": "A 15-year old female presented to the emergency dept. with history of recurrent epistaxis, hematuria and hematochezia. There was a history of profuse bleeding from the umbilicus stump at birth. Previous investigations revealed normal PT, APTT, TT and fibrinogen levels. Her platelet counts as well as platelet function tests were normal but urea clot lysis test was positive. Which one of the following clotting factor is most likely to be deficient?", "options": [{"label": "A", "text": "Factor X", "correct": false}, {"label": "B", "text": "Factor XI", "correct": false}, {"label": "C", "text": "Factor XII", "correct": false}, {"label": "D", "text": "Factor XIII", "correct": true}], "correct_answer": "D. Factor XIII", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/33108061700921733/33108061700921733.m3u8"}, {"text": "Deferiprone use as chelator therapy needs monitoring of?", "options": [{"label": "A", "text": "LFT", "correct": false}, {"label": "B", "text": "RFT", "correct": false}, {"label": "C", "text": "Blood cell counts", "correct": true}, {"label": "D", "text": "LDH", "correct": false}], "correct_answer": "C. Blood cell counts", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/70641081700915508/70641081700915508.m3u8"}, {"text": "Hair on end appearance is classically seen in X-ray skull in?", "options": [{"label": "A", "text": "Thalassemia", "correct": true}, {"label": "B", "text": "Hydrocephalus", "correct": false}, {"label": "C", "text": "Chronic malaria", "correct": false}, {"label": "D", "text": "Myelopthisis", "correct": false}], "correct_answer": "A. Thalassemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/43866441700921762/43866441700921762.m3u8"}, {"text": "In long standing thalassemia, the most common cause of death is?", "options": [{"label": "A", "text": "BM suppression", "correct": false}, {"label": "B", "text": "Secondary infections", "correct": false}, {"label": "C", "text": "Cardiac causes", "correct": true}, {"label": "D", "text": "Malignancy", "correct": false}], "correct_answer": "C. Cardiac causes", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/21438151700921772/21438151700921772.m3u8"}, {"text": "Microcytic anemia is seen in all of the following except?", "options": [{"label": "A", "text": "Thalassemia", "correct": false}, {"label": "B", "text": "Sideroblastic anemia", "correct": false}, {"label": "C", "text": "Lead poisoning", "correct": false}, {"label": "D", "text": "Aplastic anemia", "correct": true}], "correct_answer": "D. Aplastic anemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/33902871700921783/33902871700921783.m3u8"}, {"text": "Transmission of G6-PD is?", "options": [{"label": "A", "text": "X-linked", "correct": true}, {"label": "B", "text": "Acquired", "correct": false}, {"label": "C", "text": "AR", "correct": false}, {"label": "D", "text": "AD", "correct": false}], "correct_answer": "A. X-linked", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/16172311700921795/16172311700921795.m3u8"}, {"text": "Treatment useful to control mucosal bleeding in all types of vWD?", "options": [{"label": "A", "text": "Desmopressin", "correct": false}, {"label": "B", "text": "FFP", "correct": false}, {"label": "C", "text": "Antifibrinolytics", "correct": true}, {"label": "D", "text": "vWF concentrates", "correct": false}], "correct_answer": "C. Antifibrinolytics", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53155131700921805/53155131700921805.m3u8"}, {"text": "Most common cause of acquired red cell aplasia in children is?", "options": [{"label": "A", "text": "Parvovirus B19", "correct": false}, {"label": "B", "text": "Mitochondrial defects", "correct": false}, {"label": "C", "text": "Transient erythroblastopenia of childhood", "correct": true}, {"label": "D", "text": "HLH syndrome", "correct": false}], "correct_answer": "C. Transient erythroblastopenia of childhood", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/72609531700921817/72609531700921817.m3u8"}, {"text": "RBCs replaced each day in a normal post-infant person is?", "options": [{"label": "A", "text": ">1%", "correct": true}, {"label": "B", "text": "1-5%", "correct": false}, {"label": "C", "text": "5-10%", "correct": false}, {"label": "D", "text": ">10%", "correct": false}], "correct_answer": "A. >1%", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6472631700921828/6472631700921828.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

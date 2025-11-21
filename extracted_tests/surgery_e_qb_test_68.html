@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Spleen</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Spleen</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                17 Questions | 17 Total Marks | 27 min Duration | ~95.29 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 17 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 27 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 17</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Spleen - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 17</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 17 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 53-year-old male presented with a history of post-prandial fullness of the abdomen. CT scan revealed a retroperitoneal mass with intra-abdominal extension. Perioperatively there was a large mesenteric tumor infiltrating the greater omentum. Tumor was resected. There was a gray-brown/tan nodule in the omentum measuring 2x 1cm. On Microscopic examination, the Gray brown nodule in the omentum showed a well-formed capsule, trabeculae, red pulp, and white pulp of the spleen and was diagnosed as splenunculi. The most common site for splenunculi in descending order of frequency is:", "options": [{"label": "A", "text": "Gastrocolic Ligament, the Pancreatic Tail, the Greater Omentum.", "correct": false}, {"label": "B", "text": "Gastrocolic Ligament, the Greater Omentum, Hilum of the Spleen.", "correct": false}, {"label": "C", "text": "Hilum of the Spleen, the Greater Omentum, the Pancreatic Tail", "correct": false}, {"label": "D", "text": "Hilum of the Spleen, the Pancreatic Tail, the Greater Omentum", "correct": true}], "correct_answer": "D. Hilum of the Spleen, the Pancreatic Tail, the Greater Omentum", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hilum of the Spleen, the Pancreatic Tail, the Greater Omentum Over 80 % of accessory spleens are found in the region of the splenic hilum and vascular pedicle . Other locations for accessory spleens in descending order of frequency are the gastrocolic ligament, the pancreas tail, the greater omentum, the stomach’s greater curve, the splenocolic ligament, the small and large bowel mesentery, the left broad ligament in women, and the left spermatic cord in men.</p>\n<p><strong>Highyeild:</strong></p><p>The most common anomaly in splenic embryology is the presence of accessory spleens. Accessory spleens are present in approximately 20% of the population. Up to 30% of patients with the hematologic disease may have one or more accessory spleens. Over 80% of accessory spleens are located in the region of the splenic hilum and vascular pedicle.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Locations for accessory spleens in descending order of frequency are the hilum of the spleen, gastrocolic ligament, the pancreas tail, the greater omentum, the stomach’s greater curve, the splenocolic ligament, the small and large bowel mesentery, the left broad ligament in women, and the left spermatic cord in men. Option: B. Locations for accessory spleens in descending order of frequency are the hilum of the spleen, gastrocolic ligament, the pancreas tail, the greater omentum, the stomach’s greater curve, the splenocolic ligament, the small and large bowel mesentery, the left broad ligament in women, and the left spermatic cord in men. Option: C . Locations for accessory spleens in descending order of frequency are the hilum of the spleen, gastrocolic ligament, the pancreas tail, the greater omentum, the stomach’s greater curve, the splenocolic ligament, the small and large bowel mesentery, the left broad ligament in women, and the left spermatic cord in men.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the most common location of the accessory spleen from the given image which is marked as follows:", "options": [{"label": "A", "text": "A", "correct": true}, {"label": "B", "text": "C", "correct": false}, {"label": "C", "text": "D", "correct": false}, {"label": "D", "text": "F", "correct": false}], "correct_answer": "A. A", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1685621787738-QTDS054002IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>A Splenunculi are single or multiple accessory spleens that are found in approximately 10–30% of the population. They are located near the hilum of the spleen (A) in 50% of cases.</p>\n<p><strong>Highyeild:</strong></p><p>Splenunculi are accessory spleens that are found in a significant portion of the population ( 10-30% ). These small, spherical, or ovoid bodies resemble the structure and function of the spleen but are separate from the main spleen. Splenunculi can be located in various areas of the abdomen, but are most commonly found near the hilum of the spleen . In some cases, splenunculi may be discovered incidentally during an imaging study or surgical procedure, and many people may never know they have them. Splenunculi are generally considered to be benign and do not typically require treatment unless they cause complications such as abdominal pain or obstruction.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: B . Accessory spleens can be located near the pancreas tail in 6% of the population. Option: C . Accessory spleens can be located near the splenocolic ligament in 2% of the population. Option: D . Accessory spleens can be located near the mesentery in 0.5% of the population.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 47‐year‐old man was rushed to the hospital in a state of severe hypovolaemic shock and a distended abdomen. On presentation to the hospital he was hypotensive at 74/50 mm Hg, and tachycardic with a pulse of 122 beats/min. Abdominal examination was unremarkable. A bedside ultrasound scan revealed large amounts of intraperitoneal fluid. At subsequent laparotomy, 4 liters of blood was found in the abdomen and the source was from the splenic artery. A splenectomy was performed along with ligation of the splenic artery. Which of the following is true regarding splenic artery aneurysm?", "options": [{"label": "A", "text": "They are twice as common among men", "correct": false}, {"label": "B", "text": "Most common site is the main arterial trunk", "correct": false}, {"label": "C", "text": "Splenic artery aneurysms are usually found in more than one site.", "correct": false}, {"label": "D", "text": "The aneurysm is usually symptomless unless it ruptures.", "correct": true}], "correct_answer": "D. The aneurysm is usually symptomless unless it ruptures.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>The aneurysm is usually symptomless unless it ruptures. The splenic artery aneurysm is usually symptomless unless it ruptures and is more likely to be detected on a plain abdominal radiograph or scan.</p>\n<p><strong>Highyeild:</strong></p><p>The most common site of intra-abdominal aneurysm is the aorta, followed by the splenic artery. The splenic artery is the most common site of splanchnic artery aneurysms. Arteriosclerosis is the most common cause of splenic artery aneurysms. Splenic artery aneurysms are usually saccular, and multiple aneurysms are present in 20% of cases. Calcification is present in approximately one-third of cases and is mostly located in the distal third of the splenic artery. Splenic artery aneurysms are four times more common in women, with possible contributing factors such as multiparity, portal hypertension, arterial fibrodysplasia, pancreatitis, trauma, arteritis, and septic emboli. Aneurysmal rupture during pregnancy typically occurs during the third trimester. Factors that increase the risk of rupture include young age, absence of aneurysmal calcification, presence of hypertension, and an aneurysm diameter greater than 1.5 cm.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Splenic artery aneurysms are four times more common in women. Option: B. A most common site of the splenic artery aneurysm is the main arterial trunk. Option: C. Splenic artery aneurysms are generally single. More than one aneurysm is found in one-quarter of cases.</p>\n<p><strong>Extraedge:</strong></p><p>Documented aneurysmal enlargement and symptoms caused by the aneurysm are indications for surgery. An aneurysm detected in a woman who anticipates pregnancy should be removed, and one detected during pregnancy should be removed before the third trimester. Proximal aneurysms are excised after proximal and distal ligations. Mid-splenic aneurysms are excluded by proximal and distal ligations of the splenic artery and all collateral vessels. The most common type of splenic artery aneurysm, the distal or hilar aneurysm, is treated with aneurysmectomy and splenectomy.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 58-year-old lady presented with complaints of severe epigastric abdominal pain. On examination, her heart rate was 110/min and her blood pressure was 90/50 mmHg. Her abdomen was distended with mild general tenderness. The patient was later diagnosed with a splenic artery aneurysm. Which of the following is the investigation of choice for the diagnosis of splenic artery aneurysm?", "options": [{"label": "A", "text": "Ultrasound", "correct": false}, {"label": "B", "text": "CT", "correct": true}, {"label": "C", "text": "MRI", "correct": false}, {"label": "D", "text": "Plain radiography", "correct": false}], "correct_answer": "B. CT", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>CT Computed tomography (CT) with contrast enhancement is more commonly undertaken to better characterize the nature of the suspected splenic pathology and to exclude other intra-abdominal pathology and is the investigation of choice for splenic artery aneurysm.</p>\n<p><strong>Highyeild:</strong></p><p>An aneurysm is usually asymptomatic until it ruptures and can be detected through radiographs or scans. A bruit may be present, but the aneurysm is unlikely to be palpable. A ruptured aneurysm mimics symptoms of splenic rupture and is often unexpected. Younger patients and pregnant women are at a higher risk of experiencing a rupture, with almost inevitable fetal death in pregnant women. Treatment options include embolization or endovascular stenting following selective splenic artery angiography.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A . Ultrasound is rapid, relatively easy to perform, and is often the first imaging modality used to evaluate the spleen in a trauma patient. Ultrasonography can be used to determine the size and consistency of the spleen, and whether a cyst is present. Option: C . MRI can be a valuable adjunct to the more commonly used imaging techniques when the splenic disease is suspected but offers no obvious advantage for primary imaging of the spleen. Option: D . Plain Radiography is rarely used for primary splenic imaging but the incidental finding of calcification of the splenic artery or spleen may raise the possible diagnosis of a splenic artery aneurysm</p>\n<p><strong>Extraedge:</strong></p><p>For younger patients with an asymptomatic splenic artery aneurysm, surgery or interventional radiolog y is recommended after a CT scan, MRI, or selective coeliac angiography confirms the diagnosis. Observation may be the preferred treatment option for elderly patients with a calcified aneurysm.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 22-year-old female was admitted to the emergency department with severe abdominal pain which began two hours ago after blunt abdominal trauma. Her pulse was 70 beats/min, blood pressure 90/60 mm/Hg, and body temperature was 36.5°C. On abdominal examination, the abdomen was distended, bowel sounds were normal, and she had left upper quadrant tenderness. Which of the following will be the first investigation if splenic rupture is suspected in this patient?", "options": [{"label": "A", "text": "Ultrasound", "correct": true}, {"label": "B", "text": "CT", "correct": false}, {"label": "C", "text": "MRI", "correct": false}, {"label": "D", "text": "Plain radiography", "correct": false}], "correct_answer": "A. Ultrasound", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ultrasound Ultrasound is rapid, relatively easy to perform, and is often the first imaging modality used to evaluate the spleen in a trauma patient. Ultrasonography can be used to determine the size and consistency of the spleen, and whether a cyst is present.</p>\n<p><strong>Highyeild:</strong></p><p>Plain radiology is not commonly used for diagnosis. Incidental findings of calcification in the splenic artery or spleen may suggest various conditions such as splenic artery aneurysm, old infarct, benign cyst, or hydatid disease. Multiple calcifications may suggest splenic tuberculosis. Ultrasonography can provide information on spleen size and consistency, as well as the presence of cysts. Computed tomography (CT) with contrast enhancement is commonly used to better understand the nature of suspected splenic pathologies and exclude other intra-abdominal issues. Magnetic resonance imaging (MRI) can be useful, especially for distinguishing cystic lesions through T2-weighted images.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: B . Computed tomography (CT) with contrast enhancement is more commonly undertaken to better characterize the nature of the suspected splenic pathology and to exclude other intra-abdominal pathology and is the investigation of choice for splenic artery aneurysm. However; it requires that the patient to be hemodynamically stable. Option: C . MRI can be a valuable adjunct to the more commonly used imaging techniques when the splenic disease is suspected but offers no obvious advantage for primary imaging of the spleen. Option: D . Plain Radiography is rarely used for primary splenic imaging but the incidental finding of calcification of the splenic artery or spleen may raise the possible diagnosis of a splenic artery aneurysm. CT scan is the investigation of choice for splenic artery aneurysm.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is an indication for splenectomy?", "options": [{"label": "A", "text": "Autoimmune hemolytic anemias", "correct": false}, {"label": "B", "text": "Glucose-6-Phosphate Dehydrogenase Deficiency", "correct": false}, {"label": "C", "text": "Idiopathic Thrombocytopenic Purpura", "correct": true}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "C. Idiopathic Thrombocytopenic Purpura", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Idiopathic Thrombocytopenic Purpura The usual first line of therapy in Idiopathic Thrombocytopenic Purpura is oral prednisone at a dosage of 1.0 to 1.5 mg/kg per day. Splenectomy is selectively indicated for the failure of medical therapy, for prolonged use of steroids with undesirable effects, and in selected cases after the first relapse.</p>\n<p><strong>Highyeild:</strong></p><p>ITP is caused by antibodies to specific platelet membrane glycoproteins. It results in isolated thrombocytopenia , and can be acute or chronic. Acute ITP usually resolves spontaneously , while chronic ITP persists for longer than 6 months without a specific cause being identified. Clinical features include purpuric patches on the skin and mucous membranes, spontaneous bleeding from mucous membranes, and menorrhagia in women. Diagnosis is indicated by the presence of cutaneous ecchymoses and a positive tourniquet test. Investigations involve normal coagulation studies and a reduced platelet count in the peripheral blood film. Treatment involves short courses of corticosteroids , which are usually followed by recovery. Splenectomy is usually recommended for refractory or relapsing ITP, with up to two-thirds of patients being cured by surgical intervention. Laparoscopic splenectomy is becoming the mainstay of treatment. In the acute setting, fresh blood transfusion or transfusion with platelet concentrates may be necessary before the Operation.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A . Treatment of AIHA depends on the severity of the disease and whether it is primary or secondary. The mainstay treatment for both primary and secondary forms of symptomatic, unstable AIHA remains long term corticosteroid administration.36 Therapy should continue until a response is noted by a rise in hematocrit and fall in reticulocyte count, which generally occurs within 3 weeks. Option: B. The mainstay of therapy in Glucose-6-Phosphate Dehydrogenase Deficiency is avoidance of drugs known to precipitate hemolysis in patients with G6PD deficiency. Transfusions are given in cases of symptomatic anemia. Option: D . None of the above can not be the correct option.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 33-year-old male presented with complaints of bleeding gums. Intraoral examination revealed hemorrhagic lesions in his oral cavity related to the buccal mucosa on both sides, the tip and lateral borders of the tongue, the lower lip, and the attached mucosa around his teeth. An extra-oral evaluation was done and revealed multiple petechia and ecchymosis all around his body. He was diagnosed with Idiopathic thrombocytopenic purpura (ITP). What is the treatment for Refractory cases of ITP?", "options": [{"label": "A", "text": "Oral prednisone", "correct": false}, {"label": "B", "text": "Intravenous (IV) immunoglobulin", "correct": false}, {"label": "C", "text": "Plasma exchange", "correct": false}, {"label": "D", "text": "Splenectomy", "correct": true}], "correct_answer": "D. Splenectomy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Splenectomy Splenectomy is selectively indicated for the failure of medical therapy, for prolonged use of steroids with undesirable effects, and in selected cases after the first relapse. Splenectomy is an effective option for refractory ITP and provides a permanent response without the subsequent need for steroids in 75% to 85% of patients.</p>\n<p><strong>Highyeild:</strong></p><p>ITP is caused by antibodies to specific platelet membrane glycoproteins. It results in isolated thrombocytopenia , and can be acute or chronic. Acute ITP usually resolves spontaneously , while chronic ITP persists for longer than 6 months without a specific cause being identified. Clinical features include purpuric patches on the skin and mucous membranes, spontaneous bleeding from mucous membranes, and menorrhagia in women. Diagnosis is indicated by the presence of cutaneous ecchymoses and a positive tourniquet test. Investigations involve normal coagulation studies and a reduced platelet count in the peripheral blood film. Treatment involves short courses of corticosteroids , which are usually followed by recovery. Splenectomy is usually recommended for refractory or relapsing ITP, with up to two-thirds of patients being cured by surgical intervention. Laparoscopic splenectomy is becoming the mainstay of treatment. In the acute setting, fresh blood transfusion or transfusion with platelet concentrates may be necessary before the Operation.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. The first-line treatment for ITP includes corticosteroids , such as oral prednisone . However, splenectomy is considered as the definitive treatment for refractory cases of ITP. Option: B. If corticosteroids are not effective, other treatments such as intravenous immunoglobulin (IVIG) or plasma exchange can be considered. IVIG provides a concentrated solution of immunoglobulins to counteract the autoantibodies. But, splenectomy is considered as the definitive treatment for refractory cases of ITP. Option: C. If corticosteroids are not effective, other treatments such as intravenous immunoglobulin (IVIG) or plasma exchange can be considered. Plasma exchange removes the autoantibodies from the bloodstream. However, splenectomy is considered as the definitive treatment for refractory cases of ITP.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A splenic artery aneurysm was diagnosed in a 24-year-old female. Which of the following is an indication for surgical treatment of a splenic aneurysm?", "options": [{"label": "A", "text": "Pregnancy", "correct": true}, {"label": "B", "text": "Size >1.5 cm", "correct": false}, {"label": "C", "text": "Calcified aneurysm", "correct": false}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "A. Pregnancy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Pregnancy Splenic artery aneurysm (SAA) is four times more common among women than men. SAA is particularly worrisome when discovered during pregnancy, as rupture imparts a high risk of mortality to both mother (70%) and the foetus (95%). Indications for treatment include the presence of symptoms, pregnancy, intention to become pregnant, and pseudoaneurysms associated with inflammatory processes.</p>\n<p><strong>Highyeild:</strong></p><p>The most common site of intra-abdominal aneurysm is the aorta, followed by the splenic artery. The splenic artery is the most common site of splanchnic artery aneurysms. Splenic artery aneurysms are usually saccular, and multiple aneurysms are present in 20% of cases. Calcification is present in approximately one-third of cases and is mostly located in the distal third of the splenic artery. Splenic artery aneurysms are four times more common in women, with possible contributing factors such as multiparity, portal hypertension, arterial fibrodysplasia, pancreatitis, trauma, arteritis, and septic emboli. Aneurysmal rupture during pregnancy typically occurs during the third trimester. Factors that increase the risk of rupture include young age, absence of aneurysmal calcification, presence of hypertension, and an aneurysm diameter greater than 1.5 cm.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: B . For asymptomatic patients, a size greater than 2 cm constitutes an indication, or surgery. Option: C .In a calcified aneurysm , there is less risk of rupture, and observation may be preferred. Option: D. All of the above cannot be the correct option.</p>\n<p><strong>Extraedge:</strong></p><p>Documented aneurysmal enlargement and symptoms caused by the aneurysm are indications for surgery. An aneurysm detected in a woman who anticipates pregnancy should be removed, and one detected during pregnancy should be removed before the third trimester. Proximal aneurysms are excised after proximal and distal ligations. Mid-splenic aneurysms are excluded by proximal and distal ligations of the splenic artery and all collateral vessels. The most common type of splenic artery aneurysm, the distal or hilar aneurysm, is treated with aneurysmectomy and splenectomy.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 78-year-old woman presented with a productive cough, shortness of breath, and decreased appetite for 4 days. Initial clinical assessment revealed signs of consolidation in the right lower lobe. She had normal heart sounds, a palpable but non-tender spleen, and was febrile. Investigations undertaken showed a large splenic abscess measuring 9.6×8.2×7.9 cm. Which is the investigation of choice for the diagnosis of a splenic abscess?", "options": [{"label": "A", "text": "Ultrasound", "correct": false}, {"label": "B", "text": "CT", "correct": true}, {"label": "C", "text": "MRI", "correct": false}, {"label": "D", "text": "Plain radiography", "correct": false}], "correct_answer": "B. CT", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>CT Computed tomography (CT) with contrast enhancement is more commonly undertaken to better characterize the nature of the suspected splenic pathology and to exclude other intra-abdominal pathology and is the investigation of choice for splenic abscess. CT is the preferred method for diagnosis.</p>\n<p><strong>Highyeild:</strong></p><p>Splenic abscess is a rare but potentially life-threatening illness with a mortality rate that ranges from 15-20% in previously healthy patients with single unilocular lesions to 80% for multiple abscesses in immunocompromised patients. The predisposing factors for splenic abscess include malignancies, polycythemia vera, endocarditis, prior trauma, hemoglobinopathies, urinary tract infections, IV drug use, and AIDS. About 70% of splenic abscesses result from the spread of infective organisms from another location through the bloodstream, such as in endocarditis, osteomyelitis, and IV drug use. Gram-positive cocci (especially Staphylococcus ), Streptococcus, Enterococcus species, and gram-negative enteric organisms are usually involved in splenic abscesses. Salmonella, Enterobacter species, and other enteric organisms are common in splenic abscesses in patients with sickle cell anemia. Fungal abscesses , such as those caused by Candida spp, occur mostly in immunosuppressed patients.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A . Ultrasound is rapid, relatively easy to perform, and is often the first imaging modality used to evaluate the spleen in a trauma patient. Ultrasonography can be used to determine the size and consistency of the spleen, and whether a cyst is present. However, the diagnosis can also be made with ultrasound. Option: C . MRI can be a valuable adjunct to the more commonly used imaging techniques when the splenic disease is suspected but offers no obvious advantage for primary imaging of the spleen. Option: D . Plain radiography is rarely used for primary splenic imaging but can be used for the finding of calcification of the splenic artery.</p>\n<p><strong>Extraedge:</strong></p><p>Splenic abscesses are usually present with nonspecific symptoms such as vague abdominal pain, fever, peritonitis, and pleuritic chest pain. Splenomegaly is not typical. CT is the diagnostic tool of choice for splenic abscesses, but ultrasound can also be used for diagnosis. Treatment for unilocular abscesses typically involves percutaneous drainage and antibiotics, with success rates ranging from 75-90%. For multilocular lesions, splenectomy, drainage of the left upper quadrant, and antibiotics are required.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 78-year-old woman presented with a productive cough, shortness of breath, and decreased appetite for 4 days. Initial clinical assessment revealed signs of consolidation in the right lower lobe. She had normal heart sounds, a palpable but non-tender spleen, and was febrile. Investigations undertaken showed a large splenic abscess measuring 9.6×8.2×7.9 cm. Which of the following is the most common organism in the development of splenic abscess?", "options": [{"label": "A", "text": "Streptococcus", "correct": false}, {"label": "B", "text": "Staphylococcus", "correct": true}, {"label": "C", "text": "Candida", "correct": false}, {"label": "D", "text": "Actinomyces", "correct": false}], "correct_answer": "B. Staphylococcus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Staphylococcus Staphylococcus ( Gram-positive cocci ) is most commonly involved in the development of a splenic abscess. The order of most common organisms is as follows: Polymicrobial > staphylococcus > salmonella.</p>\n<p><strong>Highyeild:</strong></p><p>Splenic abscess is a rare but potentially life-threatening illness with a mortality rate that ranges from 15-20% in previously healthy patients with single unilocular lesions to 80% for multiple abscesses in immunocompromised patients. The predisposing factors for splenic abscess include malignancies, polycythemia vera, endocarditis, prior trauma, hemoglobinopathies, urinary tract infections, IV drug use, and AIDS. About 70% of splenic abscesses result from the spread of infective organisms from another location through the bloodstream, such as in endocarditis, osteomyelitis, and IV drug use. Gram-positive cocci (especially Staphylococcus), Streptococcus, Enterococcus spp., and gram-negative enteric organisms are usually involved in splenic abscesses. Salmonella, Enterobacter spp., and other enteric organisms are common in splenic abscesses in patients with sickle cell anemia. Fungal abscesses , such as those caused by Candida spp., occur mostly in immunosuppressed patients.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A .Streptococcus is also involved in the development of a splenic abscess. Option: C . Fungal abscesses (e.g., Candida spp.) also occur, typically in immunosuppressed patients. Option: D . Mycobacterium tuberculosis, Mycobacterium avium, and Actinomyces spp. have also been involved in the development of a splenic abscess.</p>\n<p><strong>Extraedge:</strong></p><p>Splenic abscesses are usually present with nonspecific symptoms such as vague abdominal pain, fever, peritonitis, and pleuritic chest pain. Splenomegaly is not typical. CT is the diagnostic tool of choice for splenic abscesses, but ultrasound can also be used for diagnosis. Treatment for unilocular abscesses typically involves percutaneous drainage and antibiotics, with success rates ranging from 75-90%. For multilocular lesions, splenectomy, drainage of the left upper quadrant, and antibiotics are required.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30-year-old woman during her ultrasound for pregnancy was found to have a calcified 1cm mass in the epigastrium. A bruit was heard in the epigastric region. She does not have any symptoms. What is the most likely diagnosis for this patient?", "options": [{"label": "A", "text": "Splenic artery aneurysm", "correct": true}, {"label": "B", "text": "Splenic rupture", "correct": false}, {"label": "C", "text": "Splenic abscess", "correct": false}, {"label": "D", "text": "Splenic cyst", "correct": false}], "correct_answer": "A. Splenic artery aneurysm", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Splenic artery aneurysm This pregnant woman has the incidental finding of a splenic artery aneurysm . These are usually silent unless they rupture. Fifty percent of cases of rupture occur in patients younger than 45 years, and 25% occur in pregnant women usually in the third trimester or during labor.</p>\n<p><strong>Highyeild:</strong></p><p>SAA is more common in women than men , and during pregnancy, the risk of rupture is higher due to hormonal changes, increased blood flow, and pressure on the splenic artery by the growing uterus. The risk of mortality for both mother and fetus is high if SAA ruptures during pregnancy, and hence, surgical intervention is essential. Indications for surgical treatment of SAA in pregnancy include the presence of symptoms such as abdominal pain, nausea, vomiting, and fever, intention to become pregnant, and pseudoaneurysms associated with inflammatory processes. Surgery during pregnancy is challenging and requires a multidisciplinary approach involving obstetricians, vascular surgeons, and anesthesiologists. Open surgery and endovascular techniques can be used for treating SAA during pregnancy. The choice of surgical technique depends on the size, location, and type of aneurysm . Open surgery involves laparotomy or splenectomy, and it is associated with a higher risk of complications, longer hospital stays, and recovery time. Endovascular techniques include coil embolization, stent grafting, and balloon occlusion. These procedures are less invasive and have a shorter recovery time but are associated with a higher risk of recurrence. The timing of surgery depends on the gestational age, stability of the mother and fetus, and the urgency of the surgical intervention. Surgery is usually performed in the second trimester when the risk to the fetus is relatively low. Postoperative management includes close monitoring of the mother and fetus, pain control, prophylaxis against thromboembolic events, and management of any complications.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: B . Splenic rupture should be considered in any case of blunt abdominal trauma, particularly when the injury occurs to the left upper quadrant of the abdomen. Option: C .Clinical manifestations of splenic abscess include fever, left upper quadrant pain, leukocytosis, and splenomegaly in about one-third of patients. The diagnosis is confirmed by ultrasound or CT scan. Option: D . Clinical manifestations of splenic cysts generally are related to the presence of a mass lesion in the left upper quadrant or a lesion that impinges on the stomach. Ultrasound can establish the presence of a cystic lesion and occasionally incidentally detect asymptomatic lesions as well. Serologic testing for echinococcal antibodies can confirm or exclude the cystic lesion as parasitic, an important piece of information when planning operative therapy. Symptomatic parasitic cysts are best treated with splenectomy.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 39-year-old woman was a pedestrian hit by a car while crossing the road. She complains of the chest and abdominal pains. On examination, her GCS score is 14/15 (E4, V4, M6). Her vital observations are as follows: BP 86/32 mmHg; pulse 145/min. She has bruising and tenderness over her lower left 9th and 10th ribs. She has rebound tenderness and guarding over the left upper quadrant of her abdomen. Her chest X-ray demonstrates left rib fractures affecting ribs 8–10. Select the likely diagnosis.", "options": [{"label": "A", "text": "Tension pneumothorax", "correct": false}, {"label": "B", "text": "Cardiac tamponade", "correct": false}, {"label": "C", "text": "Splenic artery aneurysm", "correct": false}, {"label": "D", "text": "Ruptured spleen", "correct": true}], "correct_answer": "D. Ruptured spleen", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ruptured spleen This patient is presenting with a ruptured spleen (left lower rib fractures with associated hypotension) secondary to trauma. Splenic rupture should be considered in any case of blunt abdominal trauma, particularly when the injury occurs to the left upper quadrant of the abdomen Patients present with abdominal pain, left shoulder tip pain (Kehr’s sign), hypotension, and tachycardia. Bruising may present over the left upper abdomen, left chest, or left lower back and is associated with underlying hemorrhage. TOC in unstable pt is splenectomy.</p>\n<p><strong>Highyeild:</strong></p><p>The spleen is the most commonly injured intra-abdominal organ due to blunt abdominal trauma. Iatrogenic injury to the spleen is a frequent complication of surgical procedures, particularly those in the left upper quadrant when adhesions are present. Splenic rupture is classified into five grades based on the extent of the injury as seen on a CT scan. Vigorous resuscitation is crucial in managing blunt trauma. Splenectomy is recommended for severe grades of injury where controlling bleeding takes priority over attempts to salvage the spleen. Splenic angiography with embolization may be an alternative to splenectomy, but should not delay surgery in a hemodynamically unstable patient. Rupture of an enlarged spleen due to malaria is not uncommon in tropical countries and may present with delayed symptoms following a minor injury. Radiological embolization may be performed in such cases if available, but splenectomy should be considered before a peri splenic hematoma ruptures. Surgery in such patients is challenging, and early ligation of the splenic vessels along the superior border of the pancreatic body should be considered before disturbing the hematoma.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A . Findings that suggest tension pneumothorax include unequal breath sounds (diminished or absent on the side of the pneumothorax), tracheal deviation (away from the side of the pneumothorax), distended neck veins, and/or signs of respiratory distress. Option: B. The classic signs in cardiac tamponade are included in Beck

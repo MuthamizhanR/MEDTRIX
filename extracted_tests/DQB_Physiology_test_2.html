@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Central Nervous System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Central Nervous System</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                84 Questions | 608 Total Marks | 94 min Duration | ~67.14 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 84 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 94 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 84</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Central Nervous System - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 84</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 84 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which one of the following statements is true for excitatory postsynaptic potentials (EPSP) –", "options": [{"label": "A", "text": "Are self propagating", "correct": false}, {"label": "B", "text": "Show all or none response", "correct": false}, {"label": "C", "text": "Are proportional to the amount of transmitter released by the presynaptic neuron", "correct": true}, {"label": "D", "text": "Are inhibitory at presynaptic terminal", "correct": false}], "correct_answer": "C. Are proportional to the amount of transmitter released by the presynaptic neuron", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29163201704460870/29163201704460870.m3u8"}, {"text": "The intrafusal fibres of the striated skeletal muscles are innervated by one of the following type of motor neurons, Choose the correct answer:", "options": [{"label": "A", "text": "Alpha", "correct": false}, {"label": "B", "text": "Beta", "correct": false}, {"label": "C", "text": "Gamma", "correct": true}, {"label": "D", "text": "Delta", "correct": false}], "correct_answer": "C. Gamma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13844471704460889/13844471704460889.m3u8"}, {"text": "Weber Fechner Law is –", "options": [{"label": "A", "text": "Magnitude of stimulus strength perceived is approximately proportionate to the log of the intensity of stimulus strength", "correct": true}, {"label": "B", "text": "Magnitude of stimulus strength perceived is directly proportional to the intensity of stimulus strength", "correct": false}, {"label": "C", "text": "Threshold of receptor is directly proportional to stimulus strength", "correct": false}, {"label": "D", "text": "Threshold of receptor is inversely proportional to stimulus strength", "correct": false}], "correct_answer": "A. Magnitude of stimulus strength perceived is approximately proportionate to the log of the intensity of stimulus strength", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67337261704460900/67337261704460900.m3u8"}, {"text": "Muscle spindle is a receptor for A/E (All Except)", "options": [{"label": "A", "text": "Tension", "correct": true}, {"label": "B", "text": "Length", "correct": false}, {"label": "C", "text": "Proprioception", "correct": false}, {"label": "D", "text": "Stretch", "correct": false}], "correct_answer": "A. Tension", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61843721704460911/61843721704460911.m3u8"}, {"text": "The following is an example of a primarily inhibitory amino acid-", "options": [{"label": "A", "text": "Glutamate", "correct": false}, {"label": "B", "text": "Aspartate", "correct": false}, {"label": "C", "text": "GABA", "correct": true}, {"label": "D", "text": "Somatostatin", "correct": false}], "correct_answer": "C. GABA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/7024671704460922/7024671704460922.m3u8"}, {"text": "Major neurotransmitter released at end organ effectors of the sympathetic division of the autonomic nervous system –", "options": [{"label": "A", "text": "Adrenaline", "correct": false}, {"label": "B", "text": "Noradrenalin", "correct": true}, {"label": "C", "text": "Dopamine", "correct": false}, {"label": "D", "text": "Acetylcholine", "correct": false}], "correct_answer": "B. Noradrenalin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35427711704462454/35427711704462454.m3u8"}, {"text": "Synaptic transmission in the autonomic ganglion is usually:", "options": [{"label": "A", "text": "Adrenergic", "correct": false}, {"label": "B", "text": "Peptidergic", "correct": false}, {"label": "C", "text": "Cholinergic", "correct": true}, {"label": "D", "text": "Mediated by substance P", "correct": false}], "correct_answer": "C. Cholinergic", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/42278191704462471/42278191704462471.m3u8"}, {"text": "Motor area in cerebrum is mainly associated with –", "options": [{"label": "A", "text": "Performing all voluntary movements", "correct": true}, {"label": "B", "text": "Performing an involuntary movements", "correct": false}, {"label": "C", "text": "Executing fine movements", "correct": false}, {"label": "D", "text": "Controlling all motor activity", "correct": false}], "correct_answer": "A. Performing all voluntary movements", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37356451704462490/37356451704462490.m3u8"}, {"text": "Kluver-Bucy syndrome is characterized by all except-", "options": [{"label": "A", "text": "Korsakoff amnesia", "correct": false}, {"label": "B", "text": "Apathy and placidity", "correct": false}, {"label": "C", "text": "Decreased sexual activity", "correct": true}, {"label": "D", "text": "Sham rage", "correct": false}], "correct_answer": "C. Decreased sexual activity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13189281704462541/13189281704462541.m3u8"}, {"text": "EEG in paradoxical sleep is –", "options": [{"label": "A", "text": "Low amplitude mixed frequency", "correct": true}, {"label": "B", "text": "High amplitude low frequency", "correct": false}, {"label": "C", "text": "Q – waves", "correct": false}, {"label": "D", "text": "Delta & Theta waves", "correct": false}], "correct_answer": "A. Low amplitude mixed frequency", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22744231704462557/22744231704462557.m3u8"}, {"text": "Which one of the following regions of the body has the largest representation in cortical area –", "options": [{"label": "A", "text": "Trunk muscle", "correct": false}, {"label": "B", "text": "Muscles of forearm", "correct": false}, {"label": "C", "text": "Muscles of mastication", "correct": true}, {"label": "D", "text": "Muscles of thumb", "correct": false}], "correct_answer": "C. Muscles of mastication", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12624841704462895/12624841704462895.m3u8"}, {"text": "Lowest representation in sensory cortex is for –", "options": [{"label": "A", "text": "Thumb", "correct": false}, {"label": "B", "text": "Genitalia", "correct": true}, {"label": "C", "text": "Tongue", "correct": false}, {"label": "D", "text": "Face", "correct": false}], "correct_answer": "B. Genitalia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26491021704462906/26491021704462906.m3u8"}, {"text": "The receptors of pain is –", "options": [{"label": "A", "text": "Ruffini organs", "correct": false}, {"label": "B", "text": "Meckel’s bodies", "correct": false}, {"label": "C", "text": "Golgi bodies", "correct": false}, {"label": "D", "text": "Free nerve endings", "correct": true}], "correct_answer": "D. Free nerve endings", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15436581704462918/15436581704462918.m3u8"}, {"text": "First relay station of pain is:", "options": [{"label": "A", "text": "Spinal cord", "correct": true}, {"label": "B", "text": "Medulla", "correct": false}, {"label": "C", "text": "Pons", "correct": false}, {"label": "D", "text": "Thalamus", "correct": false}], "correct_answer": "A. Spinal cord", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/44590651704462929/44590651704462929.m3u8"}, {"text": "The satiety centre is located in the –", "options": [{"label": "A", "text": "Dorsomedian nucleus of hypothalamus", "correct": false}, {"label": "B", "text": "Ventromedian nucleus of hypothalamus", "correct": true}, {"label": "C", "text": "Perifornical region", "correct": false}, {"label": "D", "text": "Lateral hypothalamic area", "correct": false}], "correct_answer": "B. Ventromedian nucleus of hypothalamus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5840851704462940/5840851704462940.m3u8"}, {"text": "Lesions in ….. lead to sensory ataxia-", "options": [{"label": "A", "text": "Posterior column", "correct": true}, {"label": "B", "text": "Vermis", "correct": false}, {"label": "C", "text": "Floculo-nodular lobe", "correct": false}, {"label": "D", "text": "Vestibular apparatus", "correct": false}], "correct_answer": "A. Posterior column", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/40204341704462952/40204341704462952.m3u8"}, {"text": "Crude touch sensations are carried by –", "options": [{"label": "A", "text": "Lateral spinothalamic tract", "correct": false}, {"label": "B", "text": "Ventral spinothalamic tract", "correct": true}, {"label": "C", "text": "Posterior columns", "correct": false}, {"label": "D", "text": "Pyramidal tracts", "correct": false}], "correct_answer": "B. Ventral spinothalamic tract", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/48839491704462964/48839491704462964.m3u8"}, {"text": "The basic postural reflex is-", "options": [{"label": "A", "text": "Crossed extensor reflex", "correct": false}, {"label": "B", "text": "Golgi tendon reflex", "correct": false}, {"label": "C", "text": "Stretch reflex", "correct": true}, {"label": "D", "text": "Positive supporting reflex", "correct": false}], "correct_answer": "C. Stretch reflex", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23657521704462977/23657521704462977.m3u8"}, {"text": "Damage to sensory area 1 of the cerebral cortex results in –", "options": [{"label": "A", "text": "Loss of perception of pain", "correct": false}, {"label": "B", "text": "Loss of tactile and two-point discrimination", "correct": true}, {"label": "C", "text": "Loss of perception of touch", "correct": false}, {"label": "D", "text": "Loss of only tactile discrimination.", "correct": false}], "correct_answer": "B. Loss of tactile and two-point discrimination", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26188731704462989/26188731704462989.m3u8"}, {"text": "Medial geniculate body is concerned with –", "options": [{"label": "A", "text": "Hearing", "correct": true}, {"label": "B", "text": "Vision", "correct": false}, {"label": "C", "text": "Smell", "correct": false}, {"label": "D", "text": "Taste", "correct": false}], "correct_answer": "A. Hearing", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15604211704463000/15604211704463000.m3u8"}, {"text": "Which is caused by Acetylcholine through Nicotinic receptors-", "options": [{"label": "A", "text": "Contraction of Skeletal muscle", "correct": true}, {"label": "B", "text": "Decrease of heart rate", "correct": false}, {"label": "C", "text": "Secretion of Saliva", "correct": false}, {"label": "D", "text": "Contraction of pupils", "correct": false}], "correct_answer": "A. Contraction of Skeletal muscle", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4355191704463010/4355191704463010.m3u8"}, {"text": "The intensity of sensory stimuli is determined by –", "options": [{"label": "A", "text": "Duration of latent period", "correct": false}, {"label": "B", "text": "Amplitude of action potential", "correct": false}, {"label": "C", "text": "Frequency of action potential", "correct": true}, {"label": "D", "text": "Amplitude of generation potential", "correct": false}], "correct_answer": "C. Frequency of action potential", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63271411704463022/63271411704463022.m3u8"}, {"text": "Nucleus gracilis and Nucleus cuneatus are the first synapse for –", "options": [{"label": "A", "text": "Dorsal columns", "correct": true}, {"label": "B", "text": "Dorsa lateral tract", "correct": false}, {"label": "C", "text": "Ventral spino thalamic tract", "correct": false}, {"label": "D", "text": "Lateral spinothalamic tract", "correct": false}], "correct_answer": "A. Dorsal columns", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52045281704463032/52045281704463032.m3u8"}, {"text": "Paccinian corpuscles are major receptors for –", "options": [{"label": "A", "text": "Pressure", "correct": false}, {"label": "B", "text": "Pain", "correct": false}, {"label": "C", "text": "Touch", "correct": false}, {"label": "D", "text": "Vibration", "correct": true}], "correct_answer": "D. Vibration", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77644781704463043/77644781704463043.m3u8"}, {"text": "Spinothalamic tract transmits all the following sensations except-", "options": [{"label": "A", "text": "Proprioception", "correct": true}, {"label": "B", "text": "Pain", "correct": false}, {"label": "C", "text": "Temperature", "correct": false}, {"label": "D", "text": "Touch", "correct": false}], "correct_answer": "A. Proprioception", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29153421704463081/29153421704463081.m3u8"}, {"text": "Increased Gamma efferent discharge is seen in all except-", "options": [{"label": "A", "text": "Jendrassik’s maneruvre", "correct": false}, {"label": "B", "text": "Anxiety", "correct": false}, {"label": "C", "text": "Rapid shallow breathing", "correct": true}, {"label": "D", "text": "Stimulation of skin", "correct": false}], "correct_answer": "C. Rapid shallow breathing", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35419601704463092/35419601704463092.m3u8"}, {"text": "What is true regarding the gamma efferent neuron –", "options": [{"label": "A", "text": "An ‘A’ group motor neuron with a smaller diameter than that of alpha efferent neurons", "correct": false}, {"label": "B", "text": "Innervates intrafusal fibres", "correct": false}, {"label": "C", "text": "Innervates muscle fibres that stretch annulospiral endings", "correct": false}, {"label": "D", "text": "All of the above.", "correct": true}], "correct_answer": "D. All of the above.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/7595791704463193/7595791704463193.m3u8"}, {"text": "Muscle spindle is –", "options": [{"label": "A", "text": "Receptor for a variety of multisynaptic reflexes", "correct": false}, {"label": "B", "text": "Receptor for stretch receptor reflex", "correct": true}, {"label": "C", "text": "Occurs only in antigravity extensor muscles", "correct": false}, {"label": "D", "text": "Excited by both stretch and contraction of the muscles in which it is located", "correct": false}], "correct_answer": "B. Receptor for stretch receptor reflex", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/43680491704463205/43680491704463205.m3u8"}, {"text": "Decerebrate animal results from the following experimental procedure-", "options": [{"label": "A", "text": "Removal of the cerebrum", "correct": false}, {"label": "B", "text": "Transection at the upper border of midbrain", "correct": false}, {"label": "C", "text": "Inter collicular transection", "correct": true}, {"label": "D", "text": "Section above the thalamus", "correct": false}], "correct_answer": "C. Inter collicular transection", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13885841704463216/13885841704463216.m3u8"}, {"text": "Which of the following statement is not true-", "options": [{"label": "A", "text": "Decorticate rigidity is greater than decerebrate rigidity", "correct": true}, {"label": "B", "text": "Righting reflexes are absent in the decrebrate animal", "correct": false}, {"label": "C", "text": "In decortication, upper limb is flexed and lower limb is extended", "correct": false}, {"label": "D", "text": "Decorticate rigidity is seen only when the animal is at rest", "correct": false}], "correct_answer": "A. Decorticate rigidity is greater than decerebrate rigidity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34486871704463229/34486871704463229.m3u8"}, {"text": "Level of integration of stretch reflex is at –", "options": [{"label": "A", "text": "Cerebral cortex", "correct": false}, {"label": "B", "text": "Medulla", "correct": false}, {"label": "C", "text": "Lower medulla", "correct": false}, {"label": "D", "text": "Spinal cord", "correct": true}], "correct_answer": "D. Spinal cord", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76478711704463240/76478711704463240.m3u8"}, {"text": "Flocculonodular lobe of cerebellum is concerned with-", "options": [{"label": "A", "text": "Equilibrium", "correct": true}, {"label": "B", "text": "Co-ordination", "correct": false}, {"label": "C", "text": "Baroreception", "correct": false}, {"label": "D", "text": "Chemoreception", "correct": false}], "correct_answer": "A. Equilibrium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63072091704463253/63072091704463253.m3u8"}, {"text": "Vestibular fibres relay in –", "options": [{"label": "A", "text": "Vermis", "correct": false}, {"label": "B", "text": "Lateral genticulate body", "correct": false}, {"label": "C", "text": "Flocculonodular lobe of cerebellum", "correct": true}, {"label": "D", "text": "Auditory cortex", "correct": false}], "correct_answer": "C. Flocculonodular lobe of cerebellum", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/43996801704463263/43996801704463263.m3u8"}, {"text": "Destruction of lateral nucleus of hypothalamus lead to –", "options": [{"label": "A", "text": "Aphagia", "correct": true}, {"label": "B", "text": "Hyperphagia", "correct": false}, {"label": "C", "text": "Satiety", "correct": false}, {"label": "D", "text": "Somnolence", "correct": false}], "correct_answer": "A. Aphagia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54461011704463277/54461011704463277.m3u8"}, {"text": "Hypothalmus regulates all except-", "options": [{"label": "A", "text": "Food intake", "correct": false}, {"label": "B", "text": "Temperature", "correct": false}, {"label": "C", "text": "Anticipatory rise in heart rate", "correct": true}, {"label": "D", "text": "Hypophysis", "correct": false}], "correct_answer": "C. Anticipatory rise in heart rate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52446161704463291/52446161704463291.m3u8"}, {"text": "Loss of feel of size & shape of an object is seen in lesion of –", "options": [{"label": "A", "text": "Tractus gracilis", "correct": false}, {"label": "B", "text": "Tractus cuneatus", "correct": false}, {"label": "C", "text": "Lateral spinothalamic tract", "correct": false}, {"label": "D", "text": "Cerebral cortex", "correct": true}], "correct_answer": "D. Cerebral cortex", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14041801704463309/14041801704463309.m3u8"}, {"text": "Blood brain barrier is maximally permeable to –", "options": [{"label": "A", "text": "Na+", "correct": false}, {"label": "B", "text": "K+", "correct": false}, {"label": "C", "text": "Chloride", "correct": false}, {"label": "D", "text": "CO2", "correct": true}], "correct_answer": "D. CO2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/20133101704463328/20133101704463328.m3u8"}, {"text": "Circadian rhythm is controlled by-", "options": [{"label": "A", "text": "Supra chiasmatic nucleus", "correct": true}, {"label": "B", "text": "Hypothalamus", "correct": false}, {"label": "C", "text": "Thalamus", "correct": false}, {"label": "D", "text": "Pineal gland", "correct": false}], "correct_answer": "A. Supra chiasmatic nucleus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74121341704463339/74121341704463339.m3u8"}, {"text": "Receptor which itself is a dendrite of a nerve-", "options": [{"label": "A", "text": "Olfactory", "correct": true}, {"label": "B", "text": "Gustatory", "correct": false}, {"label": "C", "text": "Visual", "correct": false}, {"label": "D", "text": "Hearing", "correct": false}], "correct_answer": "A. Olfactory", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/75610331704463350/75610331704463350.m3u8"}, {"text": "Osmoreceptor is located at which site-", "options": [{"label": "A", "text": "Anterior hypothalamus", "correct": true}, {"label": "B", "text": "Renal medulla", "correct": false}, {"label": "C", "text": "Carotid body", "correct": false}, {"label": "D", "text": "Atrial chamber", "correct": false}], "correct_answer": "A. Anterior hypothalamus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/445201704463369/445201704463369.m3u8"}, {"text": "Crossed extensor reflex is a –", "options": [{"label": "A", "text": "Withdrawal reflex", "correct": true}, {"label": "B", "text": "Postural reflex", "correct": false}, {"label": "C", "text": "Monosynaptic reflex", "correct": false}, {"label": "D", "text": "Sympathetic.", "correct": false}], "correct_answer": "A. Withdrawal reflex", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67281411704463401/67281411704463401.m3u8"}, {"text": "Arousal response is mediated by-", "options": [{"label": "A", "text": "Dorsal column", "correct": false}, {"label": "B", "text": "Reticular activating system", "correct": true}, {"label": "C", "text": "Spinothalamic tract", "correct": false}, {"label": "D", "text": "Vestibulo cerebeller tract", "correct": false}], "correct_answer": "B. Reticular activating system", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19592291704463415/19592291704463415.m3u8"}, {"text": "IPSP is due to –", "options": [{"label": "A", "text": "Cl- influx", "correct": true}, {"label": "B", "text": "K+ influx", "correct": false}, {"label": "C", "text": "Na+ influx", "correct": false}, {"label": "D", "text": "Ca++ influx", "correct": false}], "correct_answer": "A. Cl- influx", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/18581461704463430/18581461704463430.m3u8"}, {"text": "EPSP is due to –", "options": [{"label": "A", "text": "K+ influx", "correct": false}, {"label": "B", "text": "Na+ efflux", "correct": false}, {"label": "C", "text": "Na+ influx", "correct": false}, {"label": "D", "text": "Ca++ influx", "correct": false}], "correct_answer": "Unknown", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "UMN includes-", "options": [{"label": "A", "text": "Pyramidal cells", "correct": true}, {"label": "B", "text": "Peripheral nerves", "correct": false}, {"label": "C", "text": "Anterior horn cells", "correct": false}, {"label": "D", "text": "Glial Cells", "correct": false}], "correct_answer": "A. Pyramidal cells", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12955651704463859/12955651704463859.m3u8"}, {"text": "Ventroposterolateral nucleus of thalamus is the relay nucleus for all of the following except", "options": [{"label": "A", "text": "Proprioception", "correct": false}, {"label": "B", "text": "Pain", "correct": false}, {"label": "C", "text": "Olfaction", "correct": true}, {"label": "D", "text": "Temperature", "correct": false}], "correct_answer": "C. Olfaction", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59508311704464157/59508311704464157.m3u8"}, {"text": "Gate system for pain control at-", "options": [{"label": "A", "text": "Substantia gelatinosa", "correct": true}, {"label": "B", "text": "Dorsal root ganglion", "correct": false}, {"label": "C", "text": "Both", "correct": false}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "A. Substantia gelatinosa", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/302221704464169/302221704464169.m3u8"}, {"text": "The area for shivering is", "options": [{"label": "A", "text": "Cerebrum", "correct": false}, {"label": "B", "text": "Red nucleus", "correct": false}, {"label": "C", "text": "Ventromedical anterior hypothalamus", "correct": false}, {"label": "D", "text": "Dorsomedial posterior hypothalamus", "correct": true}], "correct_answer": "D. Dorsomedial posterior hypothalamus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/72236221704464180/72236221704464180.m3u8"}, {"text": "The distance by which two touch stimuli must be separated to be perceived as two separate is greatest at-", "options": [{"label": "A", "text": "The lips", "correct": false}, {"label": "B", "text": "The palm of the hand", "correct": false}, {"label": "C", "text": "The back of scapula", "correct": true}, {"label": "D", "text": "The dorsum of the hand", "correct": false}], "correct_answer": "C. The back of scapula", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/40419911704464191/40419911704464191.m3u8"}, {"text": "Neurotransmitter involved in nigrostriatial pathway is –", "options": [{"label": "A", "text": "Serotonin", "correct": false}, {"label": "B", "text": "Dopamine", "correct": true}, {"label": "C", "text": "Cholinergic", "correct": false}, {"label": "D", "text": "Adrenergic", "correct": false}], "correct_answer": "B. Dopamine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/10264201704464239/10264201704464239.m3u8"}, {"text": "The function of the neocerebellum are-", "options": [{"label": "A", "text": "Maintenance of equilibrium", "correct": false}, {"label": "B", "text": "Servo correction of voluntary movements", "correct": false}, {"label": "C", "text": "Planning and programming of voluntary movements", "correct": true}, {"label": "D", "text": "Maintenance of muscle tone", "correct": false}], "correct_answer": "C. Planning and programming of voluntary movements", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78430851704464249/78430851704464249.m3u8"}, {"text": "An anterolaternal corodotomy relieving pain in right leg is effective because it interrupts the –", "options": [{"label": "A", "text": "Left dorsal column", "correct": false}, {"label": "B", "text": "Left ventral spinothalmic tract", "correct": false}, {"label": "C", "text": "Left lateral spinothalmic tract", "correct": true}, {"label": "D", "text": "Right lateral spinothalmic tract.", "correct": false}], "correct_answer": "C. Left lateral spinothalmic tract", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64723601704464264/64723601704464264.m3u8"}, {"text": "The first physiological response to high environmental temperature is-", "options": [{"label": "A", "text": "Sweating", "correct": false}, {"label": "B", "text": "Vasodilatation", "correct": true}, {"label": "C", "text": "Decreased heat production", "correct": false}, {"label": "D", "text": "Non-shivering thermogenesis", "correct": false}], "correct_answer": "B. Vasodilatation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3338041704464280/3338041704464280.m3u8"}, {"text": "Lesion in Wernicke’s area results in-", "options": [{"label": "A", "text": "Global aphasia", "correct": false}, {"label": "B", "text": "Non-fluent aphasia", "correct": false}, {"label": "C", "text": "Conduction aphasia", "correct": false}, {"label": "D", "text": "Failure of comprehension of spoken or written words", "correct": true}], "correct_answer": "D. Failure of comprehension of spoken or written words", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/8784281704464298/8784281704464298.m3u8"}, {"text": "Phantom limb phenomenon is explained by-", "options": [{"label": "A", "text": "Law of projection", "correct": true}, {"label": "B", "text": "Webers law", "correct": false}, {"label": "C", "text": "Fechner’s law of degeneration", "correct": false}, {"label": "D", "text": "Pascals law", "correct": false}], "correct_answer": "A. Law of projection", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/62987241704464316/62987241704464316.m3u8"}, {"text": "EEG in a male fully awake with eyes closed, electrodes placed at occipital position will record:", "options": [{"label": "A", "text": "Alpha waves", "correct": true}, {"label": "B", "text": "Beta waves", "correct": false}, {"label": "C", "text": "Theta waves", "correct": false}, {"label": "D", "text": "Delta waves", "correct": false}], "correct_answer": "A. Alpha waves", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76801391704464329/76801391704464329.m3u8"}, {"text": "The principle that is the spinal cord dorsal roots are sensory and the ventral roots are motor is known as –", "options": [{"label": "A", "text": "Laplace’s law", "correct": false}, {"label": "B", "text": "Bell-Magendle’s law", "correct": true}, {"label": "C", "text": "Frank Starling’s law", "correct": false}, {"label": "D", "text": "Weber-Fechner’s law", "correct": false}], "correct_answer": "B. Bell-Magendle’s law", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/55676531704464342/55676531704464342.m3u8"}, {"text": "The raphe nuclei located in lower pons and medulla secrete the following neurotransmitter-", "options": [{"label": "A", "text": "Norepinphrine", "correct": false}, {"label": "B", "text": "Dopamine", "correct": false}, {"label": "C", "text": "Serotonin", "correct": true}, {"label": "D", "text": "Acetycholine", "correct": false}], "correct_answer": "C. Serotonin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39886271704464647/39886271704464647.m3u8"}, {"text": "Broca’s area is concerned with-", "options": [{"label": "A", "text": "Word formation", "correct": true}, {"label": "B", "text": "Comprehension", "correct": false}, {"label": "C", "text": "Repetition", "correct": false}, {"label": "D", "text": "Reading", "correct": false}], "correct_answer": "A. Word formation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/45403711704464658/45403711704464658.m3u8"}, {"text": "The nucleus involved in Papez circuit is-", "options": [{"label": "A", "text": "Pulvinar", "correct": false}, {"label": "B", "text": "Intralaminar", "correct": false}, {"label": "C", "text": "VPL nucleus", "correct": false}, {"label": "D", "text": "Anterior nucleus of Thalamus", "correct": true}], "correct_answer": "D. Anterior nucleus of Thalamus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27021191704464670/27021191704464670.m3u8"}, {"text": "The processing of short term memory to long term memory is done in-", "options": [{"label": "A", "text": "Prefrontal cortex", "correct": false}, {"label": "B", "text": "Hippocampus", "correct": true}, {"label": "C", "text": "Neocortex", "correct": false}, {"label": "D", "text": "Amygdala", "correct": false}], "correct_answer": "B. Hippocampus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12536761704464680/12536761704464680.m3u8"}, {"text": "Brown-sequard syndrome-", "options": [{"label": "A", "text": "Pain loss in the opposite side of lesion", "correct": true}, {"label": "B", "text": "Fine touch lost in opposite side of lesion", "correct": false}, {"label": "C", "text": "UMN paralysis in opposite side of lesion", "correct": false}, {"label": "D", "text": "LMN paralysis in opposite side of lesion", "correct": false}], "correct_answer": "A. Pain loss in the opposite side of lesion", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35908821704464719/35908821704464719.m3u8"}, {"text": "Regarding Golgi tendon organ true is –", "options": [{"label": "A", "text": "Senses dynamic length of muscle", "correct": false}, {"label": "B", "text": "Involved in reciprocal innervation", "correct": false}, {"label": "C", "text": "γ-motor neuron stimulation", "correct": false}, {"label": "D", "text": "Senses muscle tension", "correct": true}], "correct_answer": "D. Senses muscle tension", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59859601704464734/59859601704464734.m3u8"}, {"text": "Posterior column lesion which of the following is not affected-", "options": [{"label": "A", "text": "Vibration", "correct": false}, {"label": "B", "text": "Temperature", "correct": false}, {"label": "C", "text": "Fine touch", "correct": false}, {"label": "D", "text": "Position sense", "correct": false}, {"label": "E", "text": "Crude sense", "correct": false}], "correct_answer": "Unknown", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/20817781704464748/20817781704464748.m3u8"}, {"text": "Which of the following statements is true about presynaptic inhibition?", "options": [{"label": "A", "text": "It results due to failure of the action potential to reach the synapse", "correct": false}, {"label": "B", "text": "It occurs due to hyperpolarisation of presynaptic membrane", "correct": true}, {"label": "C", "text": "It occurs due to inhibition of release of neurotransmitter from presynaptic terminal", "correct": false}, {"label": "D", "text": "It occurs due to blockade of neurotransmitter receptors.", "correct": false}], "correct_answer": "B. It occurs due to hyperpolarisation of presynaptic membrane", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/50833791704464906/50833791704464906.m3u8"}, {"text": "Key regulators of sleep are located in-", "options": [{"label": "A", "text": "Hypothalamus", "correct": true}, {"label": "B", "text": "Thalamus", "correct": false}, {"label": "C", "text": "Putamen", "correct": false}, {"label": "D", "text": "Limbic cortex.", "correct": false}], "correct_answer": "A. Hypothalamus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/47685481704464918/47685481704464918.m3u8"}, {"text": "True about spinocerebellar tract is-", "options": [{"label": "A", "text": "Equilibrium", "correct": false}, {"label": "B", "text": "Smoothens and coordinates movement", "correct": true}, {"label": "C", "text": "Learning induced by change in vestibulocular reflex", "correct": false}, {"label": "D", "text": "Planning and programming", "correct": false}], "correct_answer": "B. Smoothens and coordinates movement", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23171271704464930/23171271704464930.m3u8"}, {"text": "Renshaw cell inhibition is:", "options": [{"label": "A", "text": "Feedback facilitation", "correct": false}, {"label": "B", "text": "Feed forward inhibition", "correct": false}, {"label": "C", "text": "Feed forward facilitation", "correct": false}, {"label": "D", "text": "Feedback inhibition", "correct": true}], "correct_answer": "D. Feedback inhibition", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26649811704464950/26649811704464950.m3u8"}, {"text": "For sweat gland secretion, along with acetyl choline which of the following is released :", "options": [{"label": "A", "text": "Neuro peptide Y", "correct": false}, {"label": "B", "text": "Enkephalin", "correct": false}, {"label": "C", "text": "Vaso active intestinal peptide", "correct": true}, {"label": "D", "text": "Substance P", "correct": false}], "correct_answer": "C. Vaso active intestinal peptide", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60928931704464963/60928931704464963.m3u8"}, {"text": "Myotactic reflex is carried by", "options": [{"label": "A", "text": "Golgi tendon organ", "correct": false}, {"label": "B", "text": "Muscle spindle", "correct": true}, {"label": "C", "text": "Free nerve endings", "correct": false}, {"label": "D", "text": "C. Fibres", "correct": false}], "correct_answer": "B. Muscle spindle", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/20529721704465001/20529721704465001.m3u8"}, {"text": "Receptor of joint capsule and ligament is :", "options": [{"label": "A", "text": "Slow adapting", "correct": true}, {"label": "B", "text": "Fast adapting", "correct": false}, {"label": "C", "text": "Can be both slow and fast adapting", "correct": false}, {"label": "D", "text": "Non adapting", "correct": false}], "correct_answer": "A. Slow adapting", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37784151704465012/37784151704465012.m3u8"}, {"text": "Monroe- Kellie doctrine is related to injury of :", "options": [{"label": "A", "text": "Head", "correct": true}, {"label": "B", "text": "Abdomen", "correct": false}, {"label": "C", "text": "Chest", "correct": false}, {"label": "D", "text": "Leg", "correct": false}], "correct_answer": "A. Head", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27325881704465023/27325881704465023.m3u8"}, {"text": "Neurotransmitter for pain is :", "options": [{"label": "A", "text": "Dopamine", "correct": false}, {"label": "B", "text": "Substance P", "correct": true}, {"label": "C", "text": "PAF", "correct": false}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "B. Substance P", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76228471704465035/76228471704465035.m3u8"}, {"text": "The following is a neurotransmitter-", "options": [{"label": "A", "text": "Serine", "correct": false}, {"label": "B", "text": "Glutathoine", "correct": false}, {"label": "C", "text": "Glutamine", "correct": false}, {"label": "D", "text": "Aspartate", "correct": true}], "correct_answer": "D. Aspartate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37997511704465049/37997511704465049.m3u8"}, {"text": "The most important constitutent of endolymph is-", "options": [{"label": "A", "text": "Sodium", "correct": false}, {"label": "B", "text": "Potassium", "correct": true}, {"label": "C", "text": "Chloride", "correct": false}, {"label": "D", "text": "Protein", "correct": false}], "correct_answer": "B. Potassium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/284481704465082/284481704465082.m3u8"}, {"text": "“Spatial distortion” is common is disorders of-", "options": [{"label": "A", "text": "Dominant parietal lobe", "correct": false}, {"label": "B", "text": "Non-dominant parietal lobe", "correct": true}, {"label": "C", "text": "Dominant temporal lobe", "correct": false}, {"label": "D", "text": "Non-dominant temporal lobe", "correct": false}], "correct_answer": "B. Non-dominant parietal lobe", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/40763131704465095/40763131704465095.m3u8"}, {"text": "Inhibition of the spinal cord may be brought about by:", "options": [{"label": "A", "text": "Glutamic acid", "correct": false}, {"label": "B", "text": "Aspartic acid", "correct": false}, {"label": "C", "text": "Glycine", "correct": true}, {"label": "D", "text": "strychinine", "correct": false}], "correct_answer": "C. Glycine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29142891704465106/29142891704465106.m3u8"}, {"text": "Lesion in which of the following leads to sensory ataxia:", "options": [{"label": "A", "text": "Posterior column", "correct": true}, {"label": "B", "text": "Vermis", "correct": false}, {"label": "C", "text": "Floculo nodular lobe", "correct": false}, {"label": "D", "text": "Vestibular apparatus", "correct": false}], "correct_answer": "A. Posterior column", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/44623141704465118/44623141704465118.m3u8"}, {"text": "Nuclear bag fiber detects -", "options": [{"label": "A", "text": "Dynamic length of muscle", "correct": true}, {"label": "B", "text": "Involved in reciprocal innervations", "correct": false}, {"label": "C", "text": "Alpha motor neuron stimulation", "correct": false}, {"label": "D", "text": "Motor tension", "correct": false}], "correct_answer": "A. Dynamic length of muscle", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/2227611704465130/2227611704465130.m3u8"}, {"text": "Extrafusal fibre innervated by :", "options": [{"label": "A", "text": "Ia", "correct": false}, {"label": "B", "text": "Ib", "correct": false}, {"label": "C", "text": "Aα", "correct": true}, {"label": "D", "text": "Aγ", "correct": false}], "correct_answer": "C. Aα", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/8127221704465142/8127221704465142.m3u8"}, {"text": "CSF pressure in the lying down posture is-", "options": [{"label": "A", "text": "20-80 mm of H2O", "correct": false}, {"label": "B", "text": "70-180 mm of H2O", "correct": true}, {"label": "C", "text": "180-200 mm of H2O", "correct": false}, {"label": "D", "text": "200-300 mm of H2O", "correct": false}], "correct_answer": "B. 70-180 mm of H2O", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/75151661704465153/75151661704465153.m3u8"}, {"text": "CSF is principally secreted by-", "options": [{"label": "A", "text": "Choroid plexus", "correct": true}, {"label": "B", "text": "Arachnoid granulation", "correct": false}, {"label": "C", "text": "Floor of fourth ventricle", "correct": false}, {"label": "D", "text": "Periaqueductal grey", "correct": false}], "correct_answer": "A. Choroid plexus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41857161704465188/41857161704465188.m3u8"}, {"text": "CSF production per day is-", "options": [{"label": "A", "text": "100 ml", "correct": false}, {"label": "B", "text": "200 ml", "correct": false}, {"label": "C", "text": "300 ml", "correct": false}, {"label": "D", "text": "400 ml", "correct": true}], "correct_answer": "D. 400 ml", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69869721704465207/69869721704465207.m3u8"}, {"text": "Which of following is lower in CSF compared to plasma:", "options": [{"label": "A", "text": "Mg", "correct": false}, {"label": "B", "text": "Cl", "correct": false}, {"label": "C", "text": "HCO3", "correct": false}, {"label": "D", "text": "K+", "correct": true}], "correct_answer": "D. K+", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41221191704465219/41221191704465219.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

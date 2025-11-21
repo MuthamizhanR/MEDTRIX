@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Gynaecology Inicet Pyq</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Gynaecology Inicet Pyq</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                133 Questions | 476 Total Marks | 143 min Duration | ~64.51 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 133 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 143 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 133</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Gynaecology Inicet Pyq - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 133</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 133 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "All are LARC except", "options": [{"label": "A", "text": "Implants", "correct": false}, {"label": "B", "text": "IUD", "correct": false}, {"label": "C", "text": "Tubal ligation", "correct": true}, {"label": "D", "text": "Injectable contraception", "correct": false}], "correct_answer": "C. Tubal ligation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22825871704788437/22825871704788437.m3u8"}, {"text": "A girl presented with amenorrhea. Which of the following will be classified as primary amenorrhea", "options": [{"label": "A", "text": "14 year old with tanner stage 1 breast", "correct": true}, {"label": "B", "text": "13 year old with tanner stage 5 breast development", "correct": false}, {"label": "C", "text": "12 year old with tanner stage 4 breast development", "correct": false}, {"label": "D", "text": "11 year old with tanner stage 1 breast", "correct": false}], "correct_answer": "A. 14 year old with tanner stage 1 breast", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5776471704788449/5776471704788449.m3u8"}, {"text": "Cancer caused by DES", "options": [{"label": "A", "text": "Sarcoma botryoides", "correct": false}, {"label": "B", "text": "Squamous cell cancer of vagina", "correct": false}, {"label": "C", "text": "Pagets disease of vagina", "correct": false}, {"label": "D", "text": "Clear cell cancer vagina", "correct": true}], "correct_answer": "D. Clear cell cancer vagina", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3348391704788462/3348391704788462.m3u8"}, {"text": "Sequence of steps in D&C A. Assess uterus direction and size B. Uterine sound C. Serial dilatation D. Curettage", "options": [{"label": "A", "text": "A, B, C, D", "correct": true}, {"label": "B", "text": "B, A, C, D", "correct": false}, {"label": "C", "text": "B, C, A, D", "correct": false}, {"label": "D", "text": "C, D, A, B", "correct": false}], "correct_answer": "A. A, B, C, D", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/10132641704788495/10132641704788495.m3u8"}, {"text": "Which part of HPV virus is sued to make the vaccine", "options": [{"label": "A", "text": "E6", "correct": false}, {"label": "B", "text": "E7", "correct": false}, {"label": "C", "text": "L1", "correct": true}, {"label": "D", "text": "E1", "correct": false}], "correct_answer": "C. L1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36642791704788555/36642791704788555.m3u8"}, {"text": "Vulval cancer most common in age group", "options": [{"label": "A", "text": "65-85", "correct": true}, {"label": "B", "text": "35-55", "correct": false}, {"label": "C", "text": "Below 18", "correct": false}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "A. 65-85", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78350251704788570/78350251704788570.m3u8"}, {"text": "All are risk factors for vulvar cancer except", "options": [{"label": "A", "text": "Vulvar dystrophy", "correct": false}, {"label": "B", "text": "Smoking", "correct": false}, {"label": "C", "text": "Vulvar hamartoma", "correct": true}, {"label": "D", "text": "HPV", "correct": false}], "correct_answer": "C. Vulvar hamartoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53002751704788584/53002751704788584.m3u8"}, {"text": "All are additional benefits of oral contraceptives except", "options": [{"label": "A", "text": "HIV and std", "correct": true}, {"label": "B", "text": "Endometrial cancer", "correct": false}, {"label": "C", "text": "Ovarian cancer", "correct": false}, {"label": "D", "text": "Ectopic pregnancy", "correct": false}], "correct_answer": "A. HIV and std", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53949941704788682/53949941704788682.m3u8"}, {"text": "Identify type of ovarian tumour", "options": [{"label": "A", "text": "Immature teratoma", "correct": false}, {"label": "B", "text": "Mature teratoma", "correct": true}, {"label": "C", "text": "Serous cystadenoma", "correct": false}, {"label": "D", "text": "Mucionpus cystadenoma", "correct": false}], "correct_answer": "B. Mature teratoma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/21(244).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/65994061704788772/65994061704788772.m3u8"}, {"text": "Webbed neck, amenorrhea, normal intelligence streak ovaries", "options": [{"label": "A", "text": "Turner syndrome", "correct": true}, {"label": "B", "text": "MRKH", "correct": false}, {"label": "C", "text": "AIS", "correct": false}, {"label": "D", "text": "Kallmann syndrome", "correct": false}], "correct_answer": "A. Turner syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77584301704788822/77584301704788822.m3u8"}, {"text": "What is the diagnosi", "options": [{"label": "A", "text": "Angioma of vulva", "correct": false}, {"label": "B", "text": "Lichen planus", "correct": false}, {"label": "C", "text": "Lichen sclerosis", "correct": true}], "correct_answer": "C. Lichen sclerosis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/25(216).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/71482001704788838/71482001704788838.m3u8"}, {"text": "All the following are risk factors for uterine dysfunction except", "options": [{"label": "A", "text": "Multiparity", "correct": true}, {"label": "B", "text": "High station at onset of labour", "correct": false}, {"label": "C", "text": "Chorioamnionitis", "correct": false}, {"label": "D", "text": "Epidural analgesia", "correct": false}], "correct_answer": "A. Multiparity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76786211704788968/76786211704788968.m3u8"}, {"text": "Regarding Ovarian cancer recurrence", "options": [{"label": "A", "text": "If recurs in >6 months then platinum sensitive", "correct": false}, {"label": "B", "text": "If recurs between 6-12 months then partially sensitive", "correct": false}, {"label": "C", "text": ">12 month sensitive relapse", "correct": false}, {"label": "D", "text": "All the above", "correct": true}], "correct_answer": "D. All the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/75763101704789012/75763101704789012.m3u8"}, {"text": "On investing for infertility the mal partner was found to have hypogonadotropic hypogonadism: How many of the following are associated with this condition? A. Azoospermia/severe oligospermia B. Low LH, low FSH C. Low LH, high FSH D. Low testosterone E. Low prolactin level", "options": [{"label": "A", "text": "A, B and D", "correct": true}, {"label": "B", "text": "A, C and E", "correct": false}, {"label": "C", "text": "A, D and E", "correct": false}, {"label": "D", "text": "B, C and D", "correct": false}], "correct_answer": "A. A, B and D", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/48253341704789025/48253341704789025.m3u8"}, {"text": "Which of the following is more commonly associated with Kallmans syndrome?", "options": [{"label": "A", "text": "Syndactyly in males", "correct": false}, {"label": "B", "text": "Anosmia", "correct": true}, {"label": "C", "text": "Precocious puberty in females", "correct": false}, {"label": "D", "text": "White forelock", "correct": false}], "correct_answer": "B. Anosmia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24431461704789072/24431461704789072.m3u8"}, {"text": "High risk hpv does not cause", "options": [{"label": "A", "text": "Anal carcinoma", "correct": false}, {"label": "B", "text": "Cervical carcinoma", "correct": false}, {"label": "C", "text": "Laryngeal papilomatosis", "correct": true}, {"label": "D", "text": "Oral carcinoma", "correct": false}], "correct_answer": "C. Laryngeal papilomatosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/48522271704789117/48522271704789117.m3u8"}, {"text": "By giving 5 alpha reductase inhibtiors. Mark correct options", "options": [{"label": "A", "text": "Lh fsh will reduce", "correct": true}, {"label": "B", "text": "Lh reduce fsh high", "correct": false}, {"label": "C", "text": "Testosterone reduce", "correct": false}, {"label": "D", "text": "Prolactoin high", "correct": false}], "correct_answer": "A. Lh fsh will reduce", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/17858921704789131/17858921704789131.m3u8"}, {"text": "HPV dosing for women less than 15 Years age group according to WHO, SAGE?", "options": [{"label": "A", "text": "1 or 2 doses", "correct": true}, {"label": "B", "text": "2 doses", "correct": false}, {"label": "C", "text": "2 or 3 doses", "correct": false}, {"label": "D", "text": "3 doses", "correct": false}], "correct_answer": "A. 1 or 2 doses", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/21202171704789268/21202171704789268.m3u8"}, {"text": "37-year-old unmarried female, whose mother had breast CA at 50 years of age and sister had cancer at 40 years of age, comes for regular checkup. She is sexually active and taking OCPs for contraception. What will you advise as next step ?", "options": [{"label": "A", "text": "Stop taking OCP", "correct": false}, {"label": "B", "text": "Do mammography", "correct": false}, {"label": "C", "text": "Genetic counseling for BRCA testing", "correct": true}, {"label": "D", "text": "Immediate mastectomy", "correct": false}], "correct_answer": "C. Genetic counseling for BRCA testing", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/8735031704789283/8735031704789283.m3u8"}, {"text": "Which of these is not long acting reversible contraception", "options": [{"label": "A", "text": "Implanon", "correct": false}, {"label": "B", "text": "Lng iud", "correct": false}, {"label": "C", "text": "Copper iud", "correct": false}, {"label": "D", "text": "Lap tubal ligation", "correct": true}], "correct_answer": "D. Lap tubal ligation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/7453951704789411/7453951704789411.m3u8"}, {"text": "70 year old postmenopausal woman with bleeding she is nondiabetic and non hypertensive what is the next best step in her evaluation", "options": [{"label": "A", "text": "Endometrial sampling", "correct": true}, {"label": "B", "text": "VIA", "correct": false}, {"label": "C", "text": "PAP smear", "correct": false}, {"label": "D", "text": "Colposcopy", "correct": false}], "correct_answer": "A. Endometrial sampling", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26125801704789427/26125801704789427.m3u8"}, {"text": "Ashermans syndrome is most commonly associated with", "options": [{"label": "A", "text": "Hypomenorrhea", "correct": true}, {"label": "B", "text": "Oligomenorrhea", "correct": false}, {"label": "C", "text": "Dysmenorrhea", "correct": false}, {"label": "D", "text": "Menorrhagia", "correct": false}], "correct_answer": "A. Hypomenorrhea", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/62991431704789444/62991431704789444.m3u8"}, {"text": "Identify", "options": [{"label": "A", "text": "Cusco speculum", "correct": true}, {"label": "B", "text": "Sims speculum", "correct": false}], "correct_answer": "A. Cusco speculum", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/35(149).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6639291704789490/6639291704789490.m3u8"}, {"text": "19 year old girl brought by mother as she has not attained menarche. Breast and pubic hair present, blind vagina and absent uterus", "options": [{"label": "A", "text": "Mullerian agenesis", "correct": true}, {"label": "B", "text": "AIS", "correct": false}, {"label": "C", "text": "Kallmann syndrome", "correct": false}, {"label": "D", "text": "Turner Syndrome", "correct": false}], "correct_answer": "A. Mullerian agenesis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63597811704789529/63597811704789529.m3u8"}, {"text": "Greenish discharge with pruritus with strawberry cervix Treatment", "options": [{"label": "A", "text": "Fluconazole", "correct": false}, {"label": "B", "text": "Metronidazole", "correct": true}, {"label": "C", "text": "Cefixime", "correct": false}, {"label": "D", "text": "Azithromycin", "correct": false}], "correct_answer": "B. Metronidazole", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34983601704789543/34983601704789543.m3u8"}, {"text": "Case of discharge with itching PAP smear image given. Diagnosis", "options": [{"label": "A", "text": "Bacterial vaginosis", "correct": false}, {"label": "B", "text": "Trichomonas vaginalis", "correct": true}, {"label": "C", "text": "Candidates", "correct": false}, {"label": "D", "text": "Physiological", "correct": false}], "correct_answer": "B. Trichomonas vaginalis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/15(352).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/73019911704789557/73019911704789557.m3u8"}, {"text": "Clear cell carcinoma belongs to which class of ovarian tumour", "options": [{"label": "A", "text": "Epithelial", "correct": true}, {"label": "B", "text": "Germ cell", "correct": false}, {"label": "C", "text": "Sexcord", "correct": false}, {"label": "D", "text": "Mixed", "correct": false}], "correct_answer": "A. Epithelial", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23326201704789573/23326201704789573.m3u8"}, {"text": "A 17 year old girl with increased facial hair, her ovaries are bulky 30ml and 40 ml. First line in management are: A. Weight reduction B. OCP C. Spironolactone D. Laparoscopic ovarian drilling", "options": [{"label": "A", "text": "B, C, D", "correct": false}, {"label": "B", "text": "A, B, D", "correct": false}, {"label": "C", "text": "A. B, C", "correct": true}, {"label": "D", "text": "A, D, C", "correct": false}], "correct_answer": "C. A. B, C", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63127001704789589/63127001704789589.m3u8"}, {"text": "Match tumour marker", "options": [{"label": "A", "text": "A-3 B-1 C-2 D-5 E-4", "correct": true}, {"label": "B", "text": "A-1 B-3 C-2 D-5 E-4", "correct": false}, {"label": "C", "text": "A-3 B-5 C-2 D-1 E-4", "correct": false}, {"label": "D", "text": "A-3 B-4 C-2 D-5 E-1", "correct": false}], "correct_answer": "A. A-3 B-1 C-2 D-5 E-4", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/20(275).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4662821704789640/4662821704789640.m3u8"}, {"text": "Not true about clomiphene citrate", "options": [{"label": "A", "text": "Causes endometrial thinning", "correct": false}, {"label": "B", "text": "Cause monofollicular development", "correct": true}, {"label": "C", "text": "Inhibits negative feedback on GnRH", "correct": false}, {"label": "D", "text": "Can be used with gonadotropin", "correct": false}], "correct_answer": "B. Cause monofollicular development", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/42722521704789653/42722521704789653.m3u8"}, {"text": "A couple comes for evaluation of infertility. The HSG was normal but semen analysis revealed azoospermia. What is next step to differentiate between testicular failure and vas obstruction?", "options": [{"label": "A", "text": "Serum LH", "correct": false}, {"label": "B", "text": "Serum FSH", "correct": true}, {"label": "C", "text": "Testosterone", "correct": false}, {"label": "D", "text": "Testicular FNAC", "correct": false}], "correct_answer": "B. Serum FSH", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4661881704789669/4661881704789669.m3u8"}, {"text": "26 year old woman with 2 living children with complaints of pain lower abdomen has a 5cm clear ovarian cyst. What is the next step?", "options": [{"label": "A", "text": "CA125", "correct": false}, {"label": "B", "text": "Excision", "correct": false}, {"label": "C", "text": "Review after 2 months", "correct": true}, {"label": "D", "text": "CT scan", "correct": false}], "correct_answer": "C. Review after 2 months", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/49868191704799820/49868191704799820.m3u8"}, {"text": "Symptoms of endometriosis (multiple correct type) A. Dysmenorrhea B. Infertility C. Irregular bleeding D. Vaginal discharge", "options": [{"label": "A", "text": "A and B", "correct": true}, {"label": "B", "text": "C and D", "correct": false}, {"label": "C", "text": "B and D", "correct": false}, {"label": "D", "text": "A and C", "correct": false}], "correct_answer": "A. A and B", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77835561704799834/77835561704799834.m3u8"}, {"text": "Unicornuate uterus which investigation will help in diagnosis (multiple correct) A. HSG B. X ray C. Laparoscopy D. Falloscopy", "options": [{"label": "A", "text": "A and C", "correct": true}, {"label": "B", "text": "B and D", "correct": false}, {"label": "C", "text": "A and D", "correct": false}, {"label": "D", "text": "C and D", "correct": false}], "correct_answer": "A. A and C", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/47706941704799849/47706941704799849.m3u8"}, {"text": "Fixative used in PAP smear", "options": [{"label": "A", "text": "Formalin", "correct": false}, {"label": "B", "text": "Normal saline", "correct": false}, {"label": "C", "text": "Air drying", "correct": false}, {"label": "D", "text": "Ethyl alcohol", "correct": true}], "correct_answer": "D. Ethyl alcohol", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/38228891704799863/38228891704799863.m3u8"}, {"text": "Image of vulval pathology:", "options": [{"label": "A", "text": "Hematoma", "correct": false}, {"label": "B", "text": "Vulval cancer", "correct": true}, {"label": "C", "text": "Condylomata", "correct": false}, {"label": "D", "text": "Bartholins cyst", "correct": false}], "correct_answer": "B. Vulval cancer", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/WhatsApp%20Image%202023-07-19%20at%208_11_15%20PM.jpeg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/32786951704799881/32786951704799881.m3u8"}, {"text": "Match the karyotype", "options": [{"label": "A", "text": "A-1, B-3, C-2, D-4", "correct": true}, {"label": "B", "text": "A-2, B-1, C-3, D-4", "correct": false}, {"label": "C", "text": "A-4, B-1, C-2, D-3", "correct": false}, {"label": "D", "text": "A-3, B-4, C-2, D-1", "correct": false}], "correct_answer": "A. A-1, B-3, C-2, D-4", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7(524).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/43179571704799893/43179571704799893.m3u8"}, {"text": "Image of uterocervical prolapse as diagnosis (spotter)", "options": [{"label": "A", "text": "Cervicouterine prolapse", "correct": true}, {"label": "B", "text": "Inversion", "correct": false}, {"label": "C", "text": "Fibroid", "correct": false}, {"label": "D", "text": "Polyp", "correct": false}], "correct_answer": "A. Cervicouterine prolapse", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8(521).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/65358651704799906/65358651704799906.m3u8"}, {"text": "Morphology criteria for semen analysis", "options": [{"label": "A", "text": "10%", "correct": false}, {"label": "B", "text": "15%", "correct": false}, {"label": "C", "text": "4%", "correct": true}, {"label": "D", "text": "40%", "correct": false}], "correct_answer": "C. 4%", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77430941704799930/77430941704799930.m3u8"}, {"text": "Match The Hormone Levels", "options": [{"label": "A", "text": "A-2, B-3, C-4, D-1", "correct": true}, {"label": "B", "text": "A-1, B-2, C-4, D-3", "correct": false}, {"label": "C", "text": "A-4, B-1, C-3, D-2", "correct": false}, {"label": "D", "text": "A-1, B-3, C-2, D-4", "correct": false}], "correct_answer": "A. A-2, B-3, C-4, D-1", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/13(386).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74747761704799967/74747761704799967.m3u8"}, {"text": "5 alpha reductase deficiency", "options": [{"label": "A", "text": "Female Pseudohermaphrodite", "correct": false}, {"label": "B", "text": "Male Pseudohermaphrodite", "correct": true}, {"label": "C", "text": "True Hermaphrodite", "correct": false}, {"label": "D", "text": "Concealed Sex", "correct": false}], "correct_answer": "B. Male Pseudohermaphrodite", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/32455921704799997/32455921704799997.m3u8"}, {"text": "Steps of taking PAP smear A. Vaginal retractor B. Scrape ectocervix C. Making thin smear D. Fxation", "options": [{"label": "A", "text": "A, B, C, D", "correct": true}, {"label": "B", "text": "B, C, A, D", "correct": false}, {"label": "C", "text": "C, A, D, B", "correct": false}, {"label": "D", "text": "D, B, C, A", "correct": false}], "correct_answer": "A. A, B, C, D", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Correct Answer (A)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35946461704800034/35946461704800034.m3u8"}, {"text": "Which Is Not Used In A Woman With PCOS With Hirsutism And Infertility", "options": [{"label": "A", "text": "OCP", "correct": true}, {"label": "B", "text": "Metformin", "correct": false}, {"label": "C", "text": "Clomiphene", "correct": false}, {"label": "D", "text": "Tamoxifen", "correct": false}], "correct_answer": "A. OCP", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9421271704800049/9421271704800049.m3u8"}, {"text": "Klinefelter syndrome karyotype what is seen", "options": [{"label": "A", "text": "Webbed Neck", "correct": false}, {"label": "B", "text": "Polydactyly", "correct": false}, {"label": "C", "text": "Gynaecomastia And Long Arms", "correct": true}], "correct_answer": "C. Gynaecomastia And Long Arms", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/44460951704800062/44460951704800062.m3u8"}, {"text": "Match STD Kits", "options": [{"label": "A", "text": "A-1, B-3, C-2, D-4", "correct": false}, {"label": "B", "text": "A-2, B-1, C-3, D-4", "correct": false}, {"label": "C", "text": "A-4, B-1, C-2, D-3", "correct": false}, {"label": "D", "text": "A-3, B-4, C-1, D-2", "correct": true}], "correct_answer": "D. A-3, B-4, C-1, D-2", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/21(246).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/21_1(72).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/68010541704800072/68010541704800072.m3u8"}, {"text": "HPV inhibits Rb gene acting through which of these", "options": [{"label": "A", "text": "E6", "correct": false}, {"label": "B", "text": "E7", "correct": true}, {"label": "C", "text": "E1", "correct": false}, {"label": "D", "text": "E2", "correct": false}], "correct_answer": "B. E7", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39078741704800124/39078741704800124.m3u8"}, {"text": "Recombinant HPV vaccine is made from", "options": [{"label": "A", "text": "E1, E2", "correct": false}, {"label": "B", "text": "E6, E7", "correct": false}, {"label": "C", "text": "L1", "correct": true}, {"label": "D", "text": "L2", "correct": false}], "correct_answer": "C. L1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/62919601704800166/62919601704800166.m3u8"}, {"text": "A patient of recurrent trichomoniasis is asked to undergo PAP smear. What is the importance of doing PAP smear", "options": [{"label": "A", "text": "Diagnosis of cervical cancer", "correct": false}, {"label": "B", "text": "Screening of cervical cancer", "correct": true}, {"label": "C", "text": "Diagnosis of trichomoniasis", "correct": false}, {"label": "D", "text": "Screening of other cancer of female genital tract", "correct": false}], "correct_answer": "B. Screening of cervical cancer", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15074251704800188/15074251704800188.m3u8"}, {"text": "Which of the following is not a mechanism of action of OCPs", "options": [{"label": "A", "text": "Suppression of ovulation", "correct": false}, {"label": "B", "text": "Cervical mucus thickening", "correct": false}, {"label": "C", "text": "Prevents implantation", "correct": false}, {"label": "D", "text": "Increases gonadotropins", "correct": true}], "correct_answer": "D. Increases gonadotropins", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36003631704800308/36003631704800308.m3u8"}, {"text": "50 year old lady presents with abnormal uterine bleeding for 2 months. What is the next step in management", "options": [{"label": "A", "text": "Progesterone", "correct": false}, {"label": "B", "text": "Hysterectomy", "correct": false}, {"label": "C", "text": "Endometrial aspiration cytology/endometrial biopsy", "correct": true}, {"label": "D", "text": "LNG IUD", "correct": false}], "correct_answer": "C. Endometrial aspiration cytology/endometrial biopsy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/82261704800353/82261704800353.m3u8"}, {"text": "A 30 year old female was diagnosed with unilateral breast cancer, she was put on tamoxifen. Risk of which of the following will be increased", "options": [{"label": "A", "text": "Increased risk of ovarian cancer", "correct": false}, {"label": "B", "text": "Increased risk of endometrial cancer", "correct": true}, {"label": "C", "text": "CML", "correct": false}], "correct_answer": "B. Increased risk of endometrial cancer", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/2913371704800364/2913371704800364.m3u8"}, {"text": "Which of the following is done for cervical cancer screening", "options": [{"label": "A", "text": "< 21 years", "correct": false}, {"label": "B", "text": "> 30 years every 5 yearly", "correct": false}, {"label": "C", "text": "21-65 years", "correct": true}, {"label": "D", "text": "> 65 years", "correct": false}], "correct_answer": "C. 21-65 years", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/16017841704800376/16017841704800376.m3u8"}, {"text": "38 year old lady presented to gynae OPD with cytology report showing HSIL , next step will be", "options": [{"label": "A", "text": "Repeat PAPS", "correct": false}, {"label": "B", "text": "Hysterctomy", "correct": false}, {"label": "C", "text": "Colposcopy", "correct": true}, {"label": "D", "text": "Cryosurgery", "correct": false}], "correct_answer": "C. Colposcopy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/7162451704800427/7162451704800427.m3u8"}, {"text": "All are used in the treatment of PCOS except", "options": [{"label": "A", "text": "Clomiphene citrate", "correct": false}, {"label": "B", "text": "Ulipristal", "correct": true}, {"label": "C", "text": "Laparoscopic ovarian drilling", "correct": false}, {"label": "D", "text": "Letrozole", "correct": false}], "correct_answer": "B. Ulipristal", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/70290571704800465/70290571704800465.m3u8"}, {"text": "A 32 year old lady presents to infertility clinic, she has regular cycles of 28 days. Ovulation ca be con?rmed with", "options": [{"label": "A", "text": "Progesterone levels on day 14", "correct": false}, {"label": "B", "text": "Progesterone levels on day 21", "correct": true}, {"label": "C", "text": "LH levels on 14 th day", "correct": false}, {"label": "D", "text": "Lh levels on day 21", "correct": false}], "correct_answer": "B. Progesterone levels on day 21", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/777391704800478/777391704800478.m3u8"}, {"text": "A 45 year old multiparous woman incidentally diagnosed clinically with 14 week size ?broid. What is the next line of management", "options": [{"label": "A", "text": "Myomectomy", "correct": false}, {"label": "B", "text": "Hysterctomy", "correct": false}, {"label": "C", "text": "Expectant management", "correct": true}, {"label": "D", "text": "Medical management", "correct": false}], "correct_answer": "C. Expectant management", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27104711704800489/27104711704800489.m3u8"}, {"text": "What is the procedure where these are used", "options": [{"label": "A", "text": "Pap smear", "correct": true}, {"label": "B", "text": "VIA", "correct": false}, {"label": "C", "text": "VILI", "correct": false}, {"label": "D", "text": "LBC", "correct": false}], "correct_answer": "A. Pap smear", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5(694).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/75907651704800515/75907651704800515.m3u8"}, {"text": "16 years unmarried girl came for vaccination against cervical cancer. Which vaccine to be given:", "options": [{"label": "A", "text": "Gardasil", "correct": true}, {"label": "B", "text": "Rabivac", "correct": false}, {"label": "C", "text": "Biovac", "correct": false}, {"label": "D", "text": "Tvac", "correct": false}], "correct_answer": "A. Gardasil", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12877471704789764/12877471704789764.m3u8"}, {"text": "DOC for Bacterial vaginosis in a pregnant female:", "options": [{"label": "A", "text": "Clindamycin", "correct": false}, {"label": "B", "text": "Metronidazole", "correct": true}, {"label": "C", "text": "Erythromycin", "correct": false}, {"label": "D", "text": "Fluconazole", "correct": false}], "correct_answer": "B. Metronidazole", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/68623201704789778/68623201704789778.m3u8"}, {"text": "In GTN, lung metastasis belongs to which stage?", "options": [{"label": "A", "text": "Stage-1", "correct": false}, {"label": "B", "text": "Stage-2", "correct": false}, {"label": "C", "text": "Stage-3", "correct": true}, {"label": "D", "text": "Stage-4", "correct": false}], "correct_answer": "C. Stage-3", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9226781704789792/9226781704789792.m3u8"}, {"text": "A 40-years patient c/o foul smelling grayish white discharge, diagnosed to be Gardenerella vaginalis infection. Microscopic findings are suggestive of:", "options": [{"label": "A", "text": "Group of bacilli arranged in chain forms", "correct": false}, {"label": "B", "text": "Bacteria found to be engulfed by macrophages", "correct": false}, {"label": "C", "text": "Bacteria adherent to lining vaginal epithelial cells", "correct": true}, {"label": "D", "text": "Bacteria arranged in cluster forms", "correct": false}], "correct_answer": "C. Bacteria adherent to lining vaginal epithelial cells", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/10(508).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/43543141704789843/43543141704789843.m3u8"}, {"text": "Continuous GnRH is useful in all except:", "options": [{"label": "A", "text": "Precocious puberty", "correct": false}, {"label": "B", "text": "Prostate cancer", "correct": false}, {"label": "C", "text": "Male infertility", "correct": true}, {"label": "D", "text": "Endometriosis", "correct": false}], "correct_answer": "C. Male infertility", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19572531704789907/19572531704789907.m3u8"}, {"text": "Assertion: Menopause shows hot flashes Reason: Hot flashes are because of low estrogen or tisfluctuation", "options": [{"label": "A", "text": "Both Assertion and Reasons are true and the Reason is the correct explanation for the Assertion", "correct": true}, {"label": "B", "text": "Both Assertion and Reasons are true, but the Reason is not the correct explanation for the Assertion", "correct": false}, {"label": "C", "text": "Assertion is true, but the Reasons is false", "correct": false}, {"label": "D", "text": "Assertion is false, but the Reasons is true", "correct": false}, {"label": "E", "text": "Both Assertion and Reasons are false", "correct": false}], "correct_answer": "A. Both Assertion and Reasons are true and the Reason is the correct explanation for the Assertion", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74267761704789992/74267761704789992.m3u8"}, {"text": "Hormone therapy is not indicated in:", "options": [{"label": "A", "text": "Hot flashes", "correct": false}, {"label": "B", "text": "CVD", "correct": true}, {"label": "C", "text": "Osteoporosis", "correct": false}, {"label": "D", "text": "Vaginal dryness", "correct": false}], "correct_answer": "B. CVD", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/58691191704790003/58691191704790003.m3u8"}, {"text": "A 35-years yound female multigravida presenting with post coital bleeding, O/E vagina-normal,cervix-hypertrophied bilateral adnexa normal. What is the Next line of management:", "options": [{"label": "A", "text": "Pap smear", "correct": false}, {"label": "B", "text": "Cone biopsy", "correct": false}, {"label": "C", "text": "Cryotherapy", "correct": false}, {"label": "D", "text": "4 quadrant biopsy", "correct": true}], "correct_answer": "D. 4 quadrant biopsy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/32794341704790016/32794341704790016.m3u8"}, {"text": "Themes & Focus: Infertility and Tubal disease: Answer option list Lead in question: For the case below, choose the single most appropriate diagnosis from the above option list Case- A 35 year-old nulliparous woman with oligomenorrhea and infertility. Image of diagnostic laparoscopy is given below. What is the most probable diagnosis?", "options": [{"label": "A", "text": "Endometriosis", "correct": false}, {"label": "B", "text": "PCOS", "correct": true}, {"label": "C", "text": "Ovarian Cyst", "correct": false}, {"label": "D", "text": "Tubeovarian mass", "correct": false}, {"label": "E", "text": "Endometrial polyp", "correct": false}, {"label": "F", "text": "Submucosal fibroid", "correct": false}], "correct_answer": "B. PCOS", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/16(333).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6461851704790125/6461851704790125.m3u8"}, {"text": "Themes & Focus: Infertility and Tubal disease: Lead in question: For each case below, choose the single most appropriate diagnosis from the above option list Case- A 32 years-old woman with a BMI of 34 complains with irregular vaginal bleeding. On examination her endometrial thickness was 13mm with unequal thickened part at one area. The hysteroscopic image given below for diagnosis.", "options": [{"label": "A", "text": "Endometriosis", "correct": false}, {"label": "B", "text": "PCOS", "correct": false}, {"label": "C", "text": "Ovarian Cyst", "correct": false}, {"label": "D", "text": "Tubeovarian mass", "correct": false}, {"label": "E", "text": "Endometrial polyp", "correct": false}, {"label": "F", "text": "Submucosal fibroid", "correct": true}], "correct_answer": "F. Submucosal fibroid", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/16_2.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56019331704790138/56019331704790138.m3u8"}, {"text": "A 55 years old lady presented with menorrhagia and biopsy finding was simple endometrial hyperplasia with atypia. What is the definitive management for this patient", "options": [{"label": "A", "text": "Hysterectomy", "correct": true}, {"label": "B", "text": "Mirena", "correct": false}, {"label": "C", "text": "Curettage", "correct": false}, {"label": "D", "text": "Hormones", "correct": false}], "correct_answer": "A. Hysterectomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/7838281704790151/7838281704790151.m3u8"}, {"text": "Sentinel lymphnode biopsy most useful for", "options": [{"label": "A", "text": "Vagina", "correct": false}, {"label": "B", "text": "Vulva", "correct": true}, {"label": "C", "text": "Endometrium", "correct": false}, {"label": "D", "text": "Cervix", "correct": false}], "correct_answer": "B. Vulva", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41075951704790164/41075951704790164.m3u8"}, {"text": "Next line of management for a women who had been reported as CIN 3 seen on Pap smear", "options": [{"label": "A", "text": "Conisation", "correct": false}, {"label": "B", "text": "Trachelectomy", "correct": false}, {"label": "C", "text": "Colposcopy and Leep", "correct": true}, {"label": "D", "text": "Hysterectomy", "correct": false}], "correct_answer": "C. Colposcopy and Leep", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39222181704790242/39222181704790242.m3u8"}, {"text": "Which of the following doesn

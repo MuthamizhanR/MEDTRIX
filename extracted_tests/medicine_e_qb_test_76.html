@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Hepatitis A &amp; B</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Hepatitis A &amp; B</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                19 Questions | 19 Total Marks | 29 min Duration | ~91.58 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 19 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 29 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 19</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Hepatitis A &amp; B - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 19</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 19 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which of the following Hepatitis viruses is a DNA virus?", "options": [{"label": "A", "text": "Hepatitis A virus", "correct": false}, {"label": "B", "text": "Hepatitis B virus", "correct": true}, {"label": "C", "text": "Hepatitis C virus", "correct": false}, {"label": "D", "text": "Hepatitis E virus", "correct": false}], "correct_answer": "B. Hepatitis B virus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hepatitis B virus HBV is a DNA virus that Comes under the family Hepadnaviridae</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. HAV is a nonenveloped 27-nm, heat-, acid-, and ether-resistant RNA virus in the Hepatovirus genus of the picornavirus family. Option: C. Hepatitis C is an RNA virus under the Flaviviridae There are seven genotypes. Option: D. HEV is the most common cause of acute hepatitis —positive-sense RNA genome under the family Hepeviridae.</p>\n<p><strong>Extraedge:</strong></p><p>The most common in India is genotype 3 The most common worldwide is genotype1</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient suspected of viral hepatitis undergoes investigations. Which provides a convenient, readily detectable, qualitative marker of HBV replication and relative infectivity?", "options": [{"label": "A", "text": "HBeAg", "correct": true}, {"label": "B", "text": "HBsAg", "correct": false}, {"label": "C", "text": "HBcAg", "correct": false}, {"label": "D", "text": "HBxAg", "correct": false}], "correct_answer": "A. HBeAg", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>HBeAg Marker of Infectivity and replication. The qualitative marker of HBV replication and relative infectivity. The presence of HBeAg during chronic hepatitis B tends to be associated with ongoing viral replication, infectivity, and inflammatory liver injury (except during the early decades after perinatally acquired HBV infection)</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. HbsAg is the first marker to rise even before the onset of prodromal symptoms. Option: C. HBcAg does not circulate. Option: D. The clinical relevance of HBxAg is limited, however, and testing for it is not part of routine clinical practice</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the role of hepatitis B X antigen (HBxAg) in Hepatitis B?", "options": [{"label": "A", "text": "Stimulation of HBV reverse transcription and HBV DNA replication", "correct": true}, {"label": "B", "text": "Inhibition of HBV reverse transcription and HBV DNA replication", "correct": false}, {"label": "C", "text": "Directs replication and repair of HBV DNA", "correct": false}, {"label": "D", "text": "Inhibits calcium release (possibly from mitochondria)", "correct": false}], "correct_answer": "A. Stimulation of HBV reverse transcription and HBV DNA replication", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Stimulation of HBV reverse transcription and HBV DNA replication The fourth gene, X, codes for a small, nonparticulate protein, hepatitis B x antigen (HBsAg), capable of transactivating both viral and cellular gene transcription . In the cytoplasm, HBxAg affects calcium release (possibly from mitochondria), activating signal-transduction pathways that stimulate HBV reverse transcription and HBV DNA replication.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: C. HBcAg is the protein product; it has no signal peptide and is not secreted, but it assembles into nucleocapsid particles, which bind to and incorporate RNA, and which, ultimately, contain HBV DNA . Also packaged within the nucleocapsid core is a DNA polymerase that directs the replication and repair of HBV DNA. Option: D. Stimulates calcium release, NOT inhibits.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Hepatitis B is a vaccine-preventable liver infection caused by the hepatitis B virus (HBV). Hepatitis B is spread when blood, semen, or other body fluids from a person infected with the virus enters the body of someone who is not infected. Which of the following is true about hepatitis B serological markers?", "options": [{"label": "A", "text": "HBcAg and anti-HBc are not detectable routinely in the serum of patients", "correct": false}, {"label": "B", "text": "HBcAg is not detectable routinely in the serum of patients, but anti-HBc is readily demonstrable in serum", "correct": true}, {"label": "C", "text": "Anti-HBc is not detectable routinely in the serum of patients, but HBcAg is readily demonstrable in serum", "correct": false}, {"label": "D", "text": "HBcAg and anti-HBc are readily demonstrable in the serum of patients", "correct": false}], "correct_answer": "B. HBcAg is not detectable routinely in the serum of patients, but anti-HBc is readily demonstrable in serum", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>HBcAg is not detectable routinely in the serum of patients, but anti-HBc is readily demonstrable in serum Hepatitis B core antigen is not detected; only core antibody is detected. Because HBcAg is intracellular and, when in the serum, sequestered within an HBsAg coat, naked core particles do not circulate in serum. Therefore, HBcAg is not detectable routinely in the serum of patients with HBV infection. By contrast, anti-HBc is readily demonstrable in serum, beginning within the first 1–2 weeks after the appearance of HBsAg and preceding detectable levels of anti-HBs by weeks to months.</p>\n<p><strong>Highyeild:</strong></p><p>Acute infection–Anti HBc IgM(used to differentiate acute versus chronic illness) IgG anti-HBc and Anti HbS—-Recovered. IgG anti-HBc and HBsAg—--chronic infection IgG anti-HBc alone—-Previous infection or Occult infection</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Anti-HBc is readily demonstrable . Option: C. HBcAg is not detectable routinely in the serum of patients, but anti-HBc is readily demonstrable in serum. Option: D. HBcAg is not detectable routinely.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 31-year male recovers from Hepatitis B. Which of the following offers immunity against reinfection with HBV?", "options": [{"label": "A", "text": "Anti-HBs", "correct": true}, {"label": "B", "text": "Anti-HBc", "correct": false}, {"label": "C", "text": "Anti-HBe", "correct": false}, {"label": "D", "text": "Anti-HBx", "correct": false}], "correct_answer": "A. Anti-HBs", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Anti-HBs The temporal association between the appearance of anti-HBs and resolution of HBV infection as well as the observation that persons with anti-HBs in serum are protected against reinfection with HBV, suggests that anti-HBs are the protective antibody .</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B, C, D: Not reported to offer immunity against reinfection.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 32-year female is diagnosed with Hepatitis B infection. Which of the following can be evaluated as a quantitative marker of its replicative phase?", "options": [{"label": "A", "text": "HBeAg", "correct": false}, {"label": "B", "text": "HBsAg", "correct": false}, {"label": "C", "text": "HBV DNA", "correct": true}, {"label": "D", "text": "HBcAg", "correct": false}], "correct_answer": "C. HBV DNA", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>HBV DNA HBeAg is a qualitative marker, and HBV DNA is a quantitative marker of this replicative phase, during which all three forms of HBV circulate, including intact virions. Over time, the relatively replicative stage of chronic HBV infection gives way to a relatively nonreplicative degree.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A: Qualitative marker . Option: B: HBcAg is not detectable routinely in the serum of patients, but anti-HBc is readily demonstrable in serum. Option: D: HBcAg is not detectable routinely.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The important category of HBV mutants consists of escape mutants; what occurs in them?", "options": [{"label": "A", "text": "Single amino acid substitution from arginine to glycine that results in a gain of neutralizing activity by anti-HBs", "correct": false}, {"label": "B", "text": "Single amino acid substitution from glycine to arginine that results in a gain of neutralizing activity by anti-HBs", "correct": false}, {"label": "C", "text": "Single amino acid substitution from arginine to glycine that results in a loss of neutralizing activity by anti-HBs", "correct": false}, {"label": "D", "text": "Single amino acid substitution from glycine to arginine that results in a loss of neutralizing activity by anti-HBs", "correct": true}], "correct_answer": "D. Single amino acid substitution from glycine to arginine that results in a loss of neutralizing activity by anti-HBs", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Single amino acid substitution from glycine to arginine that results in a loss of neutralizing activity by anti-HBs The second important category of HBV mutants consists of escape mutants, in which a single amino acid substitution, from glycine to arginine, occurs at position 145 of the immunodominant alpha determinant common to all HBsAg subtypes. This HBsAg alteration leads to a critical conformational change that results in a loss of neutralizing activity by anti-HBs.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A & C. Single amino acid substitution, from glycine to arginine, occurs. Option: B. Loss of neutralizing activity by anti-HBs.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Although the virus does not appear to be associated with tissue injury in any of these extrahepatic sites, its presence in these \"remote\" reservoirs has been invoked to explain the recurrence of HBV infection after orthotopic liver transplantation. Hepatitis B antigens and HBV DNA have been identified in all extrahepatic sites EXCEPT?", "options": [{"label": "A", "text": "Bone marrow", "correct": false}, {"label": "B", "text": "Spleen", "correct": false}, {"label": "C", "text": "Pancreas", "correct": false}, {"label": "D", "text": "Lungs", "correct": true}], "correct_answer": "D. Lungs", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Lungs They were not reported in LUNGS. Hepatitis B antigens and HBV DNA have been identified in extrahepatic sites, including the lymph nodes, bone marrow, circulating lymphocytes, spleen, and pancreas. This explains the recurrence of HBV infection after Orthotopic liver transplantation.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Under ordinary circumstances, the acute liver injury associated with viral hepatitis can be determined by which of the following?", "options": [{"label": "A", "text": "Hepatitis viruses are directly cytopathic to hepatocytes but not the immunologic responses of the host", "correct": false}, {"label": "B", "text": "The immunologic responses of the host but the hepatitis viruses are not known to be directly cytopathic to hepatocytes", "correct": true}, {"label": "C", "text": "Both hepatitis viruses are directly cytopathic to hepatocytes and the immunologic responses of the host", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "B. The immunologic responses of the host but the hepatitis viruses are not known to be directly cytopathic to hepatocytes", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>The immunologic responses of the host but the hepatitis viruses are not known to be directly cytopathic to hepatocytes Under ordinary circumstances, none of the hepatitis viruses is known to be directly cytopathic to hepatocytes. Evidence suggests that the clinical manifestations and outcomes after acute liver injury associated with viral hepatitis are determined by the immunologic responses of the host .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is FALSE regarding bridging hepatic necrosis in hepatitis?", "options": [{"label": "A", "text": "Less severe histologic lesion", "correct": true}, {"label": "B", "text": "Large areas of hepatic cell dropout", "correct": false}, {"label": "C", "text": "Thought to have prognostic significance", "correct": false}, {"label": "D", "text": "Consists of condensed reticulum, inflammatory debris, and degenerating liver cells", "correct": false}], "correct_answer": "A. Less severe histologic lesion", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Less severe histologic lesion A more severe histologic lesion, bridging hepatic necrosis , called subacute or confluent necrosis or interface hepatitis , is observed occasionally in acute hepatitis.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. “Bridging” between lobules results from large areas of hepatic cell dropout, with the collapse of the reticulin framework. Option: C & D. Characteristically, the bridge consists of condensed reticulum, inflammatory debris, and degenerating liver cells that span adjacent portal areas, a portal to central veins, or a primary vein to the main This lesion had been thought to have prognostic significance; in many of the described initially patients with this lesion, a subacute course terminated in death within several weeks to months, or severe chronic hepatitis and cirrhosis developed; however, the association between bridging necrosis and a poor prognosis in patients with acute hepatitis has not been upheld. But there is a predictive relationship between chronic hepatitis and bridging necrosis.</p>\n<p><strong>Extraedge:</strong></p><p>The specific feature in the histopathology of Hepatitis B is ground glass Hepatocyte . This is due to the HBsAg particle in the Endoplasmic reticulum. seen in other conditions but specific to Hepatitis B.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is the most common route of perinatal transmission of hepatitis B from mother to baby?", "options": [{"label": "A", "text": "Acquired in utero", "correct": false}, {"label": "B", "text": "At the time of delivery", "correct": true}, {"label": "C", "text": "Breast-feeding", "correct": false}, {"label": "D", "text": "Kissing", "correct": false}], "correct_answer": "B. At the time of delivery", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>At the time of delivery Epidemiologic evidence suggests that most infections occur approximately at the time of delivery.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Although the precise mode of perinatal transmission is unknown, and ~ 10% of infections may be acquired in utero. Epidemiologic evidence suggests that most infections occur approximately at the time of delivery and are unrelated to breastfeeding (which is not contraindicated in women with hepatitis B). The likelihood of perinatal transmission of HBV correlates with the presence of HBeAg and high-level viral replication.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following represents high-Risk Populations for whom HBV Infection Screening is recommended?", "options": [{"label": "A", "text": "Blood donors", "correct": false}, {"label": "B", "text": "Plasma donors", "correct": false}, {"label": "C", "text": "Semen donors", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A, B, C: High-Risk Populations for Whom HBV Infection Screening Is Recommended include Blood/plasma/organ/tissue/semen donors.</p>\n<p><strong>Extraedge:</strong></p><p>TABLE 332-3 High-Risk Populations for Whom HBV Infection Screening Is Recommended Persons born in countries/regions with a high (28%) and intermediate (≥2%) prevalence of HBV infection, including immigrants and adopted children and including persons born in the United States who were not vaccinated as infants and whose parents emigrated from areas of high HBV endemicity Household and sexual contact of persons with hepatitis B Babies born to HBsAg-positive mothers Persons who have used injection drugs Persons with multiple sexual contacts or a history of sexually transmitted disease Men who have sex with men Inmates of correctional facilities Persons with elevated alanine or aspartate aminotransferase levels Blood/plasma/organ/tissue/semen donors Persons with HCV or HIV infection Hemodialysis patients Pregnant women Persons who are the source of blood or body fluids that would be an indication for postexposure prevention (e.g., needlestick, mucosal exposure, sexual assault) Persons who require immunosuppressive or cytotoxic therapy (including anti-tumor necrosis factor treatment for rheumatologic or inflammatory bowel disorders)</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The serological response of hepatitis B infection is shown below. What does the green curve represent?", "options": [{"label": "A", "text": "HBeAg", "correct": false}, {"label": "B", "text": "HBsAg", "correct": false}, {"label": "C", "text": "Anti-HBe", "correct": true}, {"label": "D", "text": "Anti-HBs", "correct": false}], "correct_answer": "C. Anti-HBe", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1685621144085-QTDM064013IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Anti-HBe</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A: Yellow curve. Option: B: Blue curve. Option: D: Purple curve.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Classification of chronic hepatitis is based on which of the following features?", "options": [{"label": "A", "text": "Cause", "correct": false}, {"label": "B", "text": "Histologic activity", "correct": false}, {"label": "C", "text": "Degree of progression based on level of fibrosis", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above Classification of chronic hepatitis was based primarily on Histopathological features but is replaced by category based on clinical, serologic, and histologic variables. Classification of chronic hepatitis is based on (1 ) its cause; (2) its histologic activity or grade; and (3) its degree of progression based on the level of fibrosis or stage . Thus, neither clinical features nor histologic components—requiring liver biopsy or non-invasive markers of fibrosis—alone are sufficient to characterize and distinguish among the several categories of chronic hepatitis.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The liver biopsy of a 25-year-old patient shows most of the lobules with portal fibrosis. What score is based on the most popular histologic activity index (HAI)?", "options": [{"label": "A", "text": "2", "correct": true}, {"label": "B", "text": "3", "correct": false}, {"label": "C", "text": "4", "correct": false}, {"label": "D", "text": "5", "correct": false}], "correct_answer": "A. 2", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>2</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B: Few Bridging fibrosis. Option: C: Much bridging fibrosis. Choice: D: Incomplete Histologic Grading and Staging of Chronic Hepatitis. Fibrosis (stage) None Total 0 Portal fibrosis-some 1 Portal fibrosis-most 2 Bridging fibrosis-few 3 Bridging fibrosis-many 4 Incomplete cirrhosis 5 Cirrhosis 6 6</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-year male is being evaluated for chronic hepatitis. Which of the following is NOT a laboratory feature suggestive of chronic hepatitis B?", "options": [{"label": "A", "text": "Hyperglobulinemia", "correct": true}, {"label": "B", "text": "Aspartate Aminotransferase elevation", "correct": false}, {"label": "C", "text": "Alanine aminotransferase (ALT) tends to be more elevated", "correct": false}, {"label": "D", "text": "Elevations in serum bilirubin", "correct": false}], "correct_answer": "A. Hyperglobulinemia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hyperglobulinemia Hyperglobulinemia and detectable circulating autoantibodies are distinctly absent in chronic hepatitis B (in contrast to autoimmune hepatitis).</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B, C. As is true for acute viral hepatitis B, alanine aminotransferase (ALT) tends to be more elevated than aspartate aminotransferase (AST); however, once cirrhosis is established, AST tends to exceed ALT. Levels of alkaline phosphatase activity tend to be expected or only marginally elevated. Option: D. In severe cases, moderate elevations in serum bilirubin (51.3-171 μmol/L [3-10 mg/dL]) occur. Hypoalbuminemia and prolongation of the prothrombin time occur in severe or end-stage cases.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Treatment is recommended regardless of HBeAg status and ALT as long as HBV DNA is?", "options": [{"label": "A", "text": "Greater than 200 IU/mL", "correct": false}, {"label": "B", "text": "More fabulous than 2000 IU/mL", "correct": true}, {"label": "C", "text": "Greater than 20000 IU/mL", "correct": false}, {"label": "D", "text": "Greater than 200000 IU/mL", "correct": false}], "correct_answer": "B. More fabulous than 2000 IU/mL", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>More fabulous than 2000 IU/mL For patients with compensated cirrhosis, because antiviral therapy has been shown to retard clinical progression, treatment is recommended regardless of HBeAg status and ALT as long as HBV DNA is detectable at >2 × 10 3 IU/mL (detectable at any level according to the EASL)</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Needs evaluation of other factors. Option: C, D. Needs Treatment.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Window period in hepatitis B is?", "options": [{"label": "A", "text": "Disappearance of HBsAg and the appearance of anti HBs", "correct": true}, {"label": "B", "text": "Disappearance of HBsAg & the appearance of anti-HBC", "correct": false}, {"label": "C", "text": "Appearance of HBsAg and the appearance of anti-HBC", "correct": false}, {"label": "D", "text": "Appearance of HBsAg and the appearance of anti HBs", "correct": false}], "correct_answer": "A. Disappearance of HBsAg and the appearance of anti HBs", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Disappearance of HBsAg and the appearance of anti HBs Hepatitis B may be spread from infected mothers to their babies at birth (

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Neetpg Mock 3 (Standard Difficulty)   15 06 2025   2025 06 15</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Neetpg Mock 3 (Standard Difficulty)   15 06 2025   2025 06 15</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                200 Questions | 800 Total Marks | 210 min Duration | ~63.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 200 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 210 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 200</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Neetpg Mock 3 (Standard Difficulty)   15 06 2025   2025 06 15 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 200</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 200 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 25-year-old male presents with progressive night blindness and peripheral vision loss since adolescence. Fundoscopic examination findings is shown in the image. Which of the following electrophysiologic findings is most consistent with the pathology shown?", "options": [{"label": "A", "text": "Normal photopic and scotopic responses on electroretinography (ERG)", "correct": false}, {"label": "B", "text": "Absent cone responses, preserved rod responses", "correct": false}, {"label": "C", "text": "Extinguished or severely reduced scotopic and photopic ERG responses", "correct": true}, {"label": "D", "text": "Increased b-wave amplitude with preserved a-wave on ERG", "correct": false}], "correct_answer": "C. Extinguished or severely reduced scotopic and photopic ERG responses", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_2vRdBRA.png"], "explanation_images": [], "explanation": "<p><strong>Ans. C) Extinguished or severely reduced scotopic and photopic ERG responses</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Retinitis Pigmentosa is characterized by progressive loss of rods and cones, leading to extinguished ERG responses in advanced stages. Classic signs include bone spicule pigmentation, vessel attenuation, and optic disc pallor.</li><li>➤ Retinitis Pigmentosa is characterized by progressive loss of rods and cones, leading to extinguished ERG responses in advanced stages.</li><li>➤ Retinitis Pigmentosa</li><li>➤ Classic signs include bone spicule pigmentation, vessel attenuation, and optic disc pallor.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83574/NEET_PG_MOCK_3_Q-3_Ophtha.mp4"}, {"text": "A 47-year-old woman presents with a palpable breast lump. Histopathological examination of the biopsy reveals tumor cells with signet ring morphology, mucin deposition, and a pattern of infiltration within fibrous stroma, as shown in the image. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Invasive ductal carcinoma", "correct": false}, {"label": "B", "text": "Invasive lobular carcinoma", "correct": true}, {"label": "C", "text": "Mucinous carcinoma", "correct": false}, {"label": "D", "text": "Medullary carcinoma", "correct": false}], "correct_answer": "B. Invasive lobular carcinoma", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-06-11%20162306.jpg"], "explanation_images": [], "explanation": "<p><strong>Ans. B) Invasive lobular carcinoma</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Invasive lobular carcinoma of the breast typically shows signet ring cells, mucin production, and the Indian file pattern on histology due to loss of E-cadherin, distinguishing it from other breast cancer subtypes.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83837/NEET_PG_MOCK_3_Q-14_Pathology.mp4"}, {"text": "A baby presented with abdominal pain. On examination, a mass is palpated in the right lumbar region. A barium enema is done, and the image is given below. What is the likely diagnosis?", "options": [{"label": "A", "text": "Intussusception", "correct": true}, {"label": "B", "text": "Volvulus", "correct": false}, {"label": "C", "text": "Duodenal atresia", "correct": false}, {"label": "D", "text": "Intestinal obstruction", "correct": false}], "correct_answer": "A. Intussusception", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-06-10%20132202.jpg"], "explanation_images": [], "explanation": "<p><strong>Ans. A) Intussusception</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Intussusception should be suspected in infants with episodic pain, vomiting, and red currant jelly stools, and is confirmed by the claw sign on contrast enema, which can also be therapeutic.</li><li>➤ Intussusception should be suspected in infants with episodic pain, vomiting, and red currant jelly stools, and is confirmed by the claw sign on contrast enema, which can also be therapeutic.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83521/NEET_PG_MOCK_3_Q-9_Ped.mp4"}, {"text": "Which of the following statements is most accurate about epidemic dropsy?", "options": [{"label": "A", "text": "Mortality is uniformly low and limited to children.", "correct": false}, {"label": "B", "text": "Disease affects only elderly or immunocompromised.", "correct": false}, {"label": "C", "text": "Mortality can range from 5% to 50%, and all age groups except breastfed infants may be affected.", "correct": true}, {"label": "D", "text": "It presents with inflammatory cellulitis and is due to fungal contamination.", "correct": false}], "correct_answer": "C. Mortality can range from 5% to 50%, and all age groups except breastfed infants may be affected.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Mortality can range from 5% to 50%, and all age groups except breastfed infants may be affected.</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Epidemic dropsy is a toxicological public health emergency primarily caused by sanguinarine in adulterated mustard oil. It presents with non-inflammatory edema , affects all age groups except breastfed infants , and can have high mortality if not recognized and managed early.</li><li>➤ Epidemic dropsy is a toxicological public health emergency primarily caused by sanguinarine in adulterated mustard oil.</li><li>➤ toxicological public health emergency</li><li>➤ sanguinarine</li><li>➤ It presents with non-inflammatory edema , affects all age groups except breastfed infants , and can have high mortality if not recognized and managed early.</li><li>➤ non-inflammatory edema</li><li>➤ all age groups except breastfed infants</li><li>➤ high mortality</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83577/NEET_PG_MOCK_3_Q-13_PSM.mp4"}, {"text": "A 32-year-old pregnant woman, gravida 2 para 1, presents to the obstetric clinic at 8 weeks gestation with complaints of persistent nausea and vomiting for the last 10 days. She has already tried dietary changes but symptoms have not improved. She is hemodynamically stable and her labs rule out other causes. She is diagnosed with hyperemesis gravidarum and requires pharmacological therapy. Which of the following medications is safest and most appropriate for controlling her symptoms at this stage of pregnancy?", "options": [{"label": "A", "text": "Metoclopramide", "correct": false}, {"label": "B", "text": "Doxylamine", "correct": true}, {"label": "C", "text": "Dronabinol", "correct": false}, {"label": "D", "text": "Aprepitant", "correct": false}], "correct_answer": "B. Doxylamine", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Doxylamine</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Doxylamine , often with pyridoxine , is the first line and safest medication for nausea and vomiting in pregnancy , especially in hyperemesis gravidarum .</li><li>➤ Doxylamine</li><li>➤ pyridoxine</li><li>➤ first line</li><li>➤ nausea and vomiting in pregnancy</li><li>➤ hyperemesis gravidarum</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83725/NEET_PG_MOCK_3_Q-3_Pharma.mp4"}, {"text": "A public health team is investigating a case of zoonotic infection linked to unpasteurized milk consumption. They note that the pathogen involved is able to withstand 30 minutes of pasteurization at 63°C (Holder method). Which of the following organisms is most likely responsible?", "options": [{"label": "A", "text": "Mycobacterium bovis", "correct": false}, {"label": "B", "text": "Salmonella spp.", "correct": false}, {"label": "C", "text": "Coxiella burnetii", "correct": true}, {"label": "D", "text": "Brucella spp", "correct": false}], "correct_answer": "C. Coxiella burnetii", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Coxiella burnetii</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Coxiella burnetii is a highly heat-resistant bacterium that can survive 30 minutes of standard batch pasteurization and is the causative agent of Q fever, often transmitted through unpasteurized dairy products or inhalation from animal waste.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83720/NEET_PG_MOCK_3_Q-15_MIcrobiology.mp4"}, {"text": "A 32-year-old man volunteers for a research study on the effects of fasting. After consuming only water for 48 hours, he is brought in for testing. He reports feeling slightly fatigued but is otherwise alert and responsive. Blood glucose is mildly decreased, ketone levels are elevated, and insulin levels are significantly suppressed. Attending endocrinologist explains that the body has shifted from using glucose to using fatty acids and ketone bodies for energy. Which of the following hormones is primarily responsible for stimulating hepatic gluconeogenesis and glycogenolysis to maintain plasma glucose levels?", "options": [{"label": "A", "text": "Glucagon", "correct": true}, {"label": "B", "text": "Insulin", "correct": false}, {"label": "C", "text": "Amylase", "correct": false}, {"label": "D", "text": "Somatostatin", "correct": false}], "correct_answer": "A. Glucagon", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Glucagon</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Glucagon is the dominant hormone during fasting. It ensures blood glucose remains available for obligate glucose users like the brain and RBCs . As fasting continues, the liver uses amino acids and glycerol for gluconeogenesis and produces ketone bodies from excess acetyl-CoA.</li><li>➤ Glucagon is the dominant hormone during fasting.</li><li>➤ Glucagon</li><li>➤ dominant hormone</li><li>➤ It ensures blood glucose remains available for obligate glucose users like the brain and RBCs .</li><li>➤ obligate glucose users</li><li>➤ brain and RBCs</li><li>➤ As fasting continues, the liver uses amino acids and glycerol for gluconeogenesis and produces ketone bodies from excess acetyl-CoA.</li><li>➤ gluconeogenesis</li><li>➤ ketone bodies</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83714/NEET_PG_MOCK_3_Q-10_Biochem.mp4"}, {"text": "In which of the following scenarios would the Hardy-Weinberg law not be valid? A population undergoing high rates of non-random mating due to caste-based endogamy A large, randomly mating population with no selection or mutation A small, isolated tribal population with frequent inbreeding A population with high immigration of individuals from genetically diverse regions A dynamic population where certain genotypes have a survival advantage", "options": [{"label": "A", "text": "1, 2 and 3 only", "correct": false}, {"label": "B", "text": "2, 3 and 4 only", "correct": false}, {"label": "C", "text": "1, 3, 4 and 5 only", "correct": true}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "C. 1, 3, 4 and 5 only", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) 1, 3, 4 and 5 only</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Hardy-Weinberg equilibrium provides a mathematical model to estimate allele and genotype frequencies. However, it becomes invalid if any of the following factors— mutation, selection, gene flow, non-random mating, or genetic drift —are present in the population.</li><li>➤ Hardy-Weinberg equilibrium provides a mathematical model to estimate allele and genotype frequencies.</li><li>➤ Hardy-Weinberg equilibrium</li><li>➤ However, it becomes invalid if any of the following factors— mutation, selection, gene flow, non-random mating, or genetic drift —are present in the population.</li><li>➤ mutation, selection, gene flow, non-random mating, or genetic drift</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83581/NEET_PG_MOCK_3_Q-17_PSM.mp4"}, {"text": "A 32-year-old male presents with progressive cervical lymphadenopathy. He is found to be HIV-positive with a CD4 count of 42/mm³. Fungal culture of lymph node aspirate shows a characteristic colony as shown in the image. Which of the following organisms is the most likely cause?", "options": [{"label": "A", "text": "Pneumocystis jirovecii", "correct": false}, {"label": "B", "text": "Blastomyces dermatiditis", "correct": false}, {"label": "C", "text": "Cryptococcus neoformans", "correct": false}, {"label": "D", "text": "Talaromyces marneffei", "correct": true}], "correct_answer": "D. Talaromyces marneffei", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_2SLPtzR.png"], "explanation_images": [], "explanation": "<p><strong>Ans. D) Talaromyces marneffei</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Talaromyces marneffei causes disseminated fungal infection in immunocompromised patients and forms a velvety mold with red diffusible pigment in culture—a key diagnostic clue.</li><li>➤ Talaromyces marneffei</li><li>➤ velvety mold with red diffusible pigment</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83716/NEET_PG_MOCK_3_Q-1_MIcrobiology.mp4"}, {"text": "A 66-year-old man presents 5 days after inferior wall MI with sudden dyspnea, hypotension, and a new systolic murmur at apex. CXR shows pulmonary edema. Echo reveals flail posterior mitral leaflet with severe MR. What is the most appropriate management?", "options": [{"label": "A", "text": "Start diuretics and IV nitrates", "correct": false}, {"label": "B", "text": "Balloon intra-aortic counterpulsation and urgent surgery", "correct": true}, {"label": "C", "text": "ACE inhibitor and observe", "correct": false}, {"label": "D", "text": "Mitral valve repair electively after 2 weeks", "correct": false}], "correct_answer": "B. Balloon intra-aortic counterpulsation and urgent surgery", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Balloon intra-aortic counterpulsation and urgent surgery</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Papillary muscle rupture after MI mandates surgical correction; IABP stabilizes pre-op.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83498/Neet_Pg_Mock_3_Q-19_Medicine.mp4"}, {"text": "A 3-year-old child is brought to the emergency room with confusion, vomiting, and shallow breathing after accidentally ingesting a chemical used to preserve plant seeds. Laboratory evaluation shows elevated lactate levels and metabolic acidosis. On further investigation, it is found that the chemical inhibits the flow of electrons at the cytochrome c oxidase step of the electron transport chain. Which of the following agents is the most likely cause of the child’s symptoms?", "options": [{"label": "A", "text": "Antimycin A", "correct": false}, {"label": "B", "text": "Cyanide", "correct": true}, {"label": "C", "text": "Rotenone", "correct": false}, {"label": "D", "text": "Carboxin", "correct": false}], "correct_answer": "B. Cyanide", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Cyanide</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Cyanide poisoning inhibits cytochrome c oxidase (complex IV) of the mitochondrial electron transport chain, leading to blocked oxidative phosphorylation , lactic acidosis , and cellular hypoxia despite adequate oxygen availability.</li><li>➤ Cyanide poisoning</li><li>➤ cytochrome c oxidase (complex IV)</li><li>➤ blocked oxidative phosphorylation</li><li>➤ lactic acidosis</li><li>➤ cellular hypoxia</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83711/NEET_PG_MOCK_3_Q-8_Biochem.mp4"}, {"text": "Which of the following cytokines is not involved in the Th1 (T-helper 1) immune response?", "options": [{"label": "A", "text": "IFN-γ", "correct": false}, {"label": "B", "text": "IL-2", "correct": false}, {"label": "C", "text": "IL-12", "correct": false}, {"label": "D", "text": "IL-4", "correct": true}], "correct_answer": "D. IL-4", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) IL-4</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ IL-4 is a Th2 cytokine and is not involved in Th1-mediated responses , which are instead characterized by cytokines like IFN-γ , IL-2 , and IL-12 .</li><li>➤ IL-4 is a Th2 cytokine</li><li>➤ not involved in Th1-mediated responses</li><li>➤ IFN-γ</li><li>➤ IL-2</li><li>➤ IL-12</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83824/NEET_PG_MOCK_3_Q-7_Pathology.mp4"}, {"text": "Which of the following is an inhibitor of the intestinal mucosal transporter NPC1L1, responsible for the absorption of dietary and biliary cholesterol?", "options": [{"label": "A", "text": "Atorvastatin", "correct": false}, {"label": "B", "text": "Fenofibrate", "correct": false}, {"label": "C", "text": "Metformin", "correct": false}, {"label": "D", "text": "Ezetimibe", "correct": true}], "correct_answer": "D. Ezetimibe", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Ezetimibe</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Ezetimibe lowers LDL cholesterol by inhibiting the NPC1L1 transporter in the intestinal mucosa, thereby reducing absorption of dietary and biliary cholesterol.</li><li>➤ Ezetimibe</li><li>➤ inhibiting the NPC1L1 transporter</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83743/NEET_PG_MOCK_3_Q-15_Pharma.mp4"}, {"text": "A 38-year-old woman presents to the fertility clinic with concerns about difficulty conceiving. Her history reveals irregular cycles, and after an evaluation, a significant decline in ovarian reserve is confirmed through hormone testing and ultrasound. What is the most appropriate treatment option for this patient?", "options": [{"label": "A", "text": "Gonadotropin ovulation induction", "correct": false}, {"label": "B", "text": "In vitro fertilization (IVF) and intracytoplasmic sperm injection (ICSI)", "correct": false}, {"label": "C", "text": "Donor egg", "correct": true}, {"label": "D", "text": "Clomid ovulation induction", "correct": false}], "correct_answer": "C. Donor egg", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Donor egg</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In women with significantly diminished ovarian reserve , donor egg IVF offers the best chance for successful pregnancy, bypassing the issue of poor egg quality and increasing the likelihood of a successful outcome.</li><li>➤ significantly diminished ovarian reserve</li><li>➤ donor egg IVF</li><li>➤ best chance</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83651/NEET_PG_MOCK_3_Q-5_Obg.mp4"}, {"text": "Which of the following statements regarding Hypertrophic Cardiomyopathy is/are incorrect? It is most commonly inherited in an autosomal dominant pattern involving MYH7 or MYBPC3 gene mutations. Histological examination reveals myocyte disarray and patchy interstitial fibrosis. The murmur intensity increases when the patient is in a squatting position. The condition often leads to exertional syncope or sudden cardiac death in young athletes. Asymmetric septal hypertrophy is the key structural abnormality that contributes to dynamic left ventricular outflow tract obstruction.", "options": [{"label": "A", "text": "Only statement 3 is incorrect", "correct": true}, {"label": "B", "text": "Only statements 2 and 5 are incorrect", "correct": false}, {"label": "C", "text": "Statements 1, 4 and 5 are incorrect", "correct": false}, {"label": "D", "text": "All statements are correct", "correct": false}], "correct_answer": "A. Only statement 3 is incorrect", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-06-11%20164340.jpg"], "explanation": "<p><strong>Ans. A) Only statement 3 is incorrect</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In Hypertrophic Cardiomyopathy (HCM) , murmur intensity increases with maneuvers that decrease preload (e.g., Valsalva, standing) and decreases with maneuvers that increase preload (e.g., squatting). Recognizing autosomal dominant inheritance , myocyte disarray , and sudden death risk in young athletes is essential for diagnosis and management.</li><li>➤ In Hypertrophic Cardiomyopathy (HCM) , murmur intensity increases with maneuvers that decrease preload (e.g., Valsalva, standing) and decreases with maneuvers that increase preload (e.g., squatting).</li><li>➤ Hypertrophic Cardiomyopathy (HCM)</li><li>➤ increases with maneuvers that decrease preload</li><li>➤ decreases with maneuvers that increase preload</li><li>➤ Recognizing autosomal dominant inheritance , myocyte disarray , and sudden death risk in young athletes is essential for diagnosis and management.</li><li>➤ autosomal dominant inheritance</li><li>➤ myocyte disarray</li><li>➤ sudden death risk in young athletes</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83830/NEET_PG_MOCK_3_Q-9_Pathology.mp4"}, {"text": "A 35-year-old woman presents with dysuria and increased urinary frequency. A urine culture is ordered to identify the causative pathogen. The microbiology lab uses CLED (Cystine Lactose Electrolyte Deficient) agar instead of MacConkey agar. What is the primary reason for choosing this medium for urinary cultures?", "options": [{"label": "A", "text": "Enhances recovery of Gram-positive cocci in urine", "correct": false}, {"label": "B", "text": "Facilitates detection of non-lactose fermenters in stool samples", "correct": false}, {"label": "C", "text": "Suppresses the swarming growth of Proteus species", "correct": true}, {"label": "D", "text": "Specifically isolates enteric organisms causing urinary tract infections", "correct": false}], "correct_answer": "C. Suppresses the swarming growth of Proteus species", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Suppresses the swarming growth of Proteus species</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ CLED agar is preferred for urine cultures because it prevents the swarming of Proteus species, allowing accurate isolation and identification of urinary pathogens.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83715/NEET_PG_MOCK_3_Q-12_MIcrobiology.mp4"}, {"text": "Which of the following statements regarding the SMAD4 gene is incorrect?", "options": [{"label": "A", "text": "SMAD4 is a tumor suppressor gene implicated in the TGF-β signaling pathway.", "correct": false}, {"label": "B", "text": "SMAD4 mutations are associated with juvenile polyposis syndrome and pancreatic carcinoma.", "correct": false}, {"label": "C", "text": "SMAD4 promotes angiogenesis and enhances tumor invasiveness.", "correct": true}, {"label": "D", "text": "SMAD4 exerts its effects primarily by inhibiting mitogenic signaling pathways.", "correct": false}], "correct_answer": "C. SMAD4 promotes angiogenesis and enhances tumor invasiveness.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) SMAD4 promotes angiogenesis and enhances tumor invasiveness.</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ SMAD4 is a tumor suppressor gene involved in the TGF-β pathway. It inhibits mitogenic signaling and is mutated in various cancers like juvenile polyposis syndrome, pancreatic, and colorectal carcinoma. It does not promote angiogenesis or tumor invasion.</li><li>➤ SMAD4 is a tumor suppressor gene involved in the TGF-β pathway.</li><li>➤ SMAD4 is a tumor suppressor gene involved in the TGF-β pathway.</li><li>➤ It inhibits mitogenic signaling and is mutated in various cancers like juvenile polyposis syndrome, pancreatic, and colorectal carcinoma.</li><li>➤ It does not promote angiogenesis or tumor invasion.</li><li>➤ not</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83836/NEET_PG_MOCK_3_Q-13_Pathology.mp4"}, {"text": "A 45-year-old woman (P4L4) presents with post-coital bleeding. On examination, a 2 cm growth is observed on the cervix, which bleeds on touch. The vagina appears normal, and the parametrium is free. A biopsy confirms squamous cell carcinoma of the cervix. What is the most appropriate management option for this patient?", "options": [{"label": "A", "text": "Radical type 3 hysterectomy with pelvic lymphadenectomy", "correct": true}, {"label": "B", "text": "Radical type 2 hysterectomy with pelvic lymphadenectomy", "correct": false}, {"label": "C", "text": "Radical trachelectomy with pelvic lymphadenectomy", "correct": false}, {"label": "D", "text": "Radiotherapy", "correct": false}], "correct_answer": "A. Radical type 3 hysterectomy with pelvic lymphadenectomy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Radical type 3 hysterectomy with pelvic lymphadenectomy</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ For early-stage cervical cancer , radical type 3 hysterectomy with pelvic lymphadenectomy is the gold standard treatment . It involves the removal of the uterus, cervix, upper vagina, and parametrial tissue and is appropriate for tumors like this 2 cm cervical growth that is confined to the cervix.</li><li>➤ For early-stage cervical cancer , radical type 3 hysterectomy with pelvic lymphadenectomy is the gold standard treatment .</li><li>➤ early-stage cervical cancer</li><li>➤ radical type 3 hysterectomy</li><li>➤ gold standard treatment</li><li>➤ It involves the removal of the uterus, cervix, upper vagina, and parametrial tissue and is appropriate for tumors like this 2 cm cervical growth that is confined to the cervix.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83674/NEET_PG_MOCK_3_Q-12_Obg.mp4"}, {"text": "A 56-year-old man with newly diagnosed diffuse large B-cell lymphoma has bulky abdominal nodes and LDH >2× ULN. His creatinine is 1.8 mg/dL. Chemotherapy is to start tomorrow. What is the most appropriate prophylactic step?", "options": [{"label": "A", "text": "Oral allopurinol", "correct": false}, {"label": "B", "text": "Rasburicase", "correct": true}, {"label": "C", "text": "Forced alkaline diuresis", "correct": false}, {"label": "D", "text": "Hemodialysis", "correct": false}], "correct_answer": "B. Rasburicase", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Rasburicase</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Rasburicase is the preferred prophylaxis in high-risk TLS before chemotherapy.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83476/Neet_Pg_Mock_3_Q-1_Medicine.mp4"}, {"text": "Which of the following statements is incorrect with regards to Helicobacter pylori eradication in peptic ulcer disease?", "options": [{"label": "A", "text": "Proton-pump inhibitor is taken with two antibiotics.", "correct": false}, {"label": "B", "text": "Treatment is prescribed for at least 7 days.", "correct": false}, {"label": "C", "text": "Treatment of Helicobacter pylori infection leads to vitamin B12 deficiency.", "correct": true}, {"label": "D", "text": "Patients requiring long-term NSAIDs should undergo Helicobacter pylori eradication therapy to reduce ulcer risk.", "correct": false}], "correct_answer": "C. Treatment of Helicobacter pylori infection leads to vitamin B12 deficiency.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Treatment of Helicobacter pylori infection leads to vitamin B12 deficiency.</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Helicobacter pylori eradication is achieved with a PPI and two antibiotics for at least 7 days (preferably 14). Treatment does not lead to vitamin B12 deficiency; instead, chronic infection may impair B12 absorption due to atrophic gastritis.</li><li>➤ Helicobacter pylori eradication is achieved with a PPI and two antibiotics for at least 7 days (preferably 14).</li><li>➤ Treatment does not lead to vitamin B12 deficiency; instead, chronic infection may impair B12 absorption due to atrophic gastritis.</li><li>➤ not</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83741/NEET_PG_MOCK_3_Q-13_Pharma.mp4"}, {"text": "In a maternal health outreach program, a PHC team plans to deploy community-based workers to achieve 100% antenatal care coverage in a rural district. For every 1000 population, which of the following set of personnel is most appropriately deployed as per norms?", "options": [{"label": "A", "text": "1 ASHA, 1 Anganwadi Worker, 1 Trained Dai", "correct": false}, {"label": "B", "text": "2 ASHAs, 1 AWW, 1 Trained Dai", "correct": true}, {"label": "C", "text": "1 ASHA, 2 AWWs, 1 Health Assistant", "correct": false}, {"label": "D", "text": "2 ASHAs, 2 AWWs, 1 Health Assistant", "correct": false}], "correct_answer": "B. 2 ASHAs, 1 AWW, 1 Trained Dai", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-06-10%20165357.jpg"], "explanation": "<p><strong>Ans. B) 2 ASHAs, 1 AWW, 1 Trained Dai</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Norms & Population Coverage of Health Personnel in India</li><li>➤ Norms & Population Coverage of Health Personnel in India</li><li>➤ Norms & Population Coverage of Health Personnel in India</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83575/NEET_PG_MOCK_3_Q-11_PSM.mp4"}, {"text": "A 40-year-old patient is undergoing Functional Endoscopic Sinus Surgery (FESS) for chronic rhinosinusitis unresponsive to medical therapy. During the procedure, the surgeon uses the instrument shown in the image below. Which of the following instruments is most appropriately used for uncinectomy during FESS?", "options": [{"label": "A", "text": "Ballenger swivel knife", "correct": false}, {"label": "B", "text": "Blakesley forceps", "correct": true}, {"label": "C", "text": "Killian nasal speculum", "correct": false}, {"label": "D", "text": "Freer’s elevator", "correct": false}], "correct_answer": "B. Blakesley forceps", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_NtY8kfY.png"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_FfFemF6.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/image_UaeRFDt.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/image_Po9vp60.png"], "explanation": "<p><strong>Ans. B) Blakesley forceps</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Blakesley forceps are a fundamental instrument in FESS used for removing the uncinate process, polyps, or other soft tissue structures under endoscopic guidance. Their angulated design enables precise maneuvering within the nasal cavity, essential for effective sinus surgery.</li><li>➤ Blakesley forceps are a fundamental instrument in FESS used for removing the uncinate process, polyps, or other soft tissue structures under endoscopic guidance.</li><li>➤ Blakesley forceps</li><li>➤ Their angulated design enables precise maneuvering within the nasal cavity, essential for effective sinus surgery.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83468/NEET_PG_MOCK_3_Q-5_ENT.mp4"}, {"text": "A 58-year-old male smoker is undergoing evaluation for persistent abdominal discomfort. Ultrasound reveals a 5.6 cm infrarenal abdominal aortic aneurysm (AAA). He has normal renal function and no major comorbidities. CT angiography confirms the findings. What is the next step?", "options": [{"label": "A", "text": "Endovascular aneurysmal coiling", "correct": false}, {"label": "B", "text": "Open surgical repair via transabdominal approach", "correct": true}, {"label": "C", "text": "Surveillance with ultrasound every 6 months", "correct": false}, {"label": "D", "text": "Beta-blockers and statins only", "correct": false}], "correct_answer": "B. Open surgical repair via transabdominal approach", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Open surgical repair via transabdominal approach</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ For asymptomatic infrarenal AAA >5.5 cm with favorable anatomy, EVAR is the preferred intervention due to lower perioperative risk.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83435/NEET_PG_MOCK_3_Q-7_Surgery.mp4"}, {"text": "A 14-year-old girl presents with progressively worsening dysmenorrhea, which began after her menarche 9 months ago. Despite using oral analgesics and NSAIDs, she is unable to control her severe pain. Based on this presentation, which of the following congenital anomalies is most likely present?", "options": [{"label": "A", "text": "Mullerian agenesis", "correct": false}, {"label": "B", "text": "Complete transverse vaginal septum", "correct": false}, {"label": "C", "text": "Obstructed hemivagina and ipsilateral renal anomaly (OHVIRA) syndrome", "correct": true}, {"label": "D", "text": "Imperforate hymen", "correct": false}], "correct_answer": "C. Obstructed hemivagina and ipsilateral renal anomaly (OHVIRA) syndrome", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Obstructed hemivagina and ipsilateral renal anomaly (OHVIRA) syndrome</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Obstructed hemivagina and ipsilateral renal anomaly (OHVIRA) syndrome presents with cyclic dysmenorrhea and painful menstrual accumulation due to obstructed vaginal flow. This condition is associated with renal anomalies , and it is important to consider in adolescent girls with severe menstrual pain despite the use of analgesics.</li><li>➤ Obstructed hemivagina and ipsilateral renal anomaly (OHVIRA) syndrome presents with cyclic dysmenorrhea and painful menstrual accumulation due to obstructed vaginal flow.</li><li>➤ Obstructed hemivagina and ipsilateral renal anomaly (OHVIRA) syndrome</li><li>➤ cyclic dysmenorrhea</li><li>➤ painful menstrual accumulation</li><li>➤ This condition is associated with renal anomalies , and it is important to consider in adolescent girls with severe menstrual pain despite the use of analgesics.</li><li>➤ renal anomalies</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83645/NEET_PG_MOCK_3_Q-4_Obg.mp4"}, {"text": "Which of the following is not a function or clinical feature associated with the glossopharyngeal nerve?", "options": [{"label": "A", "text": "Innervates the stylopharyngeus muscle to assist in swallowing", "correct": false}, {"label": "B", "text": "Provides taste sensation to the anterior two-thirds of the tongue", "correct": true}, {"label": "C", "text": "Carries somatic sensory fibers from the pharynx and middle ear", "correct": false}, {"label": "D", "text": "May be damaged in head and neck surgery, leading to glossopharyngeal neuralgia", "correct": false}], "correct_answer": "B. Provides taste sensation to the anterior two-thirds of the tongue", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Provides taste sensation to the anterior two-thirds of the tongue</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The glossopharyngeal nerve (CN IX) is a mixed cranial nerve originating from the medulla. It provides motor, sensory, and special sensory innervation to structures in the oropharynx and posterior tongue. Injury results in dysphagia, reduced gag reflex, and loss of posterior taste sensation.</li><li>➤ The glossopharyngeal nerve (CN IX) is a mixed cranial nerve originating from the medulla.</li><li>➤ It provides motor, sensory, and special sensory innervation to structures in the oropharynx and posterior tongue.</li><li>➤ Injury results in dysphagia, reduced gag reflex, and loss of posterior taste sensation.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83424/NEET_PG_MOCK_3_Q-10_Anatomy.mp4"}, {"text": "A 28-year-old male athlete is undergoing training at high altitude (4,000 meters) for a competitive event. After a week, he has polycythemia and an elevated hematocrit. However, his GFR is noted to be lower than baseline despite no signs of dehydration or hypotension. Which of the following is the most likely physiological mechanism responsible for the decreased GFR?", "options": [{"label": "A", "text": "Increased blood viscosity, and reduced renal blood flow", "correct": true}, {"label": "B", "text": "Increased plasma oncotic pressure reducing filtration fraction", "correct": false}, {"label": "C", "text": "Constriction of the efferent arteriole via angiotensin II", "correct": false}, {"label": "D", "text": "Increased renal sympathetic stimulation causing vasodilation of the afferent arteriole", "correct": false}], "correct_answer": "A. Increased blood viscosity, and reduced renal blood flow", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Increased blood viscosity, and reduced renal blood flow</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Increased distal Na⁺ delivery triggers tubuloglomerular feedback, leading to afferent arteriole constriction and a reduction in GFR to protect nephron integrity during states like high-altitude adaptation.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83528/NEET_PG_MOCK_3_Q-4_Physio.mp4"}, {"text": "Which of the following statements regarding acquired hemophilia are incorrect? Acquired hemophilia involves the formation of autoantibodies that inactivate factor VIII. Activated partial thromboplastin time (aPTT) is typically shortened due to increased bleeding tendency. A mixing study typically shows correction of the prolonged aPTT in this condition. The Bethesda assay is used to quantify inhibitors against factor VIII. The intrinsic coagulation pathway is impaired, leading to isolated aPTT prolongation.", "options": [{"label": "A", "text": "2 and 3", "correct": true}, {"label": "B", "text": "1 and 5", "correct": false}, {"label": "C", "text": "1, 3 and 4", "correct": false}, {"label": "D", "text": "2, 4 and 5", "correct": false}], "correct_answer": "A. 2 and 3", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) 2 and 3</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In acquired hemophilia, autoantibodies against factor VIII lead to prolonged aPTT, failure to correct with mixing studies, and diagnosis is confirmed by the Bethesda assay.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83833/NEET_PG_MOCK_3_Q-11_Pathology.mp4"}, {"text": "A 62-year-old man with longstanding uncontrolled hypertension presents with exertional dyspnea. Echocardiogram shows concentric left ventricular hypertrophy. Which of the following changes would most likely be observed in his left ventricular pressure-volume loop?", "options": [{"label": "A", "text": "Decreased end-systolic pressure and increased stroke volume", "correct": false}, {"label": "B", "text": "Shift of the loop upward and to the right with increased end-diastolic volume", "correct": false}, {"label": "C", "text": "Increased end-systolic pressure with decreased end-diastolic volume", "correct": true}, {"label": "D", "text": "Downward shift of the loop with increased compliance", "correct": false}], "correct_answer": "C. Increased end-systolic pressure with decreased end-diastolic volume", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-06-13%20180213.jpg"], "explanation": "<p><strong>Ans. C) Increased end-systolic pressure with decreased end-diastolic volume</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In chronic hypertension with concentric LV hypertrophy, pressure-volume loops show increased end-systolic pressure and decreased compliance, leading to smaller end-diastolic volumes and reduced stroke volume.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83531/NEET_PG_MOCK_3_Q-5_Physio.mp4"}, {"text": "A 25-year-old male presents with a pulsatile mass in the supraclavicular region of the neck. On physical examination, the mass is compressible and exhibits an expansile pulsation. He denies pain, fever, or trauma. What is the most appropriate next investigation to evaluate this finding?", "options": [{"label": "A", "text": "Doppler ultrasonography", "correct": true}, {"label": "B", "text": "CT angiography followed by percutaneous intervention", "correct": false}, {"label": "C", "text": "MR angiography of neck vessels", "correct": false}, {"label": "D", "text": "Fine-needle aspiration cytology (FNAC)", "correct": false}], "correct_answer": "A. Doppler ultrasonography", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Doppler ultrasonography</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In a patient with a pulsatile neck mass, the first investigation must rule out vascular origin. Doppler ultrasonography is the initial modality of choice because it is non-invasive, safe, and effective for evaluating vascular lesions before considering advanced imaging or intervention.</li><li>➤ In a patient with a pulsatile neck mass, the first investigation must rule out vascular origin.</li><li>➤ Doppler ultrasonography is the initial modality of choice because it is non-invasive, safe, and effective for evaluating vascular lesions before considering advanced imaging or intervention.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83457/NEET_PG_MOCK_3_Q-3_Radiology.mp4"}, {"text": "An 18-year-old female presents with sudden-onset severe headache, photophobia, fever of 101°F, and altered sensorium. On examination, she has nuchal rigidity and papilledema. A lumbar puncture is performed, and Gram stain of the CSF is shown below. Based on the findings, which of the following is the most likely causative organism?", "options": [{"label": "A", "text": "Listeria monocytogenes", "correct": false}, {"label": "B", "text": "Streptococcus pneumoniae", "correct": false}, {"label": "C", "text": "Neisseria meningitidis", "correct": true}, {"label": "D", "text": "Haemophilus influenzae type B", "correct": false}], "correct_answer": "C. Neisseria meningitidis", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Screenshot%202025-06-11%20133349.jpg"], "explanation_images": [], "explanation": "<p><strong>Ans. C) Neisseria meningitidis</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Neisseria meningitidis presents as Gram-negative diplococci in CSF Gram stain and is a leading cause of bacterial meningitis in adolescents and young adults . Prompt diagnosis is critical due to rapid progression and potential for septicemia.</li><li>➤ Neisseria meningitidis presents as Gram-negative diplococci in CSF Gram stain and is a leading cause of bacterial meningitis in adolescents and young adults .</li><li>➤ Neisseria meningitidis</li><li>➤ Gram-negative diplococci in CSF Gram stain</li><li>➤ bacterial meningitis in adolescents and young adults</li><li>➤ Prompt diagnosis is critical due to rapid progression and potential for septicemia.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83718/NEET_PG_MOCK_3_Q-14_MIcrobiology.mp4"}, {"text": "A 28-year-old Rh-negative pregnant woman presents with a history of prior miscarriage. She is currently 28 weeks pregnant and is being monitored for Rh sensitization. Which of the following investigations is the most appropriate for monitoring the fetus in this situation?", "options": [{"label": "A", "text": "Biophysical profile", "correct": false}, {"label": "B", "text": "Fetal blood sampling", "correct": false}, {"label": "C", "text": "Amniospectometry", "correct": false}, {"label": "D", "text": "MCA Doppler peak systolic velocity", "correct": true}], "correct_answer": "D. MCA Doppler peak systolic velocity", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) MCA Doppler peak systolic velocity</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In Rh-negative sensitized pregnancies , the MCA Doppler peak systolic velocity is the best non-invasive method for monitoring fetal anemia and assessing the need for intervention.</li><li>➤ Rh-negative sensitized pregnancies</li><li>➤ MCA Doppler peak systolic velocity</li><li>➤ non-invasive method</li><li>➤ monitoring fetal anemia</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://media.cerebellumacademy.com/media/public/question_media/solution/video/83670/NEET_PG_MOCK_3_Q-8_Obg.mp4"}, {"text": "A 40-year-old individual presents with slowly progressive skin lesions on the face and ears that have been present for several months. The patient denies any systemic symptoms. On physical examination, there are well-demarcated, scaly plaques on the ears and surrounding areas, with evidence of central depigmentation and perifollicular plugging. A classic Shuster

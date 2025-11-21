@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Pharmacology - NEET PG 2018</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Pharmacology - NEET PG 2018</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                22 Questions | 22 Total Marks | 32 min Duration | ~87.27 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 22 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 32 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 22</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Pharmacology - NEET PG 2018 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 22</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 22 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Amphotericin B acts on:", "options": [{"label": "A", "text": "Cell one", "correct": false}, {"label": "B", "text": "Cell membrane", "correct": true}, {"label": "C", "text": "Ribosome", "correct": false}, {"label": "D", "text": "Mrna", "correct": false}], "correct_answer": "B. Cell membrane", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cell membrane</p>\n<p><strong>Highyeild:</strong></p><p>Mechanism of action of different drugs: Inhibit cell wall synthesis: Penicillins, cephalosporins, cyclo- serine, vancomycin, bacitracin. Cause leakage from cell membranes: Polypeptides—polymyxin, colistin, bacitracin. Polyenes amphotericin B, nystatin, hamycin. Inhibit protein synthesis: Tetracyclines, chloramphenicol, erythromycin, clindamycin, linezolid. Cause misreading of m-RNA code and affect permeability: Aminoglycosides—streptomycin, gentamicin, etc. Inhibit DNA gyrase: Fluoroquinolones—ciprofloxacin and others. Interfere with DNA function: Rifampin. Interfere with DNA synthesis: Acyclovir, zidovudine. Interfere with intermediary metabolism: Sulfonamides, sulfones, PAS, trimethoprim, pyrimethamine, metronidazole.</p>\n<p><strong>Table:</strong></p><p>#MANTRA ANTIFUNGAL AGENTS Amphotericin B - Adverse effects Major acute reaction to intravenous is fever and chills, which typically end spontaneously in ~30 minutes and often abate with subsequent infusions. T achypnea and modest hypotension may occur, but true bronchospasm or anaphylaxis is rare. Hypotension and hypoxia in preexisting cardiac or lung disease . Prophylactic use of IV glucocorticoids decreases reaction Transient azotemia occurs in 80% of patients Kidney function may be affected if other nephrotoxic agents like aminoglycoside are used concurrently. Administration of 1 L of NS IV prior to amphotericin B administration . is recommended for adults who can tolerate the Na+ load. Azotemia occurs less frequently with lipid preparations of Mn terbr amphotericin, and saline loading is not needed.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Alternative to epinephrine for pulseless arrest according to advanced cardiac life support is which drug?", "options": [{"label": "A", "text": "Vasopressin", "correct": true}, {"label": "B", "text": "Amiodarone", "correct": false}, {"label": "C", "text": "Low dose dopamine", "correct": false}, {"label": "D", "text": "Low dose atropine", "correct": false}], "correct_answer": "A. Vasopressin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Vasopressin</p>\n<p><strong>Highyeild:</strong></p><p>The initial response, including confirmation of loss of circulation, followed by basic life support and public access defibrillation, can be carried out by physicians, nurses, paramedical personnel and trained lay persons. Vasopressin (antidiuretic hormone or ADH) is often used as an adjunctive therapy to catecholamine vasopressors in the treatment of distributive o r vasodilatory shock . It causes peripheral vasoconstriction via V1 receptors located in smooth muscle cells and attenuation of nitric oxide (NO) synthesis and GMP, the second messenger of NO. The rationale for using low dose vasopressin in the management of septic shock includes the relative deficiency of vasopressin in late shock. It also potentiates the effects of catecholamines in the vasculature and stimulates cortisol production. Some studies have reported reduced catecholamine requirements with vasopressin administration. Intravenous infusion of vasopressin at a low dose (0.01–0.04 units/min) may be safe and beneficial in septic patients with hypertension that is refractory to fluid resuscitation and conventional catecholamine vasopressors. Higher doses of vasopressin decrease cardiac output and may put patients at greater risk for splanchnic and coronary artery ischemia. Studies do not favor the use of vasopressin as first-line therapy. In the Vasopressin and Septic Shock Trial (VASST), low doses of vasopressin did not reduce mortality compared with norepinephrine in patients with septic shock who were being treated with catecholamine vasopressors.</p>\n<p><strong>Table:</strong></p><p>#MANTRA</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Anaerobic bacteria are intrinsically resistant to:", "options": [{"label": "A", "text": "Beta lactam antibiotics", "correct": false}, {"label": "B", "text": "Aminoglycosides", "correct": true}, {"label": "C", "text": "Metronidazole", "correct": false}, {"label": "D", "text": "Meropenem", "correct": false}], "correct_answer": "B. Aminoglycosides", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Aminoglycosides Aminoglycosides is a medicinal and bacteriologic category of traditioal Gram-negative antibacterial medications that inhibit protein synthesis and contain as a portion of the molecule an amino-modified glycoside (sugar).</p>\n<p><strong>Highyeild:</strong></p><p>Anaerobic bacterial infections: They occur mostly after colorectal or pelvic surgery, appendicectomy, etc. Brain abscesses and endocarditis may be caused by anaerobic organisms. Met- ronidazole is an effective drug for these and is generally used in combination with gentamicin or cephalosporins (many are mixed infections). For serious cases IV administration is recommended: 15 mg/kg infused over 1 hr followed by 7.5 mg/kg every 6 hrs till oral therapy can be instituted with 400–800 mg TDS. Prophylactic use in high risk situations (colorectal/biliary surgery) is recommended. Other drugs effective in anaerobic infections are clindamycin and chloramphenicol. Natural resistance: Some microbes have always been resistant to certain AMAs. They lack the metabolic process or the target site which is affected by the particular drug. This is generally a group or species characteristic, e.g. gram-negative bacilli are normally unaffected by penicillin G; aerobic organisms are not affected by metronidazole; while anaerobic bacteria are not inhibited by aminoglycoside antibiotics or M. tuberculosis is insensitive to tetracyclines. This type of resistance does not pose a significant clinical problem.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A. Beta lactam antibiotics A beta-lactam (β-lactam) ring is a four-membered lactam. A lactam is a cyclic amide, and beta-lactams are named so because the nitrogen atom is attached to the β-carbon atom relative to the carbonyl. The simplest β-lactam possible is 2-azetidinone. Option B. Aminoglycosides is a medicinal and bacteriologic category of traditional Gram-negative antibacterial medications that inhibit protein synthesis and contain as a portion of the molecule an amino-modified glycoside (sugar). Option D. metronidazole is an antibiotic medicine that helps your body fight infections caused by bacteria and parasites. It is used to treat infections of the liver, stomach, intestines, vagina, brain, heart, lungs, bones and skin.</p>\n<p><strong>Table:</strong></p><p>#MANTRA Aminoglycosides Mechanism of resistance: Transferase enzyme inactivates aminoglycoside (main mechansim) Impaired entry of aminoglycoside into the cell (genotypic or phenotypic) Receptor protein on 30S ribosomal subunit may be deleted or altered Resistance depending on aminoglycoside Amikacin shows less resistance-only 1 locus that may be inactivated by enzymes Gentamicin and tobramycin-6 loci that may be inactivated by enzymes</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Niacin is given cautiously in insulin resistant diabetic patients because:", "options": [{"label": "A", "text": "It hinders metabolism of diabetic drugs", "correct": false}, {"label": "B", "text": "It causes scleroderma hindering administration of insulin", "correct": false}, {"label": "C", "text": "It causes hyperglycemia", "correct": true}, {"label": "D", "text": "It causes insulin resistance", "correct": false}], "correct_answer": "C. It causes hyperglycemia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>It causes hyperglycemia Nicotinic Acid (Niacin): It is a B group vitamin which in much higher doses reduces plasma lipids. This action is unrelated to its vitamin activity and not present in nicotinamide. When nicotinic acid is given, TGs and VLDL decrease rapidly, followed by a modest fall in LDL-CH and total CH. A 20–50% reduction in plasma TGs and 15–25% reduction in CH levels has been recorded.</p>\n<p><strong>Highyeild:</strong></p><p>Nicotinic acid is the most effective drug to raise HDL-CH, prob- ably by decreasing rate of HDL destruction; a 20–35% increase   is generally obtained. Adverse effects: The large doses needed for hypolipidemic action are poorly tolerated. Only about half of the patients are able to take the full doses. It is a cutaneous vasodilator: marked flushing, heat and itching (especially in the blush area) occur after every dose. This is associated with release of PGD2 in the skin, and can be minimized by starting with a low dose taken with meals and gradually increasing as tolerance develops. Use of sustained release (SR/ER) tablet also subdues flushing. Aspirin taken before niacin substantially attenuates flushing by inhibiting PG synthesis. Laropiprant is a specific ant flushing drug with no hypolipidemic action of its own, that has been combined with nicotinic acid to minimize flushing. Dyspepsia is very common; vomiting and diarrhea occur when full doses are given. Peptic ulcer may be activated. Dryness and hyperpigmentation of skin can be troublesome. Other long-term effects are—liver dysfunction and jaundice. Serious liver damage is the most important risk. Hyperglycemia, precipitation of diabetes (should not be used in diabetics). Hyperuricemia and gout, atrial arrhythmias. It is contraindicated during pregnancy and in children. Postural hypotension may occur in patients on antihypertensives when they take nicotinic acid. Risk of myopathy due to statins is increased.</p>\n<p><strong>Table:</strong></p><p>#MANTRA CLASSIFICATION OF ORAL HYPOGLYCEMIC AGENTS Biguanides - Metformin Sulphonylureas - First generation -(Tolbutamide, Chlorpropamide); Second generation - (Glibenglamide, Glipizide, Gliclazide, Glimiperide) Meglitinides - Repaglinide, Nateglinide Thiazolidinediones - Rosiglitazone, Pioglitazone Alpha glucosidase inhibitors - Acarbose, Miglitol Dipeptidyl peptidase- 4 (DPP-4) inhibitors - Sitagliptin Glucagon like peptide (GLP-1) analogue - Exenatide Amylin analogue - Pramlintide</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Sacubitril is a:", "options": [{"label": "A", "text": "Renin antagonist", "correct": false}, {"label": "B", "text": "Neprilysin inhibitor", "correct": true}, {"label": "C", "text": "Neuro peptidase inhibitor", "correct": false}, {"label": "D", "text": "ACE inhibitor", "correct": false}], "correct_answer": "B. Neprilysin inhibitor", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Neprilysin inhibitor Signed with the aim of developing analgesic and antihypertensive agents that act by preventing neprilysin

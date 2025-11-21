@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Upper Limb (Clavicle &amp; Shoulder Dislocation)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Upper Limb (Clavicle &amp; Shoulder Dislocation)</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                16 Questions | 16 Total Marks | 26 min Duration | ~97.5 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 16 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 26 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 16</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Upper Limb (Clavicle &amp; Shoulder Dislocation) - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 16</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 16 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Given Image 2A shows the radiograph of a 20-year-old man who has an injury to the right shoulder. Image 2B shows an arthroscopic view (posterior portal). The arrow points to which of the following?", "options": [{"label": "A", "text": "Rotator cuff tear", "correct": false}, {"label": "B", "text": "Bare area", "correct": false}, {"label": "C", "text": "Hill-Sachs defect", "correct": true}, {"label": "D", "text": "Bankart tear", "correct": false}], "correct_answer": "C. Hill-Sachs defect", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1687002076918-QTDH038001IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hill-Sachs defect The radiograph shows an anterior dislocation of the shoulder. A frequently encountered seQuelae of this is a compression fracture of the posterolateral humeral head, commonly referred to as a Hill-Sachs defect. The arthroscopic view of the glenohumeral joint visualizes the posterior aspect of the humeral head In the image, the area devoid of cartilage to the right is the bare area. The indentation seen to the left is a Hill-Sachs defect.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Not rotator cuff tear Option: B. Not Bare area Option: D. Not bankart tear.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A previously asymptomatic 40-year-old man injures his shoulder in a fall. Examination shows that he is unable to lift the hand away from his back while maximally internally rotated AND THE LIFT OFF test is positive for this patient. An axial MRI scan of the shoulder is shown in Image. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Pectoralis major tendon rupture", "correct": false}, {"label": "B", "text": "Supraspinatus rupture", "correct": false}, {"label": "C", "text": "Subscapularis rupture", "correct": true}, {"label": "D", "text": "Bankart tear", "correct": false}], "correct_answer": "C. Subscapularis rupture", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1687002084863-QTDH038002IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Subscapularis rupture LIFT OFF test is positive in Subscapularis rupture The MRI scan shows the detachment of the subscapularis from its insertion on the lesser tuberosity. The examination finding is consistent with a positive lift-off test , also indicating a tear of the subscapularis. The MRI scan shows the detachment of the subscapularis from its insertion on the lesser tuberosity. The examination finding is consistent with a positive lift-off test, also indicating a tear of the subscapularis.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. LIFT OFF test is not positive in Pectoralis major tendon rupture Option: B. LIFT OFF test is not positive in Supraspinatus rupture Option: D. LIFT OFF test is not positive in Bankart tear</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient who had undergone electro-convulsive therapy presented to the casualty with pain over the shoulder. The arm was held in internal rotation and could not be rotated back to the normal position. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Adhesive capsulitis", "correct": false}, {"label": "B", "text": "Calcific tendinitis", "correct": false}, {"label": "C", "text": "Anterior shoulder dislocation", "correct": false}, {"label": "D", "text": "Posterior shoulder dislocation", "correct": true}], "correct_answer": "D. Posterior shoulder dislocation", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1687002085170-QTDH038003IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Posterior shoulder dislocation The patient has a posterior shoulder dislocation. The AP radiograph shows an overlapping of the humeral head on the glenoid. The scapular Y view shows his humeral articular surface posterior to the glenoid. The posterior shoulder dislocation is frequently missed because the patient is comfortable in the “sling” position with the arm adducted and internally rotated across the abdomen. The posterior dislocation is diagnosed based on the radiographic findings. An axillary view or CT is recommended to better evaluate the dislocation.</p>\n<p><strong>Highyeild:</strong></p><p>The classical attitude of the arm is internal rotation and locked in that position. The examiner will be unable to externally rotate the arm back to the normal position. Posterior dislocation Mechanism of injury Direct blow from the anterior aspect of the shoulder or injury with shoulder in internal rotation, adduction and flexion In this injury head of the humerus comes to lie posteriorly behind the glenoid Posterior dislocation of shoulder is seen more commonly in fall after electric shock and convulsion. It is often difficult to diagnose because patient may have normal contour of shoulder. Clinical feature Investigation Arm is held is internal rotation and adducted and there is pain and difficulty in movement of arm. X-Ray in AP view: Due to medial rotation head looks abnormal \"electric bulb sign\" and it stands away from glenoid fossa \"Empty glenoid sign\"</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Adhesive capsulitis, also known as frozen shoulder, is an inflammatory condition characterized by shoulder stiffness and pain Option: B. Calcific tendinitis is a common condition where calcium deposits form in a tendon, sometimes causing pain at the affected site. Option: C. In an anterior dislocation, the arm is an abducted and externally rotated position . In the externally rotated position, the posterosuperior aspect of the humeral head abuts and drives through the anteroinferior aspect of the glenoid rim. This can damage the humeral head, glenoid labrum, or both.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 75-year-old man complains of pain and loss of function in his left shoulder. He is unable to abduct the shoulder, and cannot externally rotate the arm when held at his side in 908 of elbow flexion. Passively he allows full abduction and external rotation. Radiographs show superior migration of the humeral head, incongruity, articular erosion and subchondral collapse. What is the most likely underlying diagnosis?", "options": [{"label": "A", "text": "Septic arthritis", "correct": false}, {"label": "B", "text": "Rotator cuff arthropathy", "correct": true}, {"label": "C", "text": "Rheumatoid arthritis", "correct": false}, {"label": "D", "text": "Frozen shoulder", "correct": false}], "correct_answer": "B. Rotator cuff arthropathy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Rotator cuff arthropathy This clinical scenario describes the typical findings of rotator cuff arthropathy. Rotator cuff arthropathy is a specific pattern of shoulder degenerative joint disease that results from a rotator cuff tear leading to abnormal glenohumeral wear and subsequent superior migration of the humeral head .</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Allowing Passive full abduction and external rotation , rule out septic arthritis. Option: C. Rheumatoid arthritis may cause similar features, but the clinical scenario does not support this diagnosis. Although the supraspinatus tendon has ruptured, this in itself will not account for the extent of the symptoms and clinical findings. Option: D. Frozen shoulder will have restriction of both passive and active ROM, unlike the above scenario.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which type of shoulder instability is more commonly seen in patients with epilepsy?", "options": [{"label": "A", "text": "Anterior", "correct": false}, {"label": "B", "text": "Posterior", "correct": true}, {"label": "C", "text": "Inferior", "correct": false}, {"label": "D", "text": "Superior", "correct": false}], "correct_answer": "B. Posterior", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Posterior In general, anterior instability is far more common than posterior instability. However, in patients with epilepsy, posterior and anterior instability occurs with equal frequency . Thus posterior instability occurs much more commonly in epileptic patients than in the general population.</p>\n<p><strong>Highyeild:</strong></p><p>Posterior dislocation Mechanism of injury Direct blow from the anterior aspect of the shoulder or injury with shoulder in internal rotation, adduction and flexion In this injury head of the humerus comes to lie posteriorly behind the glenoid Posterior dislocation of shoulder is seen more commonly in fall after electric shock and convulsion. It is often difficult to diagnose because patient may have normal contour of shoulder. Clinical feature Investigation Arm is held in internal rotation and adducted and there is pain and difficulty in movement of arm. X-Ray in AP view: Due to medial rotation head looks abnormal \"electric bulb sign\" and it stands away from glenoid fossa \"Empty glenoid sign\"</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. ANTERIOR DISLOCATION: The head of the humerus comes out of the glenoid cavity and lies anterior. Mechanism of injury: Direct blow from the posterior aspect of the shoulder or injury with the shoulder in abduction + external rotation + extension Types of anterior dislocation of the shoulder: Preglenoid – Head lies in front of the glenoid Subcoracoid – The head lies below the coracoid process. This is the most common type of dislocation Subclavicular – Head lies below the clavicle Option: C. INFERIOR DISLOCATION: Mechanism of injury It is usually caused by severe hyperabduction of the shoulder. The humerus head is subluxated and dislocates inferiorly and the humerus shaft points upwards. The patient comes with his arm held almost over his head. This is known as a salute position Option: D. Not superior</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following factors is not associated with multidirectional instability?", "options": [{"label": "A", "text": "No history of trauma", "correct": false}, {"label": "B", "text": "Bilateral involvement", "correct": false}, {"label": "C", "text": "Good response to rehabilitation", "correct": false}, {"label": "D", "text": "Bankart lesion", "correct": true}], "correct_answer": "D. Bankart lesion", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Bankart lesion Bankart lesion is not typically associated with multidirectional instability. Patterns of instability can be remembered by using the mnemonics TUBS and AMBRI. TUBS = Traumatic Unidirectional Bankart lesion Surgery. AMBRI = Atraumatic Multidirectional Bilateral Rehabilitation Inferior capsular shift. From this, it can be seen that a Bankart lesion is not typically associated with multidirectional instability.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: Multidirectional instability is not associated with trauma. Option: B. Multidirectional instability is bilateral more commonly. Option: C. Multidirectional instability shows a good response to rehabilitation.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "With electric shock and seizures, why are posterior shoulder dislocations more common than anterior dislocations?", "options": [{"label": "A", "text": "The glenoid is retroverted", "correct": false}, {"label": "B", "text": "The humeral head is retroverted", "correct": false}, {"label": "C", "text": "The internal rotators of the shoulder are stronger than the external rotators", "correct": true}, {"label": "D", "text": "The external rotators of the shoulder are stronger than the internal rotators", "correct": false}], "correct_answer": "C. The internal rotators of the shoulder are stronger than the external rotators", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>The internal rotators of the shoulder are stronger than the external rotators The shoulder internal rotators (pectoralis major, latissimus dorsi, and subscapularis) are stronger than the external rotators ( teres minor and infraspinatus), which is why posterior shoulder dislocations are more common than anterior dislocations after electrical shock and seizures.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Not due to glenoid retroversion Option: B. Not due to humeral head retroversion Option: D. External rotators are not stronger than internal rotators in electric shock.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The given Image is the radiograph of a 39-year-old man who has a syncopal episode and falls. After being cleared by the emergency department, he was referred to your office for left shoulder pain and loss of external rotation. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Rotator cuff tear", "correct": false}, {"label": "B", "text": "Adhesive capsulitis", "correct": false}, {"label": "C", "text": "Brachial plexus injury", "correct": false}, {"label": "D", "text": "Posterior shoulder dislocation", "correct": true}], "correct_answer": "D. Posterior shoulder dislocation", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1687002085179-QTDH038013IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Posterior shoulder dislocation The patient has a posterior glenohumeral dislocation, as evidenced by the overlap on the initial radiograph. While posterior dislocations are rare, they can be overlooked</p>\n<p><strong>Highyeild:</strong></p><p>A CT scan will accurately show the lesion before proceeding to surgery. If a simple closed reduction is performed acutely and the arm is stable after the reduction, no further intervention may be needed, and treatment can be successful with 2 weeks of immobilization for defects involving less than 30 degrees of the humeral head. However, in this scenario, open reduction is likely and stabilization may require a modified McLaughlin procedure or other intervention to fill in the humeral defect. Younger male patients , those with a large humeral head defect, and those with seizure disorder may be at the highest risk for recurrence. For treatment of chronic posterior dislocations , it may be necessary to perform shoulder arthroplasty to restore stability. Stiffness is attributable to articular incongruity; therefore, physical therapy and capsular release are inappropriate</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Rotator cuff tear cannot be diagnosed with the above X-ray Option: B. History of fall and above symptoms does not correlate with adhesive capsulitis. Option: C. Only loss of external rotation with shoulder pain is not seen in the brachial plexus.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old man falls from a ladder and dislocates his non-dominant shoulder. He undergoes an uncomplicated closed reduction under sedation in the emergency department. Post Reduction radiographs reveal a small Hill-Sachs lesion and no other bony abnormalities. Six weeks after the dislocation, the patient has persistent pain at rest and forward elevation and external rotation weakness, but the remaining motor function in the extremity and sensation are intact. What is the best next step?", "options": [{"label": "A", "text": "Physical therapy with electrical stimulation and iontophoresis", "correct": false}, {"label": "B", "text": "Corticosteroid injection", "correct": false}, {"label": "C", "text": "MRI of the shoulder", "correct": true}, {"label": "D", "text": "Electromyography (EMG) of the arm", "correct": false}], "correct_answer": "C. MRI of the shoulder", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>MRI of the shoulder For a patient > 40 years of age who has persistent pain and weakness isolated to the rotator cuff following an acute anterior shoulder dislocation, an MRI is indicated to evaluate rotator cuff integrity. EMG is not indicated in this case because this patient has no evidence of distal motor functional abnormality and their sensation is intact, thereby making a brachial plexus injury unlikely. Corticosteroid injections and physical therapy modalities do not adequately address the concern over his potential for having sustained a rotator cuff tear.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. The next step will be to evaluate rotator cuff integrity before physical therapy. Option: B. The next step will be to evaluate for rotator cuff integrity before Corticosteroid injection. Option: D. The next step will be to evaluate for rotator cuff integrity with MRI and not EMG of the arm.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are clinical tests for anterior dislocation of the shoulder except?", "options": [{"label": "A", "text": "Dugas test", "correct": false}, {"label": "B", "text": "Callway’s test", "correct": false}, {"label": "C", "text": "Hamilton ruler test", "correct": false}, {"label": "D", "text": "Jerk test", "correct": true}], "correct_answer": "D. Jerk test", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Jerk test Jerk test- clinical test for recurrent dislocation of the shoulder and not for acute dislocation.</p>\n<p><strong>Highyeild:</strong></p><p>Test for anterior dislocation Dugas test Bryant’s test Hamilton ruler test The jerk test is used to detect posteroinferior instability of the glenohumeral joint</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Dugas test- clinical test for anterior dislocation of the shoulder Option: B. Callaway’s test- clinical test for anterior dislocation of the shoulder Option: C. Hamilton ruler test- clinical test for anterior dislocation of the shoulder</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 7 years old boy presented with a history of falling from a tree. The ortho resident examines the child and observes abnormal movements around the lower arm. Intern standing nearby noticed that a three-point bony relationship is maintained. What’s the most likely diagnosis?", "options": [{"label": "A", "text": "Fracture supracondylar humerus", "correct": true}, {"label": "B", "text": "Fracture lateral condyle humerus", "correct": false}, {"label": "C", "text": "Fracture medial condyle humerus", "correct": false}, {"label": "D", "text": "Elbow dislocation", "correct": false}], "correct_answer": "A. Fracture supracondylar humerus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Fracture supracondylar humerus Three-point relationship is seen around the elbow It is maintained Supracondylar fracture humerus</p>\n<p><strong>Highyeild:</strong></p><p>The three bony points in the elbow are: Tip of the medial epicondyle Tip of the lateral epicondyle Olecranon The three-point bony relationship is maintained in the case of supracondylar fracture of the humerus as the fracture occurs above the level of these bony landmarks. A condition where it is distorted: Fracture medial condyle and epicondyle Fracture lateral condyle and epicondyle Intercondylar fracture of the humerus Elbow dislocation Fracture olecranon Elbow when flexed at 90 degrees, three landmarks form an isosceles triangle And when extended from a straight horizontal</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: B. Three-point relationship not maintained in Fracture lateral condyle humerus. Option: C. Three-point relationship not maintained in Fracture medial condyle humerus. Option: D. Three-point relationship not maintained in Elbow dislocation.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All the following are techniques for reduction of anterior dislocation shoulder except?", "options": [{"label": "A", "text": "Kocher

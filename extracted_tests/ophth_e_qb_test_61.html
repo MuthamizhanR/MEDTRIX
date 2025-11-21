@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Orbital Cellulitis</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Orbital Cellulitis</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                6 Questions | 6 Total Marks | 16 min Duration | ~160.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 6 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 16 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 6</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Orbital Cellulitis - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 6</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 6 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A patient with right orbital cellulitis is not responding to antibiotics and is seen to be worsening after the initial presentation. The first sign to raise the suspicion of involvement contralateral is:", "options": [{"label": "A", "text": "Painful Right Ophthalmoplegia", "correct": false}, {"label": "B", "text": "Paralysis of left Superior Oblique", "correct": false}, {"label": "C", "text": "Paralysis of Left Lateral Rectus", "correct": true}, {"label": "D", "text": "Anesthesia of Left cornea", "correct": false}], "correct_answer": "C. Paralysis of Left Lateral Rectus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Paralysis of Left Lateral Rectus Orbital cellulitis refers to an acute infection of soft tissues of orbit behind the orbital septum. A thin tissue that divides the eyelid from the eye socket. Causative organisms - Streptococcus pneumoniae, Staphylococcus aureus, Streptococcus pyogenes , and influenza. Clinical features Swelling and severe pain , which increases with eye movements Associated with general symptoms like fever, nausea, vomiting, prostration LOV and / or diplopia Swelling of lids, characterized by woody hardness and redness Chemosis of conjunctiva Axial proptosis Restriction of ocular movements RAPD Fundus examination reveals papillitis and papilledema</p>\n<p><strong>Highyeild:</strong></p><p>Complications- optic neuritis CRAO Subperiosteal abscess Orbital abscess Temporal or parotid abscess Cavernous sinus thrombosis Septicemia or pyaemia</p>\n<p><strong>Extraedge:</strong></p><p>Investigation- bacterial culture Complete hemogram X-ray PNS Orbital USG CT and MRI</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An 8-year-old boy presents to the OPD with pain, swelling, erythema of the left eyelid, and double vision. On examination, there is proptosis, gaze restriction, and periorbital edema. Vitals are pulse 98 bpm, BP 108/72, Temperature 100° F. What is the diagnosis?", "options": [{"label": "A", "text": "Orbital Cellulitis", "correct": true}, {"label": "B", "text": "Preseptal cellulitis", "correct": false}, {"label": "C", "text": "Conjunctivitis", "correct": false}, {"label": "D", "text": "Viral Keratitis", "correct": false}], "correct_answer": "A. Orbital Cellulitis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Orbital Cellulitis This is a case of orbital cellulitis with extensive lids swelling with chemosis, proptosis, and impaired mobility resulting in diplopia. Pain is severe , increased by movement of the eye or pressure. Fever is presen t, and cerebral symptoms may arise.</p>\n<p><strong>Highyeild:</strong></p><p>Complications- optic neuritis CRAO Subperiosteal abscess Orbital abscess Temporal or parotid abscess Cavernous sinus thrombosis Septicemia or pyaemia</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B . Preseptal cellulitis commonly presents as a swelling of the lids, erythema, and chemosis, often conjunctival discharge There is no proptosis or restriction of ocular movements or visual function, differentiating between preseptal cellulitis and orbital cellulitis. Option: C .Conjunctivitis presents with symptoms and signs of discomfort, foreign body sensation, photophobia, discharge from the eyes (type of discharge depending on the cause), conjunctival congestion, and chemosis,e., swelling of the conjunctiva. Option: D. Keratitis or inflammation of the cornea presents with pain, foreign body sensation, redness and watering from eyes, photophobia, blurring of vision, chemosis of the conjunctiva, and corneal ulcer.</p>\n<p><strong>Extraedge:</strong></p><p>Investigation- bacterial culture Complete hemogram X-ray PNS Orbital USG CT and MRI</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 9-year-old boy presents to the OPD with pain, swelling of eyelids, erythema of the right eye, and a diminution of vision. On examination, there is proptosis and gaze restriction. Vitals are pulse 100 bpm, BP 106/74, Temperature 100° F. What are the possible causes of reduced vision in this case?", "options": [{"label": "A", "text": "Retrobulbar Neuritis", "correct": true}, {"label": "B", "text": "Branch retinal artery occlusion", "correct": false}, {"label": "C", "text": "Retinal detachment", "correct": false}, {"label": "D", "text": "Vitreous hemorrhage", "correct": false}], "correct_answer": "A. Retrobulbar Neuritis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Retrobulbar Neuritis The clinical vignette describes a case of orbital cellulitis due to symptoms and signs like pain, swelling of eyelids, proptosis, and gaze restriction. Vision may be reduced in orbital cellulitis due to retrobulbar neuritis, compression of the optic nerve or its blood supply due to raised tissue pressure caused by inflammatory oedema of the extraocular muscles, orbital fat, and congested veins.</p>\n<p><strong>Highyeild:</strong></p><p>Orbital cellulitis refers to an acute infection of soft tissues of orbit behind the orbital septum. A thin tissue that divides the eyelid from the eye socket. Causative organisms - Streptococcus pneumoniae, Staphylococcus aureus, Streptococcus pyogenes, and H. influenza.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B . Branch retinal artery occlusion describes decreased arterial blood flow to the retina leading to ischemic damage. The severity of visual loss depends upon the area of retinal tissue affected by the vascular occlusion. However, it is painless, unlike this case. Option: C . Retinal detachment (RD) is characterized by transient flashes of light (photopsia), ‘floaters’ or a ‘curtain’ or ‘veil’ obscuring the field of vision. Option: D. Vitreous haemorrhage presents with sudden development of floaters or sudden painless loss of vision in massive vitreous haemorrhage.</p>\n<p><strong>Extraedge:</strong></p><p>Complications- optic neuritis CRAO Subperiosteal abscess Orbital abscess Temporal or parotid abscess Cavernous sinus thrombosis Septicemia or pyaemia</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 10-year-old boy presents to the OPD with pain, erythema of the right eye, eyelid swelling, and a diminution of vision for a few hours. On examination, there is proptosis and gaze restriction. Orbital cellulitis is suspected. Which of the following organisms is most commonly responsible for the disease?", "options": [{"label": "A", "text": "Leptospira interrogans", "correct": false}, {"label": "B", "text": "Proteus mirabilis", "correct": false}, {"label": "C", "text": "Staphylococcus aureus", "correct": true}, {"label": "D", "text": "E. coli", "correct": false}], "correct_answer": "C. Staphylococcus aureus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Staphylococcus aureus The most frequently isolated organisms in cases of orbital cellulitis are Staphylococcus and Streptococcus , followed by H. influenzae, Pseudomonas, E. coli , etc. In diabetics, a particularly fulminant infection with Mucor or Aspergillus is possible.</p>\n<p><strong>Highyeild:</strong></p><p>Orbital cellulitis refers to an acute infection of soft tissues of orbit behind the orbital septum. A thin tissue that divides the eyelid from the eye socket. Vision may be reduced in orbital cellulitis due to retrobulbar neuritis, compression of the optic nerve or its blood supply due to raised tissue pressure caused by inflammatory oedema of the extraocular muscles, orbital fat, and congested veins.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A . Leptospira interrogans cause conjunctival suffusion and not orbital Option: B . Proteus species can cause conjunctivitis, canaliculitis, dacryocystitis, and even progress into preseptal cellulitis. However, it is not the most common cause. Option: D. E. Coli can lead to orbital cellulitis; however, it is not the most common cause.</p>\n<p><strong>Extraedge:</strong></p><p>Investigation- bacterial culture Complete hemogram X-ray PNS Orbital USG CT and MRI</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 9-year-old boy presents to the OPD with pain, swelling of the eyelid and erythema of the right eye, and double vision. On examination, there is proptosis, gaze restriction, and periorbital edema. Vitals are pulse 94 bpm, BP 100/68 mmHg, temperature 100° F. Which of the following is the most appropriate initial management?", "options": [{"label": "A", "text": "IV Antibiotics", "correct": false}, {"label": "B", "text": "Oral antibiotics", "correct": false}, {"label": "C", "text": "Orbital CT", "correct": false}, {"label": "D", "text": "Blood samples for culture and sensitivity", "correct": true}], "correct_answer": "D. Blood samples for culture and sensitivity", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Blood samples for culture and sensitivity This is a case of orbital cellulitis . The initial step among the given options would be to take blood samples for culture , followed by intravenous broad-spectrum antibiotics and anti-inflammatory drugs.</p>\n<p><strong>Highyeild:</strong></p><p>Orbital cellulitis refers to an acute infection of soft tissues of orbit behind the orbital septum. A thin tissue that divides the eyelid from the eye socket. Vision may be reduced in orbital cellulitis due to retrobulbar neuritis, compression of the optic nerve or its blood supply due to raised tissue pressure caused by inflammatory oedema of the extraocular muscles, orbital fat, and congested veins.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A . Intravenous broad-spectrum antibiotics are administered soon after drawing blood for culture and sensitivity. Option: B .Intravenous antibiotics are preferred over oral antibiotics due to faster onset and bioavailability, as orbital cellulitis may lead to severe complications, including blindness. Option: C. Orbital CT/MRI should be done to delineate the extent of infection after initial stabilization of the patient.</p>\n<p><strong>Extraedge:</strong></p><p>Investigation- bacterial culture Complete hemogram X-ray PNS Orbital USG CT and MRI</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 56-year-old diabetic male patient presents with pain, right eyelid swelling, erythema, and excessive eye watering. There is chemosis, periorbital edema, proptosis, and gaze restriction on examination. A CT scan shows the following findings. What is the management of the condition?", "options": [{"label": "A", "text": "Evisceration", "correct": false}, {"label": "B", "text": "IV antibiotics", "correct": true}, {"label": "C", "text": "Topical timolol", "correct": false}, {"label": "D", "text": "Topical pilocarpine", "correct": false}], "correct_answer": "B. IV antibiotics", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1686726308326-QTDO065006IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>IV antibiotics This is a case of orbital cellulitis from the symptoms and signs. The CT scan shows soft tissue swelling of the orbit. Treatment includes administration of intravenous broad-spectrum antibiotics and anti-inflammatory drugs.</p>\n<p><strong>Highyeild:</strong></p><p>Investigation- bacterial culture Complete hemogram X-ray PNS Orbital USG CT and MRI</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Evisceration is the removal of the contents of the eyeball leaving behind the sclera. It is done in conditions like panophthalmitis, a complication of orbital cellulitis. However, intravenous antibiotics are the most appropriate and initial management of this case. Options: C and D. Topical timolol and topical pilocarpine are used to manage glaucoma, which can also present with erythema of the eyes. However, swelling of eyelids and proptosis are not seen in glaucoma</p>\n<p><strong>Extraedge:</strong></p><p>Rx - Intensive antibiotic therapy Analgesics and anti-inflammatory drugs Topical antibiotic eye ointment Nasal decongestant drops Surgical intervention- immediate canthotomy/cantholysis Drainage of abscess</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

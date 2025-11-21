@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Serotonin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Serotonin</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                78 Questions | 312 Total Marks | 88 min Duration | ~67.69 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 78 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 88 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 78</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Serotonin - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 78</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 78 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which of the following is used to treat severe pulmonary hypertension?", "options": [{"label": "A", "text": "Angiotensin 1", "correct": false}, {"label": "B", "text": "Bosentan", "correct": true}, {"label": "C", "text": "Omapatrilat", "correct": false}, {"label": "D", "text": "Endothelin", "correct": false}], "correct_answer": "B. Bosentan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/8516011700218735/8516011700218735.m3u8"}, {"text": "A drug X is useful in treatment of rheumatoid arthritis. It is available only in parential formulation and its mechanism of action is antagonism of tumor necrosis factor. Which of the following can be X?", "options": [{"label": "A", "text": "Etanercept", "correct": true}, {"label": "B", "text": "Cyclosporine", "correct": false}, {"label": "C", "text": "Penicillamine", "correct": false}, {"label": "D", "text": "Phenylbutazone", "correct": false}], "correct_answer": "A. Etanercept", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/55071941700218747/55071941700218747.m3u8"}, {"text": "A drug that is effective for rheumatoid arthritis but is not appropriate for osteoarthritis is", "options": [{"label": "A", "text": "Acetaminophen", "correct": false}, {"label": "B", "text": "Ketorolac", "correct": false}, {"label": "C", "text": "Rofecoxib", "correct": false}, {"label": "D", "text": "Infliximab", "correct": true}], "correct_answer": "D. Infliximab", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41708471700218772/41708471700218772.m3u8"}, {"text": "Rasburicase is a newer drug used in gout. It acts by", "options": [{"label": "A", "text": "Decreasing urate synthesis", "correct": false}, {"label": "B", "text": "Decreasing intestinal absorption of uric acid", "correct": false}, {"label": "C", "text": "Increasing renal excretion of uric acid", "correct": false}, {"label": "D", "text": "Increasing urate oxidation", "correct": true}], "correct_answer": "D. Increasing urate oxidation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35010291700218791/35010291700218791.m3u8"}, {"text": "Allopurinol is useful in all of the following conditions EXCEPT", "options": [{"label": "A", "text": "Acute gouty arthritis", "correct": true}, {"label": "B", "text": "Cancer chemotherapy induced hyperuricemia", "correct": false}, {"label": "C", "text": "hyperuricemia induced by Hydrochlorothiazide", "correct": false}, {"label": "D", "text": "Kala-azar", "correct": false}], "correct_answer": "A. Acute gouty arthritis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/21561811700218814/21561811700218814.m3u8"}, {"text": "Drug of choice for acute gout is", "options": [{"label": "A", "text": "Colchicine", "correct": false}, {"label": "B", "text": "Allopurinol", "correct": false}, {"label": "C", "text": "Dexamethasone", "correct": false}, {"label": "D", "text": "Indomethacin", "correct": true}], "correct_answer": "D. Indomethacin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37204191700218831/37204191700218831.m3u8"}, {"text": "All of the following drugs can produce hyperuricemia EXCEPT", "options": [{"label": "A", "text": "Ethambutol", "correct": false}, {"label": "B", "text": "Sulfinpyrazone", "correct": true}, {"label": "C", "text": "Pyrazinamide", "correct": false}, {"label": "D", "text": "Hydrochlorothiazide", "correct": false}], "correct_answer": "B. Sulfinpyrazone", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61787051700218886/61787051700218886.m3u8"}, {"text": "A new born was diagnosed as having a congenital abnormality that resulted in transposition of great vessels. While preparing the infant for surgery, the medical team needed to keep the ductus arteriosus open. They did this by infusing", "options": [{"label": "A", "text": "Alprostadil", "correct": true}, {"label": "B", "text": "Cortisol", "correct": false}, {"label": "C", "text": "Indomethacin", "correct": false}, {"label": "D", "text": "Tacrolimus", "correct": false}], "correct_answer": "A. Alprostadil", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/46521141700218918/46521141700218918.m3u8"}, {"text": "Individuals with alcoholic cirrhosis of liver may develop severe hepatotoxicity after doses of acetaminophen that are not toxic to individuals with normal liver function. This increased sensitivity to acetaminophen’s toxicity is due to", "options": [{"label": "A", "text": "Decrease availability of acetaldehyde dehydrogenase", "correct": false}, {"label": "B", "text": "Decreased activity of Cytochrome P450 enzymes", "correct": false}, {"label": "C", "text": "Increased liver blood flow", "correct": false}, {"label": "D", "text": "Decrease hepatocellular store of glutathione", "correct": true}], "correct_answer": "D. Decrease hepatocellular store of glutathione", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53658431700218937/53658431700218937.m3u8"}, {"text": "A college student is brought to emergency after taking an overdose of a non-prescription drug. The patient is confused and lethargic. He has been hyperventilating and dehydrated. Arterial blood gas analysis demonstrates metabolic acidosis. In the management of this patient, which is NOT likely to be of any therapeutic value", "options": [{"label": "A", "text": "Treatment with acetyl cysteine", "correct": true}, {"label": "B", "text": "Alkalinization of urine", "correct": false}, {"label": "C", "text": "Correction of metabolic acidosis", "correct": false}, {"label": "D", "text": "Gastric lavage", "correct": false}], "correct_answer": "A. Treatment with acetyl cysteine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76817411700218952/76817411700218952.m3u8"}, {"text": "A 3-year-old child presented to OPD with symptoms of influenza. Aspirin is contraindicated in this patient because of increased risk of", "options": [{"label": "A", "text": "Reye’s syndrome", "correct": true}, {"label": "B", "text": "Gastric bleeding", "correct": false}, {"label": "C", "text": "Thrombocytopenia", "correct": false}, {"label": "D", "text": "Fanconi syndrome", "correct": false}], "correct_answer": "A. Reye’s syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/46598611700218964/46598611700218964.m3u8"}, {"text": "A patient comes to you complaining that whenever he takes aspirin for headache, he develops severe shortness of breath. Which of the following may be partly responsible for this effect?", "options": [{"label": "A", "text": "Prostaglandin E", "correct": false}, {"label": "B", "text": "Thromboxane A2", "correct": false}, {"label": "C", "text": "Prostacyclin", "correct": false}, {"label": "D", "text": "Leukotrienes", "correct": true}], "correct_answer": "D. Leukotrienes", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/65247091700218979/65247091700218979.m3u8"}, {"text": "Mechanism of action of aspirin in MI is", "options": [{"label": "A", "text": "Inhibition of cyclooxygenase", "correct": false}, {"label": "B", "text": "Decreased serum lipids", "correct": false}, {"label": "C", "text": "Thrombolytic action", "correct": false}, {"label": "D", "text": "Inhibition of thromboxane synthesis", "correct": true}], "correct_answer": "D. Inhibition of thromboxane synthesis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54628581700219816/54628581700219816.m3u8"}, {"text": "Rofecoxib as compared to indomethacin is", "options": [{"label": "A", "text": "Likely to be more effective in rheumatoid arthritis", "correct": false}, {"label": "B", "text": "Not likely to produce renal complications", "correct": false}, {"label": "C", "text": "Less likely to cause gastric ulcer and their complications", "correct": true}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "C. Less likely to cause gastric ulcer and their complications", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15866791700219831/15866791700219831.m3u8"}, {"text": "A truck driver presented to the hospital with a minor soft tissue injury. Which of the following NSAID should not be prescribed to him?", "options": [{"label": "A", "text": "Celecoxib", "correct": false}, {"label": "B", "text": "Naproxen", "correct": false}, {"label": "C", "text": "Diclofenac sodium", "correct": false}, {"label": "D", "text": "Indomethacin", "correct": true}], "correct_answer": "D. Indomethacin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13366511700219867/13366511700219867.m3u8"}, {"text": "All of the following actions of aspirin are mediated by inhibition of prostaglandin synthesis EXCEPT", "options": [{"label": "A", "text": "Hyperventilation", "correct": true}, {"label": "B", "text": "Analgesia", "correct": false}, {"label": "C", "text": "Closure of patent ductus arteriosus", "correct": false}, {"label": "D", "text": "Bleeding tendency", "correct": false}], "correct_answer": "A. Hyperventilation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/42320221700219879/42320221700219879.m3u8"}, {"text": "All of the following effects are produced by inhibitors of prostaglandin synthesis EXCEPT", "options": [{"label": "A", "text": "Prolongation of bleeding time", "correct": false}, {"label": "B", "text": "Prolongation of labour", "correct": false}, {"label": "C", "text": "Gastric mucosal damage", "correct": false}, {"label": "D", "text": "Prolongation of prothrombin time", "correct": true}], "correct_answer": "D. Prolongation of prothrombin time", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78196391700219896/78196391700219896.m3u8"}, {"text": "Aspirin in low doses produces long lasting inhibition of platelet cyclooxygenase because", "options": [{"label": "A", "text": "Platelet contain low quantity of COX", "correct": false}, {"label": "B", "text": "Platelets bind aspirin with high affinity", "correct": false}, {"label": "C", "text": "Platelet COX is inducible", "correct": false}, {"label": "D", "text": "Platelets cannot synthesize fresh COX molecules", "correct": true}], "correct_answer": "D. Platelets cannot synthesize fresh COX molecules", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27898621700219924/27898621700219924.m3u8"}, {"text": "Which of the following patient characteristics is a possible reason for the use of celecoxib in the treatment of arthritis?", "options": [{"label": "A", "text": "History of peptic ulcer disease", "correct": true}, {"label": "B", "text": "History of severe rash after treatment with a sulfonamide antibiotic", "correct": false}, {"label": "C", "text": "History of gout", "correct": false}, {"label": "D", "text": "History of type 2 DM", "correct": false}], "correct_answer": "A. History of peptic ulcer disease", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/30834501700219940/30834501700219940.m3u8"}, {"text": "Which of the following drugs reduces the activity of phospholipase A2", "options": [{"label": "A", "text": "Alprostadil", "correct": false}, {"label": "B", "text": "Prednisolone", "correct": true}, {"label": "C", "text": "Aspirin", "correct": false}, {"label": "D", "text": "Ibuprofen", "correct": false}], "correct_answer": "B. Prednisolone", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26999061700219953/26999061700219953.m3u8"}, {"text": "Which of the following is a component of slow reacting substance of anaphylaxis (SRS-A)?", "options": [{"label": "A", "text": "LTB4", "correct": false}, {"label": "B", "text": "Misoprostol", "correct": false}, {"label": "C", "text": "Prostacyclin", "correct": false}, {"label": "D", "text": "LTC4", "correct": true}], "correct_answer": "D. LTC4", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41056991700219963/41056991700219963.m3u8"}, {"text": "Which of the following drugs inhibit platelet cyclooxygenase reversibly", "options": [{"label": "A", "text": "Ibuprofen", "correct": true}, {"label": "B", "text": "Alprostadil", "correct": false}, {"label": "C", "text": "Aspirin", "correct": false}, {"label": "D", "text": "Prednisolone", "correct": false}], "correct_answer": "A. Ibuprofen", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61057811700219990/61057811700219990.m3u8"}, {"text": "Choose the CORRECT statement about sumatriptan", "options": [{"label": "A", "text": "It activates 5-HT1A receptors", "correct": false}, {"label": "B", "text": "It does not carry risk of precipitating coronary vasospasm", "correct": false}, {"label": "C", "text": "It is combined with ergotamine for the treatment of severe migraine", "correct": false}, {"label": "D", "text": "It tends to suppress both pain and vomiting in migraine", "correct": true}], "correct_answer": "D. It tends to suppress both pain and vomiting in migraine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/71834071700220002/71834071700220002.m3u8"}, {"text": "Ergot alkaloid commonly used to prevent post-partum hemorrhage is", "options": [{"label": "A", "text": "Ergotamine", "correct": false}, {"label": "B", "text": "Dihydroergotamine", "correct": false}, {"label": "C", "text": "Dihydroergotoxine", "correct": false}, {"label": "D", "text": "Methyl Ergometrine", "correct": true}], "correct_answer": "D. Methyl Ergometrine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/58175101700220023/58175101700220023.m3u8"}, {"text": "Which of the following is most useful for reversing severe ergot induced vasospasm?", "options": [{"label": "A", "text": "Ergotamine", "correct": false}, {"label": "B", "text": "Nitroprusside", "correct": true}, {"label": "C", "text": "Methysergide", "correct": false}, {"label": "D", "text": "Phenoxybenzamine", "correct": false}], "correct_answer": "B. Nitroprusside", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78747131700220036/78747131700220036.m3u8"}, {"text": "Two antihistaminics ,Terfenadine and astemizole were withdrawn from the market following the occurrence of cardiac arrhythmias when they were present in high levels in the blood. These effects were explained by the fact.", "options": [{"label": "A", "text": "Treatment of these patients with erythromycin, a macrolide antibiotic", "correct": true}, {"label": "B", "text": "Use of these drugs by addicts", "correct": false}, {"label": "C", "text": "Genetic predisposition to metabolize succinylcholine slowly", "correct": false}, {"label": "D", "text": "Concurrent treatment with phenobarbital", "correct": false}], "correct_answer": "A. Treatment of these patients with erythromycin, a macrolide antibiotic", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67262641700220054/67262641700220054.m3u8"}, {"text": "H1 antihistaminics afford benefit in a number of conditions. All of the following conditions are benefited by antagonism of histamine EXCEPT", "options": [{"label": "A", "text": "Common cold", "correct": true}, {"label": "B", "text": "Dermographism", "correct": false}, {"label": "C", "text": "Insect bite", "correct": false}, {"label": "D", "text": "Seasonal hay fever", "correct": false}], "correct_answer": "A. Common cold", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/45262381700220065/45262381700220065.m3u8"}, {"text": "Which of the following can reverse one or more smooth muscle effects of circulating histamine in humans", "options": [{"label": "A", "text": "Granisetron", "correct": false}, {"label": "B", "text": "Ranitidine", "correct": false}, {"label": "C", "text": "Sumatriptan", "correct": false}, {"label": "D", "text": "Adrenaline", "correct": true}], "correct_answer": "D. Adrenaline", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34077151700220076/34077151700220076.m3u8"}, {"text": "Erenumab, a CGRP receptor antagonist has been approved for", "options": [{"label": "A", "text": "ITP", "correct": false}, {"label": "B", "text": "Migraine", "correct": true}, {"label": "C", "text": "Atopic dermatitis", "correct": false}, {"label": "D", "text": "Plaque Psoriasis", "correct": false}], "correct_answer": "B. Migraine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12156001700220086/12156001700220086.m3u8"}, {"text": "Dose of the following anticancer need not be reduced while on Allopurinol therapy", "options": [{"label": "A", "text": "Thioguanine", "correct": true}, {"label": "B", "text": "6-Mercaptopurine", "correct": false}, {"label": "C", "text": "Azathioprine", "correct": false}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "A. Thioguanine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following is/are orphan uses for Allopurinol", "options": [{"label": "A", "text": "Lesch-Nyhan syndrome", "correct": false}, {"label": "B", "text": "Chagas disease", "correct": false}, {"label": "C", "text": "Ex vivo preservation of cadaveric kidneys prior to transplantation", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78179001700220139/78179001700220139.m3u8"}, {"text": "Tocilizumab is used in", "options": [{"label": "A", "text": "Multicentric Castleman’s disease", "correct": false}, {"label": "B", "text": "Systemic Sclerosis", "correct": false}, {"label": "C", "text": "Chronic gout", "correct": false}, {"label": "D", "text": "Rheumatoid Arthritis", "correct": true}], "correct_answer": "D. Rheumatoid Arthritis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/66308891700220315/66308891700220315.m3u8"}, {"text": "Which of the following NSAID has property of inhibition of Metalloproteinase activity", "options": [{"label": "A", "text": "Naproxen", "correct": false}, {"label": "B", "text": "Nabumetone", "correct": false}, {"label": "C", "text": "Diclofenac", "correct": false}, {"label": "D", "text": "Nimesulide", "correct": true}], "correct_answer": "D. Nimesulide", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14380071700221025/14380071700221025.m3u8"}, {"text": "Which of the following is incorrect about mechanism of action of Colchicine in acute gout", "options": [{"label": "A", "text": "Inhibits the synthesis of uric acid", "correct": true}, {"label": "B", "text": "Binds to tubulin and causes its depolymerisation", "correct": false}, {"label": "C", "text": "Colchicine blocks cell division by binding to mitotic spindles", "correct": false}, {"label": "D", "text": "Colchicine inhibits the synthesis and release of the leukotrienes", "correct": false}], "correct_answer": "A. Inhibits the synthesis of uric acid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74053131700221076/74053131700221076.m3u8"}, {"text": "Drug that can be used to prevent platelet aggregation and damage during hemodialysis or cardiopulmonary bypass is", "options": [{"label": "A", "text": "Alprostadil", "correct": false}, {"label": "B", "text": "Epoprostenol", "correct": true}, {"label": "C", "text": "Latanoprost", "correct": false}, {"label": "D", "text": "Misoprostol", "correct": false}], "correct_answer": "B. Epoprostenol", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/45685801700221174/45685801700221174.m3u8"}, {"text": "Lorcarserin is a", "options": [{"label": "A", "text": "5HT1B/1D Receptor Agonists", "correct": false}, {"label": "B", "text": "5HT2B Receptor Agonists", "correct": false}, {"label": "C", "text": "5HT1A Receptor Agonists", "correct": false}, {"label": "D", "text": "5HT2C Receptor Agonists", "correct": true}], "correct_answer": "D. 5HT2C Receptor Agonists", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63140571700221188/63140571700221188.m3u8"}, {"text": "Which of the following antihistamine has both H1 and H2 antagonist activity", "options": [{"label": "A", "text": "Fexofenadine", "correct": false}, {"label": "B", "text": "Epinastine", "correct": true}, {"label": "C", "text": "Azelastine", "correct": false}, {"label": "D", "text": "Emedastine", "correct": false}], "correct_answer": "B. Epinastine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/62589751700221202/62589751700221202.m3u8"}, {"text": "Certolizumab is a", "options": [{"label": "A", "text": "Fab fragment toward IL-1", "correct": false}, {"label": "B", "text": "Fab fragment toward IL-6", "correct": false}, {"label": "C", "text": "Fab fragment toward TNF-alpha", "correct": true}, {"label": "D", "text": "Fab fragment toward Nerve growth factor", "correct": false}], "correct_answer": "C. Fab fragment toward TNF-alpha", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19637401700221215/19637401700221215.m3u8"}, {"text": "Which of the following stabilizes lysosomes and inhibit LOX", "options": [{"label": "A", "text": "Diclofenac", "correct": false}, {"label": "B", "text": "Ketoprofen", "correct": true}, {"label": "C", "text": "Piroxicam", "correct": false}, {"label": "D", "text": "Puroxicam", "correct": false}], "correct_answer": "B. Ketoprofen", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13769351700221230/13769351700221230.m3u8"}, {"text": "The most common side effect of sumatriptan nasal spray is", "options": [{"label": "A", "text": "Bitter taste", "correct": true}, {"label": "B", "text": "Nasal irritation", "correct": false}, {"label": "C", "text": "Rhinitis", "correct": false}, {"label": "D", "text": "Excessive sneezing", "correct": false}], "correct_answer": "A. Bitter taste", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/73517541700221297/73517541700221297.m3u8"}, {"text": "Which of the following is a non-selective COX INHIBITOR", "options": [{"label": "A", "text": "Celecoxib", "correct": false}, {"label": "B", "text": "Parecoxib", "correct": false}, {"label": "C", "text": "Meloxicam", "correct": false}, {"label": "D", "text": "Piroxicam", "correct": true}], "correct_answer": "D. Piroxicam", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9154811700221316/9154811700221316.m3u8"}, {"text": "Which of the following statement is false about leflunomide", "options": [{"label": "A", "text": "Used in treatment of RA", "correct": false}, {"label": "B", "text": "Reduce purine synthesis in actively dividing cells", "correct": true}, {"label": "C", "text": "Act by inhibiting dihydroorotate dehydrogenase", "correct": false}, {"label": "D", "text": "Inhibits proliferation of T and B cells", "correct": false}], "correct_answer": "B. Reduce purine synthesis in actively dividing cells", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/1536451700221351/1536451700221351.m3u8"}, {"text": "Highest COX 2 Selective inhibitor among the following is", "options": [{"label": "A", "text": "Etoricixib", "correct": true}, {"label": "B", "text": "Valdecoxib", "correct": false}, {"label": "C", "text": "Rofecoxib", "correct": false}, {"label": "D", "text": "Celecoxib", "correct": false}], "correct_answer": "A. Etoricixib", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/50885901700221375/50885901700221375.m3u8"}, {"text": "Aprotinin is a", "options": [{"label": "A", "text": "CGRP receptor antagonist", "correct": false}, {"label": "B", "text": "Kallikrein antagonist", "correct": true}, {"label": "C", "text": "Serotonin 1F agonist", "correct": false}, {"label": "D", "text": "Bradykinnin receptor agonist", "correct": false}], "correct_answer": "B. Kallikrein antagonist", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76165201700221593/76165201700221593.m3u8"}, {"text": "Following are Preferential COX-2 inhibitors except", "options": [{"label": "A", "text": "Etodolac", "correct": false}, {"label": "B", "text": "Nimesulide", "correct": false}, {"label": "C", "text": "Meloxicam", "correct": false}, {"label": "D", "text": "Ketorolac", "correct": true}], "correct_answer": "D. Ketorolac", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/44852661700221603/44852661700221603.m3u8"}, {"text": "Following Prostaglandin is given by inhalational route", "options": [{"label": "A", "text": "Epoprostenol", "correct": false}, {"label": "B", "text": "Misoprostol", "correct": false}, {"label": "C", "text": "Alprostadil", "correct": false}, {"label": "D", "text": "Treprostonil", "correct": true}], "correct_answer": "D. Treprostonil", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/68140411700221622/68140411700221622.m3u8"}, {"text": "Drug which acts by inhibiting influx of Ca2+ from endolymph into the vestibular sensory cells is", "options": [{"label": "A", "text": "Doxylamine", "correct": false}, {"label": "B", "text": "Cinnarizine", "correct": true}, {"label": "C", "text": "Meclizine", "correct": false}, {"label": "D", "text": "Promethazine", "correct": false}], "correct_answer": "B. Cinnarizine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60478451700221634/60478451700221634.m3u8"}, {"text": "Prokinetic drug which is mainly metabolized by Flavin monooxygenases is", "options": [{"label": "A", "text": "Cisapride", "correct": false}, {"label": "B", "text": "Domperidone", "correct": false}, {"label": "C", "text": "Itopride", "correct": true}, {"label": "D", "text": "Metoclopramide", "correct": false}], "correct_answer": "C. Itopride", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31916781700221643/31916781700221643.m3u8"}, {"text": "True statement about Prokinetic action of Domperidone and Metoclopramide is", "options": [{"label": "A", "text": "Metoclopramide prokinetic action is not attenuated by atropine", "correct": false}, {"label": "B", "text": "Domperidone prokinetic action is attenuated by atropine", "correct": false}, {"label": "C", "text": "Domperidone prokinetic action is not attenuated by atropine", "correct": true}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "C. Domperidone prokinetic action is not attenuated by atropine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/71065301700221655/71065301700221655.m3u8"}, {"text": "The prokinetic activity of metoclopramide is mainly because of", "options": [{"label": "A", "text": "Central D2 antagonism", "correct": false}, {"label": "B", "text": "Peripheral D2 antagonism", "correct": false}, {"label": "C", "text": "5-HT4 agonism", "correct": false}, {"label": "D", "text": "Both B and C", "correct": true}], "correct_answer": "D. Both B and C", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29125141700221664/29125141700221664.m3u8"}, {"text": "All 5-HT receptors are heptahelical serpentine receptors EXCEPT", "options": [{"label": "A", "text": "5-HT1", "correct": false}, {"label": "B", "text": "5-HT3", "correct": true}, {"label": "C", "text": "5-HT2", "correct": false}, {"label": "D", "text": "5-HT4", "correct": false}], "correct_answer": "B. 5-HT3", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/42531591700221691/42531591700221691.m3u8"}, {"text": "Ketoconazole should not be given to a patient being treated with astemizole because", "options": [{"label": "A", "text": "Ketoconazole induces the metabolism of astemizole", "correct": false}, {"label": "B", "text": "Astemizole inhibits the metabolism of ketoconazole", "correct": false}, {"label": "C", "text": "Astemizole antagonizes the antifungal action of ketoconazole", "correct": false}, {"label": "D", "text": "Dangerous ventricular arrhythmias can occur", "correct": true}], "correct_answer": "D. Dangerous ventricular arrhythmias can occur", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5773001700221715/5773001700221715.m3u8"}, {"text": "All of the following statements are TRUE about second generation antihistaminic agents EXCEPT", "options": [{"label": "A", "text": "These do not impair psychomotor performance", "correct": false}, {"label": "B", "text": "They lack anticholinergic actions", "correct": false}, {"label": "C", "text": "These may possess additional antiallergic mechanisms", "correct": false}, {"label": "D", "text": "These possess high anti-motion sickness activity", "correct": true}], "correct_answer": "D. These possess high anti-motion sickness activity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/18192651700221725/18192651700221725.m3u8"}, {"text": "Mr. Surya Kant was prescribed a first generation antihistaminic drug. He should be advised to avoid", "options": [{"label": "A", "text": "Consuming processed cheese", "correct": false}, {"label": "B", "text": "Strenous physical exertion", "correct": false}, {"label": "C", "text": "Driving motor vehicles", "correct": true}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "C. Driving motor vehicles", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34652421700221746/34652421700221746.m3u8"}, {"text": "All of the following antihistaminic agents lack anticholinergic property except", "options": [{"label": "A", "text": "Astemizole", "correct": false}, {"label": "B", "text": "Levocetrizine", "correct": false}, {"label": "C", "text": "Loratidine", "correct": false}, {"label": "D", "text": "Promethazine", "correct": true}], "correct_answer": "D. Promethazine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/55345371700221758/55345371700221758.m3u8"}, {"text": "Which of the following drugs can cause hypotension by release of histamine from mast cells?", "options": [{"label": "A", "text": "Aspirin", "correct": false}, {"label": "B", "text": "Morphine", "correct": true}, {"label": "C", "text": "Procaine", "correct": false}, {"label": "D", "text": "Sulfadiazine", "correct": false}], "correct_answer": "B. Morphine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/610911700221771/610911700221771.m3u8"}, {"text": "A drug ‘X’ is an adrenergic blocker but paradoxically produces vasoconstriction . ‘X’ is", "options": [{"label": "A", "text": "Phenoxybenzamine", "correct": false}, {"label": "B", "text": "Prazosin", "correct": false}, {"label": "C", "text": "Tolazoline", "correct": false}, {"label": "D", "text": "Ergotamine", "correct": true}], "correct_answer": "D. Ergotamine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23621341700221781/23621341700221781.m3u8"}, {"text": "Most important receptor involved in chemotherapy induced vomiting is", "options": [{"label": "A", "text": "Histamine H1 receptor", "correct": false}, {"label": "B", "text": "Serotonin 5HT3 receptor", "correct": true}, {"label": "C", "text": "Dopamine D2 receptor", "correct": false}, {"label": "D", "text": "Opioid receptor", "correct": false}], "correct_answer": "B. Serotonin 5HT3 receptor", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The non – sedative antihistaminic are all EXCEPT one", "options": [{"label": "A", "text": "Fexofenadine", "correct": false}, {"label": "B", "text": "Desloratidine", "correct": false}, {"label": "C", "text": "Levocetrizine", "correct": false}, {"label": "D", "text": "Cinnarizine", "correct": true}], "correct_answer": "D. Cinnarizine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "After taking some drug for acute attack of migraine a patient developed nausea and vomiting. He also developed tingling and numbness in the tip of the most finger that also turned blue. Which of the following is most likely implicated in causing the above finding", "options": [{"label": "A", "text": "Dihydroergotamine", "correct": true}, {"label": "B", "text": "Sumatriptan", "correct": false}, {"label": "C", "text": "Aspirin", "correct": false}, {"label": "D", "text": "Butarphenol", "correct": false}], "correct_answer": "A. Dihydroergotamine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following can be used for prophylaxis of migraine except", "options": [{"label": "A", "text": "Sumatriptan", "correct": true}, {"label": "B", "text": "Valproate", "correct": false}, {"label": "C", "text": "Propanolol", "correct": false}, {"label": "D", "text": "Topiramate", "correct": false}], "correct_answer": "A. Sumatriptan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Ergot alkaloid commonly used to prevent post – partum hemorrhage is", "options": [{"label": "A", "text": "Methyl ergometrine", "correct": true}, {"label": "B", "text": "Ergotamine", "correct": false}, {"label": "C", "text": "Dihydroergotamine", "correct": false}, {"label": "D", "text": "Dihydroergotoxine", "correct": false}], "correct_answer": "A. Methyl ergometrine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old male patient with chronic heart failure is prescribed a medication that acts by inhibiting the release of histamine from mast cells. Which of the following drugs is most likely being used in this patient?", "options": [{"label": "A", "text": "Fexofenadine", "correct": false}, {"label": "B", "text": "Diphenhydramine", "correct": false}, {"label": "C", "text": "Cromolyn sodium", "correct": true}, {"label": "D", "text": "Ranitidine", "correct": false}], "correct_answer": "C. Cromolyn sodium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old woman is prescribed a drug to manage her chronic allergy symptoms. This drug works primarily by inhibiting the synthesis of leukotrienes from arachidonic acid. Which of the following medications is she most likely taking?", "options": [{"label": "A", "text": "Zafirlukast", "correct": false}, {"label": "B", "text": "Montelukast", "correct": false}, {"label": "C", "text": "NSAIDs", "correct": false}, {"label": "D", "text": "Zileuton", "correct": true}], "correct_answer": "D. Zileuton", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 40-year-old man with a history of peptic ulcer disease is prescribed a medication that acts as an antagonist of H2 receptors in the stomach. Which of the following medications is he most likely prescribed?", "options": [{"label": "A", "text": "Omeprazole", "correct": false}, {"label": "B", "text": "Ranitidine", "correct": true}, {"label": "C", "text": "Diphenhydramine", "correct": false}, {"label": "D", "text": "Famotidine", "correct": false}], "correct_answer": "B. Ranitidine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with asthma is prescribed a medication that selectively inhibits the binding of histamine to H1 receptors. Which of the following drugs fits this description?", "options": [{"label": "A", "text": "Levocetirizine", "correct": false}, {"label": "B", "text": "Cetirizine", "correct": false}, {"label": "C", "text": "Diphenhydramine", "correct": false}, {"label": "D", "text": "Fexofenadine", "correct": true}], "correct_answer": "D. Fexofenadine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28-year-old woman with a history of severe menstrual cramps (dysmenorrhea) is advised to take a medication that inhibits the synthesis of prostaglandins. Which of the following is the most appropriate medication for her condition?", "options": [{"label": "A", "text": "Ibuprofen", "correct": true}, {"label": "B", "text": "Acetaminophen", "correct": false}, {"label": "C", "text": "Aspirin", "correct": false}, {"label": "D", "text": "Naproxen", "correct": false}], "correct_answer": "A. Ibuprofen", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 65-year-old man with hypertension and a history of heart failure is treated with an ACE inhibitor. He presents with a persistent dry cough, which is a known side effect of this class of drugs. The physician considers switching him to a medication that acts by inhibiting the action of angiotensin II. Which of the following medications should the physician prescribe?", "options": [{"label": "A", "text": "Losartan", "correct": true}, {"label": "B", "text": "Enalapril", "correct": false}, {"label": "C", "text": "Hydralazine", "correct": false}, {"label": "D", "text": "Spironolactone", "correct": false}], "correct_answer": "A. Losartan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old woman presents with chronic migraine headaches. She is prescribed a medication that acts as a serotonin receptor agonist. Which of the following medications is she likely to receive?", "options": [{"label": "A", "text": "Propranolol", "correct": false}, {"label": "B", "text": "Ergotamine", "correct": false}, {"label": "C", "text": "Venlafaxine", "correct": false}, {"label": "D", "text": "Sumatriptan", "correct": true}], "correct_answer": "D. Sumatriptan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old man is diagnosed with allergic rhinitis and is prescribed a medication that is a selective H1 antagonist. He is concerned about sedation as he operates heavy machinery. Which of the following medications is least likely to cause sedation?", "options": [{"label": "A", "text": "Diphenhydramine", "correct": false}, {"label": "B", "text": "Loratadine", "correct": true}, {"label": "C", "text": "Chlorpheniramine", "correct": false}, {"label": "D", "text": "Promethazine", "correct": false}], "correct_answer": "B. Loratadine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 38-year-old woman with a history of asthma is started on a medication that blocks leukotriene receptors. Which of the following medications is she most likely prescribed?", "options": [{"label": "A", "text": "Montelukast", "correct": true}, {"label": "B", "text": "Zileuton", "correct": false}, {"label": "C", "text": "Prednisone", "correct": false}, {"label": "D", "text": "Salmeterol", "correct": false}], "correct_answer": "A. Montelukast", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents with anaphylaxis after a bee sting. The emergency physician administers a drug that is a non-selective adrenergic agonist. Which medication was most likely given?", "options": [{"label": "A", "text": "Norepinephrine", "correct": false}, {"label": "B", "text": "Epinephrine", "correct": true}, {"label": "C", "text": "Isoproterenol", "correct": false}, {"label": "D", "text": "Dopamine", "correct": false}], "correct_answer": "B. Epinephrine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old woman with a history of hypertension and chronic kidney disease is started on a new medication to help control her blood pressure. This medication also has a beneficial effect on preventing diabetic nephropathy by inhibiting the renin-angiotensin-aldosterone system. Which of the following medications is she most likely prescribed?", "options": [{"label": "A", "text": "Candesartan", "correct": true}, {"label": "B", "text": "Diltiazem", "correct": false}, {"label": "C", "text": "Hydrochlorothiazide", "correct": false}, {"label": "D", "text": "Amlodipine", "correct": false}], "correct_answer": "A. Candesartan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old male with a history of chronic pain due to osteoarthritis is prescribed a medication that reduces pain and inflammation by inhibiting cyclooxygenase (COX) enzymes. Which of the following medications is he likely to receive?", "options": [{"label": "A", "text": "Acetaminophen", "correct": false}, {"label": "B", "text": "Aspirin", "correct": false}, {"label": "C", "text": "Gabapentin", "correct": false}, {"label": "D", "text": "Celecoxib", "correct": true}], "correct_answer": "D. Celecoxib", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient experiencing severe allergic symptoms is treated with an antihistamine that does not cross the blood-brain barrier effectively. Which of the following medications fits this description?", "options": [{"label": "A", "text": "Diphenhydramine", "correct": false}, {"label": "B", "text": "Cetirizine", "correct": false}, {"label": "C", "text": "Fexofenadine", "correct": true}, {"label": "D", "text": "Promethazine", "correct": false}], "correct_answer": "C. Fexofenadine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 72-year-old man with heart failure is prescribed a medication that acts as a selective beta-1 adrenergic agonist. Which of the following medications is he most likely to be prescribed?", "options": [{"label": "A", "text": "Isoproterenol", "correct": false}, {"label": "B", "text": "Dobutamine", "correct": true}, {"label": "C", "text": "Albuterol", "correct": false}, {"label": "D", "text": "Epinephrine", "correct": false}], "correct_answer": "B. Dobutamine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with a history of chronic migraines is considering preventive therapy. Which of the following medications is a serotonin reuptake inhibitor that can also be used for migraine prophylaxis?", "options": [{"label": "A", "text": "Amitriptyline", "correct": false}, {"label": "B", "text": "Topiramate", "correct": false}, {"label": "C", "text": "Propranolol", "correct": false}, {"label": "D", "text": "Venlafaxine", "correct": true}], "correct_answer": "D. Venlafaxine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old woman with obesity and a family history of cardiovascular disease is looking for a medication to assist with weight loss. After evaluation, her doctor prescribes a medication that works by reducing appetite and enhancing satiety through serotonin pathways. Which medication did the doctor prescribe?", "options": [{"label": "A", "text": "Lorcaserin", "correct": true}, {"label": "B", "text": "Orlistat", "correct": false}, {"label": "C", "text": "Naltrexone/bupropion", "correct": false}, {"label": "D", "text": "Liraglutide", "correct": false}], "correct_answer": "A. Lorcaserin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

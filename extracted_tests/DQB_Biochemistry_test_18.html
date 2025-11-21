@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Lipoprotein Metabolism</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Lipoprotein Metabolism</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                48 Questions | 340 Total Marks | 58 min Duration | ~72.5 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 48 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 58 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 48</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Lipoprotein Metabolism - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 48</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 48 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "The human plasma lipoprotein containing the highest percentage of triacylglycerol by weight is", "options": [{"label": "A", "text": "Chylomicrons", "correct": true}, {"label": "B", "text": "HDL", "correct": false}, {"label": "C", "text": "LDL", "correct": false}, {"label": "D", "text": "VLDL", "correct": false}], "correct_answer": "A. Chylomicrons", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67744121704260263/67744121704260263.m3u8"}, {"text": "Which of the following is maximum in HDL compared to other lipoproteins", "options": [{"label": "A", "text": "Apoprotein", "correct": true}, {"label": "B", "text": "Fatty acids", "correct": false}, {"label": "C", "text": "Triglycerides", "correct": false}, {"label": "D", "text": "Cholesterol", "correct": false}], "correct_answer": "A. Apoprotein", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35736581704260308/35736581704260308.m3u8"}, {"text": "Dietary fat transmitted from intestine to adipocytes in the form of", "options": [{"label": "A", "text": "Triacylglycerol", "correct": false}, {"label": "B", "text": "Diacylglycerol", "correct": false}, {"label": "C", "text": "Chylomicron", "correct": true}, {"label": "D", "text": "Fat micelles", "correct": false}], "correct_answer": "C. Chylomicron", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/75893371704260438/75893371704260438.m3u8"}, {"text": "Endogenous triglyceride in plasma are maximally carried by", "options": [{"label": "A", "text": "Chylomicrons", "correct": false}, {"label": "B", "text": "HDL", "correct": false}, {"label": "C", "text": "LDL", "correct": false}, {"label": "D", "text": "VLDL", "correct": true}], "correct_answer": "D. VLDL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14806071704260454/14806071704260454.m3u8"}, {"text": "Which of the following apolipoprotein used to transport cholesterol from intestine to liver (AI 2000)", "options": [{"label": "A", "text": "apo A", "correct": false}, {"label": "B", "text": "apo B", "correct": true}, {"label": "C", "text": "apo C", "correct": false}, {"label": "D", "text": "apo E", "correct": false}], "correct_answer": "B. apo B", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/65792201704260466/65792201704260466.m3u8"}, {"text": "Highest amount of cholesterol is present in", "options": [{"label": "A", "text": "VLDL", "correct": false}, {"label": "B", "text": "IDL", "correct": false}, {"label": "C", "text": "LDL", "correct": true}, {"label": "D", "text": "HDL", "correct": false}], "correct_answer": "C. LDL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/16143681704260483/16143681704260483.m3u8"}, {"text": "Dietary cholesterol is transported extra hepatic tissue by", "options": [{"label": "A", "text": "Chylomicron", "correct": false}, {"label": "B", "text": "VLDL", "correct": false}, {"label": "C", "text": "LDL", "correct": true}, {"label": "D", "text": "HDL", "correct": false}], "correct_answer": "C. LDL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27297321704260499/27297321704260499.m3u8"}, {"text": "Which of the following has least density", "options": [{"label": "A", "text": "HDL", "correct": false}, {"label": "B", "text": "LDL", "correct": false}, {"label": "C", "text": "VLDL", "correct": false}, {"label": "D", "text": "Chylomicron", "correct": true}], "correct_answer": "D. Chylomicron", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/73402721704260516/73402721704260516.m3u8"}, {"text": "Apo B-48 is synthesized in", "options": [{"label": "A", "text": "Kidney", "correct": false}, {"label": "B", "text": "RBC", "correct": false}, {"label": "C", "text": "Intestine", "correct": true}, {"label": "D", "text": "Liver", "correct": false}], "correct_answer": "C. Intestine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/72825541704260536/72825541704260536.m3u8"}, {"text": "Apo C and Apo E are synthesized in", "options": [{"label": "A", "text": "Kidney", "correct": false}, {"label": "B", "text": "RBCs", "correct": false}, {"label": "C", "text": "Liver", "correct": true}, {"label": "D", "text": "Intestine", "correct": false}], "correct_answer": "C. Liver", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64330131704260551/64330131704260551.m3u8"}, {"text": "Which apoprotein help in transport of chylomicrons from intestine to liver", "options": [{"label": "A", "text": "Apo A", "correct": false}, {"label": "B", "text": "Apo B", "correct": true}, {"label": "C", "text": "Apo C", "correct": false}, {"label": "D", "text": "Apo E", "correct": false}], "correct_answer": "B. Apo B", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/72945311704260569/72945311704260569.m3u8"}, {"text": "Which of the following lipoprotein has highest electrophoretic mobility and least lipid content", "options": [{"label": "A", "text": "Chylomicron", "correct": false}, {"label": "B", "text": "VLDL", "correct": false}, {"label": "C", "text": "LDL", "correct": false}, {"label": "D", "text": "HDL", "correct": true}], "correct_answer": "D. HDL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56607611704260594/56607611704260594.m3u8"}, {"text": "Which of the following is ligand for LDL", "options": [{"label": "A", "text": "apo A-11", "correct": false}, {"label": "B", "text": "apo B-48", "correct": false}, {"label": "C", "text": "apo B-100", "correct": true}, {"label": "D", "text": "apo E", "correct": false}], "correct_answer": "C. apo B-100", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4625491704260662/4625491704260662.m3u8"}, {"text": "Apo A found in", "options": [{"label": "A", "text": "Chylomicron", "correct": false}, {"label": "B", "text": "VLDL", "correct": false}, {"label": "C", "text": "LDL", "correct": false}, {"label": "D", "text": "HDL", "correct": true}], "correct_answer": "D. HDL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/17754741704260681/17754741704260681.m3u8"}, {"text": "All are true for LDL receptors except", "options": [{"label": "A", "text": "Taken by endocytosis", "correct": false}, {"label": "B", "text": "Present on clathrin coated pits on cell membrane", "correct": false}, {"label": "C", "text": "Increased cellular cholesterol down regulates LDL receptors", "correct": false}, {"label": "D", "text": "Present only at extra hepatic site", "correct": true}], "correct_answer": "D. Present only at extra hepatic site", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77448911704260714/77448911704260714.m3u8"}, {"text": "All of the following are true for LDL except", "options": [{"label": "A", "text": "Smaller than VLDL", "correct": false}, {"label": "B", "text": "Contains maximum cholesterol content", "correct": false}, {"label": "C", "text": "More dense than chylomicron", "correct": false}, {"label": "D", "text": "Transport maximum amount of lipids", "correct": true}], "correct_answer": "D. Transport maximum amount of lipids", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/33259031704260730/33259031704260730.m3u8"}, {"text": "Oxidized LDL is more atherogenic because of", "options": [{"label": "A", "text": "Binds to scavenger receptor", "correct": false}, {"label": "B", "text": "Binds to ATP binding", "correct": false}, {"label": "C", "text": "Binds to Apo E", "correct": false}, {"label": "D", "text": "Accumulation in macrophage", "correct": true}], "correct_answer": "D. Accumulation in macrophage", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52295111704260744/52295111704260744.m3u8"}, {"text": "Which of the following is true for cholesterol present in LDL", "options": [{"label": "A", "text": "Binds to receptor and diffuse across the cell membrane", "correct": false}, {"label": "B", "text": "When enters into cells, inhibits the activity of ACAT", "correct": false}, {"label": "C", "text": "Represents primary cholesterol that is being removed from peripheral cells", "correct": false}, {"label": "D", "text": "On accumulation in the cell inhibits replenishment of LDL receptors", "correct": true}], "correct_answer": "D. On accumulation in the cell inhibits replenishment of LDL receptors", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4268781704260764/4268781704260764.m3u8"}, {"text": "Which of the following cholesterol is called ‘good cholesterol’", "options": [{"label": "A", "text": "VLDL", "correct": false}, {"label": "B", "text": "IDL", "correct": false}, {"label": "C", "text": "LDL", "correct": false}, {"label": "D", "text": "HDL", "correct": true}], "correct_answer": "D. HDL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31908701704260783/31908701704260783.m3u8"}, {"text": "Scavenger receptor is used metabolism of", "options": [{"label": "A", "text": "VLDL", "correct": false}, {"label": "B", "text": "IDL", "correct": false}, {"label": "C", "text": "LDL", "correct": false}, {"label": "D", "text": "HDL", "correct": true}], "correct_answer": "D. HDL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69696021704260801/69696021704260801.m3u8"}, {"text": "Lipoprotein play important role in coronary artery disease", "options": [{"label": "A", "text": "Triglyceride", "correct": false}, {"label": "B", "text": "VLDL", "correct": false}, {"label": "C", "text": "LDL", "correct": true}, {"label": "D", "text": "HDL", "correct": false}], "correct_answer": "C. LDL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67851661704260838/67851661704260838.m3u8"}, {"text": "HDL is increased by", "options": [{"label": "A", "text": "Aspirin", "correct": false}, {"label": "B", "text": "DHEA", "correct": false}, {"label": "C", "text": "Oral intake of 400 mg Vitamin E", "correct": false}, {"label": "D", "text": "Exercise", "correct": true}], "correct_answer": "D. Exercise", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36070771704260852/36070771704260852.m3u8"}, {"text": "The main apolipoprotein in the HDL is", "options": [{"label": "A", "text": "Apo A-I", "correct": true}, {"label": "B", "text": "Apo B-100", "correct": false}, {"label": "C", "text": "Apo B-48", "correct": false}, {"label": "D", "text": "Apo E", "correct": false}], "correct_answer": "A. Apo A-I", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76364621704260868/76364621704260868.m3u8"}, {"text": "Apoprotein E is rich in", "options": [{"label": "A", "text": "Histidine", "correct": false}, {"label": "B", "text": "Lysine", "correct": false}, {"label": "C", "text": "Arginine", "correct": true}, {"label": "D", "text": "Methionine", "correct": false}], "correct_answer": "C. Arginine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/62799831704260908/62799831704260908.m3u8"}, {"text": "Lecithin cholesterol acyl transferase cause", "options": [{"label": "A", "text": "Involves in formation of chylomicrons", "correct": false}, {"label": "B", "text": "Helps in conversion of cholesterol to cholesterol ester", "correct": true}, {"label": "C", "text": "One of the enzymes which involved in cholesterol biosynthesis", "correct": false}, {"label": "D", "text": "Hydrolysis of triacylglycerol in glycerol and fatty acids", "correct": false}], "correct_answer": "B. Helps in conversion of cholesterol to cholesterol ester", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/20422521704260925/20422521704260925.m3u8"}, {"text": "All of the following are true for reverse cholesterol transport except", "options": [{"label": "A", "text": "ATP binding cassette transporter protein is involved in the conversion of HDL3 to HDL2", "correct": false}, {"label": "B", "text": "discoidal to spherical instead of spherical to discoidal.", "correct": false}, {"label": "C", "text": "Lecithin cholesterol acyl transferase helps in conversion of spheroidal to discoidal HDL", "correct": true}, {"label": "D", "text": "Transport of cholesterol from extra hepatic tissue to liver", "correct": false}], "correct_answer": "C. Lecithin cholesterol acyl transferase helps in conversion of spheroidal to discoidal HDL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/65045991704260941/65045991704260941.m3u8"}, {"text": "All of the following are true for lipoproteins except", "options": [{"label": "A", "text": "Increased cholesterol is associated with increased LDL receptors", "correct": true}, {"label": "B", "text": "Increased HDL is associated with decreased risk of coronary disease", "correct": false}, {"label": "C", "text": "VLDL transports lipids to tissue", "correct": false}, {"label": "D", "text": "VLDL transports endogenous lipids", "correct": false}], "correct_answer": "A. Increased cholesterol is associated with increased LDL receptors", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52706841704260955/52706841704260955.m3u8"}, {"text": "Apo B-100 and Apo B-48 are expressed as two different apoproteins because of difference in", "options": [{"label": "A", "text": "RNA splicing", "correct": false}, {"label": "B", "text": "Chromosomal loci", "correct": false}, {"label": "C", "text": "Apo B gene", "correct": false}, {"label": "D", "text": "RNA editing", "correct": true}], "correct_answer": "D. RNA editing", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/45444741704260972/45444741704260972.m3u8"}, {"text": "Which of the following apolipoprotein is the most activator of lipoprotein lipase", "options": [{"label": "A", "text": "Apo A-I", "correct": false}, {"label": "B", "text": "Apo E", "correct": false}, {"label": "C", "text": "Apo C-II", "correct": true}, {"label": "D", "text": "Apo B-48", "correct": false}], "correct_answer": "C. Apo C-II", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35754711704260989/35754711704260989.m3u8"}, {"text": "Which of the following lipase is regulated by glucagon", "options": [{"label": "A", "text": "Hormone sensitive lipase", "correct": true}, {"label": "B", "text": "Pancreatic lipase", "correct": false}, {"label": "C", "text": "Gastric lipase", "correct": false}, {"label": "D", "text": "Lipoprotein lipase", "correct": false}], "correct_answer": "A. Hormone sensitive lipase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59502661704261003/59502661704261003.m3u8"}, {"text": "All of the following are true about lipoprotein lipase except", "options": [{"label": "A", "text": "Deficiency cause hypertriglyceridemia", "correct": false}, {"label": "B", "text": "Deficiency cause hypercholesterolemia", "correct": true}, {"label": "C", "text": "Found in adipocytes", "correct": false}, {"label": "D", "text": "Found myocytes", "correct": false}], "correct_answer": "B. Deficiency cause hypercholesterolemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5941931704261018/5941931704261018.m3u8"}, {"text": "Which of the following action is action of lipoprotein lipase", "options": [{"label": "A", "text": "To form HDL", "correct": false}, {"label": "B", "text": "To form mature chylomicron", "correct": false}, {"label": "C", "text": "To form remnant lipoprotein", "correct": true}, {"label": "D", "text": "Promote lipolysis in adipose tissue", "correct": false}], "correct_answer": "C. To form remnant lipoprotein", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54201881704261040/54201881704261040.m3u8"}, {"text": "All of the following are true about heparin except", "options": [{"label": "A", "text": "Act as an anticoagulant", "correct": false}, {"label": "B", "text": "It is glycosaminoglycan", "correct": false}, {"label": "C", "text": "Releases hormone sensitive lipase", "correct": true}, {"label": "D", "text": "Releases lipoprotein lipase", "correct": false}], "correct_answer": "C. Releases hormone sensitive lipase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/21506801704261055/21506801704261055.m3u8"}, {"text": "A person on fat free and carbohydrate rich diet continues to go obese. Which of the following lipoproteins is likely to be elevated in his blood?", "options": [{"label": "A", "text": "Chylomicron", "correct": false}, {"label": "B", "text": "LDL", "correct": false}, {"label": "C", "text": "VLDL", "correct": true}, {"label": "D", "text": "HDL", "correct": false}], "correct_answer": "C. VLDL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/17469941704261105/17469941704261105.m3u8"}, {"text": "True about apoprotein C", "options": [{"label": "A", "text": "present in Chylomicron and VLDL", "correct": false}, {"label": "B", "text": "Facilitates triglyceride transport", "correct": false}, {"label": "C", "text": "Activates lipoprotein lipase", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35695781704261120/35695781704261120.m3u8"}, {"text": "All of the following are true about apolipoprotein except", "options": [{"label": "A", "text": "Apoprotein C-I activates lipoprotein lipase", "correct": false}, {"label": "B", "text": "Apoprotein C-II inhibits lipoprotein lipase", "correct": true}, {"label": "C", "text": "Apoprotein C-II activates lipoprotein lipase", "correct": false}, {"label": "D", "text": "Apoprotein A-I activates LCAT", "correct": false}], "correct_answer": "B. Apoprotein C-II inhibits lipoprotein lipase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/32667681704261137/32667681704261137.m3u8"}, {"text": "Type I hyperlipoproteinemia is characterized by", "options": [{"label": "A", "text": "Elevated Chylomicron", "correct": true}, {"label": "B", "text": "Elevated LDL", "correct": false}, {"label": "C", "text": "Elevated HDL", "correct": false}, {"label": "D", "text": "Elevated lipoprotein lipase", "correct": false}], "correct_answer": "A. Elevated Chylomicron", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37416441704261171/37416441704261171.m3u8"}, {"text": "Patient is diagnosed with highly elevated LDL cholesterol but the level of LDL receptor is normal. What could be cause?", "options": [{"label": "A", "text": "Lipoprotein lipase deficiency", "correct": false}, {"label": "B", "text": "Cholesterol acyl CoA transferase deficiency", "correct": false}, {"label": "C", "text": "Apo B-100 mutation", "correct": true}, {"label": "D", "text": "Phosphorylation of LDL receptor", "correct": false}], "correct_answer": "C. Apo B-100 mutation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/10729791704261190/10729791704261190.m3u8"}, {"text": "Apo E deficiency occurs in", "options": [{"label": "A", "text": "Type I hyperlipoproteinemia", "correct": false}, {"label": "B", "text": "Type II hyperlipoproteinemia", "correct": false}, {"label": "C", "text": "Type III hyperlipoproteinemia", "correct": true}, {"label": "D", "text": "Type IV hyperlipoproteinemia", "correct": false}], "correct_answer": "C. Type III hyperlipoproteinemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/66649411704261205/66649411704261205.m3u8"}, {"text": "Which of the following is not affected in Abetalipoproteinemia", "options": [{"label": "A", "text": "VLDL", "correct": false}, {"label": "B", "text": "IDL", "correct": false}, {"label": "C", "text": "LDL", "correct": false}, {"label": "D", "text": "HDL", "correct": true}], "correct_answer": "D. HDL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/57967671704261218/57967671704261218.m3u8"}, {"text": "Abetalipoproteinemia is due to deficiency of", "options": [{"label": "A", "text": "ATP binding cassette transporter-1", "correct": false}, {"label": "B", "text": "Lecithin cholesterol acyl transferase", "correct": false}, {"label": "C", "text": "Apo C-II", "correct": false}, {"label": "D", "text": "Mitochondrial triglyceride transfer protein", "correct": true}], "correct_answer": "D. Mitochondrial triglyceride transfer protein", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9906191704261233/9906191704261233.m3u8"}, {"text": "Which of the following is abnormal lipoprotein", "options": [{"label": "A", "text": "Chylomicron", "correct": false}, {"label": "B", "text": "VLDL", "correct": false}, {"label": "C", "text": "LDL", "correct": false}, {"label": "D", "text": "Lp (a)", "correct": true}], "correct_answer": "D. Lp (a)", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26758851704261246/26758851704261246.m3u8"}, {"text": "Plasminogen domain resembles to", "options": [{"label": "A", "text": "Apolipoprotein (a)", "correct": true}, {"label": "B", "text": "LDL receptor", "correct": false}, {"label": "C", "text": "Prothrombin", "correct": false}, {"label": "D", "text": "Fibrinogen", "correct": false}], "correct_answer": "A. Apolipoprotein (a)", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59980011704261260/59980011704261260.m3u8"}, {"text": "Lipoprotein X is an indicator of", "options": [{"label": "A", "text": "Cholestasis", "correct": true}, {"label": "B", "text": "Atherosclerosis", "correct": false}, {"label": "C", "text": "Myocardial infarction", "correct": false}, {"label": "D", "text": "Hepatitis", "correct": false}], "correct_answer": "A. Cholestasis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/38308121704261273/38308121704261273.m3u8"}, {"text": "Patient has total cholesterol 300 mg/dl, triglyceride 150 mg/dl and HDL 25 mg/dl. What will be LDL value?", "options": [{"label": "A", "text": "35", "correct": false}, {"label": "B", "text": "55", "correct": false}, {"label": "C", "text": "125", "correct": false}, {"label": "D", "text": "245", "correct": true}], "correct_answer": "D. 245", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/57780581704261286/57780581704261286.m3u8"}, {"text": "Recommended cholesterol level in coronary artery disease is", "options": [{"label": "A", "text": "< 200 mg/dl", "correct": true}, {"label": "B", "text": "< 220 mg/dl", "correct": false}, {"label": "C", "text": "< 250 mg/dl", "correct": false}, {"label": "D", "text": "< 280 mg/dl", "correct": false}], "correct_answer": "A. < 200 mg/dl", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36389711704261300/36389711704261300.m3u8"}, {"text": "Tangier disease is autosomal recessive disease characterizes by orange tonsil and low HDL. It is due to mutation in", "options": [{"label": "A", "text": "Lipoprotein lipase", "correct": false}, {"label": "B", "text": "LCAT", "correct": false}, {"label": "C", "text": "ABCA1", "correct": true}, {"label": "D", "text": "ABCG1", "correct": false}], "correct_answer": "C. ABCA1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35969911704261315/35969911704261315.m3u8"}, {"text": "Which of the following is best marker of dyslipidemia", "options": [{"label": "A", "text": "Cholesterol", "correct": false}, {"label": "B", "text": "Apo AI", "correct": false}, {"label": "C", "text": "LDL/HDL ratio", "correct": true}, {"label": "D", "text": "TG and cholesterol", "correct": false}], "correct_answer": "C. LDL/HDL ratio", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/70321511704261332/70321511704261332.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

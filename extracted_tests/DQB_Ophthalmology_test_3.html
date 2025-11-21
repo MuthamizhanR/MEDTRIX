@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Diseases Of The Lens</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Diseases Of The Lens</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                43 Questions | 192 Total Marks | 53 min Duration | ~73.95 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 43 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 53 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 43</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Diseases Of The Lens - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 43</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 43 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Riders are commonly seen in:", "options": [{"label": "A", "text": "Blue–dot cataract", "correct": false}, {"label": "B", "text": "Zonular cataract", "correct": true}, {"label": "C", "text": "Embryonal nuclear cataract", "correct": false}, {"label": "D", "text": "Diffuse nuclear cataract", "correct": false}], "correct_answer": "B. Zonular cataract", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19846111697891519/19846111697891519.m3u8"}, {"text": "Anterior polar cataract develops after :", "options": [{"label": "A", "text": "Diabetes mellitus", "correct": false}, {"label": "B", "text": "Penetrating injury of cornea", "correct": true}, {"label": "C", "text": "Irradiation", "correct": false}, {"label": "D", "text": "Chalcosis", "correct": false}], "correct_answer": "B. Penetrating injury of cornea", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39455071697891547/39455071697891547.m3u8"}, {"text": "Typical diabetes cataract has characteristic morphology of:", "options": [{"label": "A", "text": "Sunflower", "correct": false}, {"label": "B", "text": "Oil droplet", "correct": false}, {"label": "C", "text": "Snowflake", "correct": true}, {"label": "D", "text": "stellate", "correct": false}], "correct_answer": "C. Snowflake", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/70554221697891576/70554221697891576.m3u8"}, {"text": "Constantly changing refractory error is seen in", "options": [{"label": "A", "text": "Traumatis cataract", "correct": false}, {"label": "B", "text": "Diabetic cataract", "correct": false}, {"label": "C", "text": "Morgagnian cataract", "correct": false}, {"label": "D", "text": "Intumescent cataract", "correct": true}], "correct_answer": "D. Intumescent cataract", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29141351697891644/29141351697891644.m3u8"}, {"text": "Anterior Lenticonus is found in:", "options": [{"label": "A", "text": "Lowes syndrome", "correct": false}, {"label": "B", "text": "Turners syndrome", "correct": false}, {"label": "C", "text": "Downs syndrome", "correct": false}, {"label": "D", "text": "Alports syndrome", "correct": true}], "correct_answer": "D. Alports syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/45537231697891658/45537231697891658.m3u8"}, {"text": "Steroid induced cataract is", "options": [{"label": "A", "text": "Anterior subcapsular", "correct": false}, {"label": "B", "text": "Posterior subcapsular", "correct": true}, {"label": "C", "text": "Nuclear", "correct": false}, {"label": "D", "text": "Cupulliform cataract", "correct": false}], "correct_answer": "B. Posterior subcapsular", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31355651697891669/31355651697891669.m3u8"}, {"text": "Polychromatic luster is seen in", "options": [{"label": "A", "text": "Zonular Cataract", "correct": false}, {"label": "B", "text": "Posterior Subcapsular Cataract", "correct": true}, {"label": "C", "text": "Nuclear Cataract.", "correct": false}, {"label": "D", "text": "Anterior subcapsular cataract.", "correct": false}], "correct_answer": "B. Posterior Subcapsular Cataract", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/75516321697891683/75516321697891683.m3u8"}, {"text": "Ectopia Lentis is seen in all the following conditions except:", "options": [{"label": "A", "text": "Congenital Rubella", "correct": true}, {"label": "B", "text": "Marchesani’s Syndrome.", "correct": false}, {"label": "C", "text": "Marfan Syndrome", "correct": false}, {"label": "D", "text": "Homocystinuria", "correct": false}], "correct_answer": "A. Congenital Rubella", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/51388181697891697/51388181697891697.m3u8"}, {"text": "Supero-temporal type of Ectopia lentis is the characteristic sign of:", "options": [{"label": "A", "text": "Homocystinuria", "correct": false}, {"label": "B", "text": "Ehler-Danlos syndrome", "correct": false}, {"label": "C", "text": "Weill-Marchesani syndrome", "correct": false}, {"label": "D", "text": "Marfan’s syndrome", "correct": true}], "correct_answer": "D. Marfan’s syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61444841697891736/61444841697891736.m3u8"}, {"text": "Most common type of Congenital Cataract is:", "options": [{"label": "A", "text": "Capsular", "correct": false}, {"label": "B", "text": "Zonular", "correct": false}, {"label": "C", "text": "Coralliform", "correct": false}, {"label": "D", "text": "Blue Dot", "correct": true}], "correct_answer": "D. Blue Dot", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/10010261697891753/10010261697891753.m3u8"}, {"text": "Lens capsule is thinnest at the:", "options": [{"label": "A", "text": "Centre Anteriorly", "correct": false}, {"label": "B", "text": "At Equator", "correct": false}, {"label": "C", "text": "Centre posteriorly", "correct": true}, {"label": "D", "text": "Superiorly", "correct": false}], "correct_answer": "C. Centre posteriorly", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/66249141697891777/66249141697891777.m3u8"}, {"text": "Ideal site for intra-ocular lens implantation is:", "options": [{"label": "A", "text": "Anterior to pupil", "correct": false}, {"label": "B", "text": "Ciliary sulcus", "correct": false}, {"label": "C", "text": "On Anterior capsule", "correct": false}, {"label": "D", "text": "On posterior capsule", "correct": true}], "correct_answer": "D. On posterior capsule", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69769581697891789/69769581697891789.m3u8"}, {"text": "Intra ocular lenses are made up of", "options": [{"label": "A", "text": "PMMA", "correct": true}, {"label": "B", "text": "HEMA", "correct": false}, {"label": "C", "text": "Glass", "correct": false}, {"label": "D", "text": "Plastic", "correct": false}], "correct_answer": "A. PMMA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/66241511697891801/66241511697891801.m3u8"}, {"text": "Most common type of cataract following radiation is:", "options": [{"label": "A", "text": "Posterior subcapsular", "correct": true}, {"label": "B", "text": "Anterior subcapsular", "correct": false}, {"label": "C", "text": "Tear drop cataract", "correct": false}, {"label": "D", "text": "Diffuse cataract", "correct": false}], "correct_answer": "A. Posterior subcapsular", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13108251697891826/13108251697891826.m3u8"}, {"text": "Lens develops from:", "options": [{"label": "A", "text": "Mesoderm", "correct": false}, {"label": "B", "text": "Neuro-Ectoderm", "correct": false}, {"label": "C", "text": "Endoderm", "correct": false}, {"label": "D", "text": "Surface Ectoderm", "correct": true}], "correct_answer": "D. Surface Ectoderm", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/71413841697891848/71413841697891848.m3u8"}, {"text": "A diabetic patient gets cataract because accumulation of sorbitol in lens. The enzyme responsible for this is:", "options": [{"label": "A", "text": "Glucokinase", "correct": false}, {"label": "B", "text": "NADPH Dependent aldose reductase", "correct": true}, {"label": "C", "text": "Phospho fructo isomerase", "correct": false}, {"label": "D", "text": "Hexokinase", "correct": false}], "correct_answer": "B. NADPH Dependent aldose reductase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/2263191697891877/2263191697891877.m3u8"}, {"text": "Amongst the following accepted current treatment of congenital cataract:", "options": [{"label": "A", "text": "Lensectomy", "correct": false}, {"label": "B", "text": "Needling", "correct": false}, {"label": "C", "text": "Lens aspiration with anterior vitrectomy", "correct": true}, {"label": "D", "text": "ECCE", "correct": false}], "correct_answer": "C. Lens aspiration with anterior vitrectomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27492001697891906/27492001697891906.m3u8"}, {"text": "Expulsive haemorrhage in cataract surgery is due to rupture of", "options": [{"label": "A", "text": "Vortex vein", "correct": false}, {"label": "B", "text": "Short posterior ciliary artery", "correct": true}, {"label": "C", "text": "Long posterior ciliary artery", "correct": false}, {"label": "D", "text": "Anterior ciliary artery", "correct": false}], "correct_answer": "B. Short posterior ciliary artery", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/11154861697891922/11154861697891922.m3u8"}, {"text": "Cause of Anterior subcapsular cataract", "options": [{"label": "A", "text": "Chloroquine", "correct": false}, {"label": "B", "text": "Amiodarone", "correct": true}, {"label": "C", "text": "Concussion injury", "correct": false}, {"label": "D", "text": "Corticosteroids", "correct": false}], "correct_answer": "B. Amiodarone", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22409501697891936/22409501697891936.m3u8"}, {"text": "Berger space is:", "options": [{"label": "A", "text": "Between posterior hyaloid face and the retina", "correct": false}, {"label": "B", "text": "Between anterior hyaloid face and the lens", "correct": true}, {"label": "C", "text": "Between the anterior hyaloid face and the ora serrata", "correct": false}, {"label": "D", "text": "Between the posterior hyaloid face and the vitreous body", "correct": false}], "correct_answer": "B. Between anterior hyaloid face and the lens", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/72426151697891948/72426151697891948.m3u8"}, {"text": "Cupuliform cataract is:", "options": [{"label": "A", "text": "Nuclear", "correct": false}, {"label": "B", "text": "Anteriour cortical", "correct": false}, {"label": "C", "text": "Posterior subcapsular", "correct": true}, {"label": "D", "text": "Radial spokes", "correct": false}], "correct_answer": "C. Posterior subcapsular", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/73859391697891961/73859391697891961.m3u8"}, {"text": "the oldest fibres are located in:", "options": [{"label": "A", "text": "embryonic nucleus", "correct": true}, {"label": "B", "text": "Fetal nucleus", "correct": false}, {"label": "C", "text": "Infantile nucleus", "correct": false}, {"label": "D", "text": "Adult nucleus", "correct": false}], "correct_answer": "A. embryonic nucleus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/72100851697891975/72100851697891975.m3u8"}, {"text": "The most common complication of hypermature sclerotic cataract is:", "options": [{"label": "A", "text": "Dislocation of the lens", "correct": true}, {"label": "B", "text": "Phacomorphic Glaucoma", "correct": false}, {"label": "C", "text": "Uveitis", "correct": false}, {"label": "D", "text": "Neovascularisation of retina.", "correct": false}], "correct_answer": "A. Dislocation of the lens", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14759821697891993/14759821697891993.m3u8"}, {"text": "Intraocular lens are made of:", "options": [{"label": "A", "text": "PMMA", "correct": false}, {"label": "B", "text": "Silicone", "correct": false}, {"label": "C", "text": "Hydrogel", "correct": false}, {"label": "D", "text": "Acrylic", "correct": false}, {"label": "E", "text": "All", "correct": true}], "correct_answer": "E. All", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/46786231697892004/46786231697892004.m3u8"}, {"text": "A 55-year old patient presents with colored halo and on Finchams’ test, there is break-up of halo and rejoining of halos. Diagnosis is:", "options": [{"label": "A", "text": "Open-Angle Glaucoma", "correct": false}, {"label": "B", "text": "Cataract", "correct": true}, {"label": "C", "text": "Mucopurulent Conjunctivitis", "correct": false}, {"label": "D", "text": "Acute Angle closure glaucoma.", "correct": false}], "correct_answer": "B. Cataract", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12538001697892017/12538001697892017.m3u8"}, {"text": "“Second sight of old age” is generally due to:", "options": [{"label": "A", "text": "Coronary Cataract", "correct": false}, {"label": "B", "text": "Nuclear Sclerosis", "correct": true}, {"label": "C", "text": "Anterior capsular cataract", "correct": false}, {"label": "D", "text": "Posterior polar cataract", "correct": false}], "correct_answer": "B. Nuclear Sclerosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/219491697892031/219491697892031.m3u8"}, {"text": "Vossius ring is seen in:", "options": [{"label": "A", "text": "Anterior capsule of lens", "correct": true}, {"label": "B", "text": "Posterior capsule of lens", "correct": false}, {"label": "C", "text": "Nucleus", "correct": false}, {"label": "D", "text": "Cortex", "correct": false}], "correct_answer": "A. Anterior capsule of lens", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6697271697892056/6697271697892056.m3u8"}, {"text": "Most common complication following cataract surgery:", "options": [{"label": "A", "text": "endophthalmitis", "correct": false}, {"label": "B", "text": "Expulsive choroidal hemorrhage", "correct": false}, {"label": "C", "text": "After-cataract", "correct": true}, {"label": "D", "text": "Complicated cataract", "correct": false}], "correct_answer": "C. After-cataract", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/46377171697892075/46377171697892075.m3u8"}, {"text": "Oil droplet cataract is seen in:", "options": [{"label": "A", "text": "Keratoconus", "correct": false}, {"label": "B", "text": "Lenticonus", "correct": false}, {"label": "C", "text": "Galactosemia", "correct": true}, {"label": "D", "text": "Down’s syndrome", "correct": false}], "correct_answer": "C. Galactosemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/58628441697892102/58628441697892102.m3u8"}, {"text": "1mm difference in axial length measurement on biometry would result in change in IOL power by:", "options": [{"label": "A", "text": "1.5D", "correct": false}, {"label": "B", "text": "2.5D", "correct": true}, {"label": "C", "text": "3.5D", "correct": false}, {"label": "D", "text": "4.5D", "correct": false}], "correct_answer": "B. 2.5D", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61769461697892116/61769461697892116.m3u8"}, {"text": "Treatment of choice of expulsive haemorrhage is:", "options": [{"label": "A", "text": "Immediate wound closure with vitrectomy", "correct": false}, {"label": "B", "text": "Immediate wound closure with AC paracentesis", "correct": false}, {"label": "C", "text": "Wait and Watch", "correct": false}, {"label": "D", "text": "Immediate wound closure", "correct": true}], "correct_answer": "D. Immediate wound closure", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/7987781697892143/7987781697892143.m3u8"}, {"text": "A person sustained blunt trauma to the eye with immediate dimunition of vision. The anterior chamber is deep. Cause could be:", "options": [{"label": "A", "text": "Hyphema", "correct": false}, {"label": "B", "text": "Dislocation of lens", "correct": true}, {"label": "C", "text": "Retinal detachment", "correct": false}, {"label": "D", "text": "Iridodialysis", "correct": false}], "correct_answer": "B. Dislocation of lens", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60348831697892161/60348831697892161.m3u8"}, {"text": "Glass Blower’s cataract is generally:", "options": [{"label": "A", "text": "Anterior subcapsular", "correct": false}, {"label": "B", "text": "Posterior subcapsular", "correct": true}, {"label": "C", "text": "Anterior capsular", "correct": false}, {"label": "D", "text": "Posterior capsular", "correct": false}], "correct_answer": "B. Posterior subcapsular", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27439101697892240/27439101697892240.m3u8"}, {"text": "Oil-globule reflex during ophthalmoscopy is seen in:", "options": [{"label": "A", "text": "Galactosemia", "correct": false}, {"label": "B", "text": "Anterior lenticonus", "correct": true}, {"label": "C", "text": "Keratoconus", "correct": false}, {"label": "D", "text": "Microsherophakia", "correct": false}], "correct_answer": "B. Anterior lenticonus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76823471697892268/76823471697892268.m3u8"}, {"text": "All are true regarding lens except:", "options": [{"label": "A", "text": "Radius of curvature of anterior surface is 10mm", "correct": false}, {"label": "B", "text": "Basement membrane of the anterior lens epithelium is the thickest basement membrane of the body", "correct": false}, {"label": "C", "text": "Radius of curvature of posterior surface is 6mm", "correct": false}, {"label": "D", "text": "Lens capsule is thickest at the posterior pole", "correct": true}], "correct_answer": "D. Lens capsule is thickest at the posterior pole", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61151921697892285/61151921697892285.m3u8"}, {"text": "Cataract can be caused by prolonged ingestion of which drug:", "options": [{"label": "A", "text": "Phenothiazines", "correct": true}, {"label": "B", "text": "Methotrexate", "correct": false}, {"label": "C", "text": "Ethambutol", "correct": false}, {"label": "D", "text": "Vitamin A", "correct": false}], "correct_answer": "A. Phenothiazines", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/68359981697892298/68359981697892298.m3u8"}, {"text": "What is done of congenital cataract involving visual axis :", "options": [{"label": "A", "text": "Wait and watch", "correct": false}, {"label": "B", "text": "Operated when baby reaches appropriate age", "correct": false}, {"label": "C", "text": "Give mydriatics", "correct": false}, {"label": "D", "text": "Immediately operate", "correct": true}], "correct_answer": "D. Immediately operate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54084691697892362/54084691697892362.m3u8"}, {"text": "length of incision in phacoemulsification is :", "options": [{"label": "A", "text": "2.75 - 3.2", "correct": true}, {"label": "B", "text": "3.0-3.5", "correct": false}, {"label": "C", "text": "3.2-3.5", "correct": false}, {"label": "D", "text": "2.5-2.75", "correct": false}], "correct_answer": "A. 2.75 - 3.2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31468671697892376/31468671697892376.m3u8"}, {"text": "The method of calculating the IOL power :", "options": [{"label": "A", "text": "Keratometry", "correct": false}, {"label": "B", "text": "Pachymetry", "correct": false}, {"label": "C", "text": "SRK formula", "correct": false}, {"label": "D", "text": "Biometry", "correct": true}], "correct_answer": "D. Biometry", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77179981697892391/77179981697892391.m3u8"}, {"text": "Fleischer’s ring is located in:", "options": [{"label": "A", "text": "Descemet’s membrane", "correct": false}, {"label": "B", "text": "Endothelium", "correct": false}, {"label": "C", "text": "Epithelium", "correct": true}, {"label": "D", "text": "Bowman’s membrane", "correct": false}], "correct_answer": "C. Epithelium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27948711697892404/27948711697892404.m3u8"}, {"text": "Congenital cataract occurs due to abnormalities in protein formation in which of the following genes?", "options": [{"label": "A", "text": "PAX6", "correct": false}, {"label": "B", "text": "SIX5", "correct": false}, {"label": "C", "text": "CryG", "correct": true}, {"label": "D", "text": "PITX3", "correct": false}], "correct_answer": "C. CryG", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27420551697892417/27420551697892417.m3u8"}, {"text": "Most Commonocular feature of Marfans syndrome is", "options": [{"label": "A", "text": "Ectopia lentis", "correct": true}, {"label": "B", "text": "Megalocornea", "correct": false}, {"label": "C", "text": "Lattice degeneration", "correct": false}, {"label": "D", "text": "Long axial length", "correct": false}], "correct_answer": "A. Ectopia lentis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69020981697892431/69020981697892431.m3u8"}, {"text": "Sunflower cataract is characteristically seen in:", "options": [{"label": "A", "text": "Chalcosis", "correct": true}, {"label": "B", "text": "Diabetes", "correct": false}, {"label": "C", "text": "Stargardts’ disease", "correct": false}, {"label": "D", "text": "Congenital syphilis", "correct": false}], "correct_answer": "A. Chalcosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15376671697892445/15376671697892445.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

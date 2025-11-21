@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Non Communicable Diseases</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Non Communicable Diseases</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                64 Questions | 256 Total Marks | 74 min Duration | ~69.38 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 64 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 74 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 64</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Non Communicable Diseases - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 64</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 64 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "You are evaluating the impact of lifestyle factors on population health. One of the key factors under study is physical inactivity. What is the increased risk of all-cause mortality associated with lack of physical activity?", "options": [{"label": "A", "text": "10-20%", "correct": false}, {"label": "B", "text": "15-30%", "correct": false}, {"label": "C", "text": "20-30%", "correct": true}, {"label": "D", "text": "25-45%", "correct": false}], "correct_answer": "C. 20-30%", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. 20-30%</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• The WHO reports that people who are insufficiently physically active have a 20% to 30% increased risk of all-cause mortality compared to those who are sufficiently active . This indicates a significant health risk associated with physical inactivity​.</li><li>• WHO</li><li>• insufficiently physically active</li><li>• 20% to 30% increased risk</li><li>• all-cause mortality</li><li>• compared</li><li>• sufficiently active</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ People who are insufficiently physically active have a 20% to 30% increased risk of all-cause mortality.</li><li>➤ insufficiently physically active</li><li>➤ 20% to 30% increased risk</li><li>➤ all-cause mortality.</li><li>➤ Ref : Park 26 th ed pg 408</li><li>➤ Ref</li><li>➤ : Park 26 th ed pg 408</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Mrs. X brought her 8-year-old child to the hospital with symptoms suggestive of Rheumatic Heart Disease, and the child was found to have carditis. The medical officer initiated treatment with an injection of Benzathine Penicillin. For how long should this child continue to receive regular Benzathine Penicillin injections for secondary prophylaxis of Rheumatic Heart Disease?", "options": [{"label": "A", "text": "10 years", "correct": false}, {"label": "B", "text": "15 years", "correct": false}, {"label": "C", "text": "20 years", "correct": false}, {"label": "D", "text": "25 years", "correct": true}], "correct_answer": "D. 25 years", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/08/09/screenshot-2024-08-09-095627_v4BAZwr.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/08/09/screenshot-2024-08-09-100207.png"], "explanation": "<p><strong>Ans. D. 25 years</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Prevention of RF with Benzathine benzyl penicillin :</li><li>• Prevention</li><li>• RF</li><li>• Benzathine benzyl penicillin</li><li>• Oral penicillin (Penicillin V or G) X 10 days is the ‘least expensive method’ of giving penicillin to eradicate Streptococci from throat</li><li>• Oral penicillin</li><li>• 10 days</li><li>• ‘least expensive method’</li><li>• penicillin</li><li>• Streptococci from throat</li><li>• Secondary prevention for patients with carditis: Continue for 10 yrs after the last attack or at least until 25 yrs age (whichever is longer)</li><li>• 10 yrs after the last attack or at least until 25 yrs age (whichever is longer)</li><li>• RHEUMATIC FEVER (RF)</li><li>• RHEUMATIC FEVER (RF)</li><li>• Causative agent : Group A beta hemolytic streptococci – Serotype M type 5 has highest rheumatogenic potential Recently Coxsackie virus B4 has been suggested as a ‘causative factor’ & Streptococcus acting as a ‘conditioning agent’ RF is a disease of childhood & adolescence (5–15 yrs) affecting both sexes equally RF is not a communicable disease : but it results from a communicable disease (streptococcal pharyngitis) MC cause of Heart disease in 5-30 yrs age group (globally): RF Prevalence of RHD in India : 5-7 per 1000 in 5–15 yrs age group RF occurs in 1–3% of Streptococcal infection Eradication of Grp A Streptococcus is not possible: Due to high carrier rate MC cardiac lesion seen in RF: – In children: Mitral regurgitation; In adults: Mitral stenosis MC ECG finding in RF: First degree AV block Diagnosis of RF is by employing NEW Revised Jones criteria -</li><li>• Causative agent : Group A beta hemolytic streptococci – Serotype M type 5 has highest rheumatogenic potential Recently Coxsackie virus B4 has been suggested as a ‘causative factor’ & Streptococcus acting as a ‘conditioning agent’</li><li>• Causative agent</li><li>• Group A beta hemolytic streptococci</li><li>• Recently Coxsackie virus B4 has been suggested as a ‘causative factor’ & Streptococcus acting as a ‘conditioning agent’</li><li>• Recently Coxsackie virus B4 has been suggested as a ‘causative factor’ & Streptococcus acting as a ‘conditioning agent’</li><li>• RF is a disease of childhood & adolescence (5–15 yrs) affecting both sexes equally</li><li>• disease of childhood</li><li>• adolescence</li><li>• both sexes equally</li><li>• RF is not a communicable disease : but it results from a communicable disease (streptococcal pharyngitis)</li><li>• not a communicable disease</li><li>• MC cause of Heart disease in 5-30 yrs age group (globally): RF</li><li>• MC</li><li>• Heart disease in 5-30 yrs age group</li><li>• Prevalence of RHD in India : 5-7 per 1000 in 5–15 yrs age group</li><li>• Prevalence of RHD in India</li><li>• 5-7 per 1000</li><li>• 5–15 yrs age group</li><li>• RF occurs in 1–3% of Streptococcal infection</li><li>• Eradication of Grp A Streptococcus is not possible: Due to high carrier rate</li><li>• MC cardiac lesion seen in RF: – In children: Mitral regurgitation; In adults: Mitral stenosis</li><li>• MC ECG finding in RF: First degree AV block</li><li>• Diagnosis of RF is by employing NEW Revised Jones criteria -</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ Treatment for RF - one intramuscular injection of benzathine benzyl penicillin (1.2 million units in adults and 600,000 units in children) at intervals of 3 weeks . This must be continued for at least 5 years or until the child reaches 18 years , whichever is later.</li><li>➤ Treatment for RF</li><li>➤ one intramuscular injection</li><li>➤ benzathine benzyl penicillin</li><li>➤ intervals of 3 weeks</li><li>➤ continued</li><li>➤ least 5 years</li><li>➤ child reaches 18 years</li><li>➤ For patients with carditis (mild mitral regurgitation or healed carditis) the treatment should continue for 10 years after the last attack , or at least until 25 years of age , whichever is longer. More severe valvular disease or post-valve surgery cases need life-long Treatment.</li><li>➤ carditis</li><li>➤ treatment</li><li>➤ continue for 10 years</li><li>➤ last attack</li><li>➤ at least until 25 years of age</li><li>➤ Ref : Park 26 th ed pg 425.</li><li>➤ Ref : Park 26 th ed pg 425.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In an in-depth analysis of the four-tier structure proposed by the Vision 2020: The Right to Sight initiative, the conversation shifts to the specific services offered at each level of this structure, particularly for the treatment of glaucoma. Glaucoma surgeries are crucial in preventing blindness caused by this condition. Within the four-tier structure of Vision 2020, which type of center is equipped to offer facilities for glaucoma surgeries?", "options": [{"label": "A", "text": "Service centres", "correct": false}, {"label": "B", "text": "Training centres", "correct": true}, {"label": "C", "text": "Vision centres", "correct": false}, {"label": "D", "text": "Centre of excellence", "correct": false}], "correct_answer": "B. Training centres", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/08/10/screenshot-2024-08-10-110654.png", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/09/04/whatsapp-image-2024-08-27-at-110629-am.jpeg"], "explanation": "<p><strong>Ans. B. Training centres</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Level of care under Vision 2020:</li><li>• Level of care under Vision 2020:</li><li>• Centres of Excellence - Professional leadership, Strategy development, continued medical education (CME), Laying of standards and quality assurance and Research</li><li>• Centres of Excellence</li><li>• Training centres -  Tertiary eye care including retinal surgery, corneal transplantation, glaucoma surgery etc, Training and CME</li><li>• Training centres</li><li>• Service centres - Cataract surgery, Other common eye surgeries, Facilities for refraction and Referral services</li><li>• Service centres</li><li>• Vision centres - Refraction and prescription of glasses, Primary eye care, School eye screening programme and Screening and referral services</li><li>• Vision centres</li><li>• Vision 2020</li><li>• Vision 2020</li><li>• Vision 2020– The Right To Sight : A global initiative by WHO and International NGOs to reduce avoidable (preventable and curable) blindness by 2020</li><li>• Vision 2020– The Right To Sight : A global initiative by WHO and International NGOs to reduce avoidable (preventable and curable) blindness by 2020</li><li>• The Right To Sight</li><li>• global initiative by WHO</li><li>• International NGOs</li><li>• reduce avoidable</li><li>• blindness by 2020</li><li>• Aim of Vision 2020: To reduce the current projection of 75 million blind people by the year 2020 to a target of 25 million Vision 2020 will be implemented as ‘4 five-year plans’ , starting in 2000, 2005, 2010 and 2015 respectively Basic Strategies Under Vision 2020 : Disease prevention and control Training of personnel Strengthening the existing eye care infrastructure Use of appropriate and affordable technology Mobilization of resources</li><li>• Aim of Vision 2020: To reduce the current projection of 75 million blind people by the year 2020 to a target of 25 million</li><li>• Aim of Vision 2020:</li><li>• reduce the current projection of 75 million blind people</li><li>• Vision 2020 will be implemented as ‘4 five-year plans’ , starting in 2000, 2005, 2010 and 2015 respectively</li><li>• Vision 2020</li><li>• implemented</li><li>• ‘4 five-year plans’</li><li>• Basic Strategies Under Vision 2020 : Disease prevention and control Training of personnel Strengthening the existing eye care infrastructure Use of appropriate and affordable technology Mobilization of resources</li><li>• Basic Strategies Under Vision 2020</li><li>• Disease prevention and control Training of personnel Strengthening the existing eye care infrastructure Use of appropriate and affordable technology Mobilization of resources</li><li>• Disease prevention and control</li><li>• Training of personnel</li><li>• Strengthening the existing eye care infrastructure</li><li>• Use of appropriate and affordable technology</li><li>• Mobilization of resources</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Four tier structure of Vision 2020 -</li><li>➤ Four tier structure of Vision 2020</li><li>➤ Ref : Park 26 th ed pg 494.</li><li>➤ Ref</li><li>➤ : Park 26 th ed pg 494.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An intern is discussing the nature of chronic diseases with her supervisor. She is reviewing the characteristics that typically define these conditions. Which of the following is NOT a characteristic feature of chronic diseases?", "options": [{"label": "A", "text": "Permanent", "correct": false}, {"label": "B", "text": "Leave residual disability", "correct": false}, {"label": "C", "text": "Reversible pathological alteration", "correct": true}, {"label": "D", "text": "Require special training of the patient for rehabilitation", "correct": false}], "correct_answer": "C. Reversible pathological alteration", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. Reversible pathological alteration</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. Permanent . Correct</li><li>• Option A.</li><li>• Permanent</li><li>• Option B. Leave residual disability . Correct</li><li>• Option B.</li><li>• Leave residual disability</li><li>• Option D. Require special training of the patient for rehabilitation . Correct</li><li>• Option D.</li><li>• Require special training of the patient for rehabilitation</li><li>• The Commission on Chronic Illness in USA has defined “chronic diseases ” as “comprising all impairments or deviations from normal , which have one or more of the following characteristics -</li><li>• Commission on Chronic Illness</li><li>• USA</li><li>• “chronic diseases</li><li>• “comprising all impairments</li><li>• deviations from normal</li><li>• Are Permanent Leave residual disability Are caused by non-reversible pathological alteration Require special training of the patient for rehabilitation May be expected to require a long period of supervision, observation, or care.”</li><li>• Are Permanent</li><li>• Leave residual disability</li><li>• Are caused by non-reversible pathological alteration</li><li>• Require special training of the patient for rehabilitation</li><li>• May be expected to require a long period of supervision, observation, or care.”</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Chronic diseases are - typically permanent , often leave residual disability , and may require rehabilitation training , but they are not characterized by reversible pathological alterations.</li><li>➤ Chronic diseases</li><li>➤ permanent</li><li>➤ leave residual disability</li><li>➤ require rehabilitation training</li><li>➤ Ref : Park 26 th ed pg 407</li><li>➤ Ref : Park 26 th ed pg 407</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A medical student is studying public health trends and comes across the term \"epidemiological transition.\" Which of the following statements best describes this concept?", "options": [{"label": "A", "text": "Transition from high mortality to low mortality", "correct": false}, {"label": "B", "text": "Transition from high birth rate to high death rate", "correct": false}, {"label": "C", "text": "Transition from communicable diseases to non-communicable diseases", "correct": true}, {"label": "D", "text": "Transition from under nutrition to obesity", "correct": false}], "correct_answer": "C. Transition from communicable diseases to non-communicable diseases", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. Transition from communicable diseases to non-communicable diseases.</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Epidemiological transition is a gradual process by which disease profile of a community in a nation passes from one of predominantly communicable to one which is predominated by NCDs . Epidemiological transition: A change in the pattern of disease in a country away from infectious diseases towards degenerative diseases</li><li>• Epidemiological transition</li><li>• gradual process</li><li>• disease profile</li><li>• community</li><li>• nation passes</li><li>• predominantly communicable</li><li>• predominated by NCDs</li><li>• change in the pattern of disease</li><li>• country</li><li>• Other important terminologies -</li><li>• Other important terminologies -</li><li>• Demographic trap: Applies to a country whose population is growing rapidly due to a high BR and low DRQ</li><li>• Demographic trap:</li><li>• country</li><li>• population is growing rapidly</li><li>• Demographic gift: The initially favorable effect of falling fertility rates on the ratio of the working population to the dependent population</li><li>• Demographic gift:</li><li>• initially favorable effect</li><li>• falling fertility rates</li><li>• ratio of the working population</li><li>• Demographic dividend: A rise in the rate of economic growth due to a rising share of working age people in a population . It usually occurs late in the demographic transition when the fertility rate falls and the youth DR declines. In this demographic window opportunity, output per capita rises</li><li>• Demographic dividend:</li><li>• rise in the rate of economic growth</li><li>• rising share</li><li>• working age people</li><li>• population</li><li>• Demographic transition: is a model used to explain the process of transition from high BR and high DR to low BR and low DR as part of the economic development of a country from a preindustrial to an industrialized economy</li><li>• Demographic transition:</li><li>• model</li><li>• process of transition</li><li>• high BR</li><li>• high DR</li><li>• low BR</li><li>• low DR</li><li>• Demographic Window: Period of time in a when ‘proportion of population of working age group is particularly prominent’. Typically, the demographic window of opportunity lasts 30–40 years</li><li>• Demographic Window:</li><li>• Period of time</li><li>• when</li><li>• ‘proportion of population of working age group is particularly prominent’.</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Epidemiological transition - A change in the pattern of disease in a country away from infectious diseases (communicable diseases) towards degenerative diseases (NCDs)</li><li>➤ Epidemiological transition</li><li>➤ change in the pattern</li><li>➤ disease</li><li>➤ country away from infectious diseases</li><li>➤ degenerative diseases</li><li>➤ Ref : Textbook of community medicine by Rajvir Balwar, 4 th ed, pg 902</li><li>➤ Ref : Textbook of community medicine by Rajvir Balwar, 4 th ed, pg 902</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A public health policy student is studying international health targets and comes across the WHO

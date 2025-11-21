@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Mid Day Module (Psm 1)   2025 02 12</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Mid Day Module (Psm 1)   2025 02 12</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                50 Questions | 200 Total Marks | 60 min Duration | ~72.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 50 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 60 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 50</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Mid Day Module (Psm 1)   2025 02 12 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 50</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 50 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "In District X with mid-year population of 1,20,000, during 2022, total of 2400 deaths were reported, among them 40 deaths out of 5000 cases were due to pneumonia. based on this information, calculate the case fatality rate of pneumonia in District X for 2022?", "options": [{"label": "A", "text": "0.8%", "correct": true}, {"label": "B", "text": "1.6%", "correct": false}, {"label": "C", "text": "2.0%", "correct": false}, {"label": "D", "text": "0.03%", "correct": false}], "correct_answer": "A. 0.8%", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/07/05/cfr.png"], "explanation": "<p><strong>Ans. A) 0.8%</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ :</li><li>➤ Case Fatality Rate -</li><li>➤ Case Fatality Rate -</li><li>➤ CFR represents ‘killing power of a disease’ It is ‘ closely related to virulence of organism CFR = Total no. of deaths due to a disease/Total no. of cases due to a disease × 100 CFR is a Proportion: Always expressed in percentage CFR is the ‘complement of Survival Rate’, thus CFR = 1 – Survival Rate</li><li>➤ CFR represents ‘killing power of a disease’</li><li>➤ CFR</li><li>➤ ‘killing power of a disease’</li><li>➤ It is ‘ closely related to virulence of organism</li><li>➤ closely related to virulence of organism</li><li>➤ CFR = Total no. of deaths due to a disease/Total no. of cases due to a disease × 100</li><li>➤ CFR is a Proportion: Always expressed in percentage</li><li>➤ CFR is the ‘complement of Survival Rate’, thus CFR = 1 – Survival Rate</li><li>➤ Ref : Park 26th ed pg 66.</li><li>➤ Ref</li><li>➤ : Park 26th ed pg 66.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Analyze mortality data from a city with a total population of 1,44,000 during the year 2022. In that year, there were 3200 reported deaths, and out of those, 285 were due to road traffic accidents. Based on this information, calculate the proportionate mortality rate for road traffic accidents in this city for the year 2022.", "options": [{"label": "A", "text": "0.19%", "correct": false}, {"label": "B", "text": "8.9%", "correct": true}, {"label": "C", "text": "2.2%", "correct": false}, {"label": "D", "text": "9.6%", "correct": false}], "correct_answer": "B. 8.9%", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/08/23/screenshot-2023-08-11-1921039018.jpg"], "explanation": "<p><strong>Ans. B. 8.9%</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ :</li><li>➤ Proportional mortality rate - PMR is number of deaths due to a particular cause (or in a specific age group) per 100 (or 1000) total deaths . PMR Is the ‘simplest measure of estimating the burden of a disease’.</li><li>➤ Proportional mortality rate</li><li>➤ PMR</li><li>➤ number of deaths</li><li>➤ particular cause</li><li>➤ per 100</li><li>➤ total deaths</li><li>➤ PMR</li><li>➤ ‘simplest measure of estimating the burden of a disease’.</li><li>➤ Ref: Park 26th ed pg 66.</li><li>➤ Ref:</li><li>➤ Park 26th ed pg 66.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In 2018, an oncology outpatient department of a tertiary care hospital documented 180 breast cancer diagnoses. All diagnosed patients immediately commenced treatment. Upon reevaluation five years later, it was determined that 32 of the initially diagnosed patients had succumbed to the disease. Based on this information, calculate the 5-year survival rate for breast cancer patients treated at this hospital.", "options": [{"label": "A", "text": "17.8%", "correct": false}, {"label": "B", "text": "78.4%", "correct": false}, {"label": "C", "text": "82.2%", "correct": true}, {"label": "D", "text": "24.6%", "correct": false}], "correct_answer": "C. 82.2%", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/07/05/image-20230705130431-1.png"], "explanation": "<p><strong>Ans. C. 82.2%</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ :</li><li>➤ 5-year survival rate –</li><li>➤ 5-year survival rate –</li><li>➤ Is used as ‘an index of success in cancer treatment’ Is not an appropriate measure to assess therapy that was introduced less than 5 years ago WHENEVER screening is performed: Higher 5-year survival rate is observed; THIS IS A POTENTIAL BIAS DUE TO earlier diagnosis being made (and not because people live longer)</li><li>➤ Is used as ‘an index of success in cancer treatment’</li><li>➤ ‘an index of success in cancer treatment’</li><li>➤ Is not an appropriate measure to assess therapy that was introduced less than 5 years ago</li><li>➤ not an appropriate measure</li><li>➤ assess therapy</li><li>➤ less than 5 years ago</li><li>➤ WHENEVER screening is performed: Higher 5-year survival rate is observed; THIS IS A POTENTIAL BIAS DUE TO earlier diagnosis being made (and not because people live longer)</li><li>➤ Ref: Park 26th ed pg 66.</li><li>➤ Ref:</li><li>➤ Park 26th ed pg 66.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A researcher is analyzing different epidemiological measures to understand disease occurrence in a population. She needs to identify a measure where the numerator is not a part of the denominator. Which of the following measures fits this description?", "options": [{"label": "A", "text": "Rate", "correct": false}, {"label": "B", "text": "Ratio", "correct": true}, {"label": "C", "text": "Percentage", "correct": false}, {"label": "D", "text": "Proportion", "correct": false}], "correct_answer": "B. Ratio", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. Ratio</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. Rate: A rate measures the occurrence of some particular event in a defined population during a given time-period . A rate comprises the following elements - numerator, denominator, time specification, and multiplier.</li><li>• Option A. Rate:</li><li>• measures the occurrence</li><li>• some particular event</li><li>• population</li><li>• given time-period</li><li>• Option C. Percentage: Numerator is a part of denominator in percentage</li><li>• Option C. Percentage:</li><li>• Numerator</li><li>• part of denominator</li><li>• percentage</li><li>• Option D. Proportion : A proportion is a ratio that indicates the relation in magnitude of a part of the whole . The numerator is always included in the denominator. A proportion is usually expressed as a percentage. Ex. Prevalence and Case fatality rate</li><li>• Option D. Proportion</li><li>• ratio that indicates the relation in magnitude</li><li>• part of the whole</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Incidence is a rate ; Prevalence is a proportion .</li><li>➤ Incidence</li><li>➤ rate</li><li>➤ Prevalence</li><li>➤ proportion</li><li>➤ Ratio is an epidemiological measure where the numerator is not part of the denominator . It compares two distinct entities.</li><li>➤ Ratio</li><li>➤ epidemiological measure</li><li>➤ numerator</li><li>➤ not part of the denominator</li><li>➤ Ref: Park 26th ed pg 63.</li><li>➤ Ref:</li><li>➤ Park 26th ed pg 63.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A Public Health Consultant is evaluating the incidence of tuberculosis (TB) in a district with a population of 1,92,800. On January 1, 2021, there were 45 existing cases of TB. Throughout the year, an additional 32 new cases were reported. Calculate the incidence of TB in the district for the year 2021.", "options": [{"label": "A", "text": "16.5 cases per lakh population", "correct": true}, {"label": "B", "text": "23.3 cases per lakh population", "correct": false}, {"label": "C", "text": "39.9 cases per lakh population", "correct": false}, {"label": "D", "text": "44.7 cases per lakh population", "correct": false}], "correct_answer": "A. 16.5 cases per lakh population", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/14/image_2KVm8pX.png"], "explanation": "<p><strong>Ans. A. 16.5 cases per lakh population</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ :</li><li>➤ Incidence : Is defined as the ‘no. of new cases’ occurring in a defined population during a specified period of time . Incidence is a RATE, expressed per 1000</li><li>➤ Incidence</li><li>➤ ‘no. of new cases’</li><li>➤ population during a specified period of time</li><li>➤ Incidence</li><li>➤ RATE,</li><li>➤ per 1000</li><li>➤ Ref : Park 26 th ed pg 68.</li><li>➤ Ref</li><li>➤ : Park 26 th ed pg 68.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a longitudinal study, researchers are following a group of patients to understand the development of a certain disease. However, during the study period, some individuals were lost to follow-up due to death, migration, or other reasons, resulting in different follow-up times for different individuals. Which epidemiological measure is most appropriate for analyzing the development of the disease in this scenario?", "options": [{"label": "A", "text": "Incidence", "correct": false}, {"label": "B", "text": "Prevalence", "correct": false}, {"label": "C", "text": "Incidence rate", "correct": true}, {"label": "D", "text": "Point prevalence", "correct": false}], "correct_answer": "C. Incidence rate", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/07/05/image-20230705132856-1.png"], "explanation": "<p><strong>Ans. C. Incidence rate</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ :</li><li>➤ Incidence rate can be calculated from Cohort study Cumulative incidence measures denominator only at the beginning of the study</li><li>➤ Incidence rate can be calculated from Cohort study</li><li>➤ Incidence rate</li><li>➤ calculated</li><li>➤ Cohort study</li><li>➤ Cumulative incidence measures denominator only at the beginning of the study</li><li>➤ Cumulative incidence</li><li>➤ denominator</li><li>➤ beginning of the study</li><li>➤ Ref : Leon Gordis, 5 th ed, pg 49.</li><li>➤ Ref</li><li>➤ : Leon Gordis, 5 th ed, pg 49.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a town having a population of 200,000 at midyear, 2,200 individuals were reported to have diabetes mellitus on January 1, 2022. Throughout that year, 450 new cases were diagnosed, and 75 individuals with diabetes mellitus passed away due to complications. Based on this information, calculate the point prevalence of diabetes mellitus in the town as of December 31, 2022.", "options": [{"label": "A", "text": "13.25 per 1000", "correct": false}, {"label": "B", "text": "2.25 per 1000", "correct": false}, {"label": "C", "text": "12.87 per 1000", "correct": true}, {"label": "D", "text": "10.63 per 1000", "correct": false}], "correct_answer": "C. 12.87 per 1000", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/07/05/image-20230705142331-1.png"], "explanation": "<p><strong>Ans. C. 12.87 per 1000</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ :</li><li>➤ Point Prevalence is defined as Number of total cases at a given point of time</li><li>➤ Point Prevalence</li><li>➤ Number of total cases</li><li>➤ point of time</li><li>➤ Period prevalence is defined by Number of total cases in a given year ​​​​​​​</li><li>➤ Period prevalence</li><li>➤ Number of total cases</li><li>➤ given year</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old public health researcher is analyzing data from a small isolated island community where no migration has occurred for many years. The researcher is interested in understanding the prevalence of a chronic disease in this community. He recalls a formula that relates incidence and duration to prevalence, especially in stable populations where migration is not a concern. Under these conditions, how is prevalence best described?", "options": [{"label": "A", "text": "Prevalence = Incidence / Duration", "correct": false}, {"label": "B", "text": "Prevalence = Incidence x Duration", "correct": true}, {"label": "C", "text": "Prevalence = Incidence + Duration", "correct": false}, {"label": "D", "text": "Prevalence = Duration / Incidence", "correct": false}], "correct_answer": "B. Prevalence = Incidence x Duration", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. Prevalence = Incidence x Duration</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ :</li><li>➤ Relationship between Incidence and Prevalence : Given the assumption that population is stable AND incidence & duration are unchanging,</li><li>➤ Relationship between Incidence and Prevalence</li><li>➤ assumption that population</li><li>➤ stable</li><li>➤ Prevalence = Incidence × Mean duration of the disease</li><li>➤ Prevalence = Incidence × Mean duration of the disease</li><li>➤ P = I × d</li><li>➤ Ref : Park 26 th ed pg 69</li><li>➤ Ref</li><li>➤ : Park 26 th ed pg 69</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A local community has recently experienced an outbreak of a contagious disease. A team of epidemiologists has been dispatched to investigate the epidemic and to devise strategies to control the spread of the disease. During their discussions on various epidemiological measures, the topic of attack rate comes up. In the context of this epidemic investigation, which of the following statements regarding attack rate is NOT true?", "options": [{"label": "A", "text": "Used when population is exposed to risk for a limited period of time", "correct": false}, {"label": "B", "text": "Expressed as percentage", "correct": false}, {"label": "C", "text": "Reflects extent of epidemic", "correct": false}, {"label": "D", "text": "It is type of prevalence rate", "correct": true}], "correct_answer": "D. It is type of prevalence rate", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/07/05/image-20230705143721-1.png"], "explanation": "<p><strong>Ans. D. It is type of prevalence rate</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ :</li><li>➤ Attack rate is given by the formula:</li><li>➤ Ref : Park 26 th ed 69</li><li>➤ Ref</li><li>➤ : Park 26 th ed 69</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In an ongoing discussion about epidemiological measures, a group of public health professionals are deliberating on the characteristics of prevalence. Which of the following statements about prevalence is NOT accurate?", "options": [{"label": "A", "text": "It includes both old and new cases", "correct": false}, {"label": "B", "text": "It is rate", "correct": true}, {"label": "C", "text": "It is ratio", "correct": false}, {"label": "D", "text": "Duration of disease effects ‘prevalence’", "correct": false}], "correct_answer": "B. It is rate", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/07/05/image-20230705143850-1.png"], "explanation": "<p><strong>Ans. B. It is rate</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Ref : Park 26th ed 69</li><li>➤ Ref</li><li>➤ : Park 26th ed 69</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a comparative epidemiological study, you are analyzing two diseases within the same population. Disease A has a prolonged duration of 10 years with a low incidence rate of 2 cases per 100,000 person-years. On the other hand, Disease B has a shorter duration of 4 years with an identical incidence rate of 2 cases per 100,000 person-years. When comparing the two diseases, which of the following statements is accurate regarding Disease A?", "options": [{"label": "A", "text": "Better cure rate", "correct": false}, {"label": "B", "text": "Lower prevalence", "correct": false}, {"label": "C", "text": "Higher prevalence", "correct": true}, {"label": "D", "text": "Higher incidence", "correct": false}], "correct_answer": "C. Higher prevalence", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. Higher prevalence</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ :</li><li>➤ Some Important Pointers -</li><li>➤ Some Important Pointers -</li><li>➤ If the prevalence is very low as compared to the incidence for a disease , it implies - Disease is very fatal and/or easily curable</li><li>➤ prevalence is very low</li><li>➤ incidence for a disease</li><li>➤ Disease is very fatal</li><li>➤ easily curable</li><li>➤ Relationship between Incidence and Prevalence : Given the assumption that population is stable AND incidence & duration are unchanging</li><li>➤ Relationship between Incidence and Prevalence</li><li>➤ Prevalence = Incidence × Mean duration of the disease P = I × d Prevalence describes the balance between incidence, mortality and recovery Incidence reflects causal factors Duration reflects the prognostic factors</li><li>➤ Prevalence = Incidence × Mean duration of the disease P = I × d</li><li>➤ Prevalence</li><li>➤ Prevalence describes the balance between incidence, mortality and recovery</li><li>➤ Prevalence</li><li>➤ balance</li><li>➤ incidence, mortality and recovery</li><li>➤ Incidence reflects causal factors</li><li>➤ Incidence</li><li>➤ causal factors</li><li>➤ Duration reflects the prognostic factors</li><li>➤ Ref : Leon gordis, 5 th ed, pg 63</li><li>➤ Ref</li><li>➤ : Leon gordis, 5 th ed, pg 63</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A novel virus has recently been identified in a country with a population of 10.4 million residents. In the year following its introduction, a total of 251,880 people were reported to have been infected by the virus. The infection is noted to have a low mortality rate. As a public health professional, you are required to determine the correct epidemiological measure to describe the extent of the disease spread in the first year. Which of the following is accurate?", "options": [{"label": "A", "text": "The incidence of infection is 251,880 per year", "correct": false}, {"label": "B", "text": "The prevalence of infection is 251,880 per year", "correct": false}, {"label": "C", "text": "The mortality rate is 24.2 per 1,000 person", "correct": false}, {"label": "D", "text": "The 1-year cumulative incidence is 24.2 per 1,000 persons", "correct": true}], "correct_answer": "D. The 1-year cumulative incidence is 24.2 per 1,000 persons", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/14/image_moJuNO4.png"], "explanation": "<p><strong>Ans. D. The 1-year cumulative incidence is 24.2 per 1,000 persons</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ :</li><li>➤ Incidence : Is defined as the ‘no. of new cases’ occurring in a defined population during a specified period of time</li><li>➤ Incidence</li><li>➤ ‘no. of new cases’</li><li>➤ population during a specified period of time</li><li>➤ Ref : Leon gordis, 5 th ed, pg 64</li><li>➤ Ref</li><li>➤ : Leon gordis, 5 th ed, pg 64</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In epidemiology, there are various methods used to compare mortality data between different populations or over different time periods. One of these methods includes age-adjusted death rates. What is the primary purpose of utilizing age-adjusted death rates?", "options": [{"label": "A", "text": "Determine the actual number of deaths that occurred in specific age groups in a population", "correct": false}, {"label": "B", "text": "Correct death rates for missing age information", "correct": false}, {"label": "C", "text": "Compare deaths in persons of the same age group", "correct": false}, {"label": "D", "text": "Eliminate the effects of differences in the age distributions of populations in comparing death rates", "correct": true}], "correct_answer": "D. Eliminate the effects of differences in the age distributions of populations in comparing death rates", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D. Eliminate the effects of differences in the age distributions of populations in comparing death rates</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ :</li><li>➤ Standardization for the characteristic(s) responsible for the differences in comparison is necessary</li><li>➤ Standardization</li><li>➤ characteristic(s)</li><li>➤ differences in comparison is necessary</li><li>➤ Age and sex are two of the most common variables used for standardization and they are called Standardized rates</li><li>➤ Age and sex</li><li>➤ two</li><li>➤ common variables</li><li>➤ standardization</li><li>➤ Standardized rates</li><li>➤ Ref : Leon gordis, 5 th ed, pg 85</li><li>➤ Ref</li><li>➤ : Leon gordis, 5 th ed, pg 85</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A researcher is evaluating a dataset on a specific disease in a population and observes a perplexing trend. Although women in this population are being diagnosed with the disease at a rate five times higher than men, the prevalence of the disease appears to be the same for both genders. Given these circumstances, what is the most likely explanation for these findings?", "options": [{"label": "A", "text": "The crude all-cause mortality rate is greater in men", "correct": false}, {"label": "B", "text": "The case-fatality from this disease is greater in women", "correct": true}, {"label": "C", "text": "The duration of this disease is shorter in men", "correct": false}, {"label": "D", "text": "Risk factors for the disease are more common in women", "correct": false}], "correct_answer": "B. The case-fatality from this disease is greater in women", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. The case-fatality from this disease is greater in women</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation</li><li>• :</li><li>• Option A. The crude all-cause mortality rate is greater in men : It’s a false statement. If mortality is higher in men, prevalence would be much lower in men. But the question mentions that the prevalence of the disease in both male and female is equal.</li><li>• Option A. The crude all-cause mortality rate is greater in men</li><li>• Option C. The duration of this disease is shorter in men: If the disease is of shorter duration, prevalence would decrease as compared to that in female.</li><li>• Option C.</li><li>• The duration of this disease is shorter in men:</li><li>• Option D. Risk factors for the disease are more common in women: While more common risk factors in women could explain the higher diagnosis rate, it does not explain why the prevalence is the same in both genders.</li><li>• Option D.</li><li>• Risk factors for the disease are more common in women:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ :</li><li>➤ Relationship between Incidence and Prevalence:</li><li>➤ Relationship between Incidence and Prevalence:</li><li>➤ Prevalence = Incidence × Mean duration of the disease</li><li>➤ P = I × d</li><li>➤ Incidence reflects causal factors Duration reflects the prognostic factors</li><li>➤ Incidence reflects causal factors</li><li>➤ Duration reflects the prognostic factors</li><li>➤ Ref : Leon gordis, 5 th ed, pg 86</li><li>➤ Ref</li><li>➤ : Leon gordis, 5 th ed, pg 86</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In the realm of public health and policy making, it is crucial to assess the impact of diseases not just in terms of mortality, but also in terms of the disability and reduced quality of life they cause. The policymakers in a certain region are focusing their efforts on interventions aimed at reducing premature disability caused by various health conditions. Which of the following indices would be the most appropriate and helpful for them to make informed decisions on where to allocate resources and which interventions to prioritize?", "options": [{"label": "A", "text": "Case-fatality", "correct": false}, {"label": "B", "text": "Crude mortality rate", "correct": false}, {"label": "C", "text": "Disability-adjusted life-years", "correct": true}, {"label": "D", "text": "Standardized mortality ratio", "correct": false}], "correct_answer": "C. Disability-adjusted life-years", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. Disability-adjusted life-years</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ :</li><li>➤ DALYs can measure ‘both mortality and disability together’</li><li>➤ DALYs</li><li>➤ ‘both mortality and disability together’</li><li>➤ Case fatality rate measures ‘virulence of an organism’ or ‘killing power of a disease’</li><li>➤ Case fatality rate</li><li>➤ ‘virulence of an organism’</li><li>➤ ‘killing power of a disease’</li><li>➤ Dependency ratio measures the ‘need for society to provide for its’ younger and older groups’</li><li>➤ Dependency ratio</li><li>➤ ‘need for society to provide for its’ younger</li><li>➤ older groups’</li><li>➤ Morbidity data measures ‘any departure from health’</li><li>➤ Morbidity data</li><li>➤ ‘any departure from health’</li><li>➤ Ref : Park 26 th ed pg 26.</li><li>➤ Ref</li><li>➤ : Park 26 th ed pg 26.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "During a seminar on global health initiatives, the presenter displayed a logo that caught everyone

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>ENT - INI CET NOVEMBER 2022 (PART A)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">ENT - INI CET NOVEMBER 2022 (PART A)</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                11 Questions | 11 Total Marks | 21 min Duration | ~114.55 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 11 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 21 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 11</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">ENT - INI CET NOVEMBER 2022 (PART A) - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 11</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 11 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Arrange in sequence the pathway of production of OAE (Otoacoustic emissions): Outer hair cells Basilar membrane Ossicles Oval window Tympanic membrane Perilymph Choose the correct Answer from below code:", "options": [{"label": "A", "text": "1,2,6,4,3,5", "correct": true}, {"label": "B", "text": "5,3,4,6,2,1", "correct": false}, {"label": "C", "text": "5,3,4,2,6,1", "correct": false}, {"label": "D", "text": "5,3,4,6,1,2", "correct": false}], "correct_answer": "A. 1,2,6,4,3,5", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>1,2,6,4,3,5 Otoacoustic emissions are low-intensity sounds produced by outer hair cells of a normal cochlea and can be elicited by a very sensitive microphone placed in the external ear canal and analyzed by a computer. Sound produced by outer hair cells travels in a reverse direction: outer hair cells → basilar membrane → perilymph → oval window → ossicles → tympanic membrane → ear canal.</p>\n<p><strong>Highyeild:</strong></p><p>OAEs are present when outer hair cells are healthy and are absent when they are damaged and thus help to test the function of cochlea. They do not disappear in VIIIth nerve pathology as cochlear hair cells are normal. Otoacoustic emissions can be used to assess the integrity of outer hair cells. Otoacoustic emissions are non-linear distortion products generated in the cochlea and transmitted back through the middle ear to the outer ear, where they can be detected as sound using a sensitive microphone</p>\n<p><strong>Extraedge:</strong></p><p>USES (a) OAEs are used as a screening test of hearing in neonates and to test hearing in uncooperative or mentally challenged individuals after sedation. Sedation does not interfere with OAEs. (b) They help to distinguish cochlear from retrocochlear hearing loss. OAEs are absent in cochlear lesions, e.g. ototoxic sensorineural hearing loss. They detect ototoxic effects earlier than pure tone audiometry. (c) OAEs are also useful to diagnose retrocochlear pathology, especially auditory neuropathy. Auditory neuropathy is a neurologic disorder of CN VIII. Audiometric tests, e.g. SNHL for pure tones, impaired speech discrimination score, absent or abnormal auditory brainstem response, show a retrocochlear type of lesion but OAEs are normal</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Match the following: Select the correct answer from the given below code:", "options": [{"label": "A", "text": "A - 2, B - 4, C - 3, D – 1", "correct": true}, {"label": "B", "text": "A - 1, B - 4, C - 3, D - 2", "correct": false}, {"label": "C", "text": "A - 2, B - 3, C - 4, D - 1", "correct": false}, {"label": "D", "text": "A - 4, B - 2, C - 3, D - 1", "correct": false}], "correct_answer": "A. A - 2, B - 4, C - 3, D – 1", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1694675957933-QTDEPYQ002IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>A - 2, B - 4, C - 3, D – 1 Wullstein Classification of Tympanoplasty Type I: Repair of the TM alone; no abnormality of the middle ear. Type I tympanoplasty is synonymous with myringoplasty Type II: Repair of the TM and middle ear; the malleus is eroded. Tympanoplasty involves grafting the TM to the incus Type III : Repair of the TM onto the stapes head; the malleus and incus have a defect Type IV: The TM is grafted to the stapes footplate, which is movable Type V: Repair involves the stapes footplate, which is fixed. From the above discussion correct match is option A.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B,C,D are not correctly matched.</p>\n<p><strong>Extraedge:</strong></p><p>MYRINGOPLASTY It is repair of tympanic membrane. Graft materials of choice are temporalis fascia or the perichondrium taken from the patient. Sometimes, homografts such as dura, vein, fascia or cadaver tympanic membrane are also used.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following test will you combine if OAE is absent in a patient? Pure Tone Audiometry Tympanometry Free field audiometry Speech audiometry Choose the correct answer from below code:", "options": [{"label": "A", "text": "a, b", "correct": false}, {"label": "B", "text": "b, c", "correct": false}, {"label": "C", "text": "b, d", "correct": true}, {"label": "D", "text": "a, c", "correct": false}], "correct_answer": "C. b, d", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>b, d A positive OAE test suggests a functional External ear, Middle ear and Cochlea. If Absent , it suggests a defect either in the Middle ear or Sensorineural defect. So Tympanometry should be done to assess Middle ear function and a Speech Audiometry to distinguish between Cochlear and Retrocochlear defect</p>\n<p><strong>Highyeild:</strong></p><p>OTOACOUSTIC EMISSION (OAE) Otoacoustic emissions (OAE) are sounds generated from the cochlea transmitted across the middle ear to the external ear canal, where they can be recorded There are two types of OAE: Spontaneous OAE (SOAE), which occurs continuously without external stimuli Evoked OAE (EOAE), which requires an acoustic stimulus prior to its measurement.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Pure tone audiometry is a measure of threshold of hearing by air and bone conduction and thus the degree and type of hearing loss. Free Field Audiometry provides the clinic an option for assessing individuals who are unable to wear headphones. Instead of headphones, the sounds are presented via a speaker placed in front of the patient. So these are not used in the above mentioned case.</p>\n<p><strong>Extraedge:</strong></p><p>When are OAE done Infants : Universal screening test for hearing in infants. OAE is done in children up to 7 years, rather than using a subjective test like PTA. If OAE is absent, then do a BERA Adults : A patient presents with hearing loss, first test to do is Tuning fork test, followed by a Pure tone audiometry suggesting a Sensorineural hearing loss. Only then OAE is done to assess the cochlear function. A positive OAE test suggests a functional External ear, Middle ear and Cochlea If Absent, it suggests a defect either in the Middle ear or Sensorineural defect.V</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35 year old female presented with a Complaint of nasal obstruction and post nasal drip. There is a past history of FESS following failed conservative treatment 5 years back. Post-surgical notes say- uncinectomy done and maxillary ostia dilated. DNE this time shows patent ostia with mucosal oedema in the maxillary sinus lining. Next best step of management will be-", "options": [{"label": "A", "text": "Steroids irrigation and antihistamine", "correct": true}, {"label": "B", "text": "Macrolides for 4 months", "correct": false}, {"label": "C", "text": "Biologicals", "correct": false}, {"label": "D", "text": "Revision surgery", "correct": false}], "correct_answer": "A. Steroids irrigation and antihistamine", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Steroids irrigation and antihistamine Patient with previously undergone FESS surgery for failed medical management now has nasal obstruction and pot nasal drip which is suggestive of acute rhinosinusitis. Treatment will be symptomatic with nasal steroid,decongestatants and antihistamines as the next step of management. If fails, restoration of ventilation and drainage of sinus by FESS</p>\n<p><strong>Highyeild:</strong></p><p>Treatment Guidelines for rhinitis In patients aged 12 years or older, mild intermittent symptoms should be treated initially with a second-generation oral antihistamine (OAH) or intranasal antihistamine (INAH) as needed. For moderate/severe, intermittent symptoms it is similarly recommended to treat initially with a second-generation OAH or INAH as needed, with the next step adding intranasal corticosteroids (INCS) to the INAH In patients aged 12 years or older, mild persistent symptoms should be treated initially with an INCS while moderate/severe persistent symptoms should have INAH and INCS combination therapy Leukotriene receptor antagonists are not recommended for initial treatment of allergic rhinitis Intranasal steroids and oral antihistamines are recommended as first lines of treatment</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- OPTION B- Macrolides may be used in case of bacterial sinusitis. OPTION C- Biologicals don’t have any role in management. OPTION D- Repeat surgery may be done if medical management fails.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Sphenoid sinus open into-", "options": [{"label": "A", "text": "Sphenoethmoidal Recess", "correct": true}, {"label": "B", "text": "Sup. Meatus", "correct": false}, {"label": "C", "text": "Middle Meatus", "correct": false}, {"label": "D", "text": "Inferior Meatus", "correct": false}], "correct_answer": "A. Sphenoethmoidal Recess", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Sphenoethmoidal Recess Sphenoid sinus opens into sphenoethmoidal recess.</p>\n<p><strong>Highyeild:</strong></p><p>The sphenoid sinuses are paired spaces formed within the body of the sphenoid bone, communicating with the roof of the nasal cavity via the sphenoethmoidal recess in its anterior wall. Usually lies anterior inferior to the sella The sphenoid sinus is the most posterior paranasal sinus Blood supply: posterior ethmoidal and sphenopalatine arteries Innervation: posterior ethmoidal nerve and the orbital branch of the pterygopalatine ganglion</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- OPTION B- Superior meatus has opening of Posterior ethmoidal sinus. OPTION C- Frontal sinus, maxillary sinus, anterior ethmoidal sinus opens into middle meatus. OPTION D- Nasolacrimal duct, guarded by the valve of Hasner opens into inferior meatus.</p>\n<p><strong>Extraedge:</strong></p><p>Structures opening into meatuses of nose Inferior meatus: Nasolacrimal duct, guarded by the valve of Hasner Middle meatus: Frontal sinus, maxillary sinus, anterior ethmoidal sinus. All these together form the osteo-meatal complex or Picadle

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>292 Pediatrics Dr Ashutosh</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">292 Pediatrics Dr Ashutosh</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                40 Questions | 160 Total Marks | 50 min Duration | ~75.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 40 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 50 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 40</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">292 Pediatrics Dr Ashutosh - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 40</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 40 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Week full term baby is noticed to have doll’s eye movement by mother. Next action is to:", "options": [{"label": "A", "text": "Reassure the mother that it is a normal action", "correct": true}, {"label": "B", "text": "Ophthalmologist referral", "correct": false}, {"label": "C", "text": "MRI to be done", "correct": false}, {"label": "D", "text": "Cranial ultrasonography", "correct": false}], "correct_answer": "A. Reassure the mother that it is a normal action", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following sign of social development doesn’t develop at 9 months of age?", "options": [{"label": "A", "text": "Object permanence", "correct": false}, {"label": "B", "text": "Pointing behaviour", "correct": true}, {"label": "C", "text": "Waves bye bye", "correct": false}, {"label": "D", "text": "Claps", "correct": false}], "correct_answer": "B. Pointing behaviour", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Zinc deficiency is associated with increased risk of all the following except:", "options": [{"label": "A", "text": "Skin infections", "correct": false}, {"label": "B", "text": "Respiratory diseases", "correct": true}, {"label": "C", "text": "Impaired immune function", "correct": false}, {"label": "D", "text": "Diarrheal diseases", "correct": false}], "correct_answer": "B. Respiratory diseases", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Child is diagnosed to have severe acute malnutrition. During stabilization phase all of the following can be given except:", "options": [{"label": "A", "text": "Iron", "correct": true}, {"label": "B", "text": "Zinc", "correct": false}, {"label": "C", "text": "Vitamin A", "correct": false}, {"label": "D", "text": "Folic acid", "correct": false}], "correct_answer": "A. Iron", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Child is being evaluated for rickets. Biochemical findings include increased serum phosphorous, increased alkaline phosphatase level and increased PTH level. Most likely diagnosis is:", "options": [{"label": "A", "text": "Chronic renal failure", "correct": true}, {"label": "B", "text": "Distal renal tubular acidosis", "correct": false}, {"label": "C", "text": "Proximal renal tubular acidosis", "correct": false}, {"label": "D", "text": "X linked hypophosphatemic rickets", "correct": false}], "correct_answer": "A. Chronic renal failure", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is true regarding development in Downs’s syndrome?", "options": [{"label": "A", "text": "Developmental delay can be corrected by stimulation", "correct": false}, {"label": "B", "text": "Social development is relatively spared", "correct": true}, {"label": "C", "text": "No difficulty in expressive language", "correct": false}, {"label": "D", "text": "Motor development is mostly normal", "correct": false}], "correct_answer": "B. Social development is relatively spared", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Williams and DiGeorge syndrome have following chromosomal abnormalities:", "options": [{"label": "A", "text": "Microdeletion", "correct": true}, {"label": "B", "text": "Point mutation", "correct": false}, {"label": "C", "text": "Duplication", "correct": false}, {"label": "D", "text": "Frame shift mutation", "correct": false}], "correct_answer": "A. Microdeletion", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Regarding screening in Down’s syndrome, all the following should be done every year except:", "options": [{"label": "A", "text": "Peripheral blood film", "correct": false}, {"label": "B", "text": "Thyroid function test", "correct": false}, {"label": "C", "text": "Hearing test", "correct": false}, {"label": "D", "text": "ECG", "correct": true}], "correct_answer": "D. ECG", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "10 days old child is appearing jaundiced. There is also presence of pallor & hepatomegaly. All of the following can be the cause except:", "options": [{"label": "A", "text": "Hereditary spherocytosis", "correct": false}, {"label": "B", "text": "β thalassemia", "correct": true}, {"label": "C", "text": "α thalassemia", "correct": false}, {"label": "D", "text": "Congenital rubella syndrome", "correct": false}], "correct_answer": "B. β thalassemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Regarding Moro’s reflex all of the following is true except:", "options": [{"label": "A", "text": "Abduction followed by adduction of the upper limbs", "correct": false}, {"label": "B", "text": "Complete and symmetrical on both sides", "correct": false}, {"label": "C", "text": "Can persist upto 9 months of age", "correct": true}, {"label": "D", "text": "Is fully development at birth in all term child", "correct": false}], "correct_answer": "C. Can persist upto 9 months of age", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Antenatal steroids are given to mother if pregnancy duration is more than 24 weeks to less than 34 weeks. They decrease incidence of all of the following except:", "options": [{"label": "A", "text": "Hyaline membrane disease", "correct": false}, {"label": "B", "text": "Necrotising enterocolitis", "correct": false}, {"label": "C", "text": "Intraventricular haemorrhage", "correct": false}, {"label": "D", "text": "Apnea of prematurity", "correct": true}], "correct_answer": "D. Apnea of prematurity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A male new born at term gestation is born by normal vaginal delivery. Mother has fever and vesicular rash all over the body. True statement is:", "options": [{"label": "A", "text": "Breast feeding should be contraindicated", "correct": true}, {"label": "B", "text": "Child will have congenital varicella", "correct": false}, {"label": "C", "text": "New born should be started on acyclovir", "correct": false}, {"label": "D", "text": "Breast feeding should be continued", "correct": false}], "correct_answer": "A. Breast feeding should be contraindicated", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Mother is having seizure disorder and taking phenobarbitone during pregnancy. There is risk of haemorrhagic disorder of new born. Child will have bleeding on day:", "options": [{"label": "A", "text": "Within 24 hours of birth", "correct": true}, {"label": "B", "text": "2-7 days after birth", "correct": false}, {"label": "C", "text": "7-14 days after birth", "correct": false}, {"label": "D", "text": "After 2 weeks", "correct": false}], "correct_answer": "A. Within 24 hours of birth", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "New born baby is meconium stained and is having laboured breathing at birth. On examination cyanosis is present. Most appropriate next step is:", "options": [{"label": "A", "text": "Start continuous positive airway pressure", "correct": true}, {"label": "B", "text": "Start positive pressure ventilation", "correct": false}, {"label": "C", "text": "Do first tracheal suction followed by positive pressure ventilation", "correct": false}, {"label": "D", "text": "Endotracheal intubation & ventilation", "correct": false}], "correct_answer": "A. Start continuous positive airway pressure", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Child was delivered by forceps application. On 4th day after birth there is swelling on scalp, fluctuant and limited to left parietal bone. Most likely it is:", "options": [{"label": "A", "text": "Caput succedaneum", "correct": false}, {"label": "B", "text": "Cephalhematoma", "correct": true}, {"label": "C", "text": "Subgaleal haemorrhage", "correct": false}, {"label": "D", "text": "Any of the above", "correct": false}], "correct_answer": "B. Cephalhematoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In neonatal jaundice the cause of jaundice should be determined in all of the following conditions except:", "options": [{"label": "A", "text": "Serum bilirubin rises at the rate of > 5mg/dL/day", "correct": false}, {"label": "B", "text": "Jaundice persists after 14 days in term child", "correct": false}, {"label": "C", "text": "Direct bilirubin > 1mg/dL at anytime", "correct": false}, {"label": "D", "text": "Jaundice appears on day 3 of life", "correct": true}], "correct_answer": "D. Jaundice appears on day 3 of life", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In scurvy radiographic features seen are ground glass appearance of bone and pencil line cortex. These can also seen in:", "options": [{"label": "A", "text": "Copper deficiency", "correct": true}, {"label": "B", "text": "Hypervitaminosis D", "correct": false}, {"label": "C", "text": "Magnesium deficiency", "correct": false}, {"label": "D", "text": "Hypervitaminosis A", "correct": false}], "correct_answer": "A. Copper deficiency", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "18 months old child was playing in playroom. He develops an attack of wheezing and difficulty in breathing. On admission RR-62/min and O2 saturation – 92%. Most appropriate next action is:", "options": [{"label": "A", "text": "Urgent bronchoscopy", "correct": true}, {"label": "B", "text": "Chest X ray", "correct": false}, {"label": "C", "text": "CT chest", "correct": false}, {"label": "D", "text": "Endotracheal intubation", "correct": false}], "correct_answer": "A. Urgent bronchoscopy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements is true regarding malnutrition?", "options": [{"label": "A", "text": "Growth retardation is more in Kwashiorkor as compared to marasmus", "correct": false}, {"label": "B", "text": "Moon like facies are seen in Marasmus", "correct": false}, {"label": "C", "text": "Weight for age in Marasmus is <60%", "correct": true}, {"label": "D", "text": "Tense & shiny skin is seen in Marasmus", "correct": false}], "correct_answer": "C. Weight for age in Marasmus is <60%", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following findings on chest X-ray are correctly match in neonate except:", "options": [{"label": "A", "text": "Hyaline membrane disease – reticulogranular appearance", "correct": false}, {"label": "B", "text": "Transient tachypnea of new born – Sun Ray appearance", "correct": false}, {"label": "C", "text": "Meconium aspiration syndrome – patchy infiltrates", "correct": false}, {"label": "D", "text": "None of the above", "correct": true}], "correct_answer": "D. None of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Child has sudden onset of respiratory distress along with fever. He is not able to swallow and lie down in supine position. Which of the following organism is responsible for this:", "options": [{"label": "A", "text": "Para influenza virus", "correct": false}, {"label": "B", "text": "Respiratory synchial virus", "correct": false}, {"label": "C", "text": "Streptococcus Pneumoniae", "correct": false}, {"label": "D", "text": "Staphylococcus aureus", "correct": false}], "correct_answer": "Unknown", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "3 year old boy has history of recurrent wheezing. Out of the following symptoms suggestive of asthma is:", "options": [{"label": "A", "text": "Presence of day time cough", "correct": false}, {"label": "B", "text": "Presence of stridor", "correct": false}, {"label": "C", "text": "History of eczema & rhinitis", "correct": true}, {"label": "D", "text": "Not able to exercise", "correct": false}], "correct_answer": "C. History of eczema & rhinitis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "5 years old child has history of hypopigmented lesions on face since birth, mental retardation and epilepsy. It can be suggestive of:", "options": [{"label": "A", "text": "Neurofibromatosis 1", "correct": false}, {"label": "B", "text": "Tuberous sclerosis", "correct": true}, {"label": "C", "text": "Sturge Weber syndrome", "correct": false}, {"label": "D", "text": "Von Hippel sclerosis", "correct": false}], "correct_answer": "B. Tuberous sclerosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Presence of neurodevelopmental regression and hypsarrthymic pattern on EEG is seen in the following:", "options": [{"label": "A", "text": "West syndrome", "correct": true}, {"label": "B", "text": "Rolandic epilepsy", "correct": false}, {"label": "C", "text": "Dravet syndrome", "correct": false}, {"label": "D", "text": "JANZ syndrome", "correct": false}], "correct_answer": "A. West syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "1 year old child has crossing of lower limb and Babinski’s sign is positive. Underlying pathological condition is:", "options": [{"label": "A", "text": "Parasagittal cerebral injury", "correct": false}, {"label": "B", "text": "Periventricular leucomalacia", "correct": true}, {"label": "C", "text": "Basal ganglia damage due to kernicterus", "correct": false}, {"label": "D", "text": "Any of the above", "correct": false}], "correct_answer": "B. Periventricular leucomalacia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "15 month old child has cough, fever and one episode of generalised seizure for 5 minutes. There is similar history of 3 months back. Which of the following statements is true:", "options": [{"label": "A", "text": "EEG and MRI brain to be done", "correct": false}, {"label": "B", "text": "Continuous prophylaxis to be started", "correct": false}, {"label": "C", "text": "Risk of subsequent epilepsy is 1%", "correct": true}, {"label": "D", "text": "Intermittent prophylaxis to be started", "correct": false}], "correct_answer": "C. Risk of subsequent epilepsy is 1%", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "6 year old boy has complaints of making unusual sounds and drooling from his mouth during sleep. On awakening the child talks normally. School performance is normal and clinical examination is normal. Most likely diagnosis is:", "options": [{"label": "A", "text": "Absence seizure", "correct": false}, {"label": "B", "text": "Rolandic epilepsy", "correct": true}, {"label": "C", "text": "Dravet syndrome", "correct": false}, {"label": "D", "text": "Juvenile myoclonic epilepsy", "correct": false}], "correct_answer": "B. Rolandic epilepsy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Febrile status epilepticus is febrile seizure lasting for more than:", "options": [{"label": "A", "text": "15 mins", "correct": false}, {"label": "B", "text": "30 mins", "correct": true}, {"label": "C", "text": "45 mins", "correct": false}, {"label": "D", "text": "60 mins", "correct": false}], "correct_answer": "B. 30 mins", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Child is having generalized tonic clonic seizure for 5 minutes. All of the following medication are useful except:", "options": [{"label": "A", "text": "Midazolam", "correct": false}, {"label": "B", "text": "Na valproate", "correct": true}, {"label": "C", "text": "Diazepam", "correct": false}, {"label": "D", "text": "Lorazepam", "correct": false}], "correct_answer": "B. Na valproate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "16 years male is diagnosed with delayed puberty. On examination there is anosmia along with isolated gonadotropin deficiency. It is suggestive of:", "options": [{"label": "A", "text": "Kallmann syndrome", "correct": true}, {"label": "B", "text": "Noonan syndrome", "correct": false}, {"label": "C", "text": "Klinefelter’s syndrome", "correct": false}, {"label": "D", "text": "Functional gonadotropin deficiency", "correct": false}], "correct_answer": "A. Kallmann syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Regarding screening for congenital hypothyroidism following is true:", "options": [{"label": "A", "text": "Measurement of TSH at birth", "correct": false}, {"label": "B", "text": "Measurement of T4 & TSH at birth", "correct": false}, {"label": "C", "text": "Measurement of T4, TSH between 2-4 days after birth", "correct": true}, {"label": "D", "text": "Measurement of TSH between 2-4 days after birth", "correct": false}], "correct_answer": "C. Measurement of T4, TSH between 2-4 days after birth", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "8 year female child has recurrent menstrual cycle since 6 months. There is history of decreased thirst but no visual defects. There is no significant history in past. Most likely diagnosis is:", "options": [{"label": "A", "text": "Neurofibromatosis 1", "correct": false}, {"label": "B", "text": "Hypothalamic hamartomas", "correct": true}, {"label": "C", "text": "Genetic caures", "correct": false}, {"label": "D", "text": "Craniopharyngioma", "correct": false}], "correct_answer": "B. Hypothalamic hamartomas", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "4 weeks old male child comes with history of jaundice. His stool are pale yellow in color. Child was born at term and is always breastfed. On examination there is hepatomegaly. Initial investigation to be done is:", "options": [{"label": "A", "text": "Total and conjugated serum bilirubin", "correct": false}, {"label": "B", "text": "USG of liver", "correct": false}, {"label": "C", "text": "HIDA scan", "correct": false}, {"label": "D", "text": "Liver biopsy", "correct": false}], "correct_answer": "Unknown", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "3 year old child has been treated for urinary tract infection and received antibiotics. Which of the following radiological investigation needs to be done to know the underlying cause:", "options": [{"label": "A", "text": "Micturating cystouretherogram (MCU)", "correct": false}, {"label": "B", "text": "MCU + USG", "correct": false}, {"label": "C", "text": "USG + Dimercaptosuccinic acid scan", "correct": true}, {"label": "D", "text": "USG", "correct": false}], "correct_answer": "C. USG + Dimercaptosuccinic acid scan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Child is passing red colored urine after 4 weeks of skin infection. There is hypertension and serum C3 is decreased. Which of the following will be useful in diagnosis:", "options": [{"label": "A", "text": "Elevated anti streptolysin “O” titer", "correct": false}, {"label": "B", "text": "Elevated anti deoxyribonuclease level", "correct": true}, {"label": "C", "text": "Positive throat culture", "correct": false}, {"label": "D", "text": "Increased serum IgA level", "correct": false}], "correct_answer": "B. Elevated anti deoxyribonuclease level", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In haemolytic uremic syndrome, antibiotics can be given in:", "options": [{"label": "A", "text": "Shigella", "correct": false}, {"label": "B", "text": "E. Coli", "correct": false}, {"label": "C", "text": "Streptococcus Pneumonia", "correct": true}, {"label": "D", "text": "Atypical HUS", "correct": false}], "correct_answer": "C. Streptococcus Pneumonia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Child complains of pain in both lower limbs on exercise. On echocardiography was diagnosed as coarctation of Aorta. All of the findings can be seen except:", "options": [{"label": "A", "text": "Bounding pulses in upper limb", "correct": false}, {"label": "B", "text": "Weak pulses in lower limb", "correct": false}, {"label": "C", "text": "Blood pressure is higher in upper limb as compared to lower limb", "correct": false}, {"label": "D", "text": "Right ventricular hypertrophy", "correct": true}], "correct_answer": "D. Right ventricular hypertrophy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In management of hypoxic spell seen in tetralogy of Fallot all of the following are useful in management except:", "options": [{"label": "A", "text": "Propranolol", "correct": false}, {"label": "B", "text": "Ketamine", "correct": false}, {"label": "C", "text": "Morphine", "correct": false}, {"label": "D", "text": "None of the above", "correct": true}], "correct_answer": "D. None of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most potent prostaglandin produced by ductus arterious in the fetal circulation is:", "options": [{"label": "A", "text": "PGE1", "correct": false}, {"label": "B", "text": "PGE2", "correct": true}, {"label": "C", "text": "PGE3", "correct": false}, {"label": "D", "text": "PGE4", "correct": false}], "correct_answer": "B. PGE2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a 1 year old child with difficulty in breathing which of the following is considered as a danger sign:", "options": [{"label": "A", "text": "Presence of wheeze", "correct": false}, {"label": "B", "text": "Presence of stridor in a calm child", "correct": true}, {"label": "C", "text": "Fast breathing", "correct": false}, {"label": "D", "text": "Chest in drawing", "correct": false}], "correct_answer": "B. Presence of stridor in a calm child", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

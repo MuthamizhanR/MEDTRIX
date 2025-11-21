@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Radiology Inicet Pyq</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Radiology Inicet Pyq</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                117 Questions | 304 Total Marks | 127 min Duration | ~65.13 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 117 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 127 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 117</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Radiology Inicet Pyq - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 117</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 117 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Female of reproductive age group is advised for CECT Head, what will you ask her?", "options": [{"label": "A", "text": "H/O Hypertension", "correct": false}, {"label": "B", "text": "H/O Fall", "correct": false}, {"label": "C", "text": "LMP", "correct": true}, {"label": "D", "text": "Cochlear Implant", "correct": false}], "correct_answer": "C. LMP", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the focal lesion on NCCT Abdomen", "options": [{"label": "A", "text": "Hydatid Cyst", "correct": true}, {"label": "B", "text": "Abscess", "correct": false}, {"label": "C", "text": "HCC", "correct": false}, {"label": "D", "text": "FNH", "correct": false}], "correct_answer": "A. Hydatid Cyst", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(827).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the segment marked in orange", "options": [{"label": "A", "text": "5", "correct": true}, {"label": "B", "text": "6", "correct": false}, {"label": "C", "text": "7", "correct": false}, {"label": "D", "text": "8", "correct": false}], "correct_answer": "A. 5", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3(755).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3_1(143).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In RTA case, whole body CT scan will not include which of the below mentioned?", "options": [{"label": "A", "text": "CT abdomen", "correct": false}, {"label": "B", "text": "CT brain", "correct": false}, {"label": "C", "text": "CT cervical spine", "correct": false}, {"label": "D", "text": "CT upper limb", "correct": true}], "correct_answer": "D. CT upper limb", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/33716131701945629/33716131701945629.m3u8"}, {"text": "Child with respiratory distress & cyanosis. Exam with clubbing, single S2,and ejection systolic murmur, best heard in pulmonary area. What is the most likely diagnosis?", "options": [{"label": "A", "text": "TOF", "correct": true}, {"label": "B", "text": "TGA", "correct": false}, {"label": "C", "text": "Ebstein’s anomaly", "correct": false}, {"label": "D", "text": "TAPVC", "correct": false}], "correct_answer": "A. TOF", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5(666).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/66127521701945644/66127521701945644.m3u8"}, {"text": "Match the following?", "options": [{"label": "A", "text": "A-2, B-3, C-1, D-4", "correct": true}, {"label": "B", "text": "A-1, B-2, C-3, D-4", "correct": false}, {"label": "C", "text": "A-4, B-3, C-2, D-1", "correct": false}, {"label": "D", "text": "A-2, B-4, C-1, D-3", "correct": false}], "correct_answer": "A. A-2, B-3, C-1, D-4", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/6(547).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7_1(107).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/71647061701945655/71647061701945655.m3u8"}, {"text": "Patient with history of prostate carcinoma. High Gleason score. Bone scan done show increased uptake with bones and reduced in kidney & soft tissue. This is reported as superscan, reason behind it is", "options": [{"label": "A", "text": "Increased uptake in bone", "correct": false}, {"label": "B", "text": "Increased uptake because of osteoblastic lesions", "correct": true}, {"label": "C", "text": "Decreased uptake in kidney", "correct": false}, {"label": "D", "text": "Increased because of prostatic carcinoma", "correct": false}], "correct_answer": "B. Increased uptake because of osteoblastic lesions", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/46223841701945669/46223841701945669.m3u8"}, {"text": "Gas under diaphragm is noticed in a patient with peptic ulcer disease. What would you do for further investigation? 1.CECT 2.IV fluids 3.Exploratory laparotomy 4.UGIE", "options": [{"label": "A", "text": "1,2,3", "correct": false}, {"label": "B", "text": "1,2", "correct": false}, {"label": "C", "text": "1,3,4", "correct": false}, {"label": "D", "text": "2,3", "correct": true}], "correct_answer": "D. 2,3", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/9(463).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/20004631701945682/20004631701945682.m3u8"}, {"text": "Identify the vascular lesion on CECT shown", "options": [{"label": "A", "text": "RCC", "correct": false}, {"label": "B", "text": "Angiomyolipoma", "correct": true}, {"label": "C", "text": "Renal Cyst", "correct": false}, {"label": "D", "text": "Oncocytoma", "correct": false}], "correct_answer": "B. Angiomyolipoma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/10(486).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/75642341701945695/75642341701945695.m3u8"}, {"text": "In the given below X-ray, Obstructions is seen in which of the following part/management", "options": [{"label": "A", "text": "Small bowel obstructions due to bowel perforation", "correct": false}, {"label": "B", "text": "Large bowel by fecolith", "correct": false}, {"label": "C", "text": "Sigmoid", "correct": true}, {"label": "D", "text": "Caecum", "correct": false}], "correct_answer": "C. Sigmoid", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/11(392).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/11_1(101).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 34-years-old woman landed up in AIIMS emergency after a road traffic accident with GCS-3. She was intubated and sent for NCCT which was found to be normal. What is the most likely diagnosis?", "options": [{"label": "A", "text": "SAH", "correct": false}, {"label": "B", "text": "EDH", "correct": false}, {"label": "C", "text": "Cerebral contusion", "correct": false}, {"label": "D", "text": "DAI", "correct": true}], "correct_answer": "D. DAI", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/12_1(72).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60389081701945710/60389081701945710.m3u8"}, {"text": "A 70-years-old male presents with a history of painful limp. There is no history of drug intake or trauma. What is the most likely diagnosis based on the given image?", "options": [{"label": "A", "text": "AVN", "correct": true}, {"label": "B", "text": "TB hip", "correct": false}, {"label": "C", "text": "Ankylosing spondylitis", "correct": false}, {"label": "D", "text": "RA", "correct": false}], "correct_answer": "A. AVN", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/13(364).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the least useful investigation to confirm the diagnosis of the patient with following condition?", "options": [{"label": "A", "text": "Timed barium swallow", "correct": false}, {"label": "B", "text": "UGIE", "correct": false}, {"label": "C", "text": "Manometry", "correct": false}, {"label": "D", "text": "24-hr pH monitoring", "correct": true}], "correct_answer": "D. 24-hr pH monitoring", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/14(348).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/28339511701945737/28339511701945737.m3u8"}, {"text": "What is the investigation of choice to confirm the diagnosis of the patient with following condition?", "options": [{"label": "A", "text": "Timed barium swallow", "correct": false}, {"label": "B", "text": "UGIE", "correct": false}, {"label": "C", "text": "Manometry", "correct": true}, {"label": "D", "text": "24-hr pH monitoring", "correct": false}], "correct_answer": "C. Manometry", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/15(333).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/15_1(92).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following blunt trauma to the chest, patient presents to the casualty. Out of the following radiographs, in which case, will you do further evaluation before putting a chest tube in the patient:", "options": [{"label": "A", "text": "Only 1", "correct": false}, {"label": "B", "text": "1 and 2", "correct": true}, {"label": "C", "text": "2 and 3", "correct": false}, {"label": "D", "text": "All 3", "correct": false}], "correct_answer": "B. 1 and 2", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/16(315).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/57913151701945749/57913151701945749.m3u8"}, {"text": "What is the likely staging based on the image shown:", "options": [{"label": "A", "text": "T1NOMO", "correct": false}, {"label": "B", "text": "T2NOMO", "correct": false}, {"label": "C", "text": "T3NOMO", "correct": false}, {"label": "D", "text": "T4aN1MO", "correct": true}], "correct_answer": "D. T4aN1MO", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/17(297).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15317781701945765/15317781701945765.m3u8"}, {"text": "A 34-years-old patient with pain in the left flank has presented to the OPD. CT scan was done and shown below. Identify the incorrect statement:", "options": [{"label": "A", "text": "A Cyst content will cause hypersensitivity if leaked", "correct": false}, {"label": "B", "text": "FNAC should be done to confirm diagnosis", "correct": true}, {"label": "C", "text": "Albendazole is to be given before performing nephrectomy", "correct": false}, {"label": "D", "text": "It’s caused by a dog tapeworm", "correct": false}], "correct_answer": "B. FNAC should be done to confirm diagnosis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/18(280).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37234641701945779/37234641701945779.m3u8"}, {"text": "A 30 years old patient was hit by a bull and later presented with complaint of abdominal pain for last 3 days and obstipation for last 2 days along with nausea and vomiting. He was initially stabilized but now presented with increased pain and on examination, abdomen was found to be rigid. A radiograph was performed and shown below. What could be the most likely cause of his condition.", "options": [{"label": "A", "text": "Hollow Viscus perforation", "correct": true}, {"label": "B", "text": "Hemoperitoneum", "correct": false}, {"label": "C", "text": "Subdiaphragmatic Abscess", "correct": false}, {"label": "D", "text": "Tension Pneumothorax", "correct": false}], "correct_answer": "A. Hollow Viscus perforation", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/19(260).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14920451701945800/14920451701945800.m3u8"}, {"text": "Identify the name of investigation:", "options": [{"label": "A", "text": "USG", "correct": true}, {"label": "B", "text": "MRI", "correct": false}, {"label": "C", "text": "Fluoroscopy", "correct": false}, {"label": "D", "text": "Radiography", "correct": false}], "correct_answer": "A. USG", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/20(255).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statement is true regarding CORADS:", "options": [{"label": "A", "text": "CORADS 0- Normal Lung", "correct": false}, {"label": "B", "text": "CORADS 5- Typical of COVID", "correct": true}, {"label": "C", "text": "Pleural thickening is a typical feature of COVID", "correct": false}, {"label": "D", "text": "Lobar consolidation is typical of COVID 19", "correct": false}], "correct_answer": "B. CORADS 5- Typical of COVID", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/21_1(65).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63011471701945817/63011471701945817.m3u8"}, {"text": "Which of the following modalities are used for diagnosis on placenta accreta? 1. USG 2. MRI 3. Angiography 4. Radiograph", "options": [{"label": "A", "text": "Only 1", "correct": false}, {"label": "B", "text": "1 & 2 are true", "correct": true}, {"label": "C", "text": "2 and 3 are true", "correct": false}, {"label": "D", "text": "1, 2, 3 and 4 are true", "correct": false}], "correct_answer": "B. 1 & 2 are true", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15559521701945834/15559521701945834.m3u8"}, {"text": "A 56-years-old with surgically obstructed jaundice has distended gall bladder with dilated CBD and intrahepatic biliary radicles on USG. No stone was identified. CT confirmed the findings. Which of the following investigation would be most useful to localize the cause?", "options": [{"label": "A", "text": "Endoscopic USG", "correct": false}, {"label": "B", "text": "Percutaneous T Tube cholangiogram", "correct": false}, {"label": "C", "text": "MRI", "correct": true}, {"label": "D", "text": "PET", "correct": false}], "correct_answer": "C. MRI", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which one of the following is Least Radiosensitive phase of cell cycle?", "options": [{"label": "A", "text": "G1", "correct": false}, {"label": "B", "text": "G2", "correct": false}, {"label": "C", "text": "S", "correct": true}, {"label": "D", "text": "M", "correct": false}], "correct_answer": "C. S", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31975631701945846/31975631701945846.m3u8"}, {"text": "Which of the following procedure would be contraindicated in the patient with following finding on imaging?", "options": [{"label": "A", "text": "NG tube", "correct": false}, {"label": "B", "text": "LOG Roll", "correct": false}, {"label": "C", "text": "ICD tube drainage", "correct": true}, {"label": "D", "text": "Epidural anesthesia", "correct": false}], "correct_answer": "C. ICD tube drainage", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/25(206).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "There was one USG of a 10 weeks primigravida. She was having fresh bleeding. On p/v her uterus was of 12 weeks size and we had to diagnose on the basis of USG:", "options": [{"label": "A", "text": "H mole", "correct": true}, {"label": "B", "text": "Missed Abortion", "correct": false}, {"label": "C", "text": "Ectopic Pregnancy", "correct": false}, {"label": "D", "text": "Blighted Ovum", "correct": false}], "correct_answer": "A. H mole", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/26(153).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the anatomical variant shown in the CT scan", "options": [{"label": "A", "text": "Pneumatized superior Turbinate", "correct": true}, {"label": "B", "text": "Onodi cells", "correct": false}, {"label": "C", "text": "Haller cells", "correct": false}, {"label": "D", "text": "Concha Bullosa", "correct": false}], "correct_answer": "A. Pneumatized superior Turbinate", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/27(167).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/27_1(30).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67352681701945863/67352681701945863.m3u8"}, {"text": "A 76 years old non smoker male presented with nasal obstruction. CT & endoscopic findings are shown. What is the diagnosis?", "options": [{"label": "A", "text": "Esthesioneuroblastoma", "correct": false}, {"label": "B", "text": "Inverted papilloma", "correct": true}, {"label": "C", "text": "JNA", "correct": false}, {"label": "D", "text": "Maxillary Sinus Ca", "correct": false}], "correct_answer": "B. Inverted papilloma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/28(151).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/28_1(35).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "During Clinical rounds residents and chief are seeing this film as shown\" identify the arrow marked structure", "options": [{"label": "A", "text": "Cribiform plate", "correct": false}, {"label": "B", "text": "Anterior ethmoidal canal", "correct": true}, {"label": "C", "text": "Posterior ethmoidal canal", "correct": false}, {"label": "D", "text": "Optic canal", "correct": false}], "correct_answer": "B. Anterior ethmoidal canal", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/29(165).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/8942961704869480/8942961704869480.m3u8"}, {"text": "Patient on USG had Bosniak Type 3 Cyst and CECT was done for evaluation", "options": [{"label": "A", "text": "Angiomyolipoma", "correct": false}, {"label": "B", "text": "Oncocytoma", "correct": true}, {"label": "C", "text": "RCC", "correct": false}, {"label": "D", "text": "Renal Cyst", "correct": false}], "correct_answer": "B. Oncocytoma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/30(141).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Best investigation to localise cause of primary hyperparathyroidism?", "options": [{"label": "A", "text": "FDG", "correct": false}, {"label": "B", "text": "Sestamibi Scan", "correct": true}, {"label": "C", "text": "Neck USG", "correct": false}, {"label": "D", "text": "CT", "correct": false}], "correct_answer": "B. Sestamibi Scan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37967591701945891/37967591701945891.m3u8"}, {"text": "Identify the MRI Sequence.", "options": [{"label": "A", "text": "SWI", "correct": true}, {"label": "B", "text": "ADC", "correct": false}, {"label": "C", "text": "GRE", "correct": false}, {"label": "D", "text": "Proton Density Image", "correct": false}], "correct_answer": "A. SWI", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/32(141).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/58950981701945903/58950981701945903.m3u8"}, {"text": "Identify the investigation shown?", "options": [{"label": "A", "text": "CT", "correct": true}, {"label": "B", "text": "MRI", "correct": false}, {"label": "C", "text": "Contrast Study", "correct": false}, {"label": "D", "text": "Angiography", "correct": false}], "correct_answer": "A. CT", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/33(141).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "5 year child with mild upper abdominal intermittent pain.", "options": [{"label": "A", "text": "Eventration of Diaphragm", "correct": false}, {"label": "B", "text": "Bochdalek Hernia", "correct": false}, {"label": "C", "text": "Morgagni Hernia", "correct": false}, {"label": "D", "text": "Gastric Volvulus", "correct": true}], "correct_answer": "D. Gastric Volvulus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/34(143).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22326241701945914/22326241701945914.m3u8"}, {"text": "Gold Standard for Myocarditis", "options": [{"label": "A", "text": "MRI", "correct": false}, {"label": "B", "text": "BNP", "correct": false}, {"label": "C", "text": "Endomyocardial Biopsy", "correct": true}, {"label": "D", "text": "D-Dimer", "correct": false}], "correct_answer": "C. Endomyocardial Biopsy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "17 year patient with cough hemoptysis", "options": [{"label": "A", "text": "Contrast echocardiography", "correct": true}, {"label": "B", "text": "EUS with biopsy", "correct": false}, {"label": "C", "text": "Thoracotomy & sampling", "correct": false}, {"label": "D", "text": "Bronchoscopy & BAL", "correct": false}], "correct_answer": "A. Contrast echocardiography", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/36(135).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "65 year old male patient with right sided hemiparesis & aphasia. Bp is 160/110. Sugar is 160mg/dl. NCCT is normal what is the next step in management?", "options": [{"label": "A", "text": "MRI to see the ischemic zone", "correct": false}, {"label": "B", "text": "CT angiography to rule out large vessel occlusion", "correct": true}, {"label": "C", "text": "IV Labetolol", "correct": false}, {"label": "D", "text": "ABG analysis", "correct": false}], "correct_answer": "B. CT angiography to rule out large vessel occlusion", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26472061704869541/26472061704869541.m3u8"}, {"text": "Antenatal USG in 19week pregnant female. Identify the congenital abnormality.", "options": [{"label": "A", "text": "Anencephaly", "correct": true}, {"label": "B", "text": "Omphalocele", "correct": false}, {"label": "C", "text": "Encephalocele", "correct": false}, {"label": "D", "text": "Cystic Hygroma", "correct": false}], "correct_answer": "A. Anencephaly", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/38(112).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/55411041701945939/55411041701945939.m3u8"}, {"text": "On a day 5 post operative day following post cholecystectomy , a patient presented with pain abdomen, on USG 5 x 5 cm collection is seen in Morrison pouch, a possibility of biliary leak is suspected, what is best investigation to con?rm biliary leak?", "options": [{"label": "A", "text": "CT", "correct": false}, {"label": "B", "text": "MRCP", "correct": false}, {"label": "C", "text": "ERCP", "correct": true}, {"label": "D", "text": "HIDA", "correct": false}], "correct_answer": "C. ERCP", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52382951701945954/52382951701945954.m3u8"}, {"text": "A young smoker, patient with intermittent pain in calf presented to surgery OPD. On examination painful ulcer is seen at the tip of great toe surrounded by black colour skin. Best initial investigation in this case would be", "options": [{"label": "A", "text": "Duplex", "correct": true}, {"label": "B", "text": "CT angiography", "correct": false}, {"label": "C", "text": "MR angiography", "correct": false}, {"label": "D", "text": "Digital subtraction angiogram", "correct": false}], "correct_answer": "A. Duplex", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following investigations can be used in osteoporosis? Multiple completion 1. DEXA 2. Bone scan 3. Quantitative CT 4. Serum chemistry What is the answer?", "options": [{"label": "A", "text": "1, 2", "correct": false}, {"label": "B", "text": "1, 2, 3", "correct": false}, {"label": "C", "text": "1,3,4", "correct": true}, {"label": "D", "text": "1,2,3,4", "correct": false}], "correct_answer": "C. 1,3,4", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/11948941701945971/11948941701945971.m3u8"}, {"text": "A 7 year old child presented with lymphadenopathy, skin lesion and following skull radiograph. Which of the following drugs is commonly used in this scenario?", "options": [{"label": "A", "text": "Vinblastine", "correct": true}, {"label": "B", "text": "Vincristine", "correct": false}, {"label": "C", "text": "Methotrexate", "correct": false}, {"label": "D", "text": "Cyclosporin", "correct": false}], "correct_answer": "A. Vinblastine", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/42(121).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Patient with peptic ulcer disease was having abdominal pain since many days, worse since last few hours. Xray is shown, what is to be done next?", "options": [{"label": "A", "text": "IV ?uids and laparotomy", "correct": true}, {"label": "B", "text": "Observation", "correct": false}, {"label": "C", "text": "USG", "correct": false}, {"label": "D", "text": "CT", "correct": false}], "correct_answer": "A. IV ?uids and laparotomy", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/43(97).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "30 year old with BMI 18 with progressive di?culty in swallowing in both solids and liquids for 8 months. Barium swallow is shown to you. What other investigation should be done in this patient", "options": [{"label": "A", "text": "UGI endoscopy + Manometry", "correct": true}, {"label": "B", "text": "UGIE + CECT", "correct": false}, {"label": "C", "text": "UGIE + PET", "correct": false}, {"label": "D", "text": "UGIE + 24hr ph monitoring.", "correct": false}], "correct_answer": "A. UGI endoscopy + Manometry", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/44(113).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Young male post Road tra?c accident and is brought to causality with low GCS score. Has features of raised ICT. NCCT brain and spinal imaging were normal. No pelvic fracture, Fast is negative.What could be probable diagnosis?", "options": [{"label": "A", "text": "Posterior reversible encephalopathy syndrome", "correct": false}, {"label": "B", "text": "Diffuse axonal Injury", "correct": true}, {"label": "C", "text": "Post concussion syndrome", "correct": false}, {"label": "D", "text": "Posterior circulation stroke", "correct": false}], "correct_answer": "B. Diffuse axonal Injury", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/526981701945987/526981701945987.m3u8"}, {"text": "25 year old male came to emergency after Road tra?c accident. He is unable to speak full sentences, with hyper-resonant note on percussion and hypotension. CXR is shown, what is the appropriate initial management of this case?", "options": [{"label": "A", "text": "Immediately shift the patient to OT for thoracotomy", "correct": false}, {"label": "B", "text": "Immediate needle thoracotomy in the 5th intercostal space", "correct": false}, {"label": "C", "text": "Large bore needle in 5th Intercostal space followed by ICD tube in 5th Intercostal space.", "correct": true}, {"label": "D", "text": "HRCT Chest", "correct": false}], "correct_answer": "C. Large bore needle in 5th Intercostal space followed by ICD tube in 5th Intercostal space.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/16129171701946001/16129171701946001.m3u8"}, {"text": "40 year old male is suffering from increasing di?culty in bending forward and inability to look upwards. CT scan is performed , what is the most likely diagnosis?", "options": [{"label": "A", "text": "Fluorosis", "correct": false}, {"label": "B", "text": "Ankylosing spondylitis", "correct": true}, {"label": "C", "text": "Rheumatoid Arthritis", "correct": false}, {"label": "D", "text": "Reiter’s", "correct": false}], "correct_answer": "B. Ankylosing spondylitis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/47(111).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In eFAST which other part is included apart from abdomen?", "options": [{"label": "A", "text": "Thoracic cavity", "correct": true}, {"label": "B", "text": "Pelvis", "correct": false}, {"label": "C", "text": "Peripheral Vessels", "correct": false}, {"label": "D", "text": "Dural veins", "correct": false}], "correct_answer": "A. Thoracic cavity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4384691701946023/4384691701946023.m3u8"}, {"text": "40 year old male patient with mucopurulent cough underwent CT examination, what is the most likely diagnosis?", "options": [{"label": "A", "text": "Pulmonary Infarct", "correct": false}, {"label": "B", "text": "Cystic fibrosis", "correct": false}, {"label": "C", "text": "Pulmonary Hydatid", "correct": false}, {"label": "D", "text": "Bronchiectasis", "correct": true}], "correct_answer": "D. Bronchiectasis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/49(94).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The radiograph shown below for better assessment of frontal sinuses. What is the common name of the view shown.", "options": [{"label": "A", "text": "Caldwell View", "correct": true}, {"label": "B", "text": "Waters View", "correct": false}, {"label": "C", "text": "Towne’s View", "correct": false}, {"label": "D", "text": "Pierre’s view", "correct": false}], "correct_answer": "A. Caldwell View", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/50(99).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Gross Specimen of Femur with tumour in 10 year old kid at the lower end of femur", "options": [{"label": "A", "text": "GCT", "correct": false}, {"label": "B", "text": "Osteosarcoma", "correct": true}, {"label": "C", "text": "Chondrosarcoma", "correct": false}, {"label": "D", "text": "Chondroblastoma", "correct": false}], "correct_answer": "B. Osteosarcoma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/51(85).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41212751701946052/41212751701946052.m3u8"}, {"text": "USG is least useful for", "options": [{"label": "A", "text": "Retroperitoneal hematoma", "correct": true}, {"label": "B", "text": "Pneumothorax", "correct": false}, {"label": "C", "text": "Pericardial effusion", "correct": false}, {"label": "D", "text": "Renal injury", "correct": false}], "correct_answer": "A. Retroperitoneal hematoma", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/52_1(25).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/32842031701946065/32842031701946065.m3u8"}, {"text": "Full Form of FAST", "options": [{"label": "A", "text": "Focussed Assessment with sonography in Trauma", "correct": true}, {"label": "B", "text": "Focussed Abdominal Sonography in Trauma", "correct": false}, {"label": "C", "text": "Fast Assessment with sonography in Trauma", "correct": false}, {"label": "D", "text": "Functional Assessment with sonography in trauma", "correct": false}], "correct_answer": "A. Focussed Assessment with sonography in Trauma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is feature of Large Bowel Obstruction ?", "options": [{"label": "A", "text": "Dilated Bowel loops with haustrations", "correct": true}, {"label": "B", "text": "Dilated Loops with valvulae conniventes", "correct": false}, {"label": "C", "text": "Central Dilated Bowel loops", "correct": false}, {"label": "D", "text": "String of Pearls Sign", "correct": false}], "correct_answer": "A. Dilated Bowel loops with haustrations", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/54_1(25).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64939091701946076/64939091701946076.m3u8"}, {"text": "50 year old male with diffuse backache, Cervical Spine Xray is show to you", "options": [{"label": "A", "text": "Ankylosing spondylitis", "correct": false}, {"label": "B", "text": "DISH", "correct": true}, {"label": "C", "text": "Klippel feil", "correct": false}, {"label": "D", "text": "Sprengel’s deformity", "correct": false}], "correct_answer": "B. DISH", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5_1(136).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5(690).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "True about acute radiation syndrome is", "options": [{"label": "A", "text": "At lower doses more GIT syndromes than Bone Marrow syndrome", "correct": false}, {"label": "B", "text": "CNS is more sensitive than GI to radiation", "correct": false}, {"label": "C", "text": "Haematopoietic syndrome occurs at 2-8 Gy", "correct": true}, {"label": "D", "text": "Symptoms occur in shortest duration with haematopoietic syndrome", "correct": false}], "correct_answer": "C. Haematopoietic syndrome occurs at 2-8 Gy", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/57_1(24).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9377381704869603/9377381704869603.m3u8"}, {"text": "The given USG of lung shows:", "options": [{"label": "A", "text": "Stratosphere sign", "correct": false}, {"label": "B", "text": "Seashore sign", "correct": true}, {"label": "C", "text": "Troposphere sign", "correct": false}, {"label": "D", "text": "Mirror image artifact", "correct": false}], "correct_answer": "B. Seashore sign", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/58(102).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An 8-years-old child presents with the history of cough for 7 months. He also gives a history of hemoptysis for 1 month and fever for 4 days. The X-ray is given below. What is your diagnosis?", "options": [{"label": "A", "text": "Hydatid cyst", "correct": false}, {"label": "B", "text": "Lung abscess", "correct": false}, {"label": "C", "text": "Consolidation", "correct": true}, {"label": "D", "text": "Thoracic duct malformations", "correct": false}], "correct_answer": "C. Consolidation", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/59(91).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69625721701946101/69625721701946101.m3u8"}, {"text": "Which of the following is the etiological agent for the given case below:", "options": [{"label": "A", "text": "Congenital", "correct": true}, {"label": "B", "text": "Neurofibromatosis", "correct": false}, {"label": "C", "text": "Degenerative arthritic", "correct": false}, {"label": "D", "text": "Idiopathic", "correct": false}], "correct_answer": "A. Congenital", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/60(86).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following image of FAST in a trauma patient suggests:", "options": [{"label": "A", "text": "Positive fast", "correct": true}, {"label": "B", "text": "Negative fast", "correct": false}, {"label": "C", "text": "Equivocal Fast", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Positive fast", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/61(86).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Assertion: CTA is IOC for aortic dissection Reason: In case of skilled person, even TEE is most sensitivity and speci?city as Multi detector CT", "options": [{"label": "A", "text": "Both Assertion and Reasons are true and the Reason is the correct explanation for the Assertion", "correct": false}, {"label": "B", "text": "Both Assertion and Reasons are true and the Reason is not the correct explanation for the Assertion", "correct": true}, {"label": "C", "text": "Assertion is true, but the Reasons is false", "correct": false}, {"label": "D", "text": "Assertion is false, but the Reasons is true", "correct": false}, {"label": "E", "text": "Both Assertion and Reasons are false", "correct": false}], "correct_answer": "B. Both Assertion and Reasons are true and the Reason is not the correct explanation for the Assertion", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3296031701946118/3296031701946118.m3u8"}, {"text": "Uses of USG:", "options": [{"label": "A", "text": "Is helpful in Insertion of CV-line", "correct": false}, {"label": "B", "text": "To dissolve coronary plaque", "correct": false}, {"label": "C", "text": "Diaphragmatic movemnts", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All lung carcinomas for diagnosis requires CECT thorax but MRI is useful in which of the following:", "options": [{"label": "A", "text": "Small cell lung carcinoma", "correct": false}, {"label": "B", "text": "Adenocarcinoma", "correct": false}, {"label": "C", "text": "Carcinoid", "correct": false}, {"label": "D", "text": "Pancoast tumor", "correct": true}], "correct_answer": "D. Pancoast tumor", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most important advantage of Transcranial USG:", "options": [{"label": "A", "text": "Detect AV malformation", "correct": false}, {"label": "B", "text": "Detect emboli", "correct": false}, {"label": "C", "text": "Detect vasospasm", "correct": true}, {"label": "D", "text": "Detect brain blood vessels stenosis", "correct": false}], "correct_answer": "C. Detect vasospasm", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following doesn’t use ionizing radiation?", "options": [{"label": "A", "text": "MRI", "correct": true}, {"label": "B", "text": "CT", "correct": false}, {"label": "C", "text": "Angiography", "correct": false}, {"label": "D", "text": "Mamography", "correct": false}], "correct_answer": "A. MRI", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Empty thecal sac sign is seen in?", "options": [{"label": "A", "text": "Vertebral Osteomyelits,", "correct": false}, {"label": "B", "text": "Arachnoiditis", "correct": true}, {"label": "C", "text": "Tethered cord syndrome", "correct": false}, {"label": "D", "text": "Discitis", "correct": false}], "correct_answer": "B. Arachnoiditis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most probable diagnosis on the below xray is?", "options": [{"label": "A", "text": "Cervical rib", "correct": true}, {"label": "B", "text": "Spondylolisthesis of c5 and c6", "correct": false}, {"label": "C", "text": "Fracture of 2nd rib", "correct": false}, {"label": "D", "text": "Jefferson fracture", "correct": false}], "correct_answer": "A. Cervical rib", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/68(80).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Name the type of investigation shown in the below image.", "options": [{"label": "A", "text": "Angiography", "correct": false}, {"label": "B", "text": "Fluoroscopy", "correct": false}, {"label": "C", "text": "Myelography", "correct": true}, {"label": "D", "text": "Neurography", "correct": false}], "correct_answer": "C. Myelography", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/69(83).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The below logo is used to indicate?", "options": [{"label": "A", "text": "Bio hazard", "correct": false}, {"label": "B", "text": "Radiation hazard", "correct": true}, {"label": "C", "text": "Technological waste", "correct": false}], "correct_answer": "B. Radiation hazard", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/70(69).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most probable diagnosis?", "options": [{"label": "A", "text": "Eventration of diaphragm", "correct": false}, {"label": "B", "text": "Emphysema", "correct": false}, {"label": "C", "text": "Pneumoperitmenum", "correct": true}, {"label": "D", "text": "Diaphrammatic hernia", "correct": false}], "correct_answer": "C. Pneumoperitmenum", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/71(69).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not an advantage of USG over Mammography?", "options": [{"label": "A", "text": "Useful in young females with dense breasts", "correct": false}, {"label": "B", "text": "Differentiates between solid and cystic lesions in the breast", "correct": false}, {"label": "C", "text": "Guided biopsy can be done", "correct": false}, {"label": "D", "text": "Can be used for mammographically undetectable clinical non palpable breast mass", "correct": true}], "correct_answer": "D. Can be used for mammographically undetectable clinical non palpable breast mass", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/43378471701946173/43378471701946173.m3u8"}, {"text": "Identify the abnormality found in the ultrasound image shown below", "options": [{"label": "A", "text": "Phrygian cap", "correct": true}, {"label": "B", "text": "Mercedes-Benz sign", "correct": false}, {"label": "C", "text": "Gall blader polyp", "correct": false}, {"label": "D", "text": "Gall bladder cancer", "correct": false}], "correct_answer": "A. Phrygian cap", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(63).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An MRCP image is shown below. Which among the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Choledocholithiasis", "correct": true}, {"label": "B", "text": "Cholecystitis", "correct": false}, {"label": "C", "text": "Pancreatic duct stricture", "correct": false}, {"label": "D", "text": "Malignancy", "correct": false}], "correct_answer": "A. Choledocholithiasis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3(47).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the fracture site in the xray shown below:", "options": [{"label": "A", "text": "5th and 6th rib", "correct": false}, {"label": "B", "text": "6th and 7th rib", "correct": true}, {"label": "C", "text": "5th, 6th, and 7th rib", "correct": false}, {"label": "D", "text": "7th and 8th rib", "correct": false}], "correct_answer": "B. 6th and 7th rib", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4(44).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presented with dysuria and pain in the back. His lumbar spine xray shows the below finding. What is the diagnosis?", "options": [{"label": "A", "text": "Hyperparathyroidism", "correct": true}, {"label": "B", "text": "Wilson’s disease", "correct": false}, {"label": "C", "text": "Addison’s disease", "correct": false}, {"label": "D", "text": "Cystic fibrosis", "correct": false}], "correct_answer": "A. Hyperparathyroidism", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5(44).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Banana sign in USG is associated with which of the following conditions?", "options": [{"label": "A", "text": "Spina bifida", "correct": true}, {"label": "B", "text": "Down’s syndrome", "correct": false}, {"label": "C", "text": "Omphalocele", "correct": false}, {"label": "D", "text": "Klinefelters", "correct": false}], "correct_answer": "A. Spina bifida", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69002701701946186/69002701701946186.m3u8"}, {"text": "Child with breathlessness. Identify the foreign body seen", "options": [{"label": "A", "text": "Metallic cap", "correct": false}, {"label": "B", "text": "Button Battery", "correct": true}, {"label": "C", "text": "Coin", "correct": false}, {"label": "D", "text": "Metal ball", "correct": false}], "correct_answer": "B. Button Battery", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Capture(1433).JPG"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the marked ligament", "options": [{"label": "A", "text": "Patellar tendon", "correct": false}, {"label": "B", "text": "Medial Collateral Ligament", "correct": false}, {"label": "C", "text": "ACL", "correct": false}, {"label": "D", "text": "PCL", "correct": true}], "correct_answer": "D. PCL", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(817).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most sensitive for parathyroid tumour imaging", "options": [{"label": "A", "text": "Tc Sestamibi scan", "correct": false}, {"label": "B", "text": "Tc Sestamibi SPECT", "correct": true}, {"label": "C", "text": "USG", "correct": false}, {"label": "D", "text": "MRI", "correct": false}], "correct_answer": "B. Tc Sestamibi SPECT", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with stab injury to chest. Supine Xray given. Diagnosis", "options": [{"label": "A", "text": "Right hemothorax", "correct": true}, {"label": "B", "text": "Diaphragmatic rupture", "correct": false}, {"label": "C", "text": "Pulmonary contusion", "correct": false}, {"label": "D", "text": "Right Pneumothorax", "correct": false}], "correct_answer": "A. Right hemothorax", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(449).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The arrow is pointing to", "options": [{"label": "A", "text": "Pulmonary artery", "correct": false}, {"label": "B", "text": "Costal cartilage", "correct": false}, {"label": "C", "text": "Posterior rib", "correct": true}, {"label": "D", "text": "Anterior rib", "correct": false}], "correct_answer": "C. Posterior rib", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(405).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Mount Fuji Sign seen is Tension", "options": [{"label": "A", "text": "Pneumocephalus", "correct": true}, {"label": "B", "text": "Pneumothorax", "correct": false}, {"label": "C", "text": "EDH", "correct": false}, {"label": "D", "text": "Lipoma", "correct": false}], "correct_answer": "A. Pneumocephalus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3(366).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Diagnosis, young adult with pain in thigh", "options": [{"label": "A", "text": "Osteosarcoma", "correct": false}, {"label": "B", "text": "Ewings Sarcoma", "correct": false}, {"label": "C", "text": "Chronic osteomyelitis", "correct": true}, {"label": "D", "text": "Osteomalacia", "correct": false}], "correct_answer": "C. Chronic osteomyelitis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4(337).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Statement which is True about CT scan is -", "options": [{"label": "A", "text": "Water has Hounsefield number", "correct": true}, {"label": "B", "text": "Unfiltered xray beam is used", "correct": false}, {"label": "C", "text": "CT head dose is 20 msv", "correct": false}, {"label": "D", "text": "First investigation for gall stones", "correct": false}], "correct_answer": "A. Water has Hounsefield number", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Contrast that can be given in pts of chronic renal failure", "options": [{"label": "A", "text": "lonic iodinated contrast", "correct": false}, {"label": "B", "text": "Non ionic iodinated contrast", "correct": false}, {"label": "C", "text": "Uttasound contast", "correct": true}, {"label": "D", "text": "Gadolinium", "correct": false}], "correct_answer": "C. Uttasound contast", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Diagnosis", "options": [{"label": "A", "text": "Patella fracture", "correct": true}, {"label": "B", "text": "Rheumatoid arthritis", "correct": false}, {"label": "C", "text": "Hemarthrosis", "correct": false}, {"label": "D", "text": "Tibial condyle fracture", "correct": false}], "correct_answer": "A. Patella fracture", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7(249).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which normal Anatomic variant is seen in this CT", "options": [{"label": "A", "text": "Tracheal diverticulum", "correct": false}, {"label": "B", "text": "Duplication of oesophagus", "correct": false}, {"label": "C", "text": "Aberrant Right subclavian artery", "correct": true}, {"label": "D", "text": "Right aortic arch", "correct": false}], "correct_answer": "C. Aberrant Right subclavian artery", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8(241).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Old man with weight loss, regurgitation and halitosis", "options": [{"label": "A", "text": "Achalasia", "correct": true}, {"label": "B", "text": "Ca Esophagus", "correct": false}], "correct_answer": "A. Achalasia", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/9(222).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Interventional radiology Procedure used for Aneurysm", "options": [{"label": "A", "text": "Colling", "correct": true}, {"label": "B", "text": "Sclerotherapy", "correct": false}, {"label": "C", "text": "Bare Stent", "correct": false}, {"label": "D", "text": "Clipping", "correct": false}], "correct_answer": "A. Colling", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Management of this patient with Road traffic accident, GSC 10 and dilated pupils", "options": [{"label": "A", "text": "Surgical Evacuation", "correct": true}, {"label": "B", "text": "Osmotic diuretic use", "correct": false}, {"label": "C", "text": "Wait & watch", "correct": false}, {"label": "D", "text": "Thrombolysis for blood clot", "correct": false}], "correct_answer": "A. Surgical Evacuation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the arrow marked structure", "options": [{"label": "A", "text": "Posterior auricular artery", "correct": false}, {"label": "B", "text": "Middle meningeal artery", "correct": false}, {"label": "C", "text": "Superficial temporal artery", "correct": true}, {"label": "D", "text": "Ophthalmic Artery", "correct": false}], "correct_answer": "C. Superficial temporal artery", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(690).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "IOC for ureteric stones or colic", "options": [{"label": "A", "text": "????", "correct": false}, {"label": "B", "text": "NCCT", "correct": true}, {"label": "C", "text": "USG", "correct": false}, {"label": "D", "text": "Ureteroscopy", "correct": false}], "correct_answer": "B. NCCT", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41379941731494475/41379941731494475.m3u8"}, {"text": "65 year old diabetic patient with breathing difficulty and pleural effusion. His CT showed \" tree in bud\" appearance. The pleural fluid showed lymphocytes and low ADA levels. Aspirate from hilar lymph node shows which of the following?", "options": [{"label": "A", "text": "Necrotising epitheloid granuloma", "correct": false}, {"label": "B", "text": "Reactive lymphaid hyperplasia", "correct": false}, {"label": "C", "text": "Fungal hyphae surrounded by lymphocytes", "correct": true}, {"label": "D", "text": "Anthracotic pigment", "correct": false}], "correct_answer": "C. Fungal hyphae surrounded by lymphocytes", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/10459421731494510/10459421731494510.m3u8"}, {"text": "Old man with long standing dysphagia since months, bad breath", "options": [{"label": "A", "text": "Achalasia", "correct": false}, {"label": "B", "text": "Ca esophagus", "correct": false}, {"label": "C", "text": "Zenker diverticulum", "correct": true}, {"label": "D", "text": "Diffuse esophageal Spasm", "correct": false}], "correct_answer": "C. Zenker diverticulum", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4(489).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24809991731494538/24809991731494538.m3u8"}, {"text": "Trivial trauma, 68 year old unable to bear weight Image showed Hip pathology and leg fracture", "options": [{"label": "A", "text": "Disseminated TB", "correct": false}, {"label": "B", "text": "Brown

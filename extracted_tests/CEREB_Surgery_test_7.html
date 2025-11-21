@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Surgery E&amp;D   Mission 2.0, Lap 2   05 04 2025   2025 04 05</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Surgery E&amp;D   Mission 2.0, Lap 2   05 04 2025   2025 04 05</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                75 Questions | 300 Total Marks | 85 min Duration | ~68.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 75 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 85 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 75</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Surgery E&amp;D   Mission 2.0, Lap 2   05 04 2025   2025 04 05 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 75</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 75 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 25-year-old girl with dysphagia to liquids more than solids undergoes a barium swallow. Which of these is expected to be seen?", "options": [{"label": "A", "text": "Rat tail deformity", "correct": true}, {"label": "B", "text": "Smooth filling defect", "correct": false}, {"label": "C", "text": "Irregular filling defect", "correct": false}, {"label": "D", "text": "Corkscrew esophagus", "correct": false}], "correct_answer": "A. Rat tail deformity", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Rat tail deformity</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with history of hematochezia undergoes a procedure using the device as shown. Identify the device.", "options": [{"label": "A", "text": "Pile banding kit", "correct": true}, {"label": "B", "text": "Stapler for hemorrhoids", "correct": false}, {"label": "C", "text": "Hemorrhoidectomy kit", "correct": false}, {"label": "D", "text": "Fistula surgery kit", "correct": false}], "correct_answer": "A. Pile banding kit", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_vLghw7h.png"], "explanation_images": [], "explanation": "<p><strong>Ans. A) Pile banding kit</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 4-year-old boy was brought to the ER with complaints of black tarry stools. The child had intermittent pain in the right iliac region. On surgical exploration, the following was found. The diagnosis is:", "options": [{"label": "A", "text": "Meckel’s diverticulum", "correct": true}, {"label": "B", "text": "Obstructed bowel loops", "correct": false}, {"label": "C", "text": "Appendicitis", "correct": false}, {"label": "D", "text": "Appendicular mucocele", "correct": false}], "correct_answer": "A. Meckel’s diverticulum", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_AZfOrt3.jpeg"], "explanation_images": [], "explanation": "<p><strong>Ans. A) Meckel’s diverticulum</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presented to OPD with swelling in the leg. Which of these is incorrect about the condition?", "options": [{"label": "A", "text": "Radio frequency ablation can be used for treatment", "correct": false}, {"label": "B", "text": "The great saphenous is involved", "correct": false}, {"label": "C", "text": "Compression stockings provide symptomatic benefit", "correct": false}, {"label": "D", "text": "Fasciotomy is done as a part of Trendelenberg procedure", "correct": true}], "correct_answer": "D. Fasciotomy is done as a part of Trendelenberg procedure", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_4AGcUXV.png"], "explanation_images": [], "explanation": "<p><strong>Ans. D) Fasciotomy is done as a part of Trendelenberg procedure</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old male patient came with diffuse, severely contaminated perforation peritonitis due to hollow viscus. He underwent laparotomy for it. On day 7 post-op, he developed signs of wound infection and subsequently, wound showed exposure of underlying tissues as shown below. His vital signs are stable with no evidence of intra-abdominal sepsis. This patient can be managed next by:", "options": [{"label": "A", "text": "Immediate suturing of wound", "correct": false}, {"label": "B", "text": "Vacuum-assisted closure", "correct": true}, {"label": "C", "text": "Split thickness skin graft", "correct": false}, {"label": "D", "text": "Myocutaneous flap", "correct": false}], "correct_answer": "B. Vacuum-assisted closure", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_mml3Rs5.png"], "explanation_images": [], "explanation": "<p><strong>Ans. B) Vacuum-assisted closure</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30-year-old patient presented with painless right scrotal swelling for 2 months. The left testis was normal. There were enlarged para-aortic nodes. USG showed the right testicular mass. What will be the management?", "options": [{"label": "A", "text": "Biopsy of mass", "correct": false}, {"label": "B", "text": "High inguinal orchidectomy", "correct": true}, {"label": "C", "text": "Scrotal orchidectomy", "correct": false}, {"label": "D", "text": "Biopsy of para-aortic lymph node", "correct": false}], "correct_answer": "B. High inguinal orchidectomy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) High inguinal orchidectomy</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An elderly patient complaints of multiple clots in his urine. Which catheter should be used in this patient to facilitate irrigation and clot removal from the urinary bladder?", "options": [{"label": "A", "text": "22 French Foley’s 4 lumen catheter", "correct": false}, {"label": "B", "text": "22 French Foley’s 3 lumen catheter", "correct": true}, {"label": "C", "text": "22 French Foley’s 2 lumen catheter", "correct": false}, {"label": "D", "text": "22 French Foley’s 1 lumen catheter", "correct": false}], "correct_answer": "B. 22 French Foley’s 3 lumen catheter", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) 22 French Foley’s 3 lumen catheter</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of these is correct about PAIR procedure, in the management of hydatid cysts?", "options": [{"label": "A", "text": "It stands for percutaneous aspiration, injection, and re-aspiration", "correct": false}, {"label": "B", "text": "It can be performed for pulmonary hydatids", "correct": false}, {"label": "C", "text": "Prior drug treatment with Albendazole or Praziquantel is a must", "correct": true}, {"label": "D", "text": "Cysto-biliary communication and honeycombing are not contraindications", "correct": false}], "correct_answer": "C. Prior drug treatment with Albendazole or Praziquantel is a must", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Prior drug treatment with Albendazole or Praziquantel is a must</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is true regarding Highly Selective Vagotomy (HSV)?", "options": [{"label": "A", "text": "It is the procedure of choice for gastric ulcers", "correct": false}, {"label": "B", "text": "The pyloric nerves of Latarjet are sacrificed", "correct": false}, {"label": "C", "text": "A drainage procedure is not required", "correct": true}, {"label": "D", "text": "It has the lowest recurrence rate", "correct": false}], "correct_answer": "C. A drainage procedure is not required", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) A drainage procedure is not required</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old man with a history of chronic alcohol use presents with hematemesis after a night of binge drinking. He reports multiple episodes of forceful vomiting before the onset of bleeding. Upper GI endoscopy reveals a linear mucosal tear at the gastroesophageal junction. What is the most likely management of this patient?", "options": [{"label": "A", "text": "Dual endo-therapy", "correct": false}, {"label": "B", "text": "Band ligation", "correct": false}, {"label": "C", "text": "Injection sclerotherapy", "correct": false}, {"label": "D", "text": "Self limiting", "correct": true}], "correct_answer": "D. Self limiting", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Self limiting</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of these is not a part of emergency management of variceal bleed?", "options": [{"label": "A", "text": "Inj Propranolol", "correct": true}, {"label": "B", "text": "TIPSS", "correct": false}, {"label": "C", "text": "Surgical devascularisation", "correct": false}, {"label": "D", "text": "Endoscopic glue injection", "correct": false}], "correct_answer": "A. Inj Propranolol", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Inj Propranolol</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of these procedures is performed for rectal cancers?", "options": [{"label": "A", "text": "Ripstein procedure", "correct": false}, {"label": "B", "text": "Milligan Morgan procedure", "correct": false}, {"label": "C", "text": "taTME", "correct": true}, {"label": "D", "text": "Dohlman procedure", "correct": false}], "correct_answer": "C. taTME", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) taTME</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old patient with a history of chronic constipation and antipsychotics use, presents with severe abdominal pain, distension and obstipation for the past 24 hours. Examination reveals a markedly distended and tympanic abdomen. X-ray shows a bent inner tube sign. What is the next step?", "options": [{"label": "A", "text": "Exploratory laparotomy", "correct": false}, {"label": "B", "text": "CECT abdomen", "correct": true}, {"label": "C", "text": "USG abdomen", "correct": false}, {"label": "D", "text": "High pressure enema", "correct": false}], "correct_answer": "B. CECT abdomen", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) CECT abdomen</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 62-year-old woman presents to the clinic complaining of a persistent lump in her right breast. She first noticed the lump 3 months ago, and it has progressively increased in size. The lump is now approximately 6 cm x 4 cm. On examination, there is evident skin ulceration over the lump and fixity to P. Major and ribs. Based on the clinical findings, which TNM staging best categorizes the tumor in this patient?", "options": [{"label": "A", "text": "T4a", "correct": false}, {"label": "B", "text": "T4b", "correct": false}, {"label": "C", "text": "T4c", "correct": true}, {"label": "D", "text": "T4d", "correct": false}], "correct_answer": "C. T4c", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) T4c</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements regarding burns is true?", "options": [{"label": "A", "text": "First-degree burns involve the epidermis and dermis, leading to blister formation", "correct": false}, {"label": "B", "text": "The Parkland formula used to calculate fluid resuscitation in burn patients utilizes crystalloids and colloids combined, as fluids of choice", "correct": false}, {"label": "C", "text": "Full-thickness burns are associated with eschar formation", "correct": true}, {"label": "D", "text": "Inhalational burns can lead to laryngeal edema immediately after burns", "correct": false}], "correct_answer": "C. Full-thickness burns are associated with eschar formation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Full-thickness burns are associated with eschar formation</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30-year-old male presents with recurrent episodes of abdominal pain and diarrhea for the past two years. He also reports weight loss and occasional blood in his stools. Colonoscopy reveals cobblestone mucosa, and deep fissuring ulcers. Which of the following findings are typically seen in Crohn’s and not in ulcerative colitis?", "options": [{"label": "A", "text": "Higher risk of skin lesions like pyoderma", "correct": true}, {"label": "B", "text": "Continuous involvement of the colon", "correct": false}, {"label": "C", "text": "Superficial mucosal inflammation limited to the colon and rectum", "correct": false}, {"label": "D", "text": "Higher risk of colorectal cancer", "correct": false}], "correct_answer": "A. Higher risk of skin lesions like pyoderma", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Higher risk of skin lesions like pyoderma</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 7-year-old boy is brought to the pediatric clinic with concerns about an elevated right testis in the scrotum after returning from school. On examination, the right testis is palpable in the high scrotal area. The ipsilateral scrotum is well developed. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Cryptorchidism", "correct": false}, {"label": "B", "text": "Right undescended testis", "correct": false}, {"label": "C", "text": "Right ectopic testis", "correct": false}, {"label": "D", "text": "Retractile testis", "correct": true}], "correct_answer": "D. Retractile testis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Retractile testis</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is this type of hernia also known as?", "options": [{"label": "A", "text": "Pantaloon’s hernia", "correct": false}, {"label": "B", "text": "Richter’s hernia", "correct": false}, {"label": "C", "text": "Maydl’s hernia", "correct": true}, {"label": "D", "text": "Amyand’s hernia", "correct": false}], "correct_answer": "C. Maydl’s hernia", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_lGTZEWZ.png"], "explanation_images": [], "explanation": "<p><strong>Ans. C)  Maydl’s hernia</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 58-year-old male with a history of diabetes underwent transurethral resection of the prostate (TURP) 6 months ago. He now presents to the clinic with absence of semen during ejaculation and cloudy urine afterward. What is the underlying mechanism of this complication?", "options": [{"label": "A", "text": "Injury to the external urethral sphincter", "correct": false}, {"label": "B", "text": "Disruption of the autonomic nerve supply to the corpora of the penis", "correct": false}, {"label": "C", "text": "Overuse of coagulating diathermy during the procedure", "correct": false}, {"label": "D", "text": "Bladder neck disruption", "correct": true}], "correct_answer": "D. Bladder neck disruption", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Bladder neck disruption</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of these flaps, shown in the image, is used for head and neck cancers?", "options": [{"label": "A", "text": "Deltopectoral", "correct": false}, {"label": "B", "text": "Pectoralis major myocutaneous", "correct": true}, {"label": "C", "text": "Latissimus dorsi", "correct": false}, {"label": "D", "text": "TRAM flap", "correct": false}], "correct_answer": "B. Pectoralis major myocutaneous", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_v2YesUk.png"], "explanation_images": [], "explanation": "<p><strong>Ans. B) Pectoralis major myocutaneous</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old man with a history of gall stone disease presents to the clinic for a routine follow-up. The patient inquires about his risk factors for developing ca bladder due to his underlying condition. Which of these is not a risk factor for it?", "options": [{"label": "A", "text": "Choledochal cyst", "correct": false}, {"label": "B", "text": "Phrygian cap", "correct": true}, {"label": "C", "text": "Polyp of size 1.5 cm", "correct": false}, {"label": "D", "text": "Polyp in 55-year-old patient", "correct": false}], "correct_answer": "B. Phrygian cap", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Phrygian cap</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old man is brought to the emergency department after experiencing a head injury while playing cricket. He initially lost consciousness but regained awareness within minutes. He is currently having GCS 15/15. A CT scan of the brain is performed, revealing the findings shown in the image. What is the diagnosis and most appropriate management step for this patient based on the CT findings?", "options": [{"label": "A", "text": "EDH, An immediate craniotomy", "correct": false}, {"label": "B", "text": "EDH, iv Mannitol", "correct": false}, {"label": "C", "text": "Concussion, observation", "correct": true}, {"label": "D", "text": "Diffuse axonal injury, conservative management", "correct": false}], "correct_answer": "C. Concussion, observation", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_n9nMaLH.png"], "explanation_images": [], "explanation": "<p><strong>Ans. C) Concussion, observation</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify what is depicted in the abdominal X-Ray.", "options": [{"label": "A", "text": "Biliary stent", "correct": true}, {"label": "B", "text": "Intravenous urogram", "correct": false}, {"label": "C", "text": "Retrograde pyelogram", "correct": false}, {"label": "D", "text": "Ureteric stent", "correct": false}], "correct_answer": "A. Biliary stent", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_cvNiZr1.png"], "explanation_images": [], "explanation": "<p><strong>Ans. A) Biliary stent</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the mismatched component in GCS.", "options": [{"label": "A", "text": "E2: Eye-opening on painful stimulus", "correct": false}, {"label": "B", "text": "V3: Confused", "correct": true}, {"label": "C", "text": "M5: localizing pain", "correct": false}, {"label": "D", "text": "Mnt: Completely paralysed patient", "correct": false}], "correct_answer": "B. V3: Confused", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) V3: Confused</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of these is incorrect about the swelling shown below?", "options": [{"label": "A", "text": "It may lead to obstructed labour", "correct": false}, {"label": "B", "text": "It arises from the sublingual salivary gland", "correct": true}, {"label": "C", "text": "It’s a type of lymphatic sequestration cyst", "correct": false}, {"label": "D", "text": "It is managed by surgical excision", "correct": false}], "correct_answer": "B. It arises from the sublingual salivary gland", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_Sa8YakT.png"], "explanation_images": [], "explanation": "<p><strong>Ans. B) It arises from the sublingual salivary gland</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of these is incorrect about primary survey in trauma?", "options": [{"label": "A", "text": "Cervical immobilization is performed prior to airway securing", "correct": false}, {"label": "B", "text": "Disability assessment involves checking for fractures", "correct": true}, {"label": "C", "text": "eFAST can diagnose pneumothorax", "correct": false}, {"label": "D", "text": "Pelvic X ray is a part of primary survey", "correct": false}], "correct_answer": "B. Disability assessment involves checking for fractures", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Disability assessment involves checking for fractures</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of these is incorrect about Polycystic kidney disease?", "options": [{"label": "A", "text": "Initial presentation is hypertension", "correct": false}, {"label": "B", "text": "It is diagnosed on imaging", "correct": false}, {"label": "C", "text": "Bilateral renal masses are palpable", "correct": false}, {"label": "D", "text": "Cysts in lung may be associated", "correct": true}], "correct_answer": "D. Cysts in lung may be associated", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_qk5OwAa.png"], "explanation_images": [], "explanation": "<p><strong>Ans. D) Cysts in lung may be associated</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 40-year-old woman presents for a follow-up consultation after undergoing a total thyroidectomy for a thyroid mass. A histopathological slide from her surgery is shown below. Her surgeon has discussed the next steps in management, including possible treatments and follow-up protocols. Which of the following statements is most likely correct regarding the patient

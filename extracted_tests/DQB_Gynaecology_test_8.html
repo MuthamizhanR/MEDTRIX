@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Gynaecology Image Based Questions</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Gynaecology Image Based Questions</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                70 Questions | 200 Total Marks | 80 min Duration | ~68.57 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 70 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 80 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 70</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Gynaecology Image Based Questions - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 70</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 70 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Identify the procedure in this image ?", "options": [{"label": "A", "text": "Hysterosalpingo-contrast Sonography", "correct": false}, {"label": "B", "text": "Saline Infusion Sonography", "correct": true}, {"label": "C", "text": "Three-dimensional Sonography", "correct": false}, {"label": "D", "text": "Sonoelastography", "correct": false}], "correct_answer": "B. Saline Infusion Sonography", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(220).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the disease in ultrasonography?", "options": [{"label": "A", "text": "Pelvic inflammatory disease", "correct": true}, {"label": "B", "text": "Asherman syndrome", "correct": false}, {"label": "C", "text": "Infertility", "correct": false}, {"label": "D", "text": "Intraabdominal fluid", "correct": false}], "correct_answer": "A. Pelvic inflammatory disease", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(200).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the cells in the image ? Which is the pathognomonic feature to identify the disease", "options": [{"label": "A", "text": "Microscopic evaluation of a vaginal-secretion saline preparation", "correct": false}, {"label": "B", "text": "Release of volatile amines produced by anaerobic metabolism,", "correct": false}, {"label": "C", "text": "Determina- tion of the vaginal pH", "correct": false}, {"label": "D", "text": "Both a & b", "correct": true}, {"label": "E", "text": "All of the above", "correct": false}], "correct_answer": "D. Both a & b", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3(185).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Gene involved in pathogenesis of Disease are all except", "options": [{"label": "A", "text": "MED12", "correct": false}, {"label": "B", "text": "HMGA1", "correct": true}, {"label": "C", "text": "COL4A5-A6", "correct": false}, {"label": "D", "text": "FH", "correct": false}], "correct_answer": "B. HMGA1", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4(161).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Match the following", "options": [{"label": "A", "text": "A Submucosal B intramural C serosal D Cervical", "correct": false}, {"label": "B", "text": "A Submucosal B Pedunculated Submucosal C intramural D cervical", "correct": true}, {"label": "C", "text": "A intramural B Pedunculated Submucosal C Submucosal D cervical", "correct": false}, {"label": "D", "text": "A Intramural B Serosal C submucosal D Cervical", "correct": false}], "correct_answer": "B. A Submucosal B Pedunculated Submucosal C intramural D cervical", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5(137).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/6(114).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the contraceptive device .?", "options": [{"label": "A", "text": "Progestin implants", "correct": false}, {"label": "B", "text": "Cu T device", "correct": false}, {"label": "C", "text": "Micro insert used in Essure", "correct": true}, {"label": "D", "text": "Para Gard", "correct": false}], "correct_answer": "C. Micro insert used in Essure", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7(103).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 19-year-old woman wish to use this contraceptive method. This couple should be advised that the most common reason for failure (pregnancy or STD transmission) is which of the following?", "options": [{"label": "A", "text": "Breakage", "correct": false}, {"label": "B", "text": "Inconsistent use", "correct": true}, {"label": "C", "text": "Leakage caused by spermicidal creams", "correct": false}, {"label": "D", "text": "Pill of contents upon withdrawal", "correct": false}], "correct_answer": "B. Inconsistent use", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8(92).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A newly married girl is worried about starting a contraceptive method & she visit a gynaecologist and she counsel her that the method have many benefits but can rarely increase the risk of which of the following conditions?", "options": [{"label": "A", "text": "Fibrocystic breast disease", "correct": false}, {"label": "B", "text": "Hepatic adenoma", "correct": true}, {"label": "C", "text": "Salpingitis", "correct": false}, {"label": "D", "text": "Ovarian cancer", "correct": false}, {"label": "E", "text": "Endometrial cancer", "correct": false}], "correct_answer": "B. Hepatic adenoma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/9(87).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 8 year old girl presented in Gynae OPD with precocious puberty, she had breast development ( Tanner 2) and no axillary or public hairs, patient is obese, Dwarf, she was investigated and her TSH was 852 , prolactin was 186, LH was 0.07 Usg scan showed a ovarian cyst in left ovary. MRI scan of sella revealed a Sellar mass of 1.7*1.6* 1.2 cm and radioiodine scan of thyroid reveal no functioning thyroid tissue in neck or chest What is your diagnosis ?", "options": [{"label": "A", "text": "Van Wyk & Grumbach Syndrome", "correct": true}, {"label": "B", "text": "McCune – Albright Syndrome", "correct": false}, {"label": "C", "text": "Leydig cell tumour", "correct": false}, {"label": "D", "text": "Congenital adrenal syndrome", "correct": false}], "correct_answer": "A. Van Wyk & Grumbach Syndrome", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/10(81).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 48 year old perimenopausal women comes to your clinic with complain of foul smelling vaginal discharge with occasional complain of post coital bleeding, you do a per speculum examination and following findings are observed, how will you proceed next", "options": [{"label": "A", "text": "You will ask lady to undergo endometrial biopsy", "correct": false}, {"label": "B", "text": "You will take a PAP smear and prepare patient for cervical biopsy", "correct": true}, {"label": "C", "text": "You will assure her that nothing needs to be done", "correct": false}, {"label": "D", "text": "You will give her antibiotics and assure her", "correct": false}], "correct_answer": "B. You will take a PAP smear and prepare patient for cervical biopsy", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/11(76).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 40 year old presented to OPD with complaint of heavy menstrual bleeding,USG Pelvic organ was done showing ET 16mm This procedure was planned, identify the procedure?", "options": [{"label": "A", "text": "Cervical Cytology or Biopsy", "correct": false}, {"label": "B", "text": "Transvaginal Sonography", "correct": false}, {"label": "C", "text": "Endometrial Biopsy", "correct": true}, {"label": "D", "text": "“Wet Prep” Examination and Cervical Culture", "correct": false}], "correct_answer": "C. Endometrial Biopsy", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/12(76).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/13(70).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Case scenario – A 30 year old female with primary infertility presented to your OPD with complaint of Menorrhagia & dysmenorrhea with USG showing a cystic lesion of around8 * 7*5.3 cm with homogeneous, low-level internal echoes with typical ground glass echogenicity, CA 125 Levels were 159 , on p/v examination uterus was retroverted , non mobile, tenderness was present . What would be your diagnosis", "options": [{"label": "A", "text": "Fibroid uterus", "correct": false}, {"label": "B", "text": "Pelvic inflammatory disease", "correct": false}, {"label": "C", "text": "Epidermal Ovarian tumour", "correct": false}, {"label": "D", "text": "Endometriosis", "correct": true}, {"label": "E", "text": "Adenomyosis", "correct": false}], "correct_answer": "D. Endometriosis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/14(67).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the investigation of choice for the condition mentioned bellow: Case scenario – A 30 year old female with primary infertility presented to your OPD with complaint of Menorrhagia & dysmenorrhea with USG showing a cystic lesion of around8 * 7*5.3 cm with homogeneous, low-level internal echoes with typical ground glass echogenicity, CA 125 Levels were 159 , on p/v examination uterus was retroverted , non mobile, tenderness was present . What would be your diagnosis", "options": [{"label": "A", "text": "Usg", "correct": false}, {"label": "B", "text": "MRI", "correct": false}, {"label": "C", "text": "Diagnostic laparoscopy", "correct": true}, {"label": "D", "text": "CA 125 levels", "correct": false}], "correct_answer": "C. Diagnostic laparoscopy", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/14(67).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Patient with the above condition was operated and this was intraoperatively findings , what will you advice her for management of infertility ?", "options": [{"label": "A", "text": "IUI", "correct": false}, {"label": "B", "text": "Estrogen & progesterone", "correct": false}, {"label": "C", "text": "GnRh agonist", "correct": false}, {"label": "D", "text": "IVF", "correct": true}], "correct_answer": "D. IVF", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/15(53).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following condition is most commonly seen in ?", "options": [{"label": "A", "text": "POD", "correct": false}, {"label": "B", "text": "Post leaf of broad ligament", "correct": false}, {"label": "C", "text": "Ovary", "correct": true}, {"label": "D", "text": "Fallopian tube", "correct": false}], "correct_answer": "C. Ovary", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/16(50).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The appearance of cervical mucous shown in image will appear on", "options": [{"label": "A", "text": "Day 2 of cycle", "correct": false}, {"label": "B", "text": "Day 18 of cycle", "correct": false}, {"label": "C", "text": "Day 8 of cycle", "correct": true}, {"label": "D", "text": "Day 21 of cycle", "correct": false}], "correct_answer": "C. Day 8 of cycle", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/17(49).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 39 year old obese female came with complaint of irregular vaginal bleeding , what will be the best diagnostic midality for her management", "options": [{"label": "A", "text": "Usg pelvic organ", "correct": false}, {"label": "B", "text": "Hysteroscopy", "correct": true}, {"label": "C", "text": "SIS", "correct": false}, {"label": "D", "text": "Pap smear", "correct": false}], "correct_answer": "B. Hysteroscopy", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/18(38).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A girl presented with hirsutism, Acne, hoarseness if voice and sudden increase in body weight Usg findings reveal 10-12 follicles in ovary with increase ovarian volume Which statement will be correct of disease in question.", "options": [{"label": "A", "text": "LH / FSH Ratio will be > 2 : 1", "correct": true}, {"label": "B", "text": "Estrogen level decreased", "correct": false}, {"label": "C", "text": "SHBG levels increased", "correct": false}, {"label": "D", "text": "Total E2 levels increases", "correct": false}], "correct_answer": "A. LH / FSH Ratio will be > 2 : 1", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/19(40).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a patient of infertility endometrial biopsy was done in premenstrual phase, on histopathological examination following findings were obtained, what does it indicate ?", "options": [{"label": "A", "text": "Secretary phase", "correct": false}, {"label": "B", "text": "Proliferative phase", "correct": false}, {"label": "C", "text": "Telescoping of glands", "correct": false}, {"label": "D", "text": "Cork screw endometrium", "correct": false}, {"label": "E", "text": "Both b & c", "correct": true}, {"label": "F", "text": "b c & d", "correct": false}], "correct_answer": "E. Both b & c", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/20(39).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 14 year old girl presented with primary infertility, on examination we could see a bulging membrane, what is the origin mucus membrane visible in the image ?", "options": [{"label": "A", "text": "Ectodermal", "correct": false}, {"label": "B", "text": "Mesodermal", "correct": false}, {"label": "C", "text": "Endodermal", "correct": true}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "C. Endodermal", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/21(33).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Image showing a sex differentiation disorder in a obese women with complaint of hirsudism with body weight 98kg and height 130 cm, 17 hydroxyprogestrone levels were done in her and value was 400 ng/dl, what would be your next step?", "options": [{"label": "A", "text": "Start Tab Dexamethsone 0.5 mg", "correct": false}, {"label": "B", "text": "ACTH stimulation test", "correct": true}, {"label": "C", "text": "Start Hydrocortiosne 10mg/ day", "correct": false}, {"label": "D", "text": "Start OC pills", "correct": false}], "correct_answer": "B. ACTH stimulation test", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/22(34).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Sample was collected from a female for vaginal maturation index & Photomicrograh of cytology of specimen shows following finding, it can indicate all except", "options": [{"label": "A", "text": "Luteal phase of menstrual cycle", "correct": false}, {"label": "B", "text": "Pregnancy", "correct": false}, {"label": "C", "text": "Women in Early menopausal transition", "correct": false}, {"label": "D", "text": "Follicular Phase of menstrual cycle", "correct": true}], "correct_answer": "D. Follicular Phase of menstrual cycle", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/23(36).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the type of prolapse seen in image", "options": [{"label": "A", "text": "Anterior vaginal wall prolapse or cystocele.", "correct": false}, {"label": "B", "text": "Distal posterior wall prolapse or rectocele.", "correct": true}, {"label": "C", "text": "Apical posterior wall prolapse or enterocele", "correct": false}, {"label": "D", "text": "Normal pelvic Anatomy", "correct": false}], "correct_answer": "B. Distal posterior wall prolapse or rectocele.", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/24(33).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/25(34).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 76 year old menopausal , P4L4 presented to Gynae OPD with Complaint of something coming out of vagina since last 3 years , patient is known case of diabetes since last 16 years on treatment, she is also taking treatment for hypertension since last 10 years With 2D Echo showing ejection fraction of 44% On examination you see finding shown in image, what would be plan of management for the patient", "options": [{"label": "A", "text": "Shirodkar’s abdominal sling surgery", "correct": false}, {"label": "B", "text": "Abdominal Sacrocolpopexy", "correct": false}, {"label": "C", "text": "Vaginal packing followed by ring pessary", "correct": true}, {"label": "D", "text": "Manchester repair", "correct": false}], "correct_answer": "C. Vaginal packing followed by ring pessary", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/26(27).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A lady presented with complain of post coital bleeding and continuous vaginal discharge since last 1-2 years, on examination cervix showed a growth, after complete work up biopsy was planned & report showed following findings, what will be your diagnosis", "options": [{"label": "A", "text": "Normal Ectocervical epithelium", "correct": false}, {"label": "B", "text": "Cervicitis", "correct": false}, {"label": "C", "text": "Low-grade squamous intraepithelial lesion", "correct": false}, {"label": "D", "text": "High-grade squamous intraepithelial lesion", "correct": true}], "correct_answer": "D. High-grade squamous intraepithelial lesion", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/27(28).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Chose the correct option", "options": [{"label": "A", "text": "1 Used for sampling of endocervix", "correct": false}, {"label": "B", "text": "2 Used for sampling of endocervix & ectocervix", "correct": false}, {"label": "C", "text": "3 Used for sampling of endocervix & ectocervix", "correct": true}, {"label": "D", "text": "2 Used for sampling of ectocervix", "correct": false}], "correct_answer": "C. 3 Used for sampling of endocervix & ectocervix", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(221).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which stage of CA cervix is shown in image", "options": [{"label": "A", "text": "II", "correct": false}, {"label": "B", "text": "III B", "correct": true}, {"label": "C", "text": "III A", "correct": false}, {"label": "D", "text": "IV", "correct": false}], "correct_answer": "B. III B", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(201).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3(186).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A lady underwent endometrial biopsy due to AUB ?", "options": [{"label": "A", "text": "Simple hyperplasia", "correct": true}, {"label": "B", "text": "Complex hyperplasia", "correct": false}, {"label": "C", "text": "Simple hyperplasia with atypia", "correct": false}, {"label": "D", "text": "Complex hyperplasia with atypia", "correct": false}], "correct_answer": "A. Simple hyperplasia", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4(162).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the Tanner stage shown in the image", "options": [{"label": "A", "text": "Tanner 1", "correct": false}, {"label": "B", "text": "Tanner 2", "correct": true}, {"label": "C", "text": "Tanner 3", "correct": false}, {"label": "D", "text": "Tanner 4", "correct": false}], "correct_answer": "B. Tanner 2", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5(138).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/6(115).jpg", "https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7(104).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Hystosalphingography image of a lady presented with secondary infertility with complaint of menstrual irregularity since last 7-8 months, what would be your diagnosis ?", "options": [{"label": "A", "text": "Ashermann’s syndrome", "correct": false}, {"label": "B", "text": "Genital TB", "correct": true}, {"label": "C", "text": "Müllerian anomaly", "correct": false}, {"label": "D", "text": "Endometrial polyp", "correct": false}], "correct_answer": "B. Genital TB", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8(93).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "HSG image shows following finding in a patient with distance A measuring less than 4 cm & angle B measuring less than 60 degree what would be your diagnosis ?", "options": [{"label": "A", "text": "Bicorniate uterus", "correct": false}, {"label": "B", "text": "Unicornaute uterus with rudimentary horn", "correct": false}, {"label": "C", "text": "Septate uterus", "correct": true}, {"label": "D", "text": "Arcuate uterus", "correct": false}], "correct_answer": "C. Septate uterus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/9(88).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A young girl presented with primary amenorrhea, on examination secondary sexual characters are absent with FSH > 40mIU/mL and E2 is below 25 pg/m, what would be the incorrect statement for the disease", "options": [{"label": "A", "text": "46 XY gonadal dysgenesis", "correct": true}, {"label": "B", "text": "Their nuclei contain no nuclear satellite body and no drumsticks in the neutrophils.", "correct": false}, {"label": "C", "text": "In this disease germ cells fail to migrate to the genital ridge from the yolk sac", "correct": false}, {"label": "D", "text": "Pregnancy can occur with the donor egg", "correct": false}], "correct_answer": "A. 46 XY gonadal dysgenesis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/10(82).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the condition ?", "options": [{"label": "A", "text": "Fitz–Hugh Curtis syndrome", "correct": true}, {"label": "B", "text": "Asherman syndrome.", "correct": false}, {"label": "C", "text": "Herlyn-Werner-Wunderlich syndrome.", "correct": false}, {"label": "D", "text": "Neu-Laxova syndrome", "correct": false}], "correct_answer": "A. Fitz–Hugh Curtis syndrome", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/11(77).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A young sexually active woman presented to you with acute abdominal pain associated with complaint of vaginal discharge, usg showed pelvic abscess, what is the procedure shown in image done in that patient", "options": [{"label": "A", "text": "Culdocentesis", "correct": false}, {"label": "B", "text": "Anterior Colpotomy", "correct": false}, {"label": "C", "text": "Posterior Colpotomy", "correct": true}, {"label": "D", "text": "EUS Guided drainage", "correct": false}], "correct_answer": "C. Posterior Colpotomy", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/12(77).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Instrument used in which surgery", "options": [{"label": "A", "text": "Vaginal hysterectomy", "correct": false}, {"label": "B", "text": "Myomectomy", "correct": true}, {"label": "C", "text": "Vault repair", "correct": false}, {"label": "D", "text": "Abdominal hysterectomy", "correct": false}], "correct_answer": "B. Myomectomy", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/13(71).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are advantage of procedure shown in image is except", "options": [{"label": "A", "text": "Intense and prolonged monitoring not required.", "correct": false}, {"label": "B", "text": "Cost effective compared to IVF.", "correct": false}, {"label": "C", "text": "Increases LH production", "correct": true}, {"label": "D", "text": "Ovulation occurs in 80–90% and pregnancy in 60–70%.", "correct": false}], "correct_answer": "C. Increases LH production", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/14(68).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Tumor shown in image are commonly seen in ovaries but extraovarian origin of such tumor is all except", "options": [{"label": "A", "text": "LUMBAR REGION,", "correct": false}, {"label": "B", "text": "UTEROVESICAL AREA", "correct": false}, {"label": "C", "text": "PARASACRAL REGION", "correct": false}, {"label": "D", "text": "VESICOVAGINAL SEPTUM", "correct": true}], "correct_answer": "D. VESICOVAGINAL SEPTUM", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/15(54).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "True statement about ovarian tumor shown in image are all except", "options": [{"label": "A", "text": "Tumors are almost always bilateral", "correct": false}, {"label": "B", "text": "They have smooth surfaces which may be slightly bossed; they are freely movable in the pelvis", "correct": false}, {"label": "C", "text": "These tumors are always primary growth in ovary", "correct": true}, {"label": "D", "text": "Histologically, the tumour has a cellular or myxomatous stroma amongst which are scattered large signet-ring cells", "correct": false}], "correct_answer": "C. These tumors are always primary growth in ovary", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/16(51).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the instrument & its use", "options": [{"label": "A", "text": "Sim’s speculum – to retract posterior vaginal wall", "correct": false}, {"label": "B", "text": "Sim’s anterior vaginal wall retractor -to retract anterior vaginal wall", "correct": false}, {"label": "C", "text": "Auvard speculum used retracts the posterior vaginal wall during vaginal hysterectomy", "correct": true}, {"label": "D", "text": "Doyen

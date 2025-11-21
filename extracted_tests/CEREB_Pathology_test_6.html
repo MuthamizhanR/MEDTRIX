@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Heamatology</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Heamatology</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                132 Questions | 528 Total Marks | 142 min Duration | ~64.55 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 132 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 142 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 132</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Heamatology - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 132</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 132 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 16-year-old male presents with jaundice and anemia. His blood smear shows spherical red blood cells, and laboratory tests reveal an increase in mean corpuscular hemoglobin concentration (MCHC). Which of the following is the most likely cause of his anemia?", "options": [{"label": "A", "text": "Iron deficiency anemia", "correct": false}, {"label": "B", "text": "Megaloblastic anemia", "correct": false}, {"label": "C", "text": "Anemia of chronic disease ​​​", "correct": false}, {"label": "D", "text": "Hereditary spherocytosis", "correct": true}], "correct_answer": "D. Hereditary spherocytosis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D.  Hereditary spherocytosis</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. Iron deficiency anemia: It is characterized by a decrease in the amount of hemoglobin in red blood cells, leading to a decreased MCHC .</li><li>• Option A. Iron deficiency anemia:</li><li>• decrease in the amount of hemoglobin</li><li>• decreased MCHC</li><li>• Option B. Megaloblastic anemia: It can be associated with vitamin B12 or folate deficiency and ha s macrocytosis . This condition is associated with a normal or decreased MCHC.</li><li>• Option B. Megaloblastic anemia:</li><li>• vitamin B12 or folate deficiency</li><li>• s macrocytosis</li><li>• normal or decreased MCHC.</li><li>• Option C. Anemia of chronic disease: The anomie is often normocytic and normochromic , with a normal MCH</li><li>• Option C. Anemia of chronic disease:</li><li>• normocytic and normochromic</li><li>• normal MCH</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Hereditary spherocytosis often presents with an elevated MCHC due to the spherical shape of red blood cells , which concentrates the haemoglobin content</li><li>➤ Hereditary spherocytosis</li><li>➤ elevated MCHC</li><li>➤ spherical shape of red blood cells</li><li>➤ haemoglobin content</li><li>➤ Ref : Robbins 10 th / 639</li><li>➤ Ref : Robbins 10 th / 639</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The best method for estimation of hemoglobin concentration in blood is:", "options": [{"label": "A", "text": "Acid hematin method", "correct": false}, {"label": "B", "text": "Alkali hematin method", "correct": false}, {"label": "C", "text": "Cyanmethemoglobin method", "correct": true}, {"label": "D", "text": "Any of the above ​​​​​​", "correct": false}], "correct_answer": "C. Cyanmethemoglobin method", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/04/25/picture37.jpg"], "explanation": "<p><strong>Ans. C.  Cyanmethemoglobin method</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. The acid hematin method involves converting hemoglobin to acid hematin using an acidic solution . This method is less frequently used due to its lower specificity and sensitivity compared to other methods.</li><li>• Option A. The acid hematin</li><li>• hemoglobin to acid hematin</li><li>• acidic solution</li><li>• less frequently</li><li>• lower specificity and sensitivity</li><li>• Option B. Similar to the acid hematin method, the alkali hematin method involves the conversion of hemoglobin to alkali hematin using an alkaline solution . It is also not commonly used in clinical practice because it can be less accurate and is affected by turbidity caused by the presence of other substances in the blood.</li><li>• Option B. Similar to the acid hematin</li><li>• alkali hematin</li><li>• conversion of hemoglobin to alkali hematin</li><li>• alkaline solution</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Reticulocytes are BEST stained with:", "options": [{"label": "A", "text": "Methyl violet", "correct": false}, {"label": "B", "text": "Brilliant Cresyl blue", "correct": false}, {"label": "C", "text": "New methylene blue", "correct": true}, {"label": "D", "text": "Indigo carmine", "correct": false}], "correct_answer": "C. New methylene blue", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. New methylene blue</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. Methyl violet is a basic dye that can be used to stain acidic components of cells like nucleic acids, but it is not the best choice for staining reticulocytes. It is commonly used in Gram staining.</li><li>• Option A. Methyl violet</li><li>• basic dye</li><li>• acidic components</li><li>• nucleic acids,</li><li>• Option B. Brilliant Cresyl blue is used to stain reticulocytes by binding to the residual ribosomal RNA . It is a vital stain, but it is not the optimal dye for reticulocyte staining as it may not be as sensitive as new methylene blue .</li><li>• Option B. Brilliant Cresyl</li><li>• stain reticulocytes</li><li>• residual ribosomal RNA</li><li>• not the optimal dye for reticulocyte staining</li><li>• not be as sensitive as new methylene blue</li><li>• Option D. Indigo carmine is not used for staining blood cells ; it is a dye more commonly used in medical procedures to highlight structures and assess the function of certain organs, such as during kidney surgery.</li><li>• Option D. Indigo carmine</li><li>• staining blood cells</li><li>• dye</li><li>• highlight structures</li><li>• assess the function</li><li>• kidney surgery.</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Reticulocytes are stained in living state in vitro so staining with dyes like brilliant cresyl blue and new methylene blue (Best stain) is referred to as supravital staining.</li><li>➤ Reticulocytes</li><li>➤ in living state</li><li>➤ new methylene blue (Best stain)</li><li>➤ supravital staining.</li><li>➤ Ref : Robbins 10 th 637</li><li>➤ Ref</li><li>➤ : Robbins 10 th 637</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 20-year-old female presents with the following laboratory values: hemoglobin 9gm%, MCV is 55%, RBC is 4.5 million/mm3. There is no history of blood transfusion. What is the most likely diagnosis out of the following?", "options": [{"label": "A", "text": "Thalassemia major", "correct": false}, {"label": "B", "text": "Thalassemia minor", "correct": true}, {"label": "C", "text": "Iron deficiency anemia ​", "correct": false}, {"label": "D", "text": "Anemia of chronic disease", "correct": false}], "correct_answer": "B. Thalassemia minor", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. Thalassemia minor</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. Patients with thalassemia major typically present with severe anemia requiring regular blood transfusions. The degree of anemia in the vignette is not consistent with thalassemia major.</li><li>• Option A. Patients with thalassemia</li><li>• major</li><li>• severe anemia</li><li>• blood transfusions.</li><li>• vignette</li><li>• Option C. Iron deficiency anemia typically presents with microcytic and hypochromic anemia . The Mentzer index is generally greater than 13 , which is not the case here.</li><li>• Option C. Iron deficiency anemia</li><li>• microcytic and hypochromic anemia</li><li>• Mentzer index</li><li>• greater than 13</li><li>• Option D. Anemia of chronic disease usually presents with normocytic or sometimes microcytic anemia , but it is often characterized by a normal or increased storage iron level , which can be evaluated by serum ferritin.</li><li>• Option D. Anemia of chronic disease</li><li>• normocytic or sometimes microcytic anemia</li><li>• normal or increased storage iron level</li><li>• serum ferritin.</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ When presented with mild to moderate microcytic anemia and an MCV/RBC count that yields a Mentzer index of less than 13, thalassemia minor is a likely diagnosis.</li><li>➤ mild to moderate microcytic anemia</li><li>➤ MCV/RBC count</li><li>➤ Mentzer index of less than 13, thalassemia minor</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 13-yr-girl with fatigue and weakness was found to be having reduced hemoglobin. Her MCV 70fl, MCH 22pg and RDW was 28. What is her most likely diagnosis?", "options": [{"label": "A", "text": "Iron deficiency anemia ​​​​​", "correct": true}, {"label": "B", "text": "Thalassemia minor ​​​", "correct": false}, {"label": "C", "text": "Sideroblastic anemia ​​​​​", "correct": false}, {"label": "D", "text": "Thalassemia major ​​​​​​", "correct": false}], "correct_answer": "A. Iron deficiency anemia ​​​​​", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A. Iron deficiency anemia:</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option B. Thalassemia minor often presents with microcytosis and a low MCH , but RDW is typically normal because the red blood cells are uniformly small .</li><li>• Option B. Thalassemia minor</li><li>• microcytosis and a low MCH</li><li>• RDW</li><li>• normal</li><li>• red blood cells are uniformly small</li><li>• Option C. Sideroblastic anemia can also present with microcytosis, but it is usually associated with ringed sideroblasts in the bone marrow and may show elevated iron indices.</li><li>• Option C. Sideroblastic anemia</li><li>• microcytosis,</li><li>• ringed sideroblasts</li><li>• bone marrow</li><li>• elevated iron indices.</li><li>• Option D. Thalassemia major presents with severe microcytic anemia , usually early in life , and patients are typically symptomatic with a history of blood transfusions.</li><li>• Option D. Thalassemia major presents</li><li>• severe microcytic anemia</li><li>• early in life</li><li>• history of blood transfusions.</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ An elevated RDW in the context of microcytic, hypochromic anemia is suggestive of iron deficiency anemia , which can be distinguished from thalassemia minor by the increased RDW.</li><li>➤ elevated RDW</li><li>➤ microcytic, hypochromic anemia</li><li>➤ iron deficiency anemia</li><li>➤ thalassemia minor by the increased RDW.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 68-year-old male with a history of progressive fatigue and a recent diagnosis of alcoholism presents for evaluation. His complete blood count shows a macrocytic anemia and the bone marrow biopsy reveals the presence of ringed sideroblasts. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Iron deficiency anemia", "correct": false}, {"label": "B", "text": "Myelodysplastic syndrome ​​​​​", "correct": true}, {"label": "C", "text": "Thalassemia", "correct": false}, {"label": "D", "text": "Anemia of chronic disease", "correct": false}], "correct_answer": "B. Myelodysplastic syndrome ​​​​​", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. Myelodysplastic syndrome</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. Iron deficiency anemia is characterized by microcytic, hypochromic red cells without the presence of ringed sideroblasts in the bone marrow.</li><li>• Option A. Iron deficiency anemia</li><li>• microcytic, hypochromic red cells</li><li>• Option C. Thalassemia syndromes are hereditary hemoglobinopathies leading to ineffective erythropoiesis and anemia , but they do not typically present with ringed sideroblasts.</li><li>• Option C. Thalassemia syndromes</li><li>• hereditary hemoglobinopathies</li><li>• ineffective erythropoiesis and anemia</li><li>• Option D. Anemia of chronic disease can cause a microcytic anemia , but it is usually normocytic and does not present with ringed sideroblasts.</li><li>• Option D. Anemia of chronic disease</li><li>• microcytic anemia</li><li>• normocytic</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Myelodysplastic syndrome (MDS) is associated with ineffective hematopoiesis and the presence of ringed sideroblasts</li><li>➤ Myelodysplastic syndrome (MDS)</li><li>➤ ineffective hematopoiesis</li><li>➤ ringed sideroblasts</li><li>➤ Ref : Robbins 10 th /620</li><li>➤ Ref : Robbins 10 th /620</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30 years old female undergoes blood investigations which reveal RBC count 4.5 million, MCV 55fl and TLC 8000/mm3. There is no history of blood transfusion. What is the likely diagnosis?", "options": [{"label": "A", "text": "Iron deficiency anemia", "correct": false}, {"label": "B", "text": "Thalassemia major", "correct": false}, {"label": "C", "text": "Thalassemia minor", "correct": true}, {"label": "D", "text": "Megaloblastic anemia ​​​​​​", "correct": false}], "correct_answer": "C. Thalassemia minor", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. Thalassemia minor</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. Iron deficiency anemia (IDA) is characterized by microcytic, hypochromic red cells , often with a high RDW and low serum ferritin levels .</li><li>• Option A. Iron deficiency anemia</li><li>• microcytic, hypochromic red cells</li><li>• high RDW and low serum ferritin levels</li><li>• Option B. Thalassemia major presents with severe microcytic anemia usually requiring blood transfusions for survival , often diagnosed in childhood.</li><li>• Option B. Thalassemia major presents</li><li>• severe microcytic anemia</li><li>• blood transfusions for survival</li><li>• Option D. Megaloblastic anemia Megaloblastic anemia is characterized by macrocytosis with an MCV typically greater than 100 fL due to impaired DNA synthesis .</li><li>• Option D. Megaloblastic anemia Megaloblastic</li><li>• macrocytosis</li><li>• MCV</li><li>• 100 fL due to impaired DNA synthesis</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In a patient with microcytic anemia and an MCV of 55 fL, a normal TLC, and no history of transfusion, thalassemia minor is likely, particularly when using indices such as the Mentzer index (MCV/RBC count), which is less than 13 in thalassemia minor.</li><li>➤ microcytic anemia</li><li>➤ an MCV of 55 fL, a normal TLC,</li><li>➤ no history of transfusion, thalassemia minor</li><li>➤ Mentzer index (MCV/RBC count),</li><li>➤ less than 13</li><li>➤ Ref: Robbins 10 th 644</li><li>➤ Ref: Robbins 10 th 644</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The pathogenesis of hypochromic anemia in lead poisoning is due to:", "options": [{"label": "A", "text": "Inhibition of enzymes involved in heme biosynthesis", "correct": true}, {"label": "B", "text": "Binding of lead to transferrin, inhibiting the trans­port of iron", "correct": false}, {"label": "C", "text": "Binding of lead to cell membrane of erythroid pre­cursors.", "correct": false}, {"label": "D", "text": "Binding of lead to ferritin inhibiting their break­down into hemosiderin", "correct": false}], "correct_answer": "A. Inhibition of enzymes involved in heme biosynthesis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A. Inhibition of enzymes involved in heme bio­synthesis</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option B. Lead does not bind to transferrin directly</li><li>• Option B. Lead</li><li>• Option C. While lead can affect cell membrane s, the primary mechanism of hypochromic anemia in lead poisoning is related to its impact on enzymes involved in heme biosynthesis, not direct binding to cell membranes.</li><li>• Option C. While lead can affect</li><li>• cell membrane</li><li>• hypochromic anemia</li><li>• enzymes involved in heme biosynthesis,</li><li>• Option D. Lead does not directly bind to ferritin to inhibit their breakdown. The primary effect is on heme synthesis enzymes.</li><li>• Option D. Lead does not directly</li><li>• ferritin to inhibit their breakdown.</li><li>• heme synthesis enzymes.</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The primary pathogenesis of hypochromic anemia in lead poisoning involves the inhibition of enzymes necessary for heme biosynthesis , such as aminolevulinic acid dehydratase (ALAD) and ferrochelatase, leading to reduced heme and hemoglobin production.</li><li>➤ hypochromic anemia in lead poisoning</li><li>➤ inhibition of enzymes necessary</li><li>➤ heme biosynthesis</li><li>➤ aminolevulinic acid dehydratase (ALAD) and ferrochelatase,</li><li>➤ heme and hemoglobin production.</li><li>➤ Ref : Robbins 10 th / 411, Tejinder Singh 1st/147</li><li>➤ Ref</li><li>➤ : Robbins 10 th / 411, Tejinder Singh 1st/147</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presented with fatigue and dyspnea. His peripheral blood smear demonstrated microcytic hypochromic red blood cells and pencil cells. The likely diagnosis in him is:", "options": [{"label": "A", "text": "B12 deficiency", "correct": false}, {"label": "B", "text": "Iron deficiency anemia", "correct": true}, {"label": "C", "text": "Thalassemia minor", "correct": false}, {"label": "D", "text": "Sickle cell anemia", "correct": false}], "correct_answer": "B. Iron deficiency anemia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. Iron deficiency anemia</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. Vitamin B12 deficiency typically causes macrocytic anemia , not microcytic, and would not present with pencil cells on the blood smear.</li><li>• Option A. Vitamin B12 deficiency</li><li>• macrocytic anemia</li><li>• Option C. Thalassemia minor often presents with microcytosis, but red cells are usually target cells rather than pencil cells, and other hematologic indices such as hemoglobin A2 levels can help in the diagnosis.</li><li>• Option C. Thalassemia minor</li><li>• microcytosis, but red cells are usually target cells</li><li>• hemoglobin A2 levels</li><li>• Option D. Sickle cell anemia usually presents with normocytic anemia and sickled red cells on the blood smear, not pencil cells, and are associated with hemoglobin Son electrophoresis.</li><li>• Option D. Sickle cell anemia</li><li>• normocytic anemia and sickled red cells</li><li>• hemoglobin Son electrophoresis.</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Iron deficiency anemia is characterized by microcytic, hypochromic red blood cells with the presence of pencil cells on the peripheral blood smear . Iron deficiency anemia is a common cause of anemia worldwide and should be considered in patients presenting with symptoms of anemia and microcytosis.</li><li>➤ microcytic, hypochromic red blood cells</li><li>➤ peripheral blood smear</li><li>➤ Iron deficiency anemia</li><li>➤ common</li><li>➤ anemia worldwide</li><li>➤ anemia and microcytosis.</li><li>➤ Ref : Robbins 10th/e p658</li><li>➤ Ref : Robbins 10th/e p658</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old male is evaluated for anemia. Laboratory findings reveal increased serum ferritin, decreased total iron-binding capacity (TIBC), increased serum iron, and elevated transferrin saturation. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Anemia of chronic disease", "correct": false}, {"label": "B", "text": "Sideroblastic anemia", "correct": true}, {"label": "C", "text": "Iron deficiency anemia", "correct": false}, {"label": "D", "text": "Thalassemia minor", "correct": false}], "correct_answer": "B. Sideroblastic anemia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B.</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. Anemia of chronic disease - Typically presents with normal to increased serum ferritin , normal to decreased serum iron, and low transferrin saturation due to the sequestration of iron in macrophages .</li><li>• Option A. Anemia of chronic disease</li><li>• normal to increased serum ferritin</li><li>• normal to decreased serum iron, and low transferrin saturation</li><li>• sequestration of iron in macrophages</li><li>• Option C. Iron deficiency anemia - Manifests with decreased serum ferritin, increased TIBC, decreased serum iron, and low transferrin saturation due to a lack of iron stores.</li><li>• Option C. Iron deficiency anemia</li><li>• decreased serum ferritin, increased TIBC, decreased serum iron, and low</li><li>• transferrin saturation</li><li>• lack of iron stores.</li><li>• Option D. Thalassemia minor - This condition usually presents with normal iron studies and is characterized by microcytic red blood cells without an increase in iron parameters.</li><li>• Option D. Thalassemia minor</li><li>• normal iron studies</li><li>• microcytic red blood cells</li><li>• increase in iron parameters.</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Sideroblastic anemia is indicated by increased serum ferritin , decreased TIBC, increased serum iron, and elevated transferrin saturation , reflecting a defect in the incorporation of iron into hemoglobin within the erythroid precursors in the bone marrow .</li><li>➤ Sideroblastic anemia</li><li>➤ increased serum ferritin</li><li>➤ decreased TIBC, increased serum iron, and elevated transferrin saturation</li><li>➤ iron into hemoglobin</li><li>➤ erythroid precursors in the bone marrow</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a patient with raised LDH, elevated bilirubin and hemoglobinuria. Peripheral smear shows schistocytes. What would the likely diagnosis?", "options": [{"label": "A", "text": "Red cell enzyme defect ​​​​​", "correct": false}, {"label": "B", "text": "Hypersplenism", "correct": false}, {"label": "C", "text": "Mechanical heart valves ​​​​​", "correct": true}, {"label": "D", "text": "Thyroid dysfunction", "correct": false}], "correct_answer": "C. Mechanical heart valves ​​​​​", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/04/25/picture38.jpg"], "explanation_images": [], "explanation": "<p><strong>Ans. C. Mechanical heart valves</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. Red cell enzyme defects typically do not cause microangiopathic hemolytic anemia with schistocytes.</li><li>• Option A. Red cell enzyme</li><li>• do not</li><li>• microangiopathic hemolytic anemia with schistocytes.</li><li>• Option B. Hypersplenism is associated with the sequestration and destruction of blood cells in the spleen but is not typically associated with the specific findings mentioned in the question.</li><li>• Option B. Hypersplenism is associated</li><li>• sequestration and destruction of blood cells</li><li>• Option D. Thyroid dysfunction is not known to cause microangiopathic hemolytic anemia with schistocytes.</li><li>• Option D. Thyroid dysfunction</li><li>• not known</li><li>• microangiopathic hemolytic anemia with schistocytes.</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The correct diagnosis in a patient with elevated LDH, hyperbilirubinemia, hemoglobinuria, and schistocytes on the peripheral blood smear is mechanical heart valve -related hemolysis.</li><li>➤ elevated LDH, hyperbilirubinemia, hemoglobinuria, and schistocytes on the peripheral blood smear</li><li>➤ mechanical heart valve</li><li>➤ hemolysis.</li><li>➤ Ref : Robbins 10th/e p650</li><li>➤ Ref</li><li>➤ : Robbins 10th/e p650</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a patient diagnosed with iron deficiency anemia, the values of all of the following increase except", "options": [{"label": "A", "text": "Total iron binding capacity", "correct": false}, {"label": "B", "text": "RBC protoporphyrin", "correct": false}, {"label": "C", "text": "Transferrin saturation", "correct": true}, {"label": "D", "text": "Transferrin receptor", "correct": false}], "correct_answer": "C. Transferrin saturation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C.  Transferrin saturation</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. Total iron binding capacity (TIBC): TIBC increases in iron deficiency anemia . It represents the maximum amount of iron that can be bound to transferrin.</li><li>• Option A. Total iron binding capacity (TIBC):</li><li>• increases</li><li>• iron deficiency anemia</li><li>• iron</li><li>• bound to transferrin.</li><li>• Option B. RBC protoporphyrin: RBC protoporphyrin increases in iron deficiency anemia . It reflects decreased availability of iron for heme synthesis .</li><li>• Option B. RBC protoporphyrin:</li><li>• increases in iron deficiency anemia</li><li>• decreased</li><li>• iron for heme synthesis</li><li>• Option D. Transferrin receptor: Transferrin receptor levels increase in iron deficiency anemia . It is a marker of increased demand for iron by erythroid precursors .</li><li>• Option D. Transferrin receptor:</li><li>• increase in iron deficiency anemia</li><li>• increased</li><li>• iron by erythroid precursors</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Transferrin saturation decreases in iron deficiency anemia , reflecting a reduced percentage of transferrin loaded with iron due to diminished iron stores , whereas total iron binding capacity, RBC protoporphyrin, and transferrin receptor levels increase in response to this condition.</li><li>➤ Transferrin saturation decreases</li><li>➤ iron deficiency anemia</li><li>➤ reduced</li><li>➤ transferrin</li><li>➤ iron due to diminished iron stores</li><li>➤ total iron binding capacity, RBC protoporphyrin, and transferrin receptor levels increase</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 12-year-old with history of recurrent infection and bleeding gums. On investigations the patient had pancytopenia and the peripheral smear showed macrocytes. The bone marrow biopsy showed no megakaryocytes and filled with fat globules. What is your diagnosis?", "options": [{"label": "A", "text": "Myelodysplasia", "correct": false}, {"label": "B", "text": "Aplastic anemia ​​​​​​", "correct": true}, {"label": "C", "text": "ITP", "correct": false}, {"label": "D", "text": "PNH", "correct": false}], "correct_answer": "B. Aplastic anemia ​​​​​​", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B.  Aplastic anemia</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• The given clinical presentation of a 12-year-old with recurrent infections, bleeding gums, pancytopenia, macrocytes on peripheral smear, absence of megakaryocytes in bone marrow, and the presence of fat globules in the bone marrow biopsy is suggestive of aplastic anemia. Aplastic anemia is characterized by a deficiency of all blood cell types (pancytopenia) due to bone marrow failure . The absence of megakaryocytes in the bone marrow biopsy indicates a lack of platelet precursors, which can lead to bleeding manifestations . The presence of fat globules suggests replacement of hematopoietic cells by adipose tissue in the bone marrow.</li><li>• 12-year-old</li><li>• recurrent infections, bleeding gums, pancytopenia, macrocytes on peripheral</li><li>• smear, absence of megakaryocytes in bone marrow,</li><li>• presence of fat globules</li><li>• aplastic anemia.</li><li>• Aplastic anemia</li><li>• deficiency of all blood cell types (pancytopenia)</li><li>• bone marrow failure</li><li>• absence of megakaryocytes</li><li>• lack of platelet precursors,</li><li>• bleeding manifestations</li><li>• fat globules</li><li>• hematopoietic cells by adipose tissue</li><li>• EXPLANATION:</li><li>• EXPLANATION:</li><li>• Option A. Myelodysplastic syndromes : may also present with cytopenias and dysplastic changes in the bone marrow, but the absence of megakaryocytes and the presence of fat globules are not typical features.</li><li>• Option A. Myelodysplastic syndromes :</li><li>• cytopenias and dysplastic</li><li>• absence of megakaryocytes</li><li>• presence of fat globules are not typical features.</li><li>• Option C. ITP: is characterized by isolated thrombocytopenia without affecting other cell lines. It does not typically present with pancytopenia or the absence of megakaryocytes in the bone marrow.</li><li>• Option C. ITP:</li><li>• isolated thrombocytopenia</li><li>• Option D. PNH: is characterized by hemolysis, often presenting with hemoglobinuria. However, it is not typically associated with pancytopenia and fat globules in the bone marrow.</li><li>• Option D. PNH:</li><li>• hemolysis,</li><li>• hemoglobinuria.</li><li>• not typically</li><li>• pancytopenia and fat globules in the bone</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The clinical presentation of recurrent infections, bleeding gums, pancytopenia, macrocytes on peripheral smear, absence of megakaryocytes in bone marrow , and presence of fat globules in bone marrow biopsy is indicative of aplastic anemia . This diagnosis is supported by the bone marrow biopsy findings showing a lack of megakaryocytes, indicative of platelet precursor deficiency, and fat globules suggesting the replacement of hematopoietic cells by adipose tissue .</li><li>➤ recurrent infections, bleeding gums, pancytopenia, macrocytes on peripheral smear, absence of megakaryocytes in bone marrow</li><li>➤ presence of fat globules</li><li>➤ aplastic anemia</li><li>➤ bone marrow biopsy</li><li>➤ lack of megakaryocytes, indicative of platelet precursor deficiency,</li><li>➤ fat globules</li><li>➤ hematopoietic cells by adipose tissue</li><li>➤ Ref : Robbins 10th/458</li><li>➤ Ref : Robbins 10th/458</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An elderly female with mediastinal mass undergoes a microscopic examination showing red cell aplasia. What is the likely diagnosis?", "options": [{"label": "A", "text": "Bronchogenic cancer", "correct": false}, {"label": "B", "text": "Thymoma", "correct": true}, {"label": "C", "text": "Non-Hodgkin lymphoma", "correct": false}, {"label": "D", "text": "Squamous cell carcinoma", "correct": false}], "correct_answer": "B. Thymoma", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B.  Thymoma</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. Bronchogenic cancer often presents as a mediastinal mass , especially in smokers . However, it is not commonly associated with red cell aplasia, but rather with other paraneoplastic syndromes such as hypercalcemia (due to production of PTH-related protein) or the secretion of ADH or ACTH.</li><li>• Option A. Bronchogenic cancer</li><li>• mediastinal mass</li><li>• smokers</li><li>• paraneoplastic syndromes such as hypercalcemia (due to production of PTH-related protein) or the secretion of ADH or ACTH.</li><li>• Option C. Non-Hodgkin lymphoma can present as a mediastinal mass . It may cause bone marrow involvement leading to various cytopenias but is not specifically associated with pure red cell aplasia .</li><li>• Option C. Non-Hodgkin lymphoma</li><li>• mediastinal mass</li><li>• bone marrow</li><li>• cytopenias</li><li>• not</li><li>• pure red cell aplasia</li><li>• Option D. Squamous cell carcinoma typically arises from the epithelial cells of the skin or mucous membranes and is not commonly found within the mediastinum. It is associated with paraneoplastic syndromes , but not typically with red cell aplasia.</li><li>• Option D. Squamous cell carcinoma</li><li>• epithelial cells of the skin or mucous membranes</li><li>• paraneoplastic syndromes</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Thymoma is the likely diagnosis in an elderly patient with a mediastinal mass and red cell aplasia, as thymomas are associated with this condition and other paraneoplastic syndromes such as myasthenia gravis, hypogammaglobulinemia, and multi-organ autoimmunity.</li><li>➤ Thymoma</li><li>➤ mediastinal mass and red cell aplasia, as thymomas</li><li>➤ paraneoplastic syndromes</li><li>➤ myasthenia gravis, hypogammaglobulinemia, and multi-organ autoimmunity.</li><li>➤ Ref : Robbins 10th/e p493</li><li>➤ Ref : Robbins 10th/e p493</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient has been eating junk food regularly for few months and avoids fruits and vegetables. His hemoglobin is 9 g/dl and MCV is >125 fl. What is the deficiency she would likely be having?", "options": [{"label": "A", "text": "Cyanocobalamin deficiency", "correct": false}, {"label": "B", "text": "Folate deficiency", "correct": true}, {"label": "C", "text": "Sideroblastic anemia", "correct": false}, {"label": "D", "text": "Acute blood loss", "correct": false}], "correct_answer": "B. Folate deficiency", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B.  Folate deficiency</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. Cyanocobalamin (Vitamin B12) deficiency typically develops over years due to the substantial stores in the liver . While it can cause megaloblastic anemia with a high MCV, the patient

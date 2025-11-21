@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Psm E&amp;D   Mission 2.0, Lap 2   09 04 2025   2025 04 09</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Psm E&amp;D   Mission 2.0, Lap 2   09 04 2025   2025 04 09</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                75 Questions | 300 Total Marks | 85 min Duration | ~68.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 75 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 85 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 75</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Psm E&amp;D   Mission 2.0, Lap 2   09 04 2025   2025 04 09 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 75</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 75 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Four patients present with febrile illness after animal exposure. Which of the following pairs correctly matches the disease with its shortest and longest incubation periods?", "options": [{"label": "A", "text": "Shortest – Scrub typhus; Longest – Q fever", "correct": false}, {"label": "B", "text": "Shortest – Nairovirus; Longest – Taeniasis", "correct": true}, {"label": "C", "text": "Shortest – Taeniasis; Longest – Rickettsia tsutsugamushi", "correct": false}, {"label": "D", "text": "Shortest – Coxiella burnetii; Longest – Nairovirus", "correct": false}], "correct_answer": "B. Shortest – Nairovirus; Longest – Taeniasis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Shortest – Nairovirus; Longest – Taeniasis</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An environmental health officer is evaluating the humidity level in a refugee shelter during a heatwave. Which of the following tools will provide accurate measurement of air humidity?", "options": [{"label": "A", "text": "", "correct": false}, {"label": "B", "text": "", "correct": false}, {"label": "C", "text": "", "correct": true}, {"label": "D", "text": "", "correct": false}], "correct_answer": "C. ", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_R17L9d4.png"], "explanation": "<p><strong>Ans. C)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following best differentiates brucellosis from leptospirosis based on transmission?", "options": [{"label": "A", "text": "Brucellosis is exclusively airborne; leptospirosis is waterborne", "correct": false}, {"label": "B", "text": "Brucellosis spreads via body fluids; leptospirosis spreads via ticks", "correct": false}, {"label": "C", "text": "Brucellosis spreads through direct contact and ingestion; leptospirosis through rat urine exposure", "correct": true}, {"label": "D", "text": "Both are primarily transmitted via insect vectors", "correct": false}], "correct_answer": "C. Brucellosis spreads through direct contact and ingestion; leptospirosis through rat urine exposure", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Brucellosis spreads through direct contact and ingestion; leptospirosis through rat urine exposure</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 4-year-old child in a low-income urban area presents with multiple episodes of diarrhea and dysentery over the past month. Sanitary conditions are poor, and houseflies are abundant. Which of the following diseases is least likely transmitted by this vector?", "options": [{"label": "A", "text": "Poliomyelitis", "correct": false}, {"label": "B", "text": "Anthrax", "correct": false}, {"label": "C", "text": "Yaws", "correct": false}, {"label": "D", "text": "Leishmaniasis", "correct": true}], "correct_answer": "D. Leishmaniasis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Leishmaniasis</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient’s CBNAAT result shows Mycobacterium tuberculosis detected with rifampicin indeterminate resistance. What is the next step in management?", "options": [{"label": "A", "text": "Start first-line anti-TB drugs", "correct": false}, {"label": "B", "text": "Consider alternate diagnosis", "correct": false}, {"label": "C", "text": "Repeat CBNAAT on second sample", "correct": true}, {"label": "D", "text": "Start multidrug-resistant TB therapy", "correct": false}], "correct_answer": "C. Repeat CBNAAT on second sample", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Repeat CBNAAT on second sample</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Assertion: The SDG target is To End Preventable deaths of Newborns and Under-five children. Reason: Global MMR has to be reduced below 70 per 100,000 live births by 2030.", "options": [{"label": "A", "text": "Both Assertion and Reason are true, and Reason is the correct explanation", "correct": false}, {"label": "B", "text": "Both Assertion and Reason are true, but Reason is not the correct explanation", "correct": true}, {"label": "C", "text": "Assertion is true, but Reason is false", "correct": false}, {"label": "D", "text": "Assertion is false, and Reason is also false", "correct": false}], "correct_answer": "B. Both Assertion and Reason are true, but Reason is not the correct explanation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Both Assertion and Reason are true, but Reason is not the correct explanation</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 4-year-old child from a rural area in Assam (North-East India) presents with high-grade fever, chills, and vomiting. Rapid diagnostic testing confirms Plasmodium falciparum infection. The child is otherwise healthy and has no signs of severe malaria. Which of the following is the most appropriate treatment regimen and corresponding blister pack color?", "options": [{"label": "A", "text": "ACT-SP for 3 days + Primaquine Day 2; Green blister pack", "correct": false}, {"label": "B", "text": "ACT-AL for 3 days + Primaquine Day 2; Yellow blister pack", "correct": true}, {"label": "C", "text": "Chloroquine for 3 days + Primaquine 14 days; Yellow blister pack", "correct": false}, {"label": "D", "text": "ACT-SP for 3 days + Primaquine Day 2; Red blister pack", "correct": false}], "correct_answer": "B. ACT-AL for 3 days + Primaquine Day 2; Yellow blister pack", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) ACT-AL for 3 days + Primaquine Day 2; Yellow blister pack</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A government health advisor is reviewing eligibility criteria for empanelment under the AB-NHPS scheme. Which of the following correctly identifies the minimum infrastructure requirement for a private hospital to be empanelled?", "options": [{"label": "A", "text": "Minimum 10 doctors on staff", "correct": false}, {"label": "B", "text": "Minimum 5 ICU beds", "correct": false}, {"label": "C", "text": "Minimum of 10+ beds", "correct": true}, {"label": "D", "text": "Minimum 50 annual surgeries", "correct": false}], "correct_answer": "C. Minimum of 10+ beds", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Minimum of 10+ beds</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A public health officer is supervising IFA tablet distribution to school-going children aged 6 years. Which of the following combinations correctly identifies the IFA dose, frequency, and tablet color for this age group?", "options": [{"label": "A", "text": "20 mg elemental iron + 100 mcg folic acid; biweekly; pink", "correct": false}, {"label": "B", "text": "45 mg elemental iron + 400 mcg folic acid; weekly; pink", "correct": true}, {"label": "C", "text": "60 mg elemental iron + 500 mcg folic acid; daily; red", "correct": false}, {"label": "D", "text": "60 mg elemental iron + 500 mcg folic acid; weekly; blue", "correct": false}], "correct_answer": "B. 45 mg elemental iron + 400 mcg folic acid; weekly; pink", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) 45 mg elemental iron + 400 mcg folic acid; weekly; pink</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 19th-century lawyer played a pivotal role in drafting the Public Health Act of 1848 in response to unsanitary conditions and frequent cholera outbreaks in England. His advocacy laid the foundation for modern public health administration. Identify the individual?", "options": [{"label": "A", "text": "", "correct": false}, {"label": "B", "text": "", "correct": true}, {"label": "C", "text": "", "correct": false}, {"label": "D", "text": "", "correct": false}], "correct_answer": "B. ", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_CWGUcZF.png"], "explanation": "<p><strong>Ans. B)</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is a key methodological difference between HDI and MDPI?", "options": [{"label": "A", "text": "HDI uses linear averaging; MDPI uses geometric mean", "correct": false}, {"label": "B", "text": "MDPI includes only income-based indicators", "correct": false}, {"label": "C", "text": "HDI measures progress; MDPI measures acute deprivation", "correct": true}, {"label": "D", "text": "HDI assesses housing quality directly; MDPI does not", "correct": false}], "correct_answer": "C. HDI measures progress; MDPI measures acute deprivation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) HDI measures progress; MDPI measures acute deprivation</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A disease where almost all infections become symptomatic would least likely be represented by the iceberg model. Which of the following fits this description?", "options": [{"label": "A", "text": "Poliomyelitis", "correct": false}, {"label": "B", "text": "Tetanus", "correct": true}, {"label": "C", "text": "Hepatitis A", "correct": false}, {"label": "D", "text": "Tuberculosis", "correct": false}], "correct_answer": "B. Tetanus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Tetanus</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following correctly matches the classification to the example: “Loss of job because of inability to perform physical tasks due to loss of limb”?", "options": [{"label": "A", "text": "Disease", "correct": false}, {"label": "B", "text": "Impairment", "correct": false}, {"label": "C", "text": "Disability", "correct": false}, {"label": "D", "text": "Handicap", "correct": true}], "correct_answer": "D. Handicap", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Handicap</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following surveillance methods is most appropriate for capturing the true morbidity of the disease?", "options": [{"label": "A", "text": "Active surveillance", "correct": false}, {"label": "B", "text": "Passive surveillance", "correct": false}, {"label": "C", "text": "Sentinel surveillance", "correct": true}, {"label": "D", "text": "Continuous surveillance", "correct": false}], "correct_answer": "C. Sentinel surveillance", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Sentinel surveillance</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a cohort study between chronic mobile usage and backache development, the incidence of a disease among the exposed is equal to that among the non-exposed. What does the relative risk suggest in this case?", "options": [{"label": "A", "text": "Strong positive association", "correct": false}, {"label": "B", "text": "Protective association", "correct": false}, {"label": "C", "text": "No association", "correct": true}, {"label": "D", "text": "Confounding effect present", "correct": false}], "correct_answer": "C. No association", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) No association</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A population-level study is conducted to explore the association between per capita alcohol consumption and incidence of domestic violence across 20 districts in a country. Results reveal a strong positive correlation. However, further individual-level data shows no significant association. What is the most likely explanation for this discrepancy?", "options": [{"label": "A", "text": "Berkson’s bias", "correct": false}, {"label": "B", "text": "Confounding bias", "correct": false}, {"label": "C", "text": "Ecological fallacy", "correct": true}, {"label": "D", "text": "Selection bias", "correct": false}], "correct_answer": "C. Ecological fallacy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Ecological fallacy</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A researcher conducts a meta-analysis on the efficacy of a new antidiabetic drug and reports a statistically significant pooled effect size. However, several of the included studies have small sample sizes and inconsistent results/endpoints. Which of the following best describes a major limitation this analysis may face?", "options": [{"label": "A", "text": "Forest plot variability", "correct": false}, {"label": "B", "text": "Funnel plot inversion", "correct": false}, {"label": "C", "text": "Garbage-in, garbage-out effect", "correct": true}, {"label": "D", "text": "Selection bias in patient recruitment", "correct": false}], "correct_answer": "C. Garbage-in, garbage-out effect", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Garbage-in, garbage-out effect</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements regarding serial interval and communicability are incorrect? Serial interval is always shorter than the incubation period. The period of communicability may overlap with the incubation period in some diseases. Secondary attack rate is a proxy measure for the period of communicability. Serial interval is defined as the time gap between symptom onset in a primary case and the infection of a secondary case.", "options": [{"label": "A", "text": "1 and 4 only", "correct": true}, {"label": "B", "text": "1, 2, and 4 only", "correct": false}, {"label": "C", "text": "2, 3, and 4 only", "correct": false}, {"label": "D", "text": "All statements are incorrect", "correct": false}], "correct_answer": "A. 1 and 4 only", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) 1 and 4 only</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A new pediatric vaccine contains the Edmonston Zagreb strain. Which of the following statements is true regarding this vaccine?", "options": [{"label": "A", "text": "It requires intradermal injection at 6 weeks of age", "correct": false}, {"label": "B", "text": "It provides >99% protection with a single dose", "correct": false}, {"label": "C", "text": "It is administered intramuscularly into the thigh", "correct": false}, {"label": "D", "text": "It must be stored between +2°C to +8°C", "correct": true}], "correct_answer": "D. It must be stored between +2°C to +8°C", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) It must be stored between +2°C to +8°C</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 48-year-old man undergoes testing for a chronic infectious disease. Among a large cohort of individuals confirmed to have the disease, the diagnostic test correctly identifies 92% of them. Which of the following parameters does this observation best describe?", "options": [{"label": "A", "text": "Sensitivity of the test", "correct": true}, {"label": "B", "text": "Specificity of the test", "correct": false}, {"label": "C", "text": "Positive predictive value of the test", "correct": false}, {"label": "D", "text": "Likelihood ratio", "correct": false}], "correct_answer": "A. Sensitivity of the test", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Sensitivity of the test</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements is most accurate regarding the measles?", "options": [{"label": "A", "text": "Period of communicability is 7 days before to 2 days after symptom onset", "correct": false}, {"label": "B", "text": "Secondary attack rate is typically below 40%", "correct": false}, {"label": "C", "text": "Incubation period is usually between 10 to 14 days", "correct": true}, {"label": "D", "text": "Causative organism is a DNA virus", "correct": false}], "correct_answer": "C. Incubation period is usually between 10 to 14 days", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Incubation period is usually between 10 to 14 days</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A region affected by cholera reports two new cases after 10 weeks of silence. According to WHO, what is the implication for declaring the area cholera-free?", "options": [{"label": "A", "text": "It cannot be declared free as cases occurred within 6 months", "correct": false}, {"label": "B", "text": "It remains cholera-endemic indefinitely", "correct": false}, {"label": "C", "text": "It is declared cholera-free if there are no cases for 2 incubation periods", "correct": false}, {"label": "D", "text": "It is not cholera-free until twice the incubation period has passed without new cases", "correct": true}], "correct_answer": "D. It is not cholera-free until twice the incubation period has passed without new cases", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) It is not cholera-free until twice the incubation period has passed without new cases</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "As per NAPRE (National Action Plan for Dog Mediated Rabies Elimination), what is the minimum anti-rabies vaccination coverage required among dogs in a defined area for three consecutive years?", "options": [{"label": "A", "text": "60%", "correct": false}, {"label": "B", "text": "70%", "correct": true}, {"label": "C", "text": "80%", "correct": false}, {"label": "D", "text": "90%", "correct": false}], "correct_answer": "B. 70%", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) 70%</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following best explains the reason for the high number of false positives in a community setting?", "options": [{"label": "A", "text": "High prevalence and low incidence of disease", "correct": false}, {"label": "B", "text": "High incidence and low prevalence of disease", "correct": true}, {"label": "C", "text": "Low prevalence and low incidence of disease", "correct": false}, {"label": "D", "text": "High incidence and high prevalence of disease", "correct": false}], "correct_answer": "B. High incidence and low prevalence of disease", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) High incidence and low prevalence of disease</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements regarding ROC curves are true? ROC curve plots True Positive Rate (Sensitivity) against False Positive Rate (1 - Specificity). A test with an ROC curve close to the diagonal line indicates high diagnostic accuracy. Area under the ROC curve (AUC) provides a measure of test performance, with values closer to 1 indicating better performance. ROC curve can be used to determine the optimal cut-off value of a diagnostic test.", "options": [{"label": "A", "text": "1, 3, and 4 only", "correct": true}, {"label": "B", "text": "1 and 2 only", "correct": false}, {"label": "C", "text": "2 and 3 only", "correct": false}, {"label": "D", "text": "All statements are correct", "correct": false}], "correct_answer": "A. 1, 3, and 4 only", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) 1, 3, and 4 only</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 6-year-old child from an endemic area presents with prolonged fever and hepatosplenomegaly. Laboratory tests show pancytopenia and rk39 is positive. Considering the most likely diagnosis, what is the key epidemiological characteristic of this infection in India?", "options": [{"label": "A", "text": "Zoonotic transmission with rodents as reservoirs", "correct": false}, {"label": "B", "text": "Non-zoonotic transmission with humans as reservoirs", "correct": true}, {"label": "C", "text": "Transovarial transmission by vector", "correct": false}, {"label": "D", "text": "Waterborne spread in affected regions", "correct": false}], "correct_answer": "B. Non-zoonotic transmission with humans as reservoirs", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Non-zoonotic transmission with humans as reservoirs</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A country reports a 4.9% prevalence of active trachoma among children under 10 years. According to WHO criteria, which of the following is the most appropriate classification for the country

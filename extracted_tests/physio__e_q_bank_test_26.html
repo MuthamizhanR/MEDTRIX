@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Integrative Neurophysiology – Sleep &amp; EEG</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Integrative Neurophysiology – Sleep &amp; EEG</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                12 Questions | 12 Total Marks | 22 min Duration | ~110.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 12 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 22 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 12</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Integrative Neurophysiology – Sleep &amp; EEG - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 12</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 12 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 24-year-old man complains of fatigue, increased daytime somnolence, and periodic sudden loss of muscle tone. Polysomnography confirms the diagnosis of narcolepsy. Narcolepsy is associated with which of the following?", "options": [{"label": "A", "text": "Increased discharge of noradrenergic neurons in the locus coeruleus", "correct": false}, {"label": "B", "text": "Increased discharge of serotonergic neurons in the midbrain raphé", "correct": false}, {"label": "C", "text": "Decreased adenosine levels in the reticular formation", "correct": false}, {"label": "D", "text": "Hypothalamic dysfunction with decreased CSF levels of Orexin", "correct": true}], "correct_answer": "D. Hypothalamic dysfunction with decreased CSF levels of Orexin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hypothalamic dysfunction with decreased CSF levels of Orexin Compared to the brains of healthy persons, the brains of persons with narcolepsy often contain fewer hypocretin (orexin)-producing neurons in the hypothalamus.</p>\n<p><strong>Highyeild:</strong></p><p>Narcolepsy is a chronic neurological disorder caused by the brain’s inability to regulate sleep–wake cycles normally. The affected individual experiences a sudden loss of voluntary muscle tone (cataplexy), an eventual irresistible urge to sleep during the daytime, and possibly brief episodes of total paralysis at the beginning or end of sleep. Narcolepsy is also characterized by a sudden onset of REM sleep, unlike normal sleep which begins with non-REM, slow-wave sleep. Narcolepsy has a familial incidence strongly associated with a class II antigen of the major histocompatibility complex on chromosome 6 at the HLA-DR2 or HLA-DQW1 locus, implying a genetic susceptibility to narcolepsy. The HLA complex may increase susceptibility to an immune attack on the neurons producing Orexin in Hypothalamus, leading to their degeneration. Polysomnography also called a sleep study, is a comprehensive test used to diagnose sleep disorders. Polysomnography records your brain waves, the oxygen level in your blood, heart rate and breathing, as well as eye and leg movements during the study.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option: A. The noradrenergic nucleus locus coeruleus (LC) is a tiny cluster of cells located bilaterally in the pons just under the fourth ventricle. Option: B. The raphe nucleus is considered to be part of the reticular formation and is located in the brainstem. It is responsible for the release of serotonin to other parts of the brain. Option: C. In the brain adenosine is an inhibitory neurotransmitter. This means adenosine can act as a central nervous system depressant. In normal conditions, it promotes sleep and suppresses arousal.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A state of unconsciousness from which a person cannot be aroused by sensory or other stimuli is termed Coma which differs from a state of sleep. Physiologists required explanations from students in the best possible statements about Sleep:", "options": [{"label": "A", "text": "Sleep varies from very light sleep to very deep sleep", "correct": false}, {"label": "B", "text": "Brain waves are strong and of low-frequency", "correct": false}, {"label": "C", "text": "Eyes undergo slow movements when the person is asleep", "correct": false}, {"label": "D", "text": "Both A and B correct", "correct": true}], "correct_answer": "D. Both A and B correct", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Both A and B correct Sleep is defined as unconsciousness from which a person can be aroused by sensory or other stimuli. It is to be distinguished from a coma, which is unconsciousness from which a person cannot be aroused.</p>\n<p><strong>Highyeild:</strong></p><p>There are multiple stages of sleep, from very light sleep to very deep sleep. Sleep researchers also divide sleep into two entirely different types of sleep that have different qualities, as described in the following section. Two major types of sleep alternate with each other, (1) rapid eye movement sleep (REM sleep), in which the eyes undergo rapid movements even though the person is still asleep, and (2) slow-wave sleep or non-REM (NREM) sleep, in which the brain waves are strong and of low frequency.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option: C. Eyes undergo rapid movements when the person is asleep. Rapid Eye Movement or REM sleep, while the muscles of the body are paralyzed during sleep, the eyes continue to move during a type of sleep called REM (Rapid Eye Movement) sleep which is the time of sleep we are actively dreaming.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The occurrence of bilateral lesions in the medial rostral suprachiasmal area in the anterior hypothalamus led to the activation of excitatory reticular nuclei of the mesencephalon and upper pons secreting more serotonin manifesting as a state of intense wakefulness Neurologist worked on the experimental animals and kept them awake for several days to find out the release of chemicals in their CSF, blood, and urine that promote sleep. Select the correct statement:", "options": [{"label": "A", "text": "Muramyl peptide accumulates in cerebrospinal fluid and blood", "correct": false}, {"label": "B", "text": "Muramyl peptide accumulates in cerebrospinal fluid and urine", "correct": false}, {"label": "C", "text": "Injection of muramyl peptide into the third ventricle induces natural sleep in experimental animals", "correct": false}, {"label": "D", "text": "Both B and C are correct", "correct": true}], "correct_answer": "D. Both B and C are correct", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Both B and C are correct Option: B. Muramyl peptide accumulates in cerebrospinal fluid and urine in animals kept awake for several days Option: C. Injection of muramyl peptide into the third ventricle induces natural sleep in experimental animals</p>\n<p><strong>Highyeild:</strong></p><p>One likely substance has been identified as muramyl peptide, a low-molecular-weight substance that accumulates in the cerebrospinal fluid and urine in animals kept awake for several days. When only micrograms of this sleep-producing substance are injected into the third ventricle, almost natural sleep occurs within a few minutes, and the animal may stay asleep for several hours</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option: A. Muramyl peptide does not accumulate in the blood of animals kept awake for several days Experiments have shown that the cerebrospinal fluid and the blood or urine of animals that have been kept awake for several days contain a substance or substances that will cause sleep when injected into the brain ventricular system of another animal.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A male patient at age 56 years came to seek consultation from a psychiatrist with manifestations of inability to fall asleep with eyes closed and mind full of thoughts. The EEG is reported, as shown in the following image. Select the best-suited statements:-", "options": [{"label": "A", "text": "Waves at a frequency of 8–13 Hz and amplitude of 50–100 μv.", "correct": false}, {"label": "B", "text": "Beta rhythms", "correct": false}, {"label": "C", "text": "Marked with decreased levels of attention", "correct": false}, {"label": "D", "text": "Both A and C are best-suited statements", "correct": true}], "correct_answer": "D. Both A and C are best-suited statements", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Both A and C are best-suited statements Option A . EEG shows alpha waves at a frequency of 8–13 Hz and amplitude of 50–100 μv. Option C. This pattern of EEG represents decreased levels of attention.</p>\n<p><strong>Highyeild:</strong></p><p>In adult humans who are awake but at rest with the mind wandering and the eyes closed, the most prominent component of the EEG is a fairly regular pattern of waves at a frequency of 8–13 Hz and amplitude of 50–100 μv when recorded from the scalp. This pattern is the alpha rhythm. It is most marked in the parietal and occipital lobes and is associated with decreased levels of attention. The frequency and magnitude of the EEG rhythm can vary with age, with the use of some drugs, and in some pathological conditions.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option: B . Beta rhythms is an incorrect option. When attention is focused on something, the alpha rhythm is replaced by an irregular 13–30 Hz low-voltage activity, the beta rhythm</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Physiologists described the characteristics of brain waves during stage 2 of non-REM sleep with the help of EEG recordings. The image below represents a characteristic pattern. Select the best possible statements:-", "options": [{"label": "A", "text": "Presence of sleep spindles at 7–15 Hz.", "correct": false}, {"label": "B", "text": "The frequent presence of high voltage biphasic waves, K complexes.", "correct": false}, {"label": "C", "text": "The occasional occurrence of sleep spindles at 4–7 Hz", "correct": false}, {"label": "D", "text": "Both A and B are best-suited.", "correct": true}], "correct_answer": "D. Both A and B are best-suited.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Both A and B are best-suited. Stage 2 of non-REM sleep is marked by the appearance of Waves called sleep spindles (7–15 Hz) and occasional high voltage biphasic. Waves are called K complexes. Muscle tone is reduced during this time. Sleep spindles—bursts of 7–15 Hz (sigma frequency band) activity, typically between 0.5 and 2 s in duration—are characteristic transient features of the sleep electroencephalogram (EEG). Spindles are most prominent during N2 sleep and are in fact a defining feature of this stage.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option: C. Occasional occurrence of sleep spindles at 4–7 Hz, Incorrect because, Stage 1 of non-REM sleep is the transition from wakefulness to sleep, and the EEG shows a low-voltage, mixed frequency pattern. A theta rhythm (4–7 Hz) can be seen at this stage of Sleep .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The psychiatrist presented a case history of a female patient at the age of 56 years. The patient presented with complaints of ‘trouble sleeping’ where he described having difficulty falling asleep for a long time at night. The patient’s H/O previous injury, accident, or any medication for the psychosomatic disorder was non-significant. The psychiatrist described the features of EEG as provided below. Select the best-suited statements relevant to the EEG from the list below:-", "options": [{"label": "A", "text": "A pattern of rhythmic slow waves", "correct": false}, {"label": "B", "text": "The occurrence of theta and delta rhythms is normal during sleep", "correct": false}, {"label": "C", "text": "Occurrence of high voltage biphasic waves called K complexes", "correct": false}, {"label": "D", "text": "Both A and B are best suited to Image", "correct": true}], "correct_answer": "D. Both A and B are best suited to Image", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Both A and B are best suited to Image Image is the EEG pattern of deep sleep Delta waves are high-amplitude neural oscillations with a frequency between 0.5 and 4 hertz. The correct Options are:- Option A. A pattern of rhythmic slow waves Option B. Occurrence of theta and delta rhythms is normal during sleep</p>\n<p><strong>Highyeild:</strong></p><p>The image shows stage 4 of non-REM sleep. Thus, the characteristic of deep sleep is a pattern of rhythmic slow waves, indicative of marked synchronization of cortical and thalamic activity; it is sometimes referred to as slow-wave sleep. While the Occurrence of theta and delta rhythms is normal during sleep, their appearance during wakefulness is a sign of brain dysfunction. Sleep is the transition from wakefulness to sleep, the EEG shows a low-voltage, mixed-frequency pattern.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options Option C. The EEG pattern in the image does not exhibit the occurrence of high voltage biphasic waves called K complexes This finding is common in Stage 1 non-REM.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Propofol is a short-acting medication. It brings about a decreased level of consciousness and a lack of memory for events. It is used for starting and maintenance of general anesthesia. Select the correct brain wave pattern shown below induced by propofol administration:-", "options": [{"label": "A", "text": "Induce a rhythm in the EEG that is analogous to the classic alpha rhythm.", "correct": false}, {"label": "B", "text": "The frequency and magnitude of the alpha rhythm are also decreased.", "correct": false}, {"label": "C", "text": "Non-REM sleep can be grouped into three stages", "correct": false}, {"label": "D", "text": "Both A and B are correct", "correct": true}], "correct_answer": "D. Both A and B are correct", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1683532245208-QTDY014007IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Both A and B are correct Option A. Propofol can induce a rhythm in the EEG that is analogous to the classic alpha rhythm Option B. Propofol-induced reduction in frequency and magnitude of the alpha rhythm</p>\n<p><strong>Highyeild:</strong></p><p>The frequency and magnitude of the alpha rhythm are also decreased by metabolic and toxic encephalopathies including those due to hyponatremia and vitamin B12 deficiency. The frequency and magnitude of the alpha rhythm are also decreased by metabolic and toxic encephalopathies including those due to hyponatremia and vitamin B12 deficiency. The Frequency of the alpha rhythm is reduced during acute intoxication with alcohol, amphetamines, barbiturates, phenytoin, and antipsychotics. Propofol, a hypnotic/sedative drug, can induce a rhythm in the EEG that is analogous to the classic alpha rhythm.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect Option:- Option: C . Incorrect- Non-REM sleep can be grouped into 4 stages.</p>\n<p><strong>Extraedge:</strong></p><p>In a typical night of sleep, a young adult first enters non-REM sleep, passes through stages 1 and 2, and spends 70–100 min in stages 3 and 4. Sleep then lightens, and a REM period follows. This cycle is repeated at intervals of about 90 min throughout the night.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The findings of EEG, EOG, and EMG were provided by the physiologist to the students who were asked to explain them. Select the explanation not suited to the above findings in the image:-", "options": [{"label": "A", "text": "Low-amplitude desynchronized theta EEG waves", "correct": false}, {"label": "B", "text": "Rapid, roving eye movements during this stage of sleep", "correct": false}, {"label": "C", "text": "Raised skeletal muscle tone in proportion to rapid eye movements", "correct": true}, {"label": "D", "text": "Ponto Geniculo-occipital (PGO) spikes", "correct": false}], "correct_answer": "C. Raised skeletal muscle tone in proportion to rapid eye movements", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1683532245213-QTDY014008IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Raised skeletal muscle tone in proportion to rapid eye movements There is a loss of skeletal muscle tone despite the presence of rapid eye movements in REM sleep.</p>\n<p><strong>Highyeild:</strong></p><p>The high-amplitude slow waves seen in the EEG during non-REM sleep are periodically replaced by rapid, low-voltage EEG activity in REM sleep. Except for eye movement, there is almost a complete loss of skeletal muscle tone in REM sleep. The threshold for arousal from sleep by sensory stimuli is elevated during this time. Another characteristic of REM sleep is the occurrence of large phasic potentials that originate in the cholinergic neurons in the pons and pass rapidly to the lateral geniculate body and from there to the occipital cortex. They are called Ponto geniculo-occipital (PGO) spikes Figure:- PGO-like waves recorded from the Subthalamic Nucleus of a surgical patient during REM sleep, using deep brain stimulation electrodes. Red lines (top) indicate three recording sites in the Right STN, while Blue lines (bottom) indicate three recording sites in the Left STN.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option A. REM sleep is linked to low-amplitude desynchronized theta EEG waves Option B. REM phase of sleep is associated with rapid, roving eye movements during this stage of sleep Option D. REM sleep is linked to ponto geniculo-occipital (PGO) spikes.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is involved in REM sleep?", "options": [{"label": "A", "text": "Amygdala", "correct": false}, {"label": "B", "text": "Locus coeruleus", "correct": true}, {"label": "C", "text": "Tectal nucleus", "correct": false}, {"label": "D", "text": "Fornix", "correct": false}], "correct_answer": "B. Locus coeruleus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Locus coeruleus The locus coeruleus (LC) releases norepinephrine throughout the brain except when the LC falls silent throughout rapid eye movement (REM) sleep.</p>\n<p><strong>Highyeild:</strong></p><p>The locus coeruleus and the norepinephrine system are involved in the norepinephrine (NE) locus coeruleus (LC) system is integrally involved in the regulation of sleep and waking. The locus coeruleus is a small area located bilaterally and posteriorly at the juncture between the pons and mesencephalon. Nerve fibers from this area spread throughout the brain, and they secrete norepinephrine. Norepinephrine generally excites the brain to increase activity. However, it has inhibitory effects in a few brain areas because of inhibitory receptors at certain neuronal synapses. This system probably plays an important role in causing dreaming, thus leading to a type of sleep called rapid eye movement (REM) sleep.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option: A. The amygdala is anatomically connected with and functionally modulates the brainstem centers involved in arousal and sleep regulation. Recent studies have established amygdala dysfunction in patients with insomnia. Option: C. Tectum, via its connections to premotor centers, controls eye movements, approach, and avoidance movements. Option: D. The fornix is a white matter bundle located in the mesial aspect of the cerebral hemispheres, which connects various nodes of a limbic circuitry and is believed to play a key role in cognition and episodic memory recall.</p>\n<p><strong>Extraedge:</strong></p><p>The locus coeruleus is a nucleus located in the pons. It is near the bottom of the fourth ventricle. The locus coeruleus is now thought to be the primary site of norepinephrine production in the brain. The nucleus sends norepinephrine throughout the cerebral cortex as well as to other systems such as the cerebellum, amygdala, spinal cord, and hippocampus These nerve cells have frequently expanded axons that project through the neuraxis and are the only source of norepinephrine to the neocortex, cerebellum, most of the thalamus region, and the hippocampus. The locus coeruleus (or “blue spot”) interacts with the amygdala, a group of cells near the brain responsible for the emotional It is the primary source of noradrenaline, a neurotransmitter in the brain. The norepinephrine (NE) locus coeruleus (LC) framework is implicated in the control of waking and sleeping processes. Stimulation of the locus coeruleus helps promote wakefulness. Neuromelanin-containing cells in the locus coeruleus start to degrade significantly in Parkinson’s disease. In Alzheimer’s disease (AD), the locus coeruleus deteriorates in the very early stages of disease progression, resulting in a gradual deterioration of noradrenaline nerve fibers of the neocortex and hippocampus.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A person with eyes closed and mind wandering will have the following wave in EEG:", "options": [{"label": "A", "text": "Beta waves", "correct": false}, {"label": "B", "text": "Alpha waves", "correct": true}, {"label": "C", "text": "Delta waves", "correct": false}, {"label": "D", "text": "Theta waves", "correct": false}], "correct_answer": "B. Alpha waves", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Alpha waves Alpha waves are rhythmic waves that occur at frequencies between 8 and 13 cycles/sec and are found in the EEGs of almost all healthy adults when they are awake and in a quiet, resting state of cerebration. These waves occur most intensely in the occipital region but can also be recorded from the parietal and frontal regions of the scalp. Their voltage is usually about 50 microvolts. During deep sleep, the alpha waves disappear.</p>\n<p><strong>Highyeild:</strong></p><p>Alpha rhythm: In adult humans who are awake but at rest with the mind wandering and the eyes closed, a fairly regular pattern of waves at a frequency of 8-13 Hz and amplitude of 50-100 V is recorded on EEG. Most prominent on parietal and occipital associated with decreased levels of attention. Beta waves: When attention is focused on something, the alpha rhythm is replaced by an irregular beta rhythm. It is a 13-30 Hz low-voltage activity. This phenomenon is called alpha block and can be produced by any form of sensory stimulation or mental concentration, such as solving arithmetic problems. Another term for this phenomenon is the arousal or alerting response because it is correlated with the aroused, alert state. It has also been called desynchronization because it represents the breaking up of the obviously synchronized neural activity necessary to produce regular waves. EEG DURING SLEEP Stage 1 NREM sleep is the transition from wakefulness to sleep, the EEG theta rhythm (4-7 Hz). Stage 2 of NREM sleep is marked by the appearance of sinusoidal waves called sleep spindles (7-15 Hz) and occasional high voltage biphasic waves called K complexes. Stage 3 of NREM sleep is characterized by the appearance of a high-amplitude delta rhythm (0.5-4 Hz) in the EEG, associated with a further reduction in arousal, and a further reduction in muscle tone. Stage 4 of non-REM sleep Deep sleep pattern of rhythmic high amplitude slow waves-Delta waves (indicative of marked synchronization of cortical and thalamic activity) is sometimes referred to as slow-wave sleep. While the occurrence of theta and delta rhythms is normal during sleep, their appearance during wakefulness is a sign of brain dysfunction (focal brain damage).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Nightmares are seen in:", "options": [{"label": "A", "text": "REM sleep", "correct": true}, {"label": "B", "text": "NREM stage II", "correct": false}, {"label": "C", "text": "NREM stage III", "correct": false}, {"label": "D", "text": "NREM stage IV", "correct": false}], "correct_answer": "A. REM sleep", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>REM sleep Nightmare syndrome involves dreams during REM sleep and is associated with abnormal psychological tests and psychiatric disorders.</p>\n<p><strong>Highyeild:</strong></p><p>Nightmares are unpleasant or frightening dreams that occur sporadically in virtually all children. The peak incidence occurs between 3 and 6 years of age. Developmental, genetic, psychological, and organic factors have been identified as causes of nightmares. Nightmares usually occur in the middle of the night or in the early morning when rapid eye movement sleep is more common. The content of the nightmare almost always involves a specific danger to the person. On awakening, the child is fully alert and can usually recall the details of the nightmare. Sporadic nightmares are common in children and require reassurance only. If nightmares are frequent and persistent, a psychological evaluation of the patient and family is indicated. Although sporadic nightmares may be normal responses to stress, chronic nightmares can be troublesome. Night terrors are most commonly associated with medication or illness in childhood. Post-traumatic stress disorder produces recurrent and repetitive nightmares. Also remember: REM sleep has several important characteristics: It is an active form of sleep usually associated with dreaming and active bodily muscle movements. The person is even more difficult to arouse by sensory stimuli than during deep slow-wave sleep, and yet people usually awaken spontaneously in the morning during an episode of REM sleep. Muscle tone throughout the body is exceedingly depressed, indicating strong inhibition of the spinal muscle control areas. Heart rate and the respiratory rate usually become irregular, which is characteristic of the dream state. Night terrors: Night terrors are a sleep disorder, resulting from partial arousal during slow-wave sleep (NREM Sleep). They usually occur within 2 hours of sleep onset and are characterized by agitation and unresponsiveness to external stimuli. Night terrors are bizarre sleep disorder that affects young children. The child partially awakes during the night agitated, afraid, and terrified, and cannot be consoled. The child cannot usually recall the events in the dream.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Other Options are not correct because Nightmare syndrome involves dreams during REM sleep.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Sleep is primarily regulated by:", "options": [{"label": "A", "text": "Thalamus", "correct": false}, {"label": "B", "text": "Hypothalamus", "correct": true}, {"label": "C", "text": "Putamen", "correct": false}, {"label": "D", "text": "Limbic cortex", "correct": false}], "correct_answer": "B. Hypothalamus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hypothalamus The hypothalamus is the best key center for sleep regulation, with hypothalamic neurotransmitter systems providing the framework for therapeutic advances.</p>\n<p><strong>Highyeild:</strong></p><p>Transitions between sleep and wakefulness manifest a circadian rhythm consisting of an average of 8 h of sleep and 16 h of wakefulness. Nuclei in both the brainstem and hypothalamus are critical for the transitions between these states of consciousness. Damage to the area produces a comatose state. Electrical stimulation of the posterior hypothalamus also produces arousal similar to that elicited by stimulation of the midbrain, while electrical stimulation of the anterior hypothalamus and adjacent basal forebrain region induces sleep. A variety of physiological functions, such as alertness (the sleep-wake cycle), body temperature, and secretion of hormones, exhibit cyclic activity that varies over a 24-h period called circadian rhythms and are controlled by the suprachiasmatic nucleus of the hypothalamus.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Option:- Option: A. The thalamus has a nonphotic influence on sleep, circadian rhythmicity, pineal melatonin production, and secretion. Option: C. The putamen is involved in learning and motor control, including speech articulation, language functions, reward, cognitive functioning, and addiction. Option: D. Strong activation of limbic regions during REM sleep suggests a role in the regulation of emotion.</p>\n<p><strong>Extraedge:</strong></p><p>The paraventricular nucleus secretes oxytocin and vasopressin, The ventromedial and lateral nuclei control food intake The arcuate nucleus secretes gonadotropin-releasing hormone. Jet Lag Disorder: The syndrome is transient, typically lasting 2-14 d depending on the number of time zones crossed, the direction of travel, and the traveler

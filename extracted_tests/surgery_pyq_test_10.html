@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Surgery - INI CET NOV 2020</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Surgery - INI CET NOV 2020</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                17 Questions | 17 Total Marks | 27 min Duration | ~95.29 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 17 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 27 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 17</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Surgery - INI CET NOV 2020 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 17</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 17 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which size of the IV line has been shown in the Image?", "options": [{"label": "A", "text": "16 g", "correct": false}, {"label": "B", "text": "18 g", "correct": false}, {"label": "C", "text": "20 g", "correct": true}, {"label": "D", "text": "22 g", "correct": false}], "correct_answer": "C. 20 g", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1694624915428-QTDSPYQ304IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>20 g</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is true about Tillaux sign?", "options": [{"label": "A", "text": "Mass is mobile perpendicular to the mesentery attachment line", "correct": true}, {"label": "B", "text": "Mass is brilliantly transilluminate", "correct": false}, {"label": "C", "text": "Mass is felt in the periumbilical region", "correct": false}, {"label": "D", "text": "A transverse band of resonance is felt on the percussion", "correct": false}], "correct_answer": "A. Mass is mobile perpendicular to the mesentery attachment line", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Mass is mobile perpendicular to the mesentery attachment line The patient has a significant swelling moving perpendicular to the attachment of mesentery characterized by a triad known as the Tillaux Triad . TILLAUX TRIAD Soft fluctuant swelling in the periumbilical region. Zone of hyper-resonance around the swelling. I am swelling, moving perpendicular to the attachment of mesentery. CT Scan: CT Scan of Mesenteric Cyst. Unilocular appearance without a solid component strongly suggests a benign cyst.</p>\n<p><strong>Highyeild:</strong></p><p>Chylolymphatic cysts arise from lymphatic tissue that is congenitally misplaced and has no communication with the lymphatic system. They mainly occur in the mesentery of the ileum , have a thin wall filled with clear lymph or chyle , and can attain a large size. They are primarily unilocular and solitary and have an independent blood supply from the adjacent intestine, making enucleation possible without gut resection. Enterogenous cysts are derived from a diverticulum of the mesenteric border of the intestine or duplication of the intestine . They have a thicker wall than chylolymphatic cysts and are lined by mucous membranes, sometimes ciliated. Their mucinous content can be colorless or yellowish-brown due to past hemorrhage. The muscle in their wall and adjacent bowel share a standard blood supply, and their removal always entails resection of the corresponding portion of the intestine.</p>\n<p><strong>Table:</strong></p><p>#MANTRA Mesenteric cysts can be of different types, including chylolymphatic, straightforward (mesothelial), heterogeneous, urogenital remnant, and dermoid (teratomatous cyst). Clinical features of mesenteric cysts include a painless abdominal swelling, recurrent attacks of abdominal pain with or without vomiting, acute abdominal pain, and Tillaux triad (fluctuant swelling near the umbilicus that moves freely in a plane perpendicular to the attachment of the mesentery, and a zone of resonance around the cyst). CT scan is the investigation of choice for the diagnosis of mesenteric cysts, while ultrasound is also helpful. Treatment for chylolymphatic cysts is enucleation , while heterogeneous cysts require resection and anastomosis . Aspiration alone has a high rate of cyst recurrence.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A bus conductor was diagnosed with varicose veins. On examination, skin eczema and Lipodermatosclerosis were noted. According to the CEAP classification system, he would be classified as", "options": [{"label": "A", "text": "C1", "correct": false}, {"label": "B", "text": "C2", "correct": false}, {"label": "C", "text": "C3", "correct": false}, {"label": "D", "text": "C4", "correct": true}], "correct_answer": "D. C4", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>C4</p>\n<p><strong>Highyeild:</strong></p><p>Varicose Veins : Factors affecting prevalence include (Higher Risk) Women > Men Age - Higher in 55-64 age groups BMI and Height Pregnancy Family History Smokers Occupation involving prolonged standing Symptoms : Aching, heaviness, throbbing, burning or bursting over affected areas Telangiectasia (not associated with malleolar fare) and reticular veins Signs : Tortuous dilated veins(Confined to GSV and SSV) Saphena Varix (Large, dilated veins around the SFJ may present as a (usually painless) lump, emergent when standing and disappearing when recumbent) GSV Incompetence - Medial thigh and calf varicosities SSV Incompetence - Posterolateral calf varicosities AAGSV Incompetence - Anterolateral thigh and calf varicosities Investigations : Duplex Scan Management : Compression Endothermal Ablation Endovenous Laser Ablation (EVLA) Radiofrequency Ablation (RFA) Non-endothermal, Non-tumescent ablation Ultrasound -Guided foam sclerotherapy Catheter-directed sclerotherapy and Mechanochemical ablation Endovenous glue Open Surgery Saphenofemoral ligation and Great saphenous stripping Saphenopopliteal junction ligation and petite saphenous stripping Adjunctive Surgical techniques Phlebectomy Perforator Ligation</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A: C1 - Varicose Veins Option B: C2 - Oedema Option C: C3 - Telangiectasia or reticular veins</p>\n<p><strong>Table:</strong></p><p>#MANTRA For clinical classification: CO: no signs of venous disease; C1: telangiectasia or reticular veins; C2: varicose veins; C3: edema; C4a: pigmentation or eczema; C4b: LDS or atrophy blanche; C4c Corona phlebectatica C5: healed venous ulcer; C6: active venous ulcer. The clinical class can be further characterized as symptomatic (s), asymptomatic (a) or recurrent following previous successful treatment or healing (r), e.g.  C2a, C2s, C6r. For aetiological classification: Ec: congenital; Ep: primary; Es: secondary (post-thrombotic); En: no venous cause identified. For anatomical classification: As: superficial veins; Ap: perforator veins; Ad: deep veins; An: no venous location identified. For pathophysiological classification: Pr: reflux; Po: obstruction; Pr,o: reflux and obstruction; Pn: no venous pathophysiology identifiable.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "According to the European Hernia Society classification, M3 incisional hernia refers to:", "options": [{"label": "A", "text": "Epigastric", "correct": false}, {"label": "B", "text": "Infraumbilical", "correct": false}, {"label": "C", "text": "Umbilical", "correct": true}, {"label": "D", "text": "Suprapubic", "correct": false}], "correct_answer": "C. Umbilical", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Umbilical The European Hernia Society (EHS) recommends the classification of postoperative hernia based on: the character of the hernia (primary/relapsing), location, size, and risk factors for relapse. Midline subxiphoid M1 epigastric M2 umbilical M3 infra umbilical M4 suprapubic M5 Lateral subcostal L1 flank L2 iliac L3 lumbar L4</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 25-year-old male patient was brought to the ER after RTA. His RR is 25/min, BP is 80/45mmHg. On examination, hyper-resonance is heard over the right side of the chest. The chest X-ray performed is given below. What would be the appropriate management in this case?", "options": [{"label": "A", "text": "Wide bore needle insertion in 5th ICS", "correct": false}, {"label": "B", "text": "Wide bore needle insertion in the 5th ICS followed by an intercostal drain in the 5th ICS", "correct": true}, {"label": "C", "text": "Aspiration of the pleural fluid", "correct": false}, {"label": "D", "text": "No intervention needed", "correct": false}], "correct_answer": "B. Wide bore needle insertion in the 5th ICS followed by an intercostal drain in the 5th ICS", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1694624918519-QTDSPYQ308IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Wide bore needle insertion in the 5th ICS followed by an intercostal drain in the 5th ICS Given case history and findings point to the diagnosis of tension pneumothorax. No apparent cause or known underlying lung pathology characterizes spontaneous pneumothorax or primary spontaneous pneumothorax . There may be contributing factors, such as cigarette smoke, family history, and rupture of the bulla (tiny air-filled sacs in the lung tissue), but these will not cause pneumothorax. Secondary or non-spontaneous or complicated pneumothorax occurs due to an underlying lung pathology such as COPD , Asthma , Tuberculosis , Cystic Fibrosis , or Whooping Cough. A pneumothorax can further be classified as a tension or non-tension pneumothorax.</p>\n<p><strong>Highyeild:</strong></p><p>A tension pneumothorax is caused by excessive pressure buildup around the lung due to a breach in the lung surface which will admit air into the pleural cavity during inspiration but will not allow any air to escape during expiration. The breach acts as a one-way valve. This leads to lung collapse . The air is removed through the surgical incision by inserting an underwater drain in the pleural cavity. This excessive pressure can also prevent the heart from pumping effectively, which may lead to shock. A non-tension pneumothorax is not considered as severe as there is no ongoing accumulation of air, and therefore there is no increased pressure on the organs and the chest. Treatment options include: Conservative management with observation until the body naturally resorbs the air Simple aspiration Chest tube placement - Simple chest tube placement alone has a high recurrence rate (about 65%) in patients with LAM. Heimlich valve (HV) insertion - a lightweight one-way valve designed for the ambulatory treatment of pneumothorax (with an intercostal catheter) Pleurodesis through a chest tube - a procedure that obliterates the pleural space to prevent future pneumothoraces. Mechanical (using physical abrasion) Chemical (using talc, doxycycline, bleomycin , or other agents) . While chemical pleurodesis through a chest tube can be successful, this may result in incomplete pleurodesis due to the uneven distribution of the chemical. Surgery - Surgical treatment using video-assisted thoracoscopy (VATS) , is the preferred approach. A wide bore needle in the 5th ICS followed by ICD/ Thoracostomy is the most appropriate approach for this patient in the emergency setting.</p>\n<p><strong>Extraedge:</strong></p><p>The pleural cavity pressure is < the atmospheric pressure The pleural cavity = pressure is the atmospheric pressure The pleural cavity pressure is > the atmospheric pressure Indications for surgical intervention for pneumothorax include: Second ipsilateral pneumothorax First contralateral pneumothorax Bilateral spontaneous pneumothorax Pneumothorax fails to settle despite chest drainage Spontaneous haemothorax: professions at risk (e.g., pilots, divers) Pregnancy</p>\n<p><strong>Table:</strong></p><p>#MANTRA</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "According to Strasberg’s classification of bile duct injury. Injury to the right aberrant posterior sectoral duct with bile leak is:", "options": [{"label": "A", "text": "Type A", "correct": false}, {"label": "B", "text": "Type B", "correct": false}, {"label": "C", "text": "Type C", "correct": true}, {"label": "D", "text": "Type D", "correct": false}], "correct_answer": "C. Type C", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Type C Strasberg classification of bile duct injuries and strictures: Class A: injury to small ducts in continuity with the biliary system, with a leak in the duct of Luschka or the cystic duct. Class B: injury to a sectoral duct, resulting in obstruction of part of the biliary system. Class C: injury to a sectoral duct with bile leak; bile leakage occurs from a duct not continuous with the biliary system. Class D: lateral injury to the extrahepatic biliary ducts. Class E1: stricture >2 cm from the bifurcation of the right and left bile ducts. Class E2: stricture <2 cm from the bifurcation of the right and left bile ducts. Class E3: stricture at the bifurcation of the right and left bile ducts. Class E4: stricture involving the right and left bile ducts; the left and right ducts are not continuous. Class E5: complete occlusion of all bile ducts, including sectoral ducts.</p>\n<p><strong>Table:</strong></p><p>#MANTRA Bile duct injuries The rate of bile duct injury during open cholecystectomy is low (0.1-0.2%), while it is higher during laparoscopic cholecystectomy (0.3-0.85%). Bile duct injury can be caused by acute or chronic inflammation, obesity, anatomic variation, bleeding, acute cholecystitis, pancreatitis, cholangitis, and obstructive jaundice . Inadequate surgical technique and failure to identify structures before ligating or dividing them are common causes of significant biliary injury. Intraoperative cholangiography may help limit the extent of bile duct injury but does not prevent it. Symptoms of bile duct injury may include jaundice with or without abdominal pain. Major ductal injuries are often recognized intraoperatively due to bile leakage, abnormal cholangiogram, or late anatomy recognition. Patients may present with cholangitis or cirrhosis months or years after prior surgery due to a biliary tract injury. Diagnosis of bile duct injury involves imaging studies like USG or CT . The patient should be stabilized with immediate parenteral antibiotics, image-guided percutaneous drainage of fluid collections , and Cholangiography done to identify the level and nature of the Postoperative biliary strictures are best diagnosed with PTC , while ERCP is useful for patients with bile duct continuity who require urgent cholangiography and biliary decompression. CT arteriography is useful in preoperatively evaluating patients with benign biliary strictures to detect unrecognized injury to the hepatic artery or a portal vein branch. In patients presenting with late strictures with evidence of liver dysfunction, a CT arteriogram should be performed to evaluate for evidence of portal hypertension.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 43-year-old post-cholecystectomy patient presents with pain in the right upper quadrant on the second postoperative day. Evaluation reveals a collection in Morrison’s pouch/subhepatic space. Which will be the gold standard investigation for him?", "options": [{"label": "A", "text": "MRCP", "correct": false}, {"label": "B", "text": "HIDA", "correct": true}, {"label": "C", "text": "ERCP", "correct": false}, {"label": "D", "text": "CECT", "correct": false}], "correct_answer": "B. HIDA", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>HIDA HIDA is the best test to diagnose bile leak. It is the most sensitive test in this scenario. ERCP : standard treatment for a bile duct leak since the bile duct does not dilate, it might be tough to find the exact position of the bile leak from radiological examination. Only about 25% of major bile duct injuries (common bile duct or hepatic duct) are recognized during Most commonly, intraoperative bile leakage, recognition of the correct anatomy, and an abnormal cholangiogram lead to the diagnosis of a bile duct injury. More than half of patients with biliary injury will present within the first postoperative month. The remainder will present months or years later, with recurrent cholangitis or cirrhosis from a remote bile duct injury. In the early postoperative period, patients present either with a progressive elevation  of  liver  function  tests  due  to  an  occluded or a Stenosed bile duct or with a bile leak from an injured duct. Bile leak, most commonly from the cystic duct stump, a transected aberrant right hepatic duct, or a lateral injury to the main bile duct, usually presents with pain, fever, and a mild elevation of liver function tests. A CT scan or an ultrasound will show either a  collection  (biloma)  in  the  gallbladder  area  or  free  fluid (bile) in the peritoneum (Fig. 32-24). Bilious drainage through operatively placed  drains or through  the wounds  is The site of the bile leak can be confirmed noninvasively with a HIDA scan. Cystic duct leaks can usually be managed with percutaneous drainage of intra-abdominal fluid collections followed by endoscopic biliary stenting (see Fig). Computed tomographic scan of a patient with bile leak after cholecystectomy. The short arrows indicate the intraperitoneal collections. Air and bile are seen in the gallbladder bed (long arrow) and a surgical clip. An endoscopic retrograde cholangiogram- raphy from the same patient showing a leak from the cystic duct stump (arrow). Note the filling of the pancreatic duct.</p>\n<p><strong>Highyeild:</strong></p><p>Radioisotope Scanning : Technetium-99m labeled iminodiacetic acid derivatives (HIDA, IODIDA) are used for selective uptake by the liver

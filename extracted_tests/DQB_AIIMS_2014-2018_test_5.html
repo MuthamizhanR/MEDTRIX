@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Ent Aiims 2014 2018</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Ent Aiims 2014 2018</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                70 Questions | 220 Total Marks | 80 min Duration | ~68.57 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 70 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 80 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 70</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Ent Aiims 2014 2018 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 70</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 70 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Eustachian tube function is best assessed by", "options": [{"label": "A", "text": "Politzer test", "correct": false}, {"label": "B", "text": "VEMP", "correct": false}, {"label": "C", "text": "Rhinomanometry", "correct": false}, {"label": "D", "text": "Tympanometry", "correct": true}], "correct_answer": "D. Tympanometry", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/11(298).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 14 years boy presents with nasal obstruction, proptosis (Fig),recurrent epistaxis from 3–4 years not responding to anterior nasal packing. Which artery is source of bleeding", "options": [{"label": "A", "text": "Internal maxillary artery", "correct": true}, {"label": "B", "text": "Ascending pharyngeal artery", "correct": false}, {"label": "C", "text": "Facial artery", "correct": false}, {"label": "D", "text": "Anterior Ethmoidal artery", "correct": false}], "correct_answer": "A. Internal maxillary artery", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/ENT.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/44967581700824965/44967581700824965.m3u8"}, {"text": "Topical treatment forrecurrent respiratory papillomatosis includes", "options": [{"label": "A", "text": "Acyclovir", "correct": false}, {"label": "B", "text": "Cidofovir", "correct": true}, {"label": "C", "text": "Ranitidine", "correct": false}, {"label": "D", "text": "Zinc", "correct": false}], "correct_answer": "B. Cidofovir", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Kashima operation is done for", "options": [{"label": "A", "text": "Vocal cord palsy", "correct": true}, {"label": "B", "text": "Recurrent cholesteatoma", "correct": false}, {"label": "C", "text": "Atrophic rhinitis", "correct": false}, {"label": "D", "text": "Choanal atresia", "correct": false}], "correct_answer": "A. Vocal cord palsy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A Patients presents to your clinic for evaluation of defective hearing. Rinnie’s test shows air conduction greater than the bone conduction on both sides with Weber test Lateralized to right ear. What is the next logical step?", "options": [{"label": "A", "text": "Normal test", "correct": false}, {"label": "B", "text": "Schwabach’s test", "correct": true}, {"label": "C", "text": "Repeat Rinnie’s test on right side", "correct": false}, {"label": "D", "text": "Wax removal", "correct": false}], "correct_answer": "B. Schwabach’s test", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is the most common type of congenital ossicular dysfunction?", "options": [{"label": "A", "text": "Isolated stapes defect", "correct": false}, {"label": "B", "text": "Stapes defect with fixation of footplate and lenticular process involvement", "correct": true}, {"label": "C", "text": "Defective lenticular process of incus", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "B. Stapes defect with fixation of footplate and lenticular process involvement", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(67).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following tests is recommended for neonatal screening of hearing?", "options": [{"label": "A", "text": "Automated auditory brainstem response", "correct": false}, {"label": "B", "text": "Spontaneous OAE", "correct": false}, {"label": "C", "text": "Evoked OAE", "correct": true}, {"label": "D", "text": "Distorted product OAE", "correct": false}], "correct_answer": "C. Evoked OAE", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/image-20200630152050-1.png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following instruments are required for tonsillectomy except :", "options": [{"label": "A", "text": "Harmonic scalpel", "correct": false}, {"label": "B", "text": "Coblation wand", "correct": false}, {"label": "C", "text": "suction diathermy", "correct": true}, {"label": "D", "text": "Microdebrider", "correct": false}], "correct_answer": "C. suction diathermy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45 year old lady presented with complaints of nasal congestion , stuffiness ,discharge and anosmia . CT scan of paranasal sinus was done as shown below what is the diagnosis :", "options": [{"label": "A", "text": "Ethmoidal polyp", "correct": false}, {"label": "B", "text": "Antrochonal polyp", "correct": false}, {"label": "C", "text": "Allergic fungal sinusitis", "correct": true}, {"label": "D", "text": "Nasoethmoidal carcinoma", "correct": false}], "correct_answer": "C. Allergic fungal sinusitis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/image-20200630152156-1.jpeg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/30253031700815582/30253031700815582.m3u8"}, {"text": "Identify the encircled structure in middle ear cavity :", "options": [{"label": "A", "text": "Sinus tympani", "correct": true}, {"label": "B", "text": "Pyramidal fossa", "correct": false}, {"label": "C", "text": "Fossa incudes", "correct": false}, {"label": "D", "text": "Facial recess", "correct": false}], "correct_answer": "A. Sinus tympani", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/image(1043).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "5 year old child presents with voice change and stirdor Identify the abnormality marked on the fiberoptic laryngoscopy:", "options": [{"label": "A", "text": "Hemangioma", "correct": false}, {"label": "B", "text": "Respiratory papillomatosis", "correct": true}, {"label": "C", "text": "Carcinoma larynx", "correct": false}, {"label": "D", "text": "Respiratory nodules", "correct": false}], "correct_answer": "B. Respiratory papillomatosis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(56).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A construction worker met with an accident and presented to the trauma centre when a heavy concrete block fell over his face. He was found to have severe maxillofacial and laryngeal injury. He was not able to open his mouth and, on examination, he is found to have multiple fractures and obstruction in patent airway, the following procedure was done for him. Which of the following options correct define the procedure?", "options": [{"label": "A", "text": "Submental endotracheal intubation.", "correct": false}, {"label": "B", "text": "Emerency tracheostomy", "correct": false}, {"label": "C", "text": "Cricothyroidotomy", "correct": true}, {"label": "D", "text": "Subcutaneous tracheostomy", "correct": false}], "correct_answer": "C. Cricothyroidotomy", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/image(1045).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54297761701440887/54297761701440887.m3u8"}, {"text": "According to the WHO definition of hearing loss, what is the value to classify as profound hearing loss?", "options": [{"label": "A", "text": "61-71 dB", "correct": false}, {"label": "B", "text": ">81 dB", "correct": true}, {"label": "C", "text": ">91 dB", "correct": false}, {"label": "D", "text": ">101 dB", "correct": false}], "correct_answer": "B. >81 dB", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/WhatsApp%20Image%202023-09-12%20at%2010_28_21%20AM.jpeg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the diagnosis on the audiogram shown below?", "options": [{"label": "A", "text": "Otosclerosis", "correct": true}, {"label": "B", "text": "Ototoxicity", "correct": false}, {"label": "C", "text": "Meniere disease", "correct": false}, {"label": "D", "text": "Noise induced hearing loss", "correct": false}], "correct_answer": "A. Otosclerosis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4(46).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 6-years-old with gradually progressive hoarseness of voice over three months and respiratory distress for 2 weeks. Diagnosis is:", "options": [{"label": "A", "text": "Croup", "correct": false}, {"label": "B", "text": "Acute epiglottitis", "correct": false}, {"label": "C", "text": "Vocal nodule", "correct": false}, {"label": "D", "text": "Respiratory papillomatosis", "correct": true}], "correct_answer": "D. Respiratory papillomatosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the following line shown in the below picture", "options": [{"label": "A", "text": "Ohngren line", "correct": true}, {"label": "B", "text": "Kassum line", "correct": false}, {"label": "C", "text": "Donaldson line", "correct": false}, {"label": "D", "text": "Frankfurt line", "correct": false}], "correct_answer": "A. Ohngren line", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/77238.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not ligated in case of epistaxis control?", "options": [{"label": "A", "text": "Anterior ethmoidal artery", "correct": false}, {"label": "B", "text": "Maxillary artery", "correct": false}, {"label": "C", "text": "External carotid artery", "correct": false}, {"label": "D", "text": "Internal carotid artery", "correct": true}], "correct_answer": "D. Internal carotid artery", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22157561700564248/22157561700564248.m3u8"}, {"text": "An intraoperative photograph of cortical mastoidectomy. Which of the following is the lateral semi-circular canal?", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "B", "correct": true}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "B. B", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/6(33).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which facial sinus continues to grow even in adulthood?", "options": [{"label": "A", "text": "Frontal", "correct": true}, {"label": "B", "text": "Maxillary", "correct": false}, {"label": "C", "text": "Ethmoid", "correct": false}, {"label": "D", "text": "Sphenoid", "correct": false}], "correct_answer": "A. Frontal", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The patient came with an ulcer on the side of the nose as shown, which bleeds on itching. What is the diagnosis?", "options": [{"label": "A", "text": "Squamous cells carcinoma", "correct": false}, {"label": "B", "text": "Basal cell carcinoma", "correct": true}, {"label": "C", "text": "Marjolin’s ulcer", "correct": false}, {"label": "D", "text": "Nevus", "correct": false}], "correct_answer": "B. Basal cell carcinoma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8(30).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/9(24).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following arteries of the Kiesselbach’s plexus is not a branch of ECA.", "options": [{"label": "A", "text": "Sphenopalatine artery", "correct": false}, {"label": "B", "text": "Greater Palatine artery", "correct": false}, {"label": "C", "text": "Anterior & middle, posterior ethmoidal arteries", "correct": true}, {"label": "D", "text": "Septal branch of the superior labial artery", "correct": false}], "correct_answer": "C. Anterior & middle, posterior ethmoidal arteries", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/ENT-28(1).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Target sign is seen in a blot test from nasal discharge in which of these conditions.", "options": [{"label": "A", "text": "Traumatic CSF leak", "correct": true}, {"label": "B", "text": "Fracture mastoid", "correct": false}, {"label": "C", "text": "Spontaneous CSF leak", "correct": false}, {"label": "D", "text": "Meningoencephalocele", "correct": false}], "correct_answer": "A. Traumatic CSF leak", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/55332841701439181/55332841701439181.m3u8"}, {"text": "A steel factory worker is suffering from noise induced hearing loss. Which of the following is most likely to be affected?", "options": [{"label": "A", "text": "Inner hair cells", "correct": true}, {"label": "B", "text": "Macula", "correct": false}, {"label": "C", "text": "Crista ampullaris", "correct": false}, {"label": "D", "text": "Saccule", "correct": false}], "correct_answer": "A. Inner hair cells", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the structure marked as A?", "options": [{"label": "A", "text": "Incus", "correct": false}, {"label": "B", "text": "Stapes footplate", "correct": false}, {"label": "C", "text": "Lateral semic circular canal", "correct": false}, {"label": "D", "text": "Malleus", "correct": true}], "correct_answer": "D. Malleus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/11(22).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Gelles test is done in?", "options": [{"label": "A", "text": "Otosclerosis", "correct": true}, {"label": "B", "text": "Serous otitis media", "correct": false}, {"label": "C", "text": "Traumatic hearing loss", "correct": false}, {"label": "D", "text": "Age related hearing loss", "correct": false}], "correct_answer": "A. Otosclerosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Best surgery to relieve intractable vertigo in a menieres disease patient is?", "options": [{"label": "A", "text": "Labyrinthectomy", "correct": true}, {"label": "B", "text": "Cochlear Neurectomy", "correct": false}, {"label": "C", "text": "Endolymphatic sac decompression", "correct": false}, {"label": "D", "text": "Cochleosacculotomy", "correct": false}], "correct_answer": "A. Labyrinthectomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 12 years adolescent male presents with unilateral mass in nose with recurrent spontaneous bleeding. On examination a pink mass covered with mucosa is found in the nasopharynx. Which of the following is not to be done?", "options": [{"label": "A", "text": "Biopsy is done for diagnosis", "correct": true}, {"label": "B", "text": "CECT is done", "correct": false}, {"label": "C", "text": "Endoscopy surgery can be done", "correct": false}, {"label": "D", "text": "Angioembolization can be performed", "correct": false}], "correct_answer": "A. Biopsy is done for diagnosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Caloric test was done on right side with cold water. Eyes moved to the opposite side. Which of the following corresponds to correct interpretation of nystagmus in this test?", "options": [{"label": "A", "text": "Eyes move slowly to right", "correct": false}, {"label": "B", "text": "Eyes move slowly to left", "correct": false}, {"label": "C", "text": "Eyes move rapidly to left", "correct": true}, {"label": "D", "text": "Eyes move rapidly to right", "correct": false}], "correct_answer": "C. Eyes move rapidly to left", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55 years-old male presents with a lesion of 2.5*3.5 cm on lateral border of tongue with induration. There is no associated lymphadenopathy. What is the staging according to the 8th AJCC guidelines-", "options": [{"label": "A", "text": "T2N0M0", "correct": true}, {"label": "B", "text": "T3N1M0", "correct": false}, {"label": "C", "text": "T4N3M0", "correct": false}, {"label": "D", "text": "T3N2M0", "correct": false}], "correct_answer": "A. T2N0M0", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/12(19).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A boy having unilateral nasal obstruction with epistaxis for several months. ON CT PNS it is found to have enhancing lesion with minimal extension to sphenoid sinus & no lateral extension. what is stage?", "options": [{"label": "A", "text": "1a", "correct": false}, {"label": "B", "text": "1b", "correct": true}, {"label": "C", "text": "2a", "correct": false}, {"label": "D", "text": "2b", "correct": false}], "correct_answer": "B. 1b", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/13(17).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not related to olfaction?", "options": [{"label": "A", "text": "Hypoglossal nerve", "correct": true}, {"label": "B", "text": "Glossopharyngeal nerve", "correct": false}, {"label": "C", "text": "Trigeminal nerve", "correct": false}, {"label": "D", "text": "Vagus nerve", "correct": false}], "correct_answer": "A. Hypoglossal nerve", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A middle aged while turning on side of his bed has a sensation of severe vertigo. Most probable diagnosis is ?", "options": [{"label": "A", "text": "Bppv", "correct": true}, {"label": "B", "text": "Vestibular neuronitis", "correct": false}, {"label": "C", "text": "Labyrinthitis", "correct": false}, {"label": "D", "text": "Meniere disease", "correct": false}], "correct_answer": "A. Bppv", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is correct regarding the cervical lymph node", "options": [{"label": "A", "text": "Level 2 between myelohyoid base to cricoid", "correct": false}, {"label": "B", "text": "Level 3 between cricoid to clavicle", "correct": false}, {"label": "C", "text": "level 5 between base of skull to clavicle", "correct": false}, {"label": "D", "text": "Level 6 between cricoid to clavicle", "correct": true}], "correct_answer": "D. Level 6 between cricoid to clavicle", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Vocal cord position when cricoarytenoids are in neutral positions:", "options": [{"label": "A", "text": "Paramedian", "correct": false}, {"label": "B", "text": "Median", "correct": false}, {"label": "C", "text": "Intermediate", "correct": true}, {"label": "D", "text": "Abducted", "correct": false}], "correct_answer": "C. Intermediate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Brainstem evoked potential in vestibular schwannoma:", "options": [{"label": "A", "text": "Flat amplitude", "correct": false}, {"label": "B", "text": "Increased amplitude in 5, 6", "correct": false}, {"label": "C", "text": "Decreased amplitude in 5, 6", "correct": false}, {"label": "D", "text": "Increased amplitude in 1 to 5", "correct": false}, {"label": "E", "text": "Increased inter-wave latency between 1, 5 and 1 and 3 waves", "correct": true}], "correct_answer": "E. Increased inter-wave latency between 1, 5 and 1 and 3 waves", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Optic nerve injury following sinus surgery (FESS) is due to removal of which ethmoidal cells?", "options": [{"label": "A", "text": "Haller", "correct": false}, {"label": "B", "text": "Aggernasi", "correct": false}, {"label": "C", "text": "Onodi cells", "correct": true}, {"label": "D", "text": "Bullae cells", "correct": false}], "correct_answer": "C. Onodi cells", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/77270.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following are true regarding laryngeal papillomatosis", "options": [{"label": "A", "text": "Zinc treatment is enough", "correct": false}, {"label": "B", "text": "Surgery is required in all cases", "correct": false}, {"label": "C", "text": "CO2 laser is enough to treat all cases", "correct": false}, {"label": "D", "text": "Causative organism is HPV", "correct": true}], "correct_answer": "D. Causative organism is HPV", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Kashima surgery is true statement is", "options": [{"label": "A", "text": "CO2 mediated cordectomy", "correct": true}, {"label": "B", "text": "For treatment of RLN palsy", "correct": false}, {"label": "C", "text": "Done in dysplastic vocal cords", "correct": false}, {"label": "D", "text": "Done for carcinoma larynx", "correct": false}], "correct_answer": "A. CO2 mediated cordectomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the neurotransmitter for inner hair cells", "options": [{"label": "A", "text": "GABA", "correct": false}, {"label": "B", "text": "Glutamate", "correct": true}, {"label": "C", "text": "Glycine", "correct": false}, {"label": "D", "text": "Acetylcholine", "correct": false}], "correct_answer": "B. Glutamate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the safe limit of noise levels in a city", "options": [{"label": "A", "text": "80 dB", "correct": false}, {"label": "B", "text": "60 dB", "correct": false}, {"label": "C", "text": "45 dB", "correct": true}, {"label": "D", "text": "120 dB", "correct": false}], "correct_answer": "C. 45 dB", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Pathology shown in given coronal CT scan slice should be corrected by?", "options": [{"label": "A", "text": "Open reduction immediately", "correct": false}, {"label": "B", "text": "Open reduction after 3 days", "correct": false}, {"label": "C", "text": "Open reduction after 3 weeks", "correct": true}, {"label": "D", "text": "Open reduction after 3 months", "correct": false}], "correct_answer": "C. Open reduction after 3 weeks", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7728.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/38019871701439192/38019871701439192.m3u8"}, {"text": "All of the following statement are true about pterygopalatine fossa except", "options": [{"label": "A", "text": "Anteroinferiorly lies the vidian nerve", "correct": false}, {"label": "B", "text": "Constitutes third part of maxillary artery", "correct": false}, {"label": "C", "text": "Medially it communicates with infratemporal fossa via pterygopalatine fissure", "correct": true}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "C. Medially it communicates with infratemporal fossa via pterygopalatine fissure", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following nerve is injured in the pyriform fossa while taking out a fish bone?", "options": [{"label": "A", "text": "Internal laryngeal nerve", "correct": true}, {"label": "B", "text": "External laryngeal nerve", "correct": false}, {"label": "C", "text": "Recurrent laryngeal nerve", "correct": false}, {"label": "D", "text": "Superior laryngeal nerve", "correct": false}], "correct_answer": "A. Internal laryngeal nerve", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the most common in the below condition", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": true}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "C. C", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/14(19).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/image(1046).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "True regarding rhinitis medicamentosa and its associations is/are?", "options": [{"label": "A", "text": "Long term use of steroids may be causative", "correct": false}, {"label": "B", "text": "Steroids may produce inflammation and hypertrophy of turbinates predisposing to this", "correct": false}, {"label": "C", "text": "Long term use of alpha adrenergic agonists may be causative", "correct": false}, {"label": "D", "text": "May be produced by cocaine sniffing", "correct": false}, {"label": "E", "text": "Only 5-10% may regress despite high-dose steroids", "correct": false}], "correct_answer": "Unknown", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• Explanation: Rhinitis medicamentosa</li><li>• The term indicates “persistent rhinitis induced by prolonged use of topical nasal decongestants (sympathomimetic amines and imidazoles)” (Task force definition). It is classified as “non-allergic rhinitis” (Old PGI MCQ) Mostly caused by topical sympathetic agents (e.g. alpha-adrenergic agonists like xylometazoline) May rarely be produced by cocaine sniffing and benzalkonium chloride. Persistent adrenergic stimulation producing refractoriness and rebound vasodilatation may be the pathophysiology After use of topical sympathetic agents beyond 3-5 days, there is rebound vasodilatation, nasal obstruction, edema, erythema and reduced efficacy of the drug. This congestion causes the patient to increase the frequency of application and the quantity applied, resulting in dependence on topical nasal decongestants Clinical rhinoscopic examination is non-specific, showing areas of red, thickened mucosa and dull zones It is treated by withdrawal of nasal drops, short course of systemic steroid therapy and in some cases, surgical reduction of turbinates, if they have become hypertrophied (Dhingra) Both topical and systemic steroids are effective in most cases. Topical antihistamines may also be tried (Sataloff”s)</li><li>• The term indicates “persistent rhinitis induced by prolonged use of topical nasal decongestants (sympathomimetic amines and imidazoles)” (Task force definition).</li><li>• It is classified as “non-allergic rhinitis” (Old PGI MCQ)</li><li>• Mostly caused by topical sympathetic agents (e.g. alpha-adrenergic agonists like xylometazoline)</li><li>• May rarely be produced by cocaine sniffing and benzalkonium chloride.</li><li>• Persistent adrenergic stimulation producing refractoriness and rebound vasodilatation may be the pathophysiology</li><li>• After use of topical sympathetic agents beyond 3-5 days, there is rebound vasodilatation, nasal obstruction, edema, erythema and reduced efficacy of the drug.</li><li>• This congestion causes the patient to increase the frequency of application and the quantity applied, resulting in dependence on topical nasal decongestants</li><li>• Clinical rhinoscopic examination is non-specific, showing areas of red, thickened mucosa and dull zones</li><li>• It is treated by withdrawal of nasal drops, short course of systemic steroid therapy and in some cases, surgical reduction of turbinates, if they have become hypertrophied (Dhingra)</li><li>• Both topical and systemic steroids are effective in most cases. Topical antihistamines may also be tried (Sataloff”s)</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Features seen with malar fracture of zygomatic bone may include?", "options": [{"label": "A", "text": "Flattening of the cheeks", "correct": false}, {"label": "B", "text": "Trismus", "correct": false}, {"label": "C", "text": "CSF rhinorrhea", "correct": false}, {"label": "D", "text": "Anesthesia in infraorbital nerve distribution", "correct": false}, {"label": "E", "text": "Paraesthesia due to facial nerve injury", "correct": false}], "correct_answer": "Unknown", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "True regarding otosclerosis is/are?", "options": [{"label": "A", "text": "Can be autosomal dominant", "correct": false}, {"label": "B", "text": "Ossicular chain disruption leads to painful conductive deafness", "correct": false}, {"label": "C", "text": "Flamingo pink to bluish hue", "correct": false}, {"label": "D", "text": "Initially involves stapes", "correct": false}, {"label": "E", "text": "More common in males", "correct": false}], "correct_answer": "Unknown", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Correct statement(s) regarding Caldwell-Luc operation?", "options": [{"label": "A", "text": "Done for chronic maxillary sinusitis", "correct": false}, {"label": "B", "text": "Maxillary nerve block is not done since always done under GA", "correct": false}, {"label": "C", "text": "Done for biopsy in antral malignancy", "correct": false}, {"label": "D", "text": "Passage to maxillary sinus created", "correct": false}, {"label": "E", "text": "Infra-orbital nerve is damaged", "correct": false}], "correct_answer": "Unknown", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• Explanation: Caldwell-Luc operation</li><li>• Caldwell-Luc operation is a process of opening the maxillary antrum through canine fossa by sub-labial approach and dealing with the pathology inside the antrum. Can be done under LA.</li><li>• Indications:</li><li>• Chronic maxillary sinusitis with irreversible changes in the sinus mucosa. Removal of foreign bodies or root of a tooth. Dental cyst. Oroantral fistula. Suspected neoplasm in the antrum and its biopsy. Recurrent antrochoanal polyp. Fracture of maxilla or blow-out fractures of the orbit. As an approach to ethmoids (Horgan

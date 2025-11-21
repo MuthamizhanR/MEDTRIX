@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Mid Day Module (Derma+Patho 1)   2025 02 24</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Mid Day Module (Derma+Patho 1)   2025 02 24</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                50 Questions | 200 Total Marks | 60 min Duration | ~72.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 50 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 60 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 50</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Mid Day Module (Derma+Patho 1)   2025 02 24 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 50</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 50 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which of the following is not true about medulloblastoma?", "options": [{"label": "A", "text": "Radiosensitive tumor", "correct": false}, {"label": "B", "text": "Spreads through CSF", "correct": false}, {"label": "C", "text": "Surgical treatment not done", "correct": true}, {"label": "D", "text": "Occurs in young age group", "correct": false}], "correct_answer": "C. Surgical treatment not done", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Surgical treatment not done</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A: Medulloblastoma is a radiosensitive tumor and radiation therapy is often part of the treatment plan.</li><li>• Option A:</li><li>• Medulloblastoma</li><li>• radiosensitive tumor</li><li>• radiation therapy</li><li>• Option B: Medulloblastoma commonly spreads through the cerebrospinal fluid (CSF), leading to leptomeningeal dissemination .</li><li>• Option B:</li><li>• Medulloblastoma</li><li>• spreads through the cerebrospinal fluid</li><li>• leptomeningeal dissemination</li><li>• Option D: Medulloblastoma predominantly occurs in the pediatric age group .</li><li>• Option D:</li><li>• Medulloblastoma</li><li>• pediatric age group</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Surgical treatment is indeed performed for medulloblastoma and it is an important part of the management strategy for this type of tumor .</li><li>➤ Surgical treatment</li><li>➤ performed for medulloblastoma</li><li>➤ management strategy</li><li>➤ tumor</li><li>➤ Ref : Robbins 10 th / 1298</li><li>➤ Ref</li><li>➤ : Robbins 10 th / 1298</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30-year-old female in her third trimester of pregnancy presents to the dermatology clinic with a 2-week history of itchy, tense blisters centralized on her abdomen, especially around the umbilical area. The blisters are on an erythematous base and she denies any prior history of similar lesions. She has no significant medical history and her pregnancy has been uneventful until these skin changes. Examination does not reveal involvement of the mucous membranes. Based on the clinical presentation, the most likely diagnosis is ?", "options": [{"label": "A", "text": "Bullous Pemphigoid", "correct": false}, {"label": "B", "text": "Dermatitis Herpetiformis", "correct": false}, {"label": "C", "text": "PUPPP", "correct": false}, {"label": "D", "text": "Pemphigoid Gestationis", "correct": true}], "correct_answer": "D. Pemphigoid Gestationis", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/24/23.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/24/24.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/24/555.jpg"], "explanation": "<p><strong>Ans.</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A . Bullous pemphigoid:</li><li>• Option A</li><li>• Incorrect because it typically affects older individuals and is not associated with pregnancy.</li><li>• Incorrect because it typically affects older individuals and is not associated with pregnancy.</li><li>• older individuals</li><li>• Option B . Dermatitis herpetiformis:</li><li>• Option B</li><li>• Incorrect because this condition presents with grouped vesicles and intense pruritus , often on extensor surfaces, and is associated with celiac disease.</li><li>• Incorrect because this condition presents with grouped vesicles and intense pruritus , often on extensor surfaces, and is associated with celiac disease.</li><li>• grouped vesicles</li><li>• intense pruritus</li><li>• extensor</li><li>• celiac disease.</li><li>• Option C . PUPPP (Pruritic Urticarial Papules and Plaques of Pregnancy):</li><li>• Option C</li><li>• Incorrect because PUPPP usually presents with urticarial papules and plaques , starts in the stretch marks of the abdomen, and typically does not involve the formation of blisters.</li><li>• Incorrect because PUPPP usually presents with urticarial papules and plaques , starts in the stretch marks of the abdomen, and typically does not involve the formation of blisters.</li><li>• urticarial papules and plaques</li><li>• stretch marks</li><li>• not</li><li>• blisters.</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Pemphigoid gestationis is a pruritic , vesiculobullous disorder of pregnancy p resenting with tense blisters around the umbilical area , typically occurring in the second or third trimester , without mucosal involvement.</li><li>➤ Pemphigoid gestationis is a pruritic , vesiculobullous disorder of pregnancy p resenting with tense blisters around the umbilical area , typically occurring in the second or third trimester , without mucosal involvement.</li><li>➤ Pemphigoid gestationis</li><li>➤ pruritic</li><li>➤ pregnancy p</li><li>➤ tense blisters</li><li>➤ umbilical area</li><li>➤ second or third trimester</li><li>➤ Ref: Rooks Textbook of Dermatology- 9 th Edition Page No 115.13</li><li>➤ Ref:</li><li>➤ Rooks Textbook of Dermatology- 9 th Edition Page No 115.13</li><li>➤ Bolognia Textbook of Dermatology 4 th Edition Page No 472</li><li>➤ Bolognia Textbook of Dermatology 4 th Edition Page No 472</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A primigravida in her 3 rd Trimester develops intensely itchy grouped vesicles in the periumbilical area. A diagnosis of Herpes gestation is made based on these features. Which of the following is INCORRECT statement among the following options regarding this condition?", "options": [{"label": "A", "text": "It resolves spontaneously in P[ostpartum Period", "correct": false}, {"label": "B", "text": "Herpes Simplex Virus- 1 is responsible for Cross Reaction with Skin Antigens & Antibody Formation", "correct": true}, {"label": "C", "text": "Associated with Antibodies against BP180 Antigen", "correct": false}, {"label": "D", "text": "Variant of Bullous Pemphigoid", "correct": false}], "correct_answer": "B. Herpes Simplex Virus- 1 is responsible for Cross Reaction with Skin Antigens & Antibody Formation", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/24/10.jpg"], "explanation": "<p><strong>Ans. B)</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. It resolves spontaneously in postpartum period</li><li>• Option A.</li><li>• The condition resolves spontaneously in the postpartum period , although flare-ups can occur with menstruation or subsequent pregnancies.</li><li>• The condition resolves spontaneously in the postpartum period , although flare-ups can occur with menstruation or subsequent pregnancies.</li><li>• resolves spontaneously in the postpartum period</li><li>• Option C. Associated with antibodies against BP180 antigen</li><li>• Option C.</li><li>• The condition is associated with antibodies against BP180 antigen , which is a hemidesmosomal protein involved in the structural integrity of the skin.</li><li>• The condition is associated with antibodies against BP180 antigen , which is a hemidesmosomal protein involved in the structural integrity of the skin.</li><li>• associated with antibodies against BP180 antigen</li><li>• hemidesmosomal protein</li><li>• Option D. Variant of Bullous Pemphigoid</li><li>• Option D.</li><li>• Pemphigoid Gestationis is considered a variant of Bullous Pemphigoid , occurring specifically during pregnancy.</li><li>• Pemphigoid Gestationis is considered a variant of Bullous Pemphigoid , occurring specifically during pregnancy.</li><li>• Pemphigoid Gestationis is considered</li><li>• variant of Bullous Pemphigoid</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Pemphigoid Gestationis, the autoimmune response targets BP180 antigen , and it is a pregnancy-related variant of Bullous Pemphigoid that typically resolves postpartum . It is not related to Herpes simplex virus infection.</li><li>➤ Pemphigoid Gestationis, the autoimmune response targets BP180 antigen , and it is a pregnancy-related variant of Bullous Pemphigoid that typically resolves postpartum .</li><li>➤ autoimmune response targets BP180 antigen</li><li>➤ variant of Bullous Pemphigoid</li><li>➤ resolves postpartum</li><li>➤ It is not related to Herpes simplex virus infection.</li><li>➤ Ref: Bolognia Textbook of Dermatology- 4 th Edition Chapter 27 Page No 554</li><li>➤ Ref: Bolognia Textbook of Dermatology- 4 th Edition Chapter 27 Page No 554</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28-year-old patient complains of the following intensely itchy rash over her elbows, knees as shown in the image below. She is also a known case of celiac disease & she strictly follows a gluten-free diet, which has resulted in improvement of her diarrhea. However, the following itchy skin lesions have persisted despite her altered diet. What is the Drug of choice for this patient & what is the characteristic DIF finding seen in this patient?", "options": [{"label": "A", "text": "Dapsone & Granular Deposits of IgA in Dermal Papillae", "correct": true}, {"label": "B", "text": "Steroids & Linear Deposits of IgA in Basement Membrane Zone", "correct": false}, {"label": "C", "text": "Dapsone & Granular Deposits of IgG in Dermal Papillae", "correct": false}, {"label": "D", "text": "Steroids & Linear Deposits of IgG in Basement Membrane Zone", "correct": false}], "correct_answer": "A. Dapsone & Granular Deposits of IgA in Dermal Papillae", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/24/7.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/24/screenshot-2024-02-24-151046.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/24/screenshot-2024-02-24-151257.jpg"], "explanation": "<p><strong>Ans.</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option B . Steroids & Linear deposits of IgA in Basement membrane Zone.</li><li>• Option B</li><li>• While steroids may be used in a variety of dermatological conditions, they are not the first-line treatment for dermatitis herpetiformis. Additionally, linear deposits of IgA at the basement membrane zone are indicative of a different condition, such as linear IgA disease.</li><li>• While steroids may be used in a variety of dermatological conditions, they are not the first-line treatment for dermatitis herpetiformis.</li><li>• Additionally, linear deposits of IgA at the basement membrane zone are indicative of a different condition, such as linear IgA disease.</li><li>• linear deposits of IgA</li><li>• linear IgA disease.</li><li>• Option C . Dapsone& Granular deposits of IgG in dermal papillae.</li><li>• Option C</li><li>• Although Dapsone is the correct treatment, the characteristic DIF finding in dermatitis herpetiformis is granular IgA, not IgG deposits.</li><li>• Although Dapsone is the correct treatment, the characteristic DIF finding in dermatitis herpetiformis is granular IgA, not IgG deposits.</li><li>• Option D .Steroids & Linear deposits of IgG in Basement membrane Zone.</li><li>• Option D</li><li>• This option suggests a diagnosis of Bullous pemphigoid and does not correspond to dermatitis herpetiformis , which is characterized by IgA deposits .</li><li>• This option suggests a diagnosis of Bullous pemphigoid and does not correspond to dermatitis herpetiformis , which is characterized by IgA deposits .</li><li>• Bullous pemphigoid</li><li>• dermatitis herpetiformis</li><li>• IgA deposits</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ For a patient with an intensely itchy rash over the elbows and knees and a history of celiac disease , the drug of choice is Dapsone , and the characteristic DIF finding is granular deposits of IgA in the dermal papillae.</li><li>➤ For a patient with an intensely itchy rash over the elbows and knees and a history of celiac disease , the drug of choice is Dapsone , and the characteristic DIF finding is granular deposits of IgA in the dermal papillae.</li><li>➤ intensely itchy rash</li><li>➤ elbows and knees</li><li>➤ celiac disease</li><li>➤ Dapsone</li><li>➤ granular deposits of IgA</li><li>➤ papillae.</li><li>➤ Ref: Rooks Textbook of Dermatology- 9 th Edition Chapter 50 Page No 50.52-50.54</li><li>➤ Ref:</li><li>➤ Rooks Textbook of Dermatology- 9 th Edition Chapter 50 Page No 50.52-50.54</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 3-year-old girl child presents to OPD with blisters over perioral area & other periorificial areas which are arranged annularly giving a ‘crown of jewels’ appearance (Image given below). Direct immunofluorescence microscopy revealed linear IgA deposition in Basement membrane zone. What is the most likely diagnosis & what is the drug of choice in this disease?", "options": [{"label": "A", "text": "﻿﻿Bullous Pemphigoid & Dapsone", "correct": false}, {"label": "B", "text": "﻿﻿Chronic Bullous Disease of Childhood & Azathioprine", "correct": false}, {"label": "C", "text": "﻿﻿Chronic Bullous Disease of Childhood & Dapsone", "correct": true}, {"label": "D", "text": "﻿﻿Epidermolysis Bullosa Simplex & Genetic Counselling", "correct": false}], "correct_answer": "C. ﻿﻿Chronic Bullous Disease of Childhood & Dapsone", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/24/5_JWNrTCe.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/24/screenshot-2024-02-24-140134.jpg"], "explanation": "<p><strong>Ans.</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option A. Bullous pemphigoid</li><li>• Option A.</li><li>• It is typically a disease of the elderly and is characterized by subepidermal blisters with linear IgG and C3 deposition , not IgA. Dapsone is not the first-line treatment for bullous pemphigoid.</li><li>• It is typically a disease of the elderly and is characterized by subepidermal blisters with linear IgG and C3 deposition , not IgA.</li><li>• subepidermal blisters</li><li>• linear IgG and C3 deposition</li><li>• Dapsone is not the first-line treatment for bullous pemphigoid.</li><li>• Option B. Chronic bullous disease of childhood (CBDC), also known as linear IgA disease.</li><li>• Option B.</li><li>• It is the correct diagnosis based on the description, but azathioprine is not the drug of choice. It is used as a second-line or adjunctive therapy when dapsone is contraindicated or insufficient.</li><li>• It is the correct diagnosis based on the description, but azathioprine is not the drug of choice.</li><li>• azathioprine</li><li>• It is used as a second-line or adjunctive therapy when dapsone is contraindicated or insufficient.</li><li>• second-line</li><li>• Option D. Epidermolysis bullosa simplex</li><li>• Option D.</li><li>• It is a hereditary condition characterized by skin fragility and blistering due to cytoskeletal protein mutations. Genetic counselling may be of value for familial planning , but the condition does not present with linear IgA deposition, nor is it treated with dapsone.</li><li>• It is a hereditary condition characterized by skin fragility and blistering due to cytoskeletal protein mutations.</li><li>• hereditary</li><li>• skin fragility</li><li>• blistering</li><li>• mutations.</li><li>• Genetic counselling may be of value for familial planning , but the condition does not present with linear IgA deposition, nor is it treated with dapsone.</li><li>• Genetic counselling</li><li>• familial planning</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In a child presenting with annularly arranged periorificial blisters and linear IgA deposition at the basement membrane zone , the most likely diagnosis is Chronic bullous disease of childhood, and the drug of choice is dapsone.</li><li>➤ In a child presenting with annularly arranged periorificial blisters and linear IgA deposition at the basement membrane zone , the most likely diagnosis is Chronic bullous disease of childhood, and the drug of choice is dapsone.</li><li>➤ child</li><li>➤ annularly</li><li>➤ periorificial blisters</li><li>➤ linear IgA</li><li>➤ basement membrane zone</li><li>➤ Ref: Rooks Textbook of Dermatology- 9 th Edition Chapter 50 Page N50.33</li><li>➤ Ref:</li><li>➤ Rooks Textbook of Dermatology- 9 th Edition Chapter 50 Page N50.33</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents with the Tense bullous lesions associated with itching. Histopathology revealed Subepidermal blistering. What is the diagnosis of this condition & what are the antigens against which autoantibodies are most commonly seen in this condition?", "options": [{"label": "A", "text": "Bullous Pemphigoid & BP180", "correct": true}, {"label": "B", "text": "Pemphigus Vulgaris & Desmoglein 3", "correct": false}, {"label": "C", "text": "Bullous Pemphigoid & BP280", "correct": false}, {"label": "D", "text": "Pemphigus Vulgaris & Desmoglein 1", "correct": false}], "correct_answer": "A. Bullous Pemphigoid & BP180", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/24/1.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/24/screenshot-2024-02-24-133410.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/02/24/2.jpg"], "explanation": "<p><strong>Ans. A) Bullous Pemphigoid & BP180</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Option B. Pemphigus vulgaris & Desmoglein 3.</li><li>• Option B.</li><li>• Pemphigus vulgaris is associated with flaccid blisters , not tense ones, and the blisters are intraepidermal due to acantholysis . The main autoantigen is Desmoglein 3 , a desmosomal protein.</li><li>• Pemphigus vulgaris is associated with flaccid blisters , not tense ones, and the blisters are intraepidermal due to acantholysis .</li><li>• flaccid blisters</li><li>• intraepidermal</li><li>• acantholysis</li><li>• The main autoantigen is Desmoglein 3 , a desmosomal protein.</li><li>• The main autoantigen is Desmoglein 3</li><li>• Option C. Bullous Pemphigoid & BP280 .</li><li>• Option C.</li><li>• This option is incorrect because BP280 (collagen type VII) is not the primary</li><li>• This option is incorrect because BP280 (collagen type VII) is not the primary</li><li>• BP280</li><li>• primary</li><li>• antigen in Bullous Pemphigoid ; BP180 is the correct antigen.</li><li>• antigen</li><li>• Bullous Pemphigoid</li><li>• Option D. Pemphigus vulgaris & Desmoglein 1 .</li><li>• Option D.</li><li>• .</li><li>• While Desmoglein 1 is indeed a target antigen in some cases of Pemphigus vulgaris (usually in combination with Desmoglein 3), the description provided does not match Pemphigus vulgaris, which presents with supra basal intra-epidermal blistering and flaccid bullae .</li><li>• While Desmoglein 1 is indeed a target antigen in some cases of Pemphigus vulgaris (usually in combination with Desmoglein 3), the description provided does not match Pemphigus vulgaris, which presents with supra basal intra-epidermal blistering and flaccid bullae .</li><li>• supra basal intra-epidermal blistering</li><li>• flaccid bullae</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In a patient with tense bullae and histopathology showing subepidermal blistering , the diagnosis is Bullous Pemphigoid , and the autoantibodies are most commonly directed against the BP180 antigen .</li><li>➤ In a patient with tense bullae and histopathology showing subepidermal blistering , the diagnosis is Bullous Pemphigoid , and the autoantibodies are most commonly directed against the BP180 antigen .</li><li>➤ tense bullae</li><li>➤ subepidermal blistering</li><li>➤ Bullous Pemphigoid</li><li>➤ BP180 antigen</li><li>➤ Ref: Rooks Textbook of Dermatology- 9 th Edition Chapter 50 Page No 50.10</li><li>➤ Ref:</li><li>➤ Rooks Textbook of Dermatology- 9 th Edition Chapter 50 Page No 50.10</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 68-year-old male presents with a resting tremor, bradykinesia, and rigidity. On examination, there is a characteristic \"pill-rolling\" tremor observed. The patient also exhibits postural instability. Which neurotransmitter is primarily affected in the pathophysiology of Parkinson

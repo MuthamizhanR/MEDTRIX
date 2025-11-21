@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Fmt Clinical Vignettes</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Fmt Clinical Vignettes</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                53 Questions | 80 Total Marks | 63 min Duration | ~71.32 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 53 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 63 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 53</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Fmt Clinical Vignettes - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 53</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 53 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Match the following declarations with their agendas?", "options": [{"label": "A", "text": "A-4, B-3, C-1, D-2", "correct": true}, {"label": "B", "text": "A-1, B-3, C-4, D-2", "correct": false}, {"label": "C", "text": "A-1, B-4, C-3, D-2", "correct": false}, {"label": "D", "text": "A-2, B-3, C-4, D-1", "correct": false}], "correct_answer": "A. A-4, B-3, C-1, D-2", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(520).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6146421703765005/6146421703765005.m3u8"}, {"text": "The name of the doctor is permanently removed from the SMC Register.This will be referred to which of the following terms given below?", "options": [{"label": "A", "text": "Penal erasure", "correct": false}, {"label": "B", "text": "Professional misconduct", "correct": false}, {"label": "C", "text": "Professional death sentence", "correct": true}, {"label": "D", "text": "Professional negligence", "correct": false}], "correct_answer": "C. Professional death sentence", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78628911703765022/78628911703765022.m3u8"}, {"text": "A patient is brought to the emergency department in an unconscious state with an imminent danger to the life of the patient and the designated surrogate is unavailable,then the law presumes that consent has been deemed to be given.This type of consent is known as?", "options": [{"label": "A", "text": "Blanket consent", "correct": false}, {"label": "B", "text": "Implied Consent", "correct": true}, {"label": "C", "text": "Expressed content", "correct": false}, {"label": "D", "text": "Informed consent", "correct": false}], "correct_answer": "B. Implied Consent", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/30028731703765043/30028731703765043.m3u8"}, {"text": "Whoever causes the death of any person by doing any rash or negligent act not amounting to culpable homicide is punished with imprisonment upto 2 years and with/without fine’. This law comes under which section of the Indian Penal Code?", "options": [{"label": "A", "text": "299 IPC", "correct": false}, {"label": "B", "text": "300 IPC", "correct": false}, {"label": "C", "text": "304-A IPC", "correct": true}, {"label": "D", "text": "304-B IPC", "correct": false}], "correct_answer": "C. 304-A IPC", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4_1(52).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12380441703765059/12380441703765059.m3u8"}, {"text": "In civil negligence cases against the doctor, the burden of the proof lies with which of the following?", "options": [{"label": "A", "text": "Doctor", "correct": false}, {"label": "B", "text": "Patient", "correct": true}, {"label": "C", "text": "First class judicial magistrate", "correct": false}, {"label": "D", "text": "Police not below the rank of sub-inspector", "correct": false}], "correct_answer": "B. Patient", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60393671703765073/60393671703765073.m3u8"}, {"text": "A doctor performed surgery on a patient but failed to remove swabs from the incision leaving it inside the abdomen causing further complications and harm to the patient.This will come under which of the following?", "options": [{"label": "A", "text": "Novus Actus Interveniens", "correct": false}, {"label": "B", "text": "Res Ipsa Loquitur", "correct": true}, {"label": "C", "text": "Calculated Risk Doctrine", "correct": false}, {"label": "D", "text": "Doctrine of Avoidable Consequence Rule", "correct": false}], "correct_answer": "B. Res Ipsa Loquitur", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60317041703765087/60317041703765087.m3u8"}, {"text": "A physician performs an unauthorized operation on a patient.He may be punished for?", "options": [{"label": "A", "text": "Civil Negligence", "correct": false}, {"label": "B", "text": "Criminal Negligence", "correct": false}, {"label": "C", "text": "Civil and Criminal Negligence both", "correct": true}, {"label": "D", "text": "Contributory negligence", "correct": false}], "correct_answer": "C. Civil and Criminal Negligence both", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59540071703765102/59540071703765102.m3u8"}, {"text": "A consent is considered invalid if ?", "options": [{"label": "A", "text": "It is an informed consent.", "correct": false}, {"label": "B", "text": "Given for committing a crime or an illegal act, such as criminal abortion.", "correct": true}, {"label": "C", "text": "Not Obtained by misrepresentation or fraud.", "correct": false}, {"label": "D", "text": "Given by one who had legal capacity to give it.", "correct": false}], "correct_answer": "B. Given for committing a crime or an illegal act, such as criminal abortion.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37358091703765116/37358091703765116.m3u8"}, {"text": "Hospital management is held responsible for the mistakes of resident physicians and interns in training, who are considered employees when performing their normal duties. This statement will be applicable to which of the following below?", "options": [{"label": "A", "text": "Vicarious liability", "correct": false}, {"label": "B", "text": "Respondent Superior", "correct": false}, {"label": "C", "text": "Borrowed servant doctrine", "correct": false}, {"label": "D", "text": "Both a and b", "correct": true}], "correct_answer": "D. Both a and b", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/2070011703765131/2070011703765131.m3u8"}, {"text": "Which of the following does not come under Therapeutic misadventure ?", "options": [{"label": "A", "text": "Medication errors", "correct": true}, {"label": "B", "text": "Medical and surgical complications", "correct": false}, {"label": "C", "text": "Latrogenic and nosocomial infections", "correct": false}, {"label": "D", "text": "Hypersensitivity reactions to penicillin", "correct": false}], "correct_answer": "A. Medication errors", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52226521703765146/52226521703765146.m3u8"}, {"text": "Burden to prove defense lies with the doctor in case of?", "options": [{"label": "A", "text": "Mens rea", "correct": false}, {"label": "B", "text": "Res ipsa loquitur", "correct": true}, {"label": "C", "text": "Res judicata", "correct": false}, {"label": "D", "text": "Respondeat superior", "correct": false}], "correct_answer": "B. Res ipsa loquitur", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/68399951703765159/68399951703765159.m3u8"}, {"text": "A child under 12 years of age and an insane person cannot give valid consent to suffer any harm which may result from an act done in good faith and for their benefit. In such cases, the consent of the parent or guardian should be obtained. This provision is covered under which section of the Bharatiya Nyaya Sanhita (BNS), 2023?", "options": [{"label": "A", "text": "Section 27 BNS", "correct": false}, {"label": "B", "text": "Section 28 BNS", "correct": false}, {"label": "C", "text": "Section 30 BNS", "correct": true}, {"label": "D", "text": "Section 31 BNS", "correct": false}], "correct_answer": "C. Section 30 BNS", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/73994501703765172/73994501703765172.m3u8"}, {"text": "The doctor is liable to be sued by the patient until what time after the occurrence of medical negligence?", "options": [{"label": "A", "text": "1 year", "correct": false}, {"label": "B", "text": "2 year", "correct": true}, {"label": "C", "text": "4 year", "correct": false}, {"label": "D", "text": "3 year", "correct": false}], "correct_answer": "B. 2 year", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53656991703765185/53656991703765185.m3u8"}, {"text": "A married woman died in unnatural conditions just 3 years after her marriage. Her parents informed that she was frequently troubled because of demand of dowry from her inlaws.Her autopsy will be conducted under which section?", "options": [{"label": "A", "text": "Sec. 174 CrPC", "correct": false}, {"label": "B", "text": "Sec. 176 CrPC", "correct": true}, {"label": "C", "text": "Sec. 302 IPC", "correct": false}, {"label": "D", "text": "Sec. 304B IPC", "correct": false}], "correct_answer": "B. Sec. 176 CrPC", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9955311703765197/9955311703765197.m3u8"}, {"text": "A witness who after taking oath or making a solemn affirmation, willfully makes a false statement which he knows or believes to be false.He is liable to be prosecuted for perjury under which section and with imprisonment upto which time?", "options": [{"label": "A", "text": "Sec 193 IPC and imprisonment upto 7 years", "correct": true}, {"label": "B", "text": "Sec 192 IPC and imprisonment upto 7 years", "correct": false}, {"label": "C", "text": "Sec 193 IPC and imprisonment upto 5 years", "correct": false}, {"label": "D", "text": "Sec 191 IPC and imprisonment upto 7 years", "correct": false}], "correct_answer": "A. Sec 193 IPC and imprisonment upto 7 years", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59383401703765210/59383401703765210.m3u8"}, {"text": "Dying Declaration is considered as which type of evidence?", "options": [{"label": "A", "text": "Circumstantial evidence", "correct": false}, {"label": "B", "text": "Oral evidence", "correct": false}, {"label": "C", "text": "Documentary evidence", "correct": false}, {"label": "D", "text": "Hearsay evidence", "correct": true}], "correct_answer": "D. Hearsay evidence", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/46896841703765223/46896841703765223.m3u8"}, {"text": "One of the following statements given below is not an indication for conducting in a magistrate inquest?", "options": [{"label": "A", "text": "Deaths due to police firing.", "correct": true}, {"label": "B", "text": "Disappearance or death of a person in police custody or during police interrogation.", "correct": false}, {"label": "C", "text": "Death of a convict in jail.", "correct": false}, {"label": "D", "text": "Dowry deaths (suicide/death of a woman within 5 years of marriage).", "correct": false}], "correct_answer": "A. Deaths due to police firing.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27063161703765238/27063161703765238.m3u8"}, {"text": "Given is a list of offenses listed under the category of bailable offenses. Which one of the following does not fall under this category?", "options": [{"label": "A", "text": "Dowry death (Sec. 304-B IPC)", "correct": true}, {"label": "B", "text": "Causing death by rash or negligent act (Sec. 304-A IPC)", "correct": false}, {"label": "C", "text": "Causing miscarriage (Sec. 312 IPC)", "correct": false}, {"label": "D", "text": "Voluntarily causing hurt (Sec. 323 IPC) and grievous hurt (Sec. 325 IPC).", "correct": false}], "correct_answer": "A. Dowry death (Sec. 304-B IPC)", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/47642361703765253/47642361703765253.m3u8"}, {"text": "Leading questions are not permitted in which type of examination?", "options": [{"label": "A", "text": "Cross-examination", "correct": false}, {"label": "B", "text": "Examination-in-chief", "correct": false}, {"label": "C", "text": "Re-examination", "correct": false}, {"label": "D", "text": "Both B and C", "correct": true}], "correct_answer": "D. Both B and C", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/2185751703765268/2185751703765268.m3u8"}, {"text": "A witness, who after taking oath, willfully makes a statement which he knows or believes to be false is guilty of offence under section?", "options": [{"label": "A", "text": "190 IPC", "correct": false}, {"label": "B", "text": "191 IPC", "correct": false}, {"label": "C", "text": "192 IPC", "correct": false}, {"label": "D", "text": "193 IPC", "correct": true}], "correct_answer": "D. 193 IPC", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/40450141703765281/40450141703765281.m3u8"}, {"text": "A 37-year-old man was hit by a car, when brought to hospital the casualty medical officer declared him dead. Autopsy shows fatal head trauma, numerous cutaneous abrasions and contusions, and two fractures of the lower legs. The fractures are centered ~8 and 14 inches above the soles of the right and left feet, respectively. What conclusion is suggested regarding the leg fractures?", "options": [{"label": "A", "text": "Decedent was struck while the car was braking", "correct": false}, {"label": "B", "text": "Decedent was walking on the road", "correct": true}, {"label": "C", "text": "Decedent was standing on the road", "correct": false}, {"label": "D", "text": "Decedent was thrown over the roof of the car", "correct": false}], "correct_answer": "B. Decedent was walking on the road", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1_1(69).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53770791703765294/53770791703765294.m3u8"}, {"text": "A 32 year CRPF officer posted in naxalite area is involved in an explosion caused by an improvised explosive device (IED). He sustains a penetrating chest injury. How should this type of blast injury pattern be classified?", "options": [{"label": "A", "text": "Primary", "correct": false}, {"label": "B", "text": "Secondary", "correct": true}, {"label": "C", "text": "Tertiary", "correct": false}, {"label": "D", "text": "Quaternary", "correct": false}], "correct_answer": "B. Secondary", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3_1(54).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14444831703765313/14444831703765313.m3u8"}, {"text": "Which collection tube additive should be used for postmortem blood specimens for toxicological analysis?", "options": [{"label": "A", "text": "Clot activator and gel", "correct": false}, {"label": "B", "text": "Ethylene diamine tetra-acetic acid", "correct": false}, {"label": "C", "text": "No additive", "correct": false}, {"label": "D", "text": "Sodium fluoride", "correct": true}], "correct_answer": "D. Sodium fluoride", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4396291703765327/4396291703765327.m3u8"}, {"text": "On court orders in a case an exhumation was performed in the presence of executive magistrate. The adult skeletal remains are recovered. A skull defect of the posterior right parietal bone is found. What is the best interpretation of this defect?", "options": [{"label": "A", "text": "Entrance gunshot wound", "correct": false}, {"label": "B", "text": "Exit gunshot wound", "correct": false}, {"label": "C", "text": "Burr hole surgery", "correct": true}, {"label": "D", "text": "Penetrating ice pick injury", "correct": false}], "correct_answer": "C. Burr hole surgery", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7(307).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/72115751703765345/72115751703765345.m3u8"}, {"text": "A 10-week-old term gestation infant with no birth complications and a normal prenatal course is found deceased face down in a full-sized bed while bed sharing with two obese parents. During scene reconstruction, the parents convey that they were on the edges of the bed. Autopsy shows anterior and posterior lividity. A respiratory viral panel is positive for rhinovirus, and histology shows a mild chronic bronchiolitis. How should the manner of death be classified?", "options": [{"label": "A", "text": "Accident", "correct": false}, {"label": "B", "text": "Homicide", "correct": false}, {"label": "C", "text": "Natural", "correct": false}, {"label": "D", "text": "Undetermined", "correct": true}], "correct_answer": "D. Undetermined", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77515341703765372/77515341703765372.m3u8"}, {"text": "An intoxicated person is brought to the hospital, on the basis of symptoms the doctor suspects cocaine intoxication. What is the principle substance used to screen for cocaine use ?", "options": [{"label": "A", "text": "Anhydroecgonidine", "correct": false}, {"label": "B", "text": "Benzoylecgonine", "correct": true}, {"label": "C", "text": "Cocaine", "correct": false}, {"label": "D", "text": "Ester methyl ecgonine", "correct": false}], "correct_answer": "B. Benzoylecgonine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39036681703765384/39036681703765384.m3u8"}, {"text": "Among the given options what is the receptor associated with 3,4-methylenedioxy-methamphetamine?", "options": [{"label": "A", "text": "5-HT2A", "correct": true}, {"label": "B", "text": "CB2", "correct": false}, {"label": "C", "text": "CB1", "correct": false}, {"label": "D", "text": "µ", "correct": false}], "correct_answer": "A. 5-HT2A", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/7978311703765399/7978311703765399.m3u8"}, {"text": "A 20 year old college student is brought to the hospital with seizures the body temperature of the patient is recorded as 110°F . On probing further the patients hostel roommate describes that the patient consumed a substance contained in a small plastic bag. He subsequently becomes delirious then started exhibiting seizures. Considering the history and the circumstances what did the patient likely consume ?", "options": [{"label": "A", "text": "Cocaine", "correct": true}, {"label": "B", "text": "Fentanyl", "correct": false}, {"label": "C", "text": "Heroin", "correct": false}, {"label": "D", "text": "Marijuana", "correct": false}], "correct_answer": "A. Cocaine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/33035431703765414/33035431703765414.m3u8"}, {"text": "A 25-year-old sewer worker without wearing protective gear entering a manhole, collapses and dies within moments. First respondents report a strong rotten egg odor. Autopsy shows cyanosis and pulmonary edema. What chemical should be suspected?", "options": [{"label": "A", "text": "Ammonia", "correct": false}, {"label": "B", "text": "Carbon monoxide", "correct": false}, {"label": "C", "text": "Cyanide", "correct": false}, {"label": "D", "text": "Hydrogen sulfide", "correct": true}], "correct_answer": "D. Hydrogen sulfide", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/75369801703765430/75369801703765430.m3u8"}, {"text": "A 3 year old child who lives in a suburban area is brought to the clinic with complaints of altered mental status. Subsequent hospital workup documents a microcytic, hypochromic anemia. A skeletal survey reveals radiopaque densities at multiple metaphyseal plates. What underlying disease process should be suspected?", "options": [{"label": "A", "text": "Lead toxicity", "correct": true}, {"label": "B", "text": "Folate deficiency", "correct": false}, {"label": "C", "text": "Fracture with callus formation", "correct": false}, {"label": "D", "text": "Vitamin B12 deficiency", "correct": false}], "correct_answer": "A. Lead toxicity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61256791703765442/61256791703765442.m3u8"}, {"text": "A 34 year old man who previously used to work in a corporate firm was fired from his job due to global recession. He develops suicidal ideation and was visiting a therapist for the same. Today he is found dead in his car. Inside the car, several household cleaners are recovered. Autopsy shows pulmonary edema but no other significant findings. You are the medical officer called to the the scene. What should you instruct the laboratory analyzing the postmortem toxicology samples to analyze specimens for?", "options": [{"label": "A", "text": "Thiosulfate", "correct": true}, {"label": "B", "text": "Carbon monoxide", "correct": false}, {"label": "C", "text": "Ethanol", "correct": false}, {"label": "D", "text": "Methane", "correct": false}], "correct_answer": "A. Thiosulfate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39617621703765464/39617621703765464.m3u8"}, {"text": "A 48-year-old chronic alcoholic man has been sent to prison in charges of domestic violence against complaint filed by his wife. He had no significant medical history and was not on medications. On his third day at prison he is brought to the prison’s medical officer with complaints of demonstrating odd behavior and he also described visual hallucinations. He subsequently experienced seizure-like activity and then became unresponsive. What is the likely underlying cause of this patient’s condition ?", "options": [{"label": "A", "text": "Delirium tremens", "correct": true}, {"label": "B", "text": "Diabetic ketoacidosis", "correct": false}, {"label": "C", "text": "Hypertensive crisis", "correct": false}, {"label": "D", "text": "Ingestion of cocaine in prison.", "correct": false}], "correct_answer": "A. Delirium tremens", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67607291703765481/67607291703765481.m3u8"}, {"text": "A 34 year old male weighing approx 62 kg is caught by the traffic police for rash driving and over speeding, a blood sample examination revealed ethanol concentration of 120 mg/dL. Prior to being caught the man was at a cocktail party with his friends where he had his last drink 2 hours ago. Assuming no confounding variables. What is the best approximation of the decedent’s blood ethanol at the time he quit drinking 2 hours ago ?", "options": [{"label": "A", "text": "90 mg/dL", "correct": false}, {"label": "B", "text": "150 mg/dL", "correct": true}, {"label": "C", "text": "140 mg/dL", "correct": false}, {"label": "D", "text": "120 mg/dL", "correct": false}], "correct_answer": "B. 150 mg/dL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/55336441703765495/55336441703765495.m3u8"}, {"text": "A 58 year old man living in a rural area has been brought to the local PHC in altered sensorium, family members report that the man had a fall at home and striked his head on ground. After initial management the patient is referred to the higher centre where CT scan demonstrated a subdural hematoma. Patient remains obtunded during hospitalization and dies 1 week after presentation. Hospital blood drawn around the time of admission has all been disposed. What is the best postmortem source to send for toxicology in this scenario?", "options": [{"label": "A", "text": "Liver tissue", "correct": false}, {"label": "B", "text": "Peripheral blood", "correct": false}, {"label": "C", "text": "Subdural blood", "correct": true}, {"label": "D", "text": "Vitreous fluid", "correct": false}], "correct_answer": "C. Subdural blood", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/42807241703765510/42807241703765510.m3u8"}, {"text": "Which of the following is a reliable indicator of a live birth?", "options": [{"label": "A", "text": "Microscopic aeration of lungs", "correct": false}, {"label": "B", "text": "Hydrostatic float test", "correct": false}, {"label": "C", "text": "Meconium at the anus", "correct": false}, {"label": "D", "text": "Food in the stomach", "correct": true}], "correct_answer": "D. Food in the stomach", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/21962431703765529/21962431703765529.m3u8"}, {"text": "During an autopsy being conducted for an unnatural death, the following finding is observed, your professor asks you to tell the approximate age of this myocardial infarction. Which of the following would be a correct answer ?", "options": [{"label": "A", "text": "Acute, 6 hours", "correct": false}, {"label": "B", "text": "Subacute, 10 days", "correct": false}, {"label": "C", "text": "Remote, 6 months", "correct": true}, {"label": "D", "text": "Subacute, 3 days", "correct": false}], "correct_answer": "C. Remote, 6 months", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(501).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2_1(58).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/65023101703765584/65023101703765584.m3u8"}, {"text": "A 50 year old presented to the emergency department with complaint of headache and blurred vision. Patient described headache as “worst headache of my life”. Even after best efforts of the medical team the patient died. An autopsy finding of the patient is given in the image below, identify the source of hemorrhage.", "options": [{"label": "A", "text": "Anterior communicating cerebral artery", "correct": true}, {"label": "B", "text": "Basilar artery", "correct": false}, {"label": "C", "text": "Internal carotid artery", "correct": false}, {"label": "D", "text": "Middle cerebral artery", "correct": false}], "correct_answer": "A. Anterior communicating cerebral artery", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3(468).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76316161703765603/76316161703765603.m3u8"}, {"text": "A 22-year-old woman is found disarticulated and burned inside a barrel 2 days after she was last seen. At that time she had been arguing with her boyfriend. Autopsy shows extensively charred human remains, with only portions of major internal organs present. Soot is not definitively identified in the remaining airways. Toxicological analysis of remaining liver tissue demonstrates delta-9-tetrahydrocannabinol (THC) at 0.05 mg/kg and oxycodone at 0.1 mg/kg. What is the best characterization of the cause of death?", "options": [{"label": "A", "text": "Carbon monoxide toxicity", "correct": false}, {"label": "B", "text": "Drug overdose", "correct": false}, {"label": "C", "text": "Homicidal violence", "correct": true}, {"label": "D", "text": "Thermal injury", "correct": false}], "correct_answer": "C. Homicidal violence", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23510421703765617/23510421703765617.m3u8"}, {"text": "On a clear road 30-year-old female is crossing the street and is hit by an automobile. Nearby people call for ambulance, patient dies en route to the hospital. The driver flees the scene and turns himself in the next day. Driver claims that he thought he had killed a deer and did not realize somebody had died until he saw the event being reported in local news. The police files negligent homicide charges against the driver. What is the manner of death?", "options": [{"label": "A", "text": "Accident", "correct": true}, {"label": "B", "text": "Homicide", "correct": false}, {"label": "C", "text": "Natural", "correct": false}, {"label": "D", "text": "Suicide", "correct": false}], "correct_answer": "A. Accident", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6012451703765630/6012451703765630.m3u8"}, {"text": "What drug is most commonly associated with excited delirium?", "options": [{"label": "A", "text": "Amphetamine", "correct": false}, {"label": "B", "text": "Cocaine", "correct": true}, {"label": "C", "text": "Lysergic acid diethylamide", "correct": false}, {"label": "D", "text": "Methamphetamine", "correct": false}], "correct_answer": "B. Cocaine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/65436891703765642/65436891703765642.m3u8"}, {"text": "What is the best characterization of the external injuries in this man shown in Figure 3.1 below?", "options": [{"label": "A", "text": "Hyperextension injuries sustained in a jump from a bridge", "correct": false}, {"label": "B", "text": "Motor vehicle crash injuries of an ejected passenger", "correct": true}, {"label": "C", "text": "Motor vehicle crash injuries of a restrained driver", "correct": false}, {"label": "D", "text": "Postmortem injuries in moving water", "correct": false}], "correct_answer": "B. Motor vehicle crash injuries of an ejected passenger", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7(311).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3971871703765659/3971871703765659.m3u8"}, {"text": "A 30 year old man was involved in a motor vehicle accident on the national highway near delhi, the emergency team brought the patient to hospital with the injury depicted below to the right side of the face. What was the most likely position of this individual during the crash?", "options": [{"label": "A", "text": "Captive in the trunk", "correct": false}, {"label": "B", "text": "Cyclist, riding a bicycle", "correct": false}, {"label": "C", "text": "Driver", "correct": true}, {"label": "D", "text": "none of the above", "correct": false}], "correct_answer": "C. Driver", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8(305).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60143041703765674/60143041703765674.m3u8"}, {"text": "What is the depicted forehead injury in ?", "options": [{"label": "A", "text": "Animal bite", "correct": false}, {"label": "B", "text": "Electrical injury", "correct": false}, {"label": "C", "text": "Incised wound", "correct": false}, {"label": "D", "text": "Laceration", "correct": true}], "correct_answer": "D. Laceration", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/9(292).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/8661501703765690/8661501703765690.m3u8"}, {"text": "In the image given below, identify the likely cause of death ?", "options": [{"label": "A", "text": "Drowning", "correct": false}, {"label": "B", "text": "Hanging", "correct": true}, {"label": "C", "text": "Manual strangulation", "correct": false}, {"label": "D", "text": "Smothering", "correct": false}], "correct_answer": "B. Hanging", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/10(286).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/10_1(44).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4617611703765704/4617611703765704.m3u8"}, {"text": "Image of head of a 30 year old man is given below. What is the best description of the pictured wound ?", "options": [{"label": "A", "text": "Close-range gunshot wound", "correct": false}, {"label": "B", "text": "Contact gunshot wound", "correct": true}, {"label": "C", "text": "Exit gunshot wound", "correct": false}, {"label": "D", "text": "Indeterminate range gunshot wound", "correct": false}], "correct_answer": "B. Contact gunshot wound", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/11(246).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/68221101703765722/68221101703765722.m3u8"}, {"text": "The number of equally sized lead balls in one pound is defined as?", "options": [{"label": "A", "text": "Bore", "correct": true}, {"label": "B", "text": "Buckshot", "correct": false}, {"label": "C", "text": "Caliber", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Bore", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/13_1(47).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4172401703765747/4172401703765747.m3u8"}, {"text": "In a person who initially survive an explosion what is the most common cause of death ?", "options": [{"label": "A", "text": "Cardiac arrhythmia", "correct": false}, {"label": "B", "text": "Gastrointestinal hemorrhage", "correct": false}, {"label": "C", "text": "Pulmonary barotrauma", "correct": true}, {"label": "D", "text": "Spleen rupture", "correct": false}], "correct_answer": "C. Pulmonary barotrauma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/665851703765759/665851703765759.m3u8"}, {"text": "A 28 year old soldier is involved in an explosion caused by an improvised explosive device (IED). He sustained multiple injuries including compound fracture of the shaft of tibia as a result of hitting a vehicle after being propelled by the shock wave of the blast. How should this type of blast injury pattern be classified?", "options": [{"label": "A", "text": "Primary", "correct": false}, {"label": "B", "text": "Secondary", "correct": false}, {"label": "C", "text": "Tertiary", "correct": true}, {"label": "D", "text": "Quaternary", "correct": false}], "correct_answer": "C. Tertiary", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52096771703765775/52096771703765775.m3u8"}, {"text": "A 40 year old man is found deceased on a street after an assault with multiple sharp force injuries to his chest. The injury below is found on the back. What weapon was likely used?", "options": [{"label": "A", "text": "Broken glass bottle", "correct": false}, {"label": "B", "text": "Scissors", "correct": false}, {"label": "C", "text": "Serrated knife", "correct": true}, {"label": "D", "text": "Single-edged knife", "correct": false}], "correct_answer": "C. Serrated knife", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/16(196).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/51462441703766021/51462441703766021.m3u8"}, {"text": "A 45 year old man is found dead near his house, the autopsy demonstrates hemorrhage from the right ear canal. No fractures and no intracranial hemorrhages are present, and no other findings are identified. What cause of death do you suspect?", "options": [{"label": "A", "text": "Asphyxia", "correct": false}, {"label": "B", "text": "Blunt head trauma", "correct": false}, {"label": "C", "text": "Eustachian tube infection", "correct": false}, {"label": "D", "text": "Lightning strike", "correct": true}], "correct_answer": "D. Lightning strike", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/17(186).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/75200521703766041/75200521703766041.m3u8"}, {"text": "Which of the following is associated with the image given below", "options": [{"label": "A", "text": "Superheated water", "correct": false}, {"label": "B", "text": "High temperature steam", "correct": false}, {"label": "C", "text": "Electrical power lines", "correct": true}, {"label": "D", "text": "Poisonous mushrooms", "correct": false}], "correct_answer": "C. Electrical power lines", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/18(177).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/2522561703766093/2522561703766093.m3u8"}, {"text": "A 30 year old man is trapped in fire at a warehouse, fire fighters recover the man deceased, with extensive thermal changes including widespread charring. Which of the following cannot be assessed during autopsy?", "options": [{"label": "A", "text": "Antemortem bone fractures", "correct": false}, {"label": "B", "text": "Internal organ trauma", "correct": false}, {"label": "C", "text": "Rigor mortis", "correct": true}, {"label": "D", "text": "Toxicological analysis of blood", "correct": false}], "correct_answer": "C. Rigor mortis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19358661703766117/19358661703766117.m3u8"}, {"text": "Regarding the given image, what is the best characterization of the findings featured on the hand ?", "options": [{"label": "A", "text": "Immersion change", "correct": false}, {"label": "B", "text": "Postmortem animal artifact", "correct": false}, {"label": "C", "text": "Postmortem environmental artifact", "correct": true}, {"label": "D", "text": "Spray paint debris", "correct": false}], "correct_answer": "C. Postmortem environmental artifact", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/20(158).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/313131703766136/313131703766136.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

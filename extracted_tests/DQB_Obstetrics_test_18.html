@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Obstetrics  Image Based Question</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Obstetrics  Image Based Question</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                70 Questions | 280 Total Marks | 80 min Duration | ~68.57 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 70 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 80 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 70</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Obstetrics  Image Based Question - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 70</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 70 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Round ligament terminates at upper end of which structure ?", "options": [{"label": "A", "text": "A", "correct": true}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "A. A", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD1(1).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD2(1).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52840661699098055/52840661699098055.m3u8"}, {"text": "Which part in above image is opened during colpotomy for drainage of pus ?", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "B", "correct": true}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "B. B", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q_2%20OBG%20image.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD4.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/20599621699097592/20599621699097592.m3u8"}, {"text": "Shortest diameter is:", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "B", "correct": true}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "All are equal", "correct": false}], "correct_answer": "B. B", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q_3%20OBG%20image(1).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD6.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37277111699097603/37277111699097603.m3u8"}, {"text": "Identify the structure shown in image and match the day of development during embryonic period", "options": [{"label": "A", "text": "a-day 16th", "correct": false}, {"label": "B", "text": "b-day 16th", "correct": true}, {"label": "C", "text": "c–day 13th", "correct": false}, {"label": "D", "text": "b-day 13th", "correct": false}], "correct_answer": "B. b-day 16th", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Obs.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/21729091699097618/21729091699097618.m3u8"}, {"text": "Which structure is avascular and provides maximum tensile strength ?", "options": [{"label": "A", "text": "A", "correct": true}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "A. A", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD8.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD9.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/49740761699097643/49740761699097643.m3u8"}, {"text": "Identify the type of placenta ?", "options": [{"label": "A", "text": "Placenta bilobata", "correct": false}, {"label": "B", "text": "Placenta succenturiata", "correct": true}, {"label": "C", "text": "Battledore placenta", "correct": false}, {"label": "D", "text": "Velamentous placenta", "correct": false}], "correct_answer": "B. Placenta succenturiata", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBS10.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9991411699097655/9991411699097655.m3u8"}, {"text": "levator anii muscles is formed by", "options": [{"label": "A", "text": "a, b", "correct": false}, {"label": "B", "text": "c, a", "correct": false}, {"label": "C", "text": "a, c", "correct": false}, {"label": "D", "text": "d, b", "correct": true}], "correct_answer": "D. d, b", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD11.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD12.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74832591699097666/74832591699097666.m3u8"}, {"text": "Chose the correct option ?", "options": [{"label": "A", "text": "A- Postpartum", "correct": false}, {"label": "B", "text": "A- Parous cervix", "correct": false}, {"label": "C", "text": "B- Parous cervix", "correct": true}, {"label": "D", "text": "B- Nulliparous cervix", "correct": false}], "correct_answer": "C. B- Parous cervix", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD13.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD14.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60825431699097676/60825431699097676.m3u8"}, {"text": "Which type of Placenta is associated with higher rates of low Apgar scores, stillbirth and preterm delivery ?", "options": [{"label": "A", "text": "Battledore Placenta", "correct": false}, {"label": "B", "text": "Velamentous placenta", "correct": true}, {"label": "C", "text": "Placenta bilobata", "correct": false}, {"label": "D", "text": "Placenta succenturiata", "correct": false}], "correct_answer": "B. Velamentous placenta", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD15.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/47765211699097715/47765211699097715.m3u8"}, {"text": "Identify the technique in given image ?", "options": [{"label": "A", "text": "Paracentesis", "correct": false}, {"label": "B", "text": "Endometrial Sampling", "correct": false}, {"label": "C", "text": "Culdocentesis", "correct": true}, {"label": "D", "text": "Cervical biopsy", "correct": false}], "correct_answer": "C. Culdocentesis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD16.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/7058461699097735/7058461699097735.m3u8"}, {"text": "Identify the image and chromosomal Pattern seen in this is", "options": [{"label": "A", "text": "46 XX", "correct": true}, {"label": "B", "text": "23 X", "correct": false}, {"label": "C", "text": "69 XXX", "correct": false}, {"label": "D", "text": "69 XXY", "correct": false}], "correct_answer": "A. 46 XX", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD17.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54699821699097746/54699821699097746.m3u8"}, {"text": "Sonogram shown below is seen in ?", "options": [{"label": "A", "text": "Hydatidiform mole", "correct": true}, {"label": "B", "text": "Ectopic pregnancy", "correct": false}, {"label": "C", "text": "Anencephaly", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Hydatidiform mole", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD18.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/8218851699097761/8218851699097761.m3u8"}, {"text": "Which diameter of fetal skull takes part in engagement in the image shown below ?", "options": [{"label": "A", "text": "Occipito- frontal", "correct": false}, {"label": "B", "text": "Suboccipito-bregmatic", "correct": false}, {"label": "C", "text": "Submento-bregmatic", "correct": true}, {"label": "D", "text": "Mentovertical", "correct": false}], "correct_answer": "C. Submento-bregmatic", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD19.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD20.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69422371699097773/69422371699097773.m3u8"}, {"text": "Identify the type of grip shown in image below ?", "options": [{"label": "A", "text": "First leopold", "correct": false}, {"label": "B", "text": "Second leopold", "correct": false}, {"label": "C", "text": "Third leopold", "correct": false}, {"label": "D", "text": "Fourth leopold", "correct": true}], "correct_answer": "D. Fourth leopold", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD21.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/57400691699097793/57400691699097793.m3u8"}, {"text": "Which is the most common position shown in given image ?", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": true}], "correct_answer": "D. D", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD22.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD23.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/66016641699097803/66016641699097803.m3u8"}, {"text": "Chose the correct option ?", "options": [{"label": "A", "text": "Divergence of fingers – engaged", "correct": false}, {"label": "B", "text": "Convergence – non-engaged", "correct": false}, {"label": "C", "text": "Both", "correct": true}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "C. Both", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD24.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78016311699097814/78016311699097814.m3u8"}, {"text": "Image shows measurement of which pelvic diameter ?", "options": [{"label": "A", "text": "Obstetric conjugate", "correct": false}, {"label": "B", "text": "True conjugate", "correct": false}, {"label": "C", "text": "Diagonal conjugate", "correct": true}, {"label": "D", "text": "Anatomical conjugate", "correct": false}], "correct_answer": "C. Diagonal conjugate", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD25.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53041751699097827/53041751699097827.m3u8"}, {"text": "Identify the position in the image", "options": [{"label": "A", "text": "Left occiput anterior (LOA)", "correct": true}, {"label": "B", "text": "Left occiput posterior (LOP)", "correct": false}, {"label": "C", "text": "Right occiput posterior (ROP)", "correct": false}, {"label": "D", "text": "Right occiput transverse (ROT)", "correct": false}], "correct_answer": "A. Left occiput anterior (LOA)", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD26.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74612161699097839/74612161699097839.m3u8"}, {"text": "Umblical artery flow velocity waveform is seen in given image, chose the correct option among it", "options": [{"label": "A", "text": "A-Reverse EDF B- normal C- AEDF D- Reduced EDF", "correct": false}, {"label": "B", "text": "A-normal B-AEDF C- Reduced EDF D-Reverse EDF", "correct": false}, {"label": "C", "text": "A-normal B-Reduced EDF C- AEDF D- Reverse EDF", "correct": true}, {"label": "D", "text": "A- Reverse EDF B- normal C- Reduced EDF C- AEDF", "correct": false}], "correct_answer": "C. A-normal B-Reduced EDF C- AEDF D- Reverse EDF", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD27.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69282371699097850/69282371699097850.m3u8"}, {"text": "Choose the correct option (PGI TYPE)", "options": [{"label": "A", "text": "A- schultze", "correct": false}, {"label": "B", "text": "A- Mathews-Duncan method", "correct": false}, {"label": "C", "text": "B- schultze", "correct": false}, {"label": "D", "text": "B- Mathews-Duncan method", "correct": false}], "correct_answer": "Unknown", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD28.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A primigravida at 37 week of gestation reported to labour room with heavy bleeding per vaginum and placenta shown in image . The fetal heart rate was normal at the time of examination. The best management option for her is:", "options": [{"label": "A", "text": "Expectant management", "correct": false}, {"label": "B", "text": "Cesarean section", "correct": true}, {"label": "C", "text": "Induction and vaginal delivery", "correct": false}, {"label": "D", "text": "Induction and forceps delivery", "correct": false}], "correct_answer": "B. Cesarean section", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q_21(1).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9472461699097859/9472461699097859.m3u8"}, {"text": "Sutures applied here are used in treatment of :", "options": [{"label": "A", "text": "Uterine prolapse", "correct": false}, {"label": "B", "text": "Fibroid uterus", "correct": false}, {"label": "C", "text": "PPH", "correct": true}, {"label": "D", "text": "Uterine inversion", "correct": false}], "correct_answer": "C. PPH", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD29.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31328441699097869/31328441699097869.m3u8"}, {"text": "Select the correct option for type of placenta ?", "options": [{"label": "A", "text": "A- percreta B– increta C– accreta", "correct": true}, {"label": "B", "text": "A- accrete B- increta C- percreta", "correct": false}, {"label": "C", "text": "A- increta B- percreta C – accreta", "correct": false}, {"label": "D", "text": "A- accrete B – percreta C – increta", "correct": false}], "correct_answer": "A. A- percreta B– increta C– accreta", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD30.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4077981699097880/4077981699097880.m3u8"}, {"text": "Which one of the following is not an operation for condition shown in the image", "options": [{"label": "A", "text": "Huntington", "correct": false}, {"label": "B", "text": "Haultain", "correct": false}, {"label": "C", "text": "Spinelli", "correct": false}, {"label": "D", "text": "Fenton", "correct": true}], "correct_answer": "D. Fenton", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD31.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/20278241699097890/20278241699097890.m3u8"}, {"text": "Identify the type of twin pregnancy shown in image below", "options": [{"label": "A", "text": "Dichorionic and monoamniotic in dizygotic twins", "correct": false}, {"label": "B", "text": "Dichorionic and monoamniotic in monozygotic twins", "correct": false}, {"label": "C", "text": "Monochorionic and monoamniotic in dizygotic twins", "correct": false}, {"label": "D", "text": "Monochorionic diamniotic in monozygotic twins", "correct": true}], "correct_answer": "D. Monochorionic diamniotic in monozygotic twins", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD32.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/46841121699097915/46841121699097915.m3u8"}, {"text": "Sign shown in usg is seen in ?", "options": [{"label": "A", "text": "Monochorionic diamniotic", "correct": false}, {"label": "B", "text": "Dichorinoic monoamniotic", "correct": false}, {"label": "C", "text": "Conjoined twins", "correct": false}, {"label": "D", "text": "Diamniotic dichorionic", "correct": true}, {"label": "E", "text": "None of the above", "correct": false}], "correct_answer": "D. Diamniotic dichorionic", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q_26.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67926481699097925/67926481699097925.m3u8"}, {"text": "Identify the type of uterine rupture shown in image ?", "options": [{"label": "A", "text": "Obstructive rupture", "correct": true}, {"label": "B", "text": "Spontaneous non – obstructive rupture", "correct": false}, {"label": "C", "text": "Iatrogenic rupture", "correct": false}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "A. Obstructive rupture", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD34.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12199621699097937/12199621699097937.m3u8"}, {"text": "A female of 36 weeks gestation presents with following signs shown in image patient have hypertension, blurring of vision and headache. Her blood pressure reading was 180/120 mm Hg and 174/110 mm Hg after 20 minutes. How will you manage the patient?", "options": [{"label": "A", "text": "Admit the patient and observe", "correct": false}, {"label": "B", "text": "Admit the patient, start antihypertensive and continue pregnancy till term", "correct": false}, {"label": "C", "text": "Admit the patient, start antihypertensive, mg SO4 and terminate the pregnancy", "correct": true}, {"label": "D", "text": "Admit oral antihypertensives and follow up in outpatient department", "correct": false}], "correct_answer": "C. Admit the patient, start antihypertensive, mg SO4 and terminate the pregnancy", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD35.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52149481699097967/52149481699097967.m3u8"}, {"text": "A 29 year old eclamptic woman develop convulsions. The first measure to be done is:", "options": [{"label": "A", "text": "Give MgSO4", "correct": false}, {"label": "B", "text": "Sedation of patient", "correct": false}, {"label": "C", "text": "Immediate delivery", "correct": false}, {"label": "D", "text": "Care of airway", "correct": true}], "correct_answer": "D. Care of airway", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD36.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/21969871699097977/21969871699097977.m3u8"}, {"text": "A patient presented with c/o bleeding per vagina and history of high Bp since last 1 month, patient is on irregular medication on PA ut tense and tender and slightly > POG FHS - NL, patient was taken for urgent laparotomy, appearance of uterus is as shown in image, identify the condition ?", "options": [{"label": "A", "text": "Abdominal pregnancy", "correct": false}, {"label": "B", "text": "APH", "correct": true}, {"label": "C", "text": "Pregnancy with placenta percreta", "correct": false}, {"label": "D", "text": "Ovarian pregnancy", "correct": false}], "correct_answer": "B. APH", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD37.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53849131699097986/53849131699097986.m3u8"}, {"text": "Identify the procedure shown in the image ?", "options": [{"label": "A", "text": "Cardiotocography", "correct": false}, {"label": "B", "text": "Direct electric fetal monitoring", "correct": true}, {"label": "C", "text": "Indirect electric fetal monitoring", "correct": false}, {"label": "D", "text": "Fetal scalp sampling", "correct": false}], "correct_answer": "B. Direct electric fetal monitoring", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD38.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53968611699098771/53968611699098771.m3u8"}, {"text": "CTG shown in given image is ?", "options": [{"label": "A", "text": "Placental abruption", "correct": false}, {"label": "B", "text": "Vagal nerve activation", "correct": false}, {"label": "C", "text": "Cord compression", "correct": true}, {"label": "D", "text": "Hypertension", "correct": false}], "correct_answer": "C. Cord compression", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD39.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/73375941699098785/73375941699098785.m3u8"}, {"text": "Patient savita is known hypertensive since last 2 months of pregnancy had an episode of BPV and presented to emergency with and CTG shown below, make the correct diagnosis ?", "options": [{"label": "A", "text": "Sudden head compression", "correct": false}, {"label": "B", "text": "Abruption", "correct": true}, {"label": "C", "text": "Bleeding due to local causes", "correct": false}, {"label": "D", "text": "Sudden cord compression", "correct": false}], "correct_answer": "B. Abruption", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD40.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12469391699098796/12469391699098796.m3u8"}, {"text": "Identify the instrument shown in image?", "options": [{"label": "A", "text": "Suction tube", "correct": false}, {"label": "B", "text": "Karman’s cannula", "correct": true}, {"label": "C", "text": "Manual vaccume aspiration syringe", "correct": false}, {"label": "D", "text": "Flushing curette", "correct": false}], "correct_answer": "B. Karman’s cannula", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD41.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12536201699098807/12536201699098807.m3u8"}, {"text": "identify the type of pelvis ?", "options": [{"label": "A", "text": "Gynaecoid pelvis", "correct": false}, {"label": "B", "text": "Anthropoid pelvis", "correct": true}, {"label": "C", "text": "Platypelloid pelvis", "correct": false}, {"label": "D", "text": "Android pelvis", "correct": false}], "correct_answer": "B. Anthropoid pelvis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD42.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD43.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6886761699098821/6886761699098821.m3u8"}, {"text": "Choose the correct option for contraceptive device shown in image ?", "options": [{"label": "A", "text": "2nd generation contraceptive device", "correct": false}, {"label": "B", "text": "Life span is 8 year", "correct": true}, {"label": "C", "text": "Can be used as an emergency contraceptive", "correct": false}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "B. Life span is 8 year", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD44.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/49295701699098840/49295701699098840.m3u8"}, {"text": "OC pills shown in the image contains ?", "options": [{"label": "A", "text": "0.03 mg ethinyloestradiol + 0.15 mg LNG + 7 ferrous fumerate", "correct": true}, {"label": "B", "text": "0.06 mg ethinyloestradiol + 0.15 mg LNG + 7 ferrous fumerate", "correct": false}, {"label": "C", "text": "0.03 mg ethinyloestradiol + 1.5 mg LNG + 7 ferrous fumerate", "correct": false}, {"label": "D", "text": "0.06 mg ethinyloestradiol + 1.5 mg LNG + 7 ferrous fumerate", "correct": false}], "correct_answer": "A. 0.03 mg ethinyloestradiol + 0.15 mg LNG + 7 ferrous fumerate", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD45.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36686311699098957/36686311699098957.m3u8"}, {"text": "Identify the procedure ?", "options": [{"label": "A", "text": "Uchida technique", "correct": false}, {"label": "B", "text": "Irving method", "correct": false}, {"label": "C", "text": "Pomeroy’s method", "correct": true}, {"label": "D", "text": "Modified Pomeroy’s method", "correct": false}], "correct_answer": "C. Pomeroy’s method", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD46.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/58413331699098968/58413331699098968.m3u8"}, {"text": "Identify the device shown in image ?", "options": [{"label": "A", "text": "Implanon", "correct": false}, {"label": "B", "text": "Essure", "correct": true}, {"label": "C", "text": "Fibroplant", "correct": false}, {"label": "D", "text": "Gynae fix", "correct": false}], "correct_answer": "B. Essure", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD47.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/71932571699099007/71932571699099007.m3u8"}, {"text": "Which maneuver is shown in image ?", "options": [{"label": "A", "text": "McRoberts maneuver", "correct": false}, {"label": "B", "text": "Suprapubic pressure", "correct": false}, {"label": "C", "text": "Woods corkscrew maneuver", "correct": false}, {"label": "D", "text": "Mauriceau Smellie Veit maneuver", "correct": true}], "correct_answer": "D. Mauriceau Smellie Veit maneuver", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD48.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/2321461699099026/2321461699099026.m3u8"}, {"text": "If partograph of a patient is in right of action line, what is management of choice ?", "options": [{"label": "A", "text": "Wait for spontaneous labour", "correct": false}, {"label": "B", "text": "Early ARM to be done", "correct": false}, {"label": "C", "text": "LSCS to be done", "correct": true}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "C. LSCS to be done", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD49.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Diagnosis of condition given in image is made by ?", "options": [{"label": "A", "text": "Decreased beta hCg", "correct": false}, {"label": "B", "text": "Elevated alpha feto proteins", "correct": true}, {"label": "C", "text": "Elevated PAAP", "correct": false}, {"label": "D", "text": "Decreased estriole", "correct": false}], "correct_answer": "B. Elevated alpha feto proteins", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD50.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14472271699099058/14472271699099058.m3u8"}, {"text": "Quantity of hormone released by device shown below is ?", "options": [{"label": "A", "text": "52 mcg", "correct": false}, {"label": "B", "text": "20 mcg", "correct": true}, {"label": "C", "text": "65 mcg", "correct": false}, {"label": "D", "text": "85 mcg", "correct": false}], "correct_answer": "B. 20 mcg", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD51.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the procedure shown in image ?", "options": [{"label": "A", "text": "Shirodkar’s procedure", "correct": false}, {"label": "B", "text": "Modified Shirodkar", "correct": false}, {"label": "C", "text": "McDonald’s procedure", "correct": true}, {"label": "D", "text": "Transvaginal cerclage", "correct": false}], "correct_answer": "C. McDonald’s procedure", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD52.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/70375551699105774/70375551699105774.m3u8"}, {"text": "Chose the correct statement for the instrument given in image:", "options": [{"label": "A", "text": "Instrument is used for dilatation of cervix", "correct": false}, {"label": "B", "text": "It may cause perforation", "correct": false}, {"label": "C", "text": "It helps to know position of uterus and length of cavity", "correct": true}, {"label": "D", "text": "It helps in removal of IUCD", "correct": false}], "correct_answer": "C. It helps to know position of uterus and length of cavity", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD53.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77305531699105786/77305531699105786.m3u8"}, {"text": "Chose the correct statement for the procedure shown in image ?", "options": [{"label": "A", "text": "Procedure is done commonly between 11 -13 weeks of pregnancy", "correct": false}, {"label": "B", "text": "This is performed using 22 G- 24 g spinal needle", "correct": true}, {"label": "C", "text": "USG have no role in procedure", "correct": false}, {"label": "D", "text": "Needle injuries to fetus is common", "correct": false}], "correct_answer": "B. This is performed using 22 G- 24 g spinal needle", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD54.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/72502521699105797/72502521699105797.m3u8"}, {"text": "Choose the correct option", "options": [{"label": "A", "text": "Typically performed between 14 to 16 weeks’ gestation", "correct": false}, {"label": "B", "text": "Performed using an 14- or 16-gauge spinal needle", "correct": false}, {"label": "C", "text": "Associated with limb reduction defects if performed before 10 weeks", "correct": true}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "C. Associated with limb reduction defects if performed before 10 weeks", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD55.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74032271699105857/74032271699105857.m3u8"}, {"text": "Following comes under what classification of breech ?", "options": [{"label": "A", "text": "Frank breech", "correct": false}, {"label": "B", "text": "Incomplete breech", "correct": true}, {"label": "C", "text": "Complete breech", "correct": false}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "B. Incomplete breech", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD56.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29167651699105907/29167651699105907.m3u8"}, {"text": "Identify the type of twin with the given image", "options": [{"label": "A", "text": "Monochorionic diamniotic", "correct": false}, {"label": "B", "text": "Monochorionic monoamniotic", "correct": false}, {"label": "C", "text": "Conjoint twin", "correct": false}, {"label": "D", "text": "Diamniotic dichorionic", "correct": true}], "correct_answer": "D. Diamniotic dichorionic", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD57.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60191301699105931/60191301699105931.m3u8"}, {"text": "Identify the type of forceps", "options": [{"label": "A", "text": "Kielland’s Forceps", "correct": false}, {"label": "B", "text": "Wrigley’s Forceps", "correct": true}, {"label": "C", "text": "Long Curved Obstetric Forceps", "correct": false}, {"label": "D", "text": "Pippers Forceps", "correct": false}], "correct_answer": "B. Wrigley’s Forceps", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/OBSGYNIMAGBSD58.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/70601161699105942/70601161699105942.m3u8"}, {"text": "A 26-year-old woman came in with 12 weeks of missed periods. An ultrasound of her abdomen and pelvis indicated a twin pregnancy, as depicted in the accompanying image. This particular type of twin gestation occurs when the inner cell mass divides:", "options": [{"label": "A", "text": "Between 9 to 12 days after fertilization", "correct": false}, {"label": "B", "text": "Within 3 days after fertilization", "correct": true}, {"label": "C", "text": "Between 4 to 8 days after fertilization", "correct": false}, {"label": "D", "text": "More than 13 days after fertilization", "correct": false}], "correct_answer": "B. Within 3 days after fertilization", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(812).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 25 year old primigravida giving birth to following child . What condition in the mother is associated with such fetal anomaly?", "options": [{"label": "A", "text": "Gestational diabetes mellitus", "correct": false}, {"label": "B", "text": "Pregestational Diabetes mellitus", "correct": true}, {"label": "C", "text": "Intake of ACE inhibitors", "correct": false}, {"label": "D", "text": "Intake of sodium valproate", "correct": false}], "correct_answer": "B. Pregestational Diabetes mellitus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(718).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The method shown in the image is:", "options": [{"label": "A", "text": "Pinard’s Maneuver", "correct": false}, {"label": "B", "text": "Mauriceau Smellie Veit Method", "correct": false}, {"label": "C", "text": "Burns Marshall Technique", "correct": true}, {"label": "D", "text": "Ritgen Maneuver", "correct": false}], "correct_answer": "C. Burns Marshall Technique", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3(636).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the maneuver shown in the image below:", "options": [{"label": "A", "text": "Ritgen’s maneuver", "correct": true}, {"label": "B", "text": "Pinard’s maneuver", "correct": false}, {"label": "C", "text": "Lovset’s maneuver", "correct": false}, {"label": "D", "text": "Zavanelli maneuver", "correct": false}], "correct_answer": "A. Ritgen’s maneuver", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4(583).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A primigravida woman gives birth to a baby with the following defect. Identify the anomaly.", "options": [{"label": "A", "text": "Meningoencephalocele", "correct": false}, {"label": "B", "text": "Craniorachischisis", "correct": true}, {"label": "C", "text": "Myelomeningoencephalocele", "correct": false}, {"label": "D", "text": "Anencephaly", "correct": false}], "correct_answer": "B. Craniorachischisis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5(562).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "You are performing a cardiotocograph on a woman in labor, and your findings are shown below. What could be the possible cause of these findings?", "options": [{"label": "A", "text": "Umbilical cord compression", "correct": true}, {"label": "B", "text": "Fetal head compression", "correct": false}, {"label": "C", "text": "Uteroplacental insufficiency", "correct": false}, {"label": "D", "text": "Fetal hypoxia", "correct": false}], "correct_answer": "A. Umbilical cord compression", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/6(448).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A pregnant woman presented with complaints of passing grape-like vesicles vaginally. A USG scan was done and is shown below. Which of the following hormonal levels need to be checked in this patient?", "options": [{"label": "A", "text": "GnRh", "correct": false}, {"label": "B", "text": "FSH", "correct": false}, {"label": "C", "text": "hCG", "correct": true}, {"label": "D", "text": "LH", "correct": false}], "correct_answer": "C. hCG", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7(404).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 33-year-old pregnant woman at 20 weeks of gestation has the following finding on USG. Identify the defect.", "options": [{"label": "A", "text": "Anencephaly", "correct": false}, {"label": "B", "text": "Omphalocele", "correct": true}, {"label": "C", "text": "Cystic hygroma", "correct": false}, {"label": "D", "text": "Encephalocele", "correct": false}], "correct_answer": "B. Omphalocele", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8(382).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 2-month pregnant woman undergoes a sonographic evaluation of fetal parameters. The parameter marked in the USG shown below best measures:", "options": [{"label": "A", "text": "Fetal aneuploidy", "correct": false}, {"label": "B", "text": "Fetal growth profile", "correct": false}, {"label": "C", "text": "Gestational age", "correct": true}, {"label": "D", "text": "Fetal weight", "correct": false}], "correct_answer": "C. Gestational age", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/9(342).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An Rh-negative patient who did not have access to antenatal care delivered a stillborn fetus as shown in the image. Which of the following is not associated with the fetal condition?", "options": [{"label": "A", "text": "Oligohydramnios", "correct": true}, {"label": "B", "text": "Placentomegaly", "correct": false}, {"label": "C", "text": "Cardiac failure", "correct": false}, {"label": "D", "text": "Hepatosplenomegaly", "correct": false}], "correct_answer": "A. Oligohydramnios", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/10(313).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the grip shown in the image below.", "options": [{"label": "A", "text": "Pawlik’s grip", "correct": false}, {"label": "B", "text": "Lateral grip", "correct": false}, {"label": "C", "text": "Pelvic grip", "correct": true}, {"label": "D", "text": "Fundal grip", "correct": false}], "correct_answer": "C. Pelvic grip", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/11(268).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28-year-old pregnant woman at 36 weeks of gestation presents for a routine antenatal check-up. During the pelvic examination, the obstetrician measures the diagonal conjugate. The measurement is found to be 11 cm. What is the significance of this measurement?", "options": [{"label": "A", "text": "Normal diagonal conjugate, reassuring for a vaginal delivery", "correct": false}, {"label": "B", "text": "Short diagonal conjugate, indicating cephalopelvic disproportion", "correct": true}, {"label": "C", "text": "Long diagonal conjugate, suggestive of a contracted pelvis", "correct": false}, {"label": "D", "text": "Average diagonal conjugate, no specific concerns", "correct": false}], "correct_answer": "B. Short diagonal conjugate, indicating cephalopelvic disproportion", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/12(257).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the type of placenta previa shown in the image", "options": [{"label": "A", "text": "Type 1", "correct": false}, {"label": "B", "text": "Type 2", "correct": false}, {"label": "C", "text": "Type 3", "correct": true}, {"label": "D", "text": "Type 4", "correct": false}], "correct_answer": "C. Type 3", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/13(223).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the maneuver shown in the image below:", "options": [{"label": "A", "text": "Credes maneuver", "correct": false}, {"label": "B", "text": "Bimanual compression", "correct": false}, {"label": "C", "text": "Brandt Andrews", "correct": true}, {"label": "D", "text": "Zavanelli maneuver", "correct": false}], "correct_answer": "C. Brandt Andrews", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/14(203).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A pregnant female delivered a baby with normal, expulsion of an intact placenta. After half hour she started bleeding per vaginaly. On examination she was hypotensive and boggy mass is palpated per abdomen. USG showed. retained placental tissues. Which of the following would be likely finding?", "options": [{"label": "A", "text": "A", "correct": true}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "A. A", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/15(216).png"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/15_1(50).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A pregnant woman presented to the clinic with the given fetal presentation. What is the likely diagnosis?", "options": [{"label": "A", "text": "Stargazer breech", "correct": false}, {"label": "B", "text": "Complete breech", "correct": false}, {"label": "C", "text": "Frank breech", "correct": true}, {"label": "D", "text": "Flexed breech", "correct": false}], "correct_answer": "C. Frank breech", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/16(186).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which pregnancy sign is shown below", "options": [{"label": "A", "text": "Hegar", "correct": true}, {"label": "B", "text": "Goodle", "correct": false}, {"label": "C", "text": "Osiander", "correct": false}, {"label": "D", "text": "Piskaceks", "correct": false}], "correct_answer": "A. Hegar", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(1019).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In which type of pelvis will you see this fetal position", "options": [{"label": "A", "text": "Android", "correct": true}, {"label": "B", "text": "Anthropoid", "correct": false}, {"label": "C", "text": "Gynecoid", "correct": false}, {"label": "D", "text": "Platypelloid", "correct": false}], "correct_answer": "A. Android", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/18(149).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 26 year old pregnant woman has the following pattern of umbilical arteries on a Doppler. What does this pattern indicate?", "options": [{"label": "A", "text": "Absence of end-diastolic flow", "correct": true}, {"label": "B", "text": "Normal end-diastolic flow", "correct": false}, {"label": "C", "text": "Reversal of end-diastolic flow", "correct": false}, {"label": "D", "text": "Impending intrauterine death", "correct": false}], "correct_answer": "A. Absence of end-diastolic flow", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/19(141).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A second gravida with previous CS during repeat CS developed bleeding after delivery of fetus, hysterectomy was done and the specimen is shown below. What is diagnosis", "options": [{"label": "A", "text": "Rupture uterus", "correct": false}, {"label": "B", "text": "Abruption", "correct": false}, {"label": "C", "text": "Vasa previa", "correct": false}, {"label": "D", "text": "Placenta accreta", "correct": true}], "correct_answer": "D. Placenta accreta", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/20(146).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

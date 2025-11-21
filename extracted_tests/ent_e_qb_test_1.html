@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>ASOM</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">ASOM</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                19 Questions | 19 Total Marks | 29 min Duration | ~91.58 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 19 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 29 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 19</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">ASOM - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 19</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 19 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "What are the routes of spread of infection to the middle ear include?", "options": [{"label": "A", "text": "Via Eustachian Tube", "correct": false}, {"label": "B", "text": "Via External Ear", "correct": false}, {"label": "C", "text": "Bloodborne", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above Option A - Via Eustachian tube - it is the most common route infection travels via the lumen of the tube and along the subepithelial peritubular lymphatics . Option B - Via external ear -Traumatic perforation of the tympanic membrane due to any cause opens a route to a middle ear infection. Option C-  Bloodborne is an uncommon route.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The Eustachian tube in infants and young children is:", "options": [{"label": "A", "text": "Shorter Narrower Vertical", "correct": false}, {"label": "B", "text": "Longer Wider Vertical", "correct": false}, {"label": "C", "text": "Shorter wider more horizontal", "correct": true}, {"label": "D", "text": "Longer wider more horizontal", "correct": false}], "correct_answer": "C. Shorter wider more horizontal", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Shorter wider more horizontal The eustachian tube in infants and young children is shorter wider and more horizontal this accounts for the higher incidence of middle ear infections in this age group.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A- eustachian tube in infants is shorter, narrower and vertical. Option B- eustachian tube in infants is shorter, narrower and vertical. Option D- eustachian tube in infants is shorter, narrower and vertical.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 3-year-old child brought with fever and severe pain in the right ear with a history of throat pain three days back on examination the tympanic membrane is hyperaemic and shows characteristic cartwheel appearance of vessels the diagnosis of acute otitis media is made, what is the stage of infection?", "options": [{"label": "A", "text": "Stage of pre-suppuration", "correct": true}, {"label": "B", "text": "Stage of tubal occlusion", "correct": false}, {"label": "C", "text": "Stage Resolution", "correct": false}, {"label": "D", "text": "Stage of Complication", "correct": false}], "correct_answer": "A. Stage of pre-suppuration", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Stage of pre-suppuration This is a case of acute suppurative otitis media In the stage of the pre-suppuration tympanic membrane is hyperemic due to the invasion of microorganisms. The leash of blood vessels appears along the handle of the malleus and at the periphery of the tympanic membrane imparting it a cart-wheel appearance.</p>\n<p><strong>Highyeild:</strong></p><p>STAGE OF ASOM Stage I: Tubal occlusion-blockage of the eustachian tube, tympanic membrane retracted. Stage II: Pre- Suppuration/hyperemia-cartwheel appearance of the tympanic membrane. Stage III: Suppuration- middle ear filled with fluid(pus), bulging of the tympanic membrane. Stage IV: Either Resolution/complication- tympanic membrane ruptures and symptoms subside</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B - in the stage of tubal occlusion tympanic membrane will be retracted. Option C - in the stage of resolution the tympanic membrane ruptures to release pus. Option D - in the stage of complication the organism spread to various other places beyond the middle ear like the mastoid, inner ear, brain etc.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 3-year-old child brought severe pain in the right ear with a history of throat pain three days back. On examination, the tympanic membrane is hyperaemic and shows the characteristic cartwheel appearance of vessels the diagnosis of acute otitis media is made what is the treatment of choice?", "options": [{"label": "A", "text": "Antibiotics with analgesics and nasal decongestants", "correct": true}, {"label": "B", "text": "Myringotomy", "correct": false}, {"label": "C", "text": "Wait and Watch", "correct": false}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "A. Antibiotics with analgesics and nasal decongestants", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Antibiotics with analgesics and nasal decongestants It is the stage of pre-suppuration . It can be treated with oral antibiotics like Amoxiclav analgesics for pain relief and nasal decongestants to reduce the edema of the Eustachian tube .</p>\n<p><strong>Highyeild:</strong></p><p>STAGES OF ASOM Stage I: Tubal occlusion-blockage of the eustachian tube, tympanic membrane retracted. Stage II: Pre- Suppuration/hyperemia-cartwheel appearance of the tympanic membrane. Stage III: Suppuration- middle ear filled with fluid(pus), bulging of the tympanic membrane. Stage IV: Either Resolution/complication- tympanic membrane ruptures and symptoms subside</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B - Myringotomy is preferred in the stage of suppuration when the tympanic membrane is full and bulging and there is an impending risk of rupture. Option C - No wait and watch should be applied in acute otitis media</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The lighthouse sign is seen in", "options": [{"label": "A", "text": "Pharyngitis", "correct": false}, {"label": "B", "text": "Labyrinthitis", "correct": false}, {"label": "C", "text": "Later stages of acute otitis media", "correct": true}, {"label": "D", "text": "Furuncle", "correct": false}], "correct_answer": "C. Later stages of acute otitis media", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Later stages of acute otitis media When the bulging tympanic membrane ultimately ruptures the pus-filled in the middle ear comes out of the external auditory canal with pressure this is called pulsatile otorrhea or the lighthouse sign.</p>\n<p><strong>Highyeild:</strong></p><p>STAGES OF ASOM Stage I: Tubal occlusion-blockage of the eustachian tube, tympanic membrane retracted. Stage II: Pre- Suppuration/hyperemia-cartwheel appearance of the tympanic membrane. Stage III: Suppuration- middle ear filled with fluid (pus), bulging of the tympanic membrane. Stage IV: Either Resolution/complication- tympanic membrane ruptures and symptoms subside</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- In no other conditions, the pus is draining out of the external auditory canal in a pulsatile manner</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the causative organism of acute otitis media?", "options": [{"label": "A", "text": "Haemophilus Influenza", "correct": false}, {"label": "B", "text": "Streptococcus pneumoniae", "correct": false}, {"label": "C", "text": "Moraxella", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above The most common organisms in infants and young children are Streptococcus pneumoniae , 30% Haemophilus influenzae , 20% Moraxella, and 12% other organisms including S treptococcus pyogenes, and sometimes Pseudomonas . of the external auditory canal with pressure this is called pulsatile otorrhea or the lighthouse sign.</p>\n<p><strong>Highyeild:</strong></p><p>STAGES OF ASOM Stage I: Tubal occlusion-blockage of the eustachian tube, tympanic membrane retracted. Stage II: Pre- Suppuration/hyperemia-cartwheel appearance of the tympanic membrane. Stage III: Suppuration- middle ear filled with fluid(pus), bulging of the tympanic membrane. Stage IV: Either Resolution/complication- tympanic membrane ruptures and symptoms subside</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In the stage of complication the acute otitis media can lead to:", "options": [{"label": "A", "text": "Petrositis", "correct": false}, {"label": "B", "text": "Labyrinthitis", "correct": false}, {"label": "C", "text": "Facial Paralysis", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above In the stage of complication acute otitis media can spread and lead to the following: Acute mastoiditis Labyrinthitis Petrositis Facial nerve paralysis Brain abscess Extradural abscess Meningitis Lateral sinus thrombophlebitis</p>\n<p><strong>Highyeild:</strong></p><p>STAGE OF ASOM Stage I: Tubal occlusion-blockage of the eustachian tube, tympanic membrane retracted. Stage II: Pre- Suppuration/hyperemia-cartwheel appearance of the tympanic membrane. Stage III: Suppuration- middle ear filled with fluid(pus), bulging of the tympanic membrane. Stage IV: Either Resolution/complication- tympanic membrane ruptures and symptoms subside</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Serous otitis media is also known as:", "options": [{"label": "A", "text": "Mucoid Otitis Media", "correct": false}, {"label": "B", "text": "Secretory Otitis Media", "correct": false}, {"label": "C", "text": "Glue Ear", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above Serous otitis media is synonymous with Secretory otitis media / Mucoid otitis media and Glue ear.</p>\n<p><strong>Highyeild:</strong></p><p>STAGES OF ASOM Stage I: Tubal occlusion-blockage of the eustachian tube, tympanic membrane retracted. Stage II: Pre- Suppuration/hyperemia-cartwheel appearance of the tympanic membrane. Stage III: Suppuration- middle ear filled with fluid(pus), bulging of the tympanic membrane. Stage IV: Either Resolution/complication- tympanic membrane ruptures and symptoms subside</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The etiology behind serous otitis media include", "options": [{"label": "A", "text": "Adenoid Hyperplasia", "correct": false}, {"label": "B", "text": "Viral Infections", "correct": false}, {"label": "C", "text": "Unresolved Otitis Media", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above Etiology behind serous otitis media include Adenoid hyperplasia Chronic tonsillitis Allergy Chronic rhinitis and sinusitis Tumours of nasopharynx Palatal defect Viral infections like an adeno and rhinoviruses of the upper respiratory tract Unresolved otitis media like ASOM.</p>\n<p><strong>Highyeild:</strong></p><p>STAGES OF ASOM Stage I: Tubal occlusion-blockage of the eustachian tube, the tympanic membrane retracted. Stage II: Pre- Suppuration/hyperemia-cartwheel appearance of the tympanic membrane. Stage III: Suppuration- middle ear filled with fluid(pus), bulging of the tympanic membrane. Stage IV: Either Resolution/complication- tympanic membrane ruptures and symptoms subside</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 2-year-old child comes to the hospital with his mother and presents with earache. The child has a past history of acute upper respiratory infection. On examination following image of the tympanic membrane is seen. What is the most likely organism implicated in this condition?", "options": [{"label": "A", "text": "Beta Haemolytic Streptococcus", "correct": false}, {"label": "B", "text": "Streptococcus pneumoniae", "correct": true}, {"label": "C", "text": "Haemophilus influenza", "correct": false}, {"label": "D", "text": "Staphylococcus aureus", "correct": false}], "correct_answer": "B. Streptococcus pneumoniae", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1685002512533-QTDE032012IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Streptococcus pneumoniae The clinical scenario given is suggestive of acute suppurative otitis media . Because following pharyngitis there is a chance of the spread of infections from the throat to the It is more common in children because of the shorter and wider eustachian tube . The most likely organism implicated is Streptococcus pneumoniae .</p>\n<p><strong>Highyeild:</strong></p><p>STAGES OF ASOM Stage I: Tubal occlusion-blockage of the eustachian tube, tympanic membrane retracted. Stage II: Pre- Suppuration/hyperemia-cartwheel appearance of the tympanic membrane. Stage III: Suppuration- middle ear filled with fluid(pus), bulging of the tympanic membrane. Stage IV: Either Resolution/complication- tympanic membrane ruptures and symptoms subside</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 6-year-old school-going child, Ritu, with otalgia, is diagnosed to have acute suppurative otitis media in the pre-suppuration stage. How will you manage?", "options": [{"label": "A", "text": "Antibiotics and decongestants", "correct": true}, {"label": "B", "text": "Myringotomy with antibiotics", "correct": false}, {"label": "C", "text": "Myringotomy with grommet insertion", "correct": false}, {"label": "D", "text": "Antihistaminics and decongestants", "correct": false}], "correct_answer": "A. Antibiotics and decongestants", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Antibiotics and decongestants Management of ASOM in the pre-suppuration stage involves the usage of antibiotics and decongestants.</p>\n<p><strong>Highyeild:</strong></p><p>STAGE OF ASOM Stage I: Tubal occlusion-blockage of the eustachian tube, tympanic membrane retracted. Stage II: Pre- Suppuration/hyperemia-cartwheel appearance of the tympanic membrane. Stage III: Suppuration- middle ear filled with fluid(pus), bulging of the tympanic membrane. Stage IV: Either Resolution/complication- tympanic membrane ruptures and symptoms subside</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B - Myringotomy is indicated only when there is an impending rupture of the tympanic membrane. Option C- Myringotomy is indicated only when there is an impending rupture of the tympanic membrane. Option D - In the pre-suppuration stage antibiotics must be used.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 5-year-old child comes to ENT OPD. You did an otologic examination of a febrile child with otalgia is shown below. What is the stage of acute suppurative otitis media seen here?", "options": [{"label": "A", "text": "Pre-Suppuration Stage", "correct": true}, {"label": "B", "text": "Complication Stage", "correct": false}, {"label": "C", "text": "Resolution Stage", "correct": false}, {"label": "D", "text": "Suppuration Stage", "correct": false}], "correct_answer": "A. Pre-Suppuration Stage", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1685002512881-QTDE032016IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Pre-Suppuration Stage The otologic examination shows the stage of pre-suppuration of ASOM . During this stage, due to prolonged tubal occlusion, pyogenic organisms invade the tympanic cavity. A leash of blood vessels appears along with the handle of the malleus and at the periphery of the TM imparting it a cart-wheel appearance.</p>\n<p><strong>Highyeild:</strong></p><p>STAGES OF ASOM Stage I: Tubal occlusion-blockage of the eustachian tube, tympanic membrane retracted. Stage II: Pre- Suppuration/hyperemia-cartwheel appearance of the tympanic membrane. Stage III: Suppuration- middle ear filled with fluid(pus), bulging of the tympanic membrane. Stage IV: Either Resolution/complication- tympanic membrane ruptures and symptoms subside</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B- In the complication stage mastoiditis may be seen. Option C- In the resolution stage there is perforation of the tympanic membrane. Option  D- In the suppuration stage there is a bulging tympanic membrane.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The yellowish tympanic membrane is seen in", "options": [{"label": "A", "text": "Early Asom", "correct": false}, {"label": "B", "text": "Glue Ear", "correct": true}, {"label": "C", "text": "Normal tympanic membrane", "correct": false}, {"label": "D", "text": "Otosclerosis", "correct": false}], "correct_answer": "B. Glue Ear", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Glue Ear In glue ear (serous otitis media) Tympanic membrane is dull opaque with loss of light reflex and appears yellow/grey/blue in colour.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A- Congested membrane with prominent blood vessels (cartwheel sign) is seen in the early stages of acute otitis media. Option C- Normal colour of the tympanic membrane is pearly grey. Option D - Flamingo pink colour is seen in otosclerosis.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents with pain in the left ear, decreased hearing and thick yellowish discharge for 15 days. On examination, the tympanic membrane appears red and bulging. X-ray mastoid shows clouding of air cells. The next step in management is", "options": [{"label": "A", "text": "Antibacterial Therapy", "correct": false}, {"label": "B", "text": "Myringotomy", "correct": true}, {"label": "C", "text": "Decongestant", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "B. Myringotomy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Myringotomy The patient presents with acute symptoms and the tympanic membrane is red and bulging . The probable diagnosis is Acute otitis media [ suppurative stage] . Myringotomy is the treatment for the suppurative stage in which the drum is bulging and there is acute pain . A curvilinear incision is given on the posterior-inferior quadrant of the tympanic membrane for the drainage of pus.</p>\n<p><strong>Highyeild:</strong></p><p>STAGES OF ASOM Stage I: Tubal occlusion-blockage of the eustachian tube, tympanic membrane retracted. Stage II: Pre- Suppuration/hyperemia-cartwheel appearance of the tympanic membrane. Stage III: Suppuration- middle ear filled with fluid(pus), bulging of the tympanic membrane. Stage IV: Either Resolution/complication- tympanic membrane ruptures and symptoms subside</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A- Antibacterial therapy is recommended mostly in the stage of tubal obstruction and pre-suppurative stage and continued in this stage. Option C- Decongestant is recommended in the tubal occlusion stage.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents with irregular fever having 2-3 peaks a day. It is accompanied by chills and rigour, headache and neck pain. Compression of the right-sided jugular vein produces engorgement of retinal vessels. Diagnostic tool for the disease:", "options": [{"label": "A", "text": "Blood Smear", "correct": false}, {"label": "B", "text": "CSF Examination", "correct": false}, {"label": "C", "text": "Contrast CT", "correct": true}, {"label": "D", "text": "X-Ray Mastoid", "correct": false}], "correct_answer": "C. Contrast CT", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Contrast CT The patient presents with intermittent high-grade fever [ picket fence fever] . On the Crow Beck test [ compression of normal-sided (right side) jugular vein there is engorgement of retinal vessels . The probable diagnosis is Lateral sinus thrombophlebitis . The diagnostic tool is a contrast CT scan or MRI which shows an Empty delta sign.</p>\n<p><strong>Highyeild:</strong></p><p>STAGES OF LATERAL SINUS THROMBOPHLEBITIS</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A - Blood smear to rule out malaria. Option B - CSF is normal except for a rise in pressure. Helps to rule out meningitis. Option D- X-ray shows clouding of mastoid air cells.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The temperature used in the Fitzgerald Hallpike test is?", "options": [{"label": "A", "text": "27°C", "correct": false}, {"label": "B", "text": "34°C", "correct": false}, {"label": "C", "text": "37°C", "correct": false}, {"label": "D", "text": "44°C", "correct": true}], "correct_answer": "D. 44°C", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>44°C Fitzgerald-Hallpike test (bithermal caloric test) . In this test, the patient lies supine with the head tilted 30 degreesforward so that the horizontal canal is vertical. Ears are irrigated for 40 sec alternately with water at 30 degrees C and 44 degrees C (i.e. 7 degrees below and above normal body temperature) and eyes are observed for the appearance of nystagmus till their endpoint.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The commonest causative organism for ASOM in 2 years the child is", "options": [{"label": "A", "text": "Pneumococcus", "correct": true}, {"label": "B", "text": "H. influenzae", "correct": false}, {"label": "C", "text": "Staphylococcus", "correct": false}, {"label": "D", "text": "Streptococcus", "correct": false}], "correct_answer": "A. Pneumococcus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Pneumococcus The most common cause of acute otitis media - Streptococcus pneumonia/pneumococcus (35–40% cases) H. influenza (25–30%) M. catarrhalis (10–20%)</p>\n<p><strong>Highyeild:</strong></p><p>STAGES OF ASOM Stage I: Tubal occlusion-blockage of the eustachian tube, tympanic membrane retracted. Stage II: Pre- Suppuration/hyperemia-cartwheel appearance of the tympanic membrane. Stage III: Suppuration- middle ear filled with fluid(pus), bulging of the tympanic membrane. Stage IV: Either Resolution/complication- tympanic membrane ruptures and symptoms subside</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Acute suppurative otitis media is treated by all except:", "options": [{"label": "A", "text": "Erythromycin", "correct": false}, {"label": "B", "text": "Penicillin", "correct": false}, {"label": "C", "text": "Streptomycin", "correct": true}, {"label": "D", "text": "Cephalosporin", "correct": false}], "correct_answer": "C. Streptomycin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Streptomycin Medical management is the Treatment of choice in the case of ASOM Antibiotics of choice are: Ampicillin or amoxicillin (DOC) Other which can be used Cotrimoxazole Cefaclor Erythromycin Penicillin</p>\n<p><strong>Highyeild:</strong></p><p>STAGES OF ASOM Stage I: Tubal occlusion-blockage of the eustachian tube, tympanic membrane retracted. Stage II: Pre- Suppuration/hyperemia-cartwheel appearance of the tympanic membrane. Stage III: Suppuration- middle ear filled with fluid(pus), bulging of the tympanic membrane. Stage IV: Either Resolution/complication- tympanic membrane ruptures and symptoms subside</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the indication of the procedure shown in the image?", "options": [{"label": "A", "text": "Secretory Otitis Media", "correct": true}, {"label": "B", "text": "Acute Otitis Media", "correct": false}, {"label": "C", "text": "Congenital Cholesteatoma", "correct": false}, {"label": "D", "text": "CSOM", "correct": false}], "correct_answer": "A. Secretory Otitis Media", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1685002515143-QTDE032027IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Secretory Otitis Media The given Image shows grommet insertion which is usually done if myringotomy and aspiration have not helped . Grommet is inserted to provide continuous aeration to the middle ear. It is left in place for weeks or months or until spontaneously extruded. It is done in the case of secretory otitis media.</p>\n<p><strong>Highyeild:</strong></p><p>Complications of Grommet Blocked Grommet MC - due to blood clot, thick and dry secretion ↳Put drops of Saline ↳After few minutes → Suck it out Trauma to Middle ear structure: Ossicles Facial Nerve Facial Palsy Permanent perforation Extrusion of Grommet Foreign Body in Middle Ear Cholesteatoma formation</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

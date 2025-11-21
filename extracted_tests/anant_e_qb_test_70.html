@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Lower Limb - Tibia &amp; Fibula</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Lower Limb - Tibia &amp; Fibula</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                7 Questions | 7 Total Marks | 17 min Duration | ~145.71 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 7 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 17 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 7</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Lower Limb - Tibia &amp; Fibula - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 7</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 7 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 12 year old boy presented to the OPD with pain around his right knee. He is the captain of the football team and the pain is limiting the movement of the boy on the field. The doctor advised an X-ray of the knee and diagnosed the child as having Osgood-Schlatter disease. This disease involves which of the following structures attached to the tibial tuberosity?", "options": [{"label": "A", "text": "Iliotibial Tract", "correct": false}, {"label": "B", "text": "Patellar ligament", "correct": true}, {"label": "C", "text": "Semimembranosus", "correct": false}, {"label": "D", "text": "Popliteus", "correct": false}], "correct_answer": "B. Patellar ligament", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Patellar ligament Osgood-Schlatter disease occurs due to repetitive use injury of the knee especially during puberty due to differential growth between the patellar tendon, bones, and muscles around the knee. It is an avulsion of the patellar tendon from the tibial tuberosity. Avulsion of Patellar tendon in Osgood-Schlatter disease</p>\n<p><strong>Highyeild:</strong></p><p>Osgood Schlatter disease , also known as osteochondrosis or traction apophysitis of the tibial tubercle, is a common cause of anterior knee pain in the skeletally immature athletic population.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Iliotibial tract is attached to the lateral condyle of the tibia Option: C. Semimembranosus is attached to a groove on the posterior surface of the medial condyle Option: D. Popliteus is inserted on the posterior surface in the triangular area above the Soleil line</p>\n<p><strong>Extraedge:</strong></p><p>OSD may result in an avulsion fracture, with the tibial tuberosity separating from the tibia (usually remaining connected to a tendon or ligament). This injury is uncommon because there are mechanisms that prevent strong muscles from doing damage. The fracture on the tibial tuberosity can be a complete or incomplete break. Type I: A small fragment is displaced proximally and does not require surgery. Type II: The articular surface of the tibia remains intact and the fracture occurs at the junction where the secondary center of ossification and the proximal tibial epiphysis come together (may or may not require surgery). Type III: Complete fracture (through the articular surface) including a high chance of meniscal damage. This type of fracture usually requires surgery.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A taxi driver presented to the emergency department after suffering from a road traffic accident. On examination, it was noticed that the patient sustained a dashboard injury leading to damage to a particular structure attached to the intercondylar area of the tibia. This structure is responsible for restricting the external rotation of the tibia. Identify the involved structure.", "options": [{"label": "A", "text": "1", "correct": false}, {"label": "B", "text": "2", "correct": false}, {"label": "C", "text": "3", "correct": false}, {"label": "D", "text": "4", "correct": true}], "correct_answer": "D. 4", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1686393132811-QTDA071002IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>4 The patient’s history of dashboard injury and the restriction of external rotation point toward the diagnosis of PCL ( posterior cruciate ligament). It is the posterior-most structure attached to the tibial intercondylar area. Structures in the intercondylar area of Tibia</p>\n<p><strong>Highyeild:</strong></p><p>The PCL functions as one of the main stabilizers of the knee joint and serves primarily to resist excessive posterior translation of the tibia relative to the femur . The posterior cruciate ligament (PCL) is the strongest and largest intra-articular ligament in the human knee and the primary posterior stabilizer of the knee. The PCL also acts as a secondary stabilizer of the knee preventing excessive rotation specifically between 90° and 120° of knee flexion.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. It is the anterior horn of the medial meniscus Option: B . It is an Anterior cruciate ligament and is often torn as a part of sports injuries, The function of all is a restriction of hyperextension and internal rotation. Option: C. It is the posterior horn of the lateral meniscus.</p>\n<p><strong>Extraedge:</strong></p><p>The anterior cruciate ligament (ACL) is one of the two cruciate ligaments which stabilizes the knee joint by preventing excessive forward movements of the tibia or limiting rotational knee movements.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements about fibula is false?", "options": [{"label": "A", "text": "Fibula violates the law of ossification because the secondary center of ossification which appears first does not fuse last", "correct": false}, {"label": "B", "text": "The secondary center appears first in the lower end because it is a traction epiphysis", "correct": true}, {"label": "C", "text": "Fibula is an ideal spare bone for a bone graft", "correct": false}, {"label": "D", "text": "If the foot gets caught in a hole in the ground, there is forcible abduction and external rotation, such as an injury leads to Pott’s fracture.", "correct": false}], "correct_answer": "B. The secondary center appears first in the lower end because it is a traction epiphysis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>The secondary center appears first in the lower end because it is a traction epiphysis This is a false statement because the secondary center appears first in the lower end because it is pressure epiphysis (pressure epiphysis appears before traction epiphysis).</p>\n<p><strong>Highyeild:</strong></p><p>There are four types of epiphysis: Pressure epiphysis: The region of the long bone that forms the joint is a pressure epiphysis (e.g. the head of the femur, part of the hip joint complex). Pressure epiphysis assists in transmitting the weight of the human body and is the region of the bone that is under pressure during movement or locomotion. Traction epiphysis : The regions of the long bone which are non-articular, i.e. not involved in joint formation. Unlike pressure epiphyses, these regions do not assist in weight transmission. However, their proximity to the pressure epiphysis region means that the supporting ligaments and tendons attach to these areas of the bone. Traction epiphyses ossify later than pressure epiphyses. Examples of traction epiphyses are tubercles of the humerus (greater tubercle and lesser tubercle), and trochanters of the femur (greater and lesser). Atavistic epiphysis: A bone that is independent phylogenetically but is fused with another bone in humans. These types of fused bones are called atavistic, g. , the coracoid process of the scapula, which has been fused in humans, but is separate in four-legged animals. os trigonum (posterior tubercle of the talus) is another example of an atavistic epiphysis. Aberrant epiphysis: These epiphyses are deviations from the norm and are not always present. For example, the epiphysis at the head of the first metacarpal bone and at the base of other metacarpal bones. Four types of epiphysis</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Upper epiphysis fuses last because this is the growing end of the bone. Option: C. Fibula is an ideal bone graft. Option: D. Pott’s fracture is a spiral fracture involving the lateral malleolus, medial malleolus, and posterior margin of the It often occurs when the foot is caught in a hole in the ground.</p>\n<p><strong>Extraedge:</strong></p><p>An epiphysis is one of the rounded ends or tips of a long bone that ossify from a secondary center of ossification. Between the epiphysis and diaphysis lies the metaphysis, including the epiphyseal plate (growth plate). At the joint, the epiphysis is covered with articular cartilage; below that covering is a zone similar to the epiphyseal plate, known as subchondral bone. The epiphysis is filled with red bone marrow, which produces erythrocytes (red blood cells).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient who underwent knee replacement surgery 1 week ago. The surgery went uneventfully and the patient was advised to bed rest. When the patient started to ambulate he noticed that he was unable to dorsiflex his foot. He went to see the doctor and the doctor conducted a thorough sensory and motor examination of the foot. He found that there was a loss of sensation in the first interdigital cleft of the foot. Which of the following muscles is not supplied by the nerve affected in this condition?", "options": [{"label": "A", "text": "Peroneus Tertius", "correct": false}, {"label": "B", "text": "Tibialis anterior", "correct": false}, {"label": "C", "text": "Extensor digitorum brevis", "correct": false}, {"label": "D", "text": "Peroneus brevis", "correct": true}], "correct_answer": "D. Peroneus brevis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Peroneus brevis The clinical scenario suggests an injury to the deep peroneal nerve during knee replacement surgery, This nerve supplies sensory supply to 1st interdigital cleft and supplies the muscles of the anterior compartment of the leg. Peroneus brevis(Option D) and Peroneus longus are muscles of the lateral compartment supplied by the superficial peroneal nerve; it also gives sensory supply to the dorsum of the leg and foot except for the 1st  interdigital cleft.</p>\n<p><strong>Highyeild:</strong></p><p>Nerve supply and actions of muscles Muscle Nerve supply Actions 1. Tibialis anterior Deep peroneal nerve a. Dorsiflexor of foot b. Invertor of the foot (see Fig. 11.12) c. Keeps the leg vertical while walking on uneven ground d. Maintains medial longitudinal arch of the foot 2. Extensor hallucis longus Deep peroneal nerve Dorsiflexor of foot and extends metatarsophalangeal and interphalangeal joints of the big toe 3. Extensor digitorum longus Deep peroneal nerve Dorsiflexor of the foot. Extends metatarsophalangeal, proximal, and distal interphalangeal joints of 2nd-5th toes 4. Peroneus Tertius Deep peroneal nerve Dorsiflexor of foot and evertor of foot 5. Extensor digitorum brevis Lateral terminal branch of the deep peroneal nerve The medial tendon known as the extensor hallucis brevis extends the metatarsophalangeal joint of the big toe. The other three lateral tendons extend the metatarsophalangeal and interphalangeal joints of 2nd, the 3rd, and 4th toes, particularly in a dorsiflexed foot</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - The following muscles are supplied by deep peroneal nerve Option: A. Peroneus Tertius Option: B. Tibialis anterior Extensor hallucis longus Extensor digitorum longus Option: C. Extensor digitorum brevis</p>\n<p><strong>Extraedge:</strong></p><p>The deep fibular nerve (also known as deep peroneal nerve) begins at the bifurcation of the common fibular nerve between the fibula and upper part of the fibularis longus, passes inferno-medially, deep to the extensor digitorum longus, to the anterior surface of the interosseous membrane, and comes into relation with the anterior tibial artery above the middle of the leg; it then descends with the artery to the front of the ankle joint, where it divides into a lateral and a medial terminal branch.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A factory worker presented to the emergency department with a hand injury. The patient complained that while working his hand got stuck in a machine and got crushed. The patient was taken to the ER and salvage surgery was performed. The operating surgeon suggested that the nerve damage was very extensive and needed an autologous nerve graft to recover some degree of neural function. Which of the following areas is supplied by the nerve ideally suited for an autologous nerve graft?", "options": [{"label": "A", "text": "1", "correct": true}, {"label": "B", "text": "2", "correct": false}, {"label": "C", "text": "3", "correct": false}, {"label": "D", "text": "4", "correct": false}], "correct_answer": "A. 1", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1686393134719-QTDA071005IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>1 This is the region supplied by the sural nerve considered the ideal nerve for autologous nerve grafting.</p>\n<p><strong>Highyeild:</strong></p><p>The sural nerve (L4-S1) is a cutaneous sensory nerve of the posterolateral calf with cutaneous innervation to the distal one-third of the lower leg. Formation of the sural nerve is the result of either anastomosis of the medial sural cutaneous nerve and the sural communicating nerve , or it may be found as a continuation of the lateral sural cutaneous nerve traveling parallel to the medial sural cutaneous nerve. The sural nerve specifically innervates the cutaneous sensorium over the posterolateral leg and lower lateral ankle via lateral calcaneal branches. Cutaneous innervation of the back of the leg</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Saphenous nerve. The distal saphenous nerve is commonly known to provide cutaneous innervation of the medial side of the ankle and distally to the base of the great toe. Option: C. Medial calcaneal nerve. The medial calcaneal branches of the tibial nerve (internal calcaneal branches) perforate the laciniate ligament and supply the skin of the heel and medial side of the sole of the foot. Option: D. Peroneal communicating nerve. The peroneal communicating nerve originates in the popliteal fossa either from the lateral sural cutaneous nerve or directly from the common peroneal nerve. The nerve communicates with the medial sural cutaneous nerve to form the sural nerve.</p>\n<p><strong>Extraedge:</strong></p><p>The sural nerve (L4-S1) is generally considered a pure cutaneous nerve of the posterolateral leg to the lateral ankle. The sural nerve originates from a combination of either the sural communicating branch and medial sural cutaneous nerve, or the lateral sural cutaneous nerve. This group of nerves is termed the sural nerve complex. There are eight documented variations of the sural nerve complex. Once formed the sural nerve takes its course midline posterior to posterolateral around the lateral malleolus. The sural nerve terminates as the lateral dorsal cutaneous nerve.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 20 year old sportsperson presented to the emergency department after a sports injury. He collided with another player during the match and fell down clutching his knee. The patient exhibited pain along the medial aspect of the knee. A plain X-Ray of the knee reveals a fracture of the medial condyle of the tibia. The orthopedic surgeon classified it as a Schatzker type 4 fracture. Which of the following structures are not attached to the medial condyle of the tibia?", "options": [{"label": "A", "text": "Capsular ligament of the knee joint", "correct": false}, {"label": "B", "text": "Semimembranosus", "correct": false}, {"label": "C", "text": "Patellar ligament", "correct": false}, {"label": "D", "text": "Iliotibial tract", "correct": true}], "correct_answer": "D. Iliotibial tract", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Iliotibial tract Attachments of the medial condyle are capsular ligament of the knee joint semimembranosus medial patellar retinaculum Attachments of lateral condyle are iliotibial tract capsular ligament tendon of popliteus</p>\n<p><strong>Highyeild:</strong></p><p>The Schatzker classification system for tibial plateau fractures is widely used by orthopedic surgeons to assess the initial injury, plan management, and predict prognosis. The Schatzker classification divides tibial plateau fractures into six types: lateral plateau fracture without depression (type I), lateral plateau fracture with depression (type II), compression fracture of the lateral (type IIIA) or central (type IIIB) plateau, medial plateau fracture (type IV), bicondylar plateau fracture (type V), and plateau fracture with diaphyseal discontinuity (type VI).</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Capsular ligament of the knee joint The capsular ligament of the knee joint is attached to both the medial and lateral condyles of the tibia. Option: B. Semimembranosus Semimembranosus is attached to the medial condyle of the tibia. Option: C. Patellar ligament The patellar ligament in the form of the medial patellar retinaculum is attached to the medial condyle of the tibia.</p>\n<p><strong>Extraedge:</strong></p><p>Management of type I, II, and III fractures centers on evaluating and repairing the articular cartilage. The fracture-dislocation mechanism of type IV fractures increases the likelihood of injury to the peroneal nerve or popliteal vessels. In type V and VI fractures, the location of soft-tissue injury dictates the surgical approach and the degree of soft-tissue swelling dictates the timing of definitive surgery and the need for provisional stabilization with an external fixator.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 25 year old soccer player presented to the OPD with pain around the knee joint. He claims that the pain has been slowly developing on the inside of his knee since the last game. On taking a thorough history he mentions that he often does not follow proper stretching exercises before the game. The attending doctor makes a diagnosis of anserine bursitis. Which of the following muscles do not form the boundaries of the anserine bursa?", "options": [{"label": "A", "text": "gracilis", "correct": false}, {"label": "B", "text": "Sartorius", "correct": false}, {"label": "C", "text": "Semimembranosus", "correct": true}, {"label": "D", "text": "Semitendinosus", "correct": false}], "correct_answer": "C. Semimembranosus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Semimembranosus The Semimembranosus muscle is attached to the posterior surface of the medial condyle of the Tibia.</p>\n<p><strong>Highyeild:</strong></p><p>The pes anserinus is where the tendons of the sartorius, gracilis, and semitendinosus join at the medial knee, into the anteromedial proximal tibia. Pes anserine bursitis may result from stress, overuse, obesity, and trauma to this area. An occurrence of pes anserine bursitis commonly is characterized by pain at the medial knee and upper tibial region, especially when climbing stairs, tenderness, and local swelling.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Gracilis Option: B. Sartorius Option: D. Semitendinosus Gracilis, Sartorius, and Semitendinosus form the boundaries of the anserine bursa.</p>\n<p><strong>Extraedge:</strong></p><p>Pes anserine bursitis is an inflammation of the bursa located between the shinbone (tibia) and three tendons of the hamstring muscle at the inside of the knee . It occurs when the bursa becomes irritated and produces too much fluid, which causes it to swell and put pressure on the adjacent parts of the knee.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Anticoagulant Drugs</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Anticoagulant Drugs</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                22 Questions | 22 Total Marks | 32 min Duration | ~87.27 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 22 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 32 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 22</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Anticoagulant Drugs - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 22</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 22 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 54-year-old female is on warfarin therapy for the prevention of deep venous thrombosis. She now develops enteric fever and is put on Erythromycin by the physician for sore throat. After 2 days she comes with bleeding episodes. The reason is:", "options": [{"label": "A", "text": "Erythromycin will decrease the anticoagulant effect of warfarin", "correct": false}, {"label": "B", "text": "Erythromycin will increase the anticoagulant effect of warfarin", "correct": true}, {"label": "C", "text": "Erythromycin has Antiplatelet property", "correct": false}, {"label": "D", "text": "Erythromycin causes damage to collagen", "correct": false}], "correct_answer": "B. Erythromycin will increase the anticoagulant effect of warfarin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Erythromycin will increase the anticoagulant effect of warfarin The addition of enzyme inhibitors with warfarin increases its duration of action and may present with toxicity such as bleeding. In this question, Erythromycin is an enzyme inhibitor and it will increase the anticoagulant effect of warfarin</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option A . This is incorrect as erythromycin is an enzyme inhibitor, and will increase the effect of warfarin. Option C. Erythromycin has no antiplatelet property, it has prokinetic property additional by acting on motilin receptor. Option D . Is incorrect no such effect is mediated.</p>\n<p><strong>Table:</strong></p><p>#Mantra · Drug interaction · Increased bleeding\nrisk due to increased effect of warfarin: → INR · Antiarrhythmics- amiodarone, propafenone · Antibiotics - amoxicillin, cephalosporins, fluoroquinolones, macrolides. · Anticonvulsants- phenytoin,sodium valproate · Antidepressants - duloxetine venlafaxine, SSRI. · Antifungals- fluconazole, itraconazole, ketoconazole. · Antihyperlipidemics- Ezetimibe, fenofibrate Atorvastatin, fluvastatin · Rosuvastatin · Decreased effect\nwarfarin:-INR · Antibiotics - rifampin · Antidepressants - trazodone · Antiepileptics - carbamazepine, phenobarbitone phenytoin.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 48year old man complained of swelling, redness, and pain in his right leg. The patient is diagnosed with acute DVT and requires treatment with an anticoagulant. Which of the following anticoagulants acts by directly inhibiting Xa?", "options": [{"label": "A", "text": "Rivaroxaban", "correct": true}, {"label": "B", "text": "Dabigatran", "correct": false}, {"label": "C", "text": "Enoxaparin", "correct": false}, {"label": "D", "text": "Heparin", "correct": false}], "correct_answer": "A. Rivaroxaban", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Rivaroxaban Rivaroxaban: is an anticoagulant medication (blood thinner) used to treat and prevent blood clots. Specifically, it is used to treat deep vein thrombosis and pulmonary emboli and prevent blood clots in atrial fibrillation and following hip or knee surgery. It is taken by mouth. Oral direct factor Xa inhibitor Uses For stroke prevention in patients with atrial fibrillation For treatment of acute deep vein thrombosis or pulmonary embolism Postoperative thromboprophylaxis in patients undergoing hip or knee arthroplasty</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Dabigatran is an oral direct thrombin inhibitor (IIa), it is an anticoagulant used to treat and prevent blood clots and to prevent stroke in people with atrial fibrillation Specifically it is used to prevent blood clots following hip or knee replacement and in those with a history of prior clots . It is used as an alternative to warfarin and does not require monitoring by blood tests Option: C . Enoxaparin is known as an anticoagulant and is used to prevent harmful blood clots. It stops existing clots from getting any bigger and stops new ones from forming in the legs, lungs, brain, or heart. This can help prevent Acute coronary syndrome, Deep vein thrombosis, and Pulmonary embolism. Option: D. Heparin are indirect thrombin inhibitor, Heparin, also known as unfractionated heparin (UFH), is a medication and naturally occurring glycosaminoglycan. Since heparins depend on the activity of antithrombin, they are considered anticoagulants. Specifically, it is also used in the treatment of heart attacks and unstable angina</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 40year old male was given high dose UFH for Percutaneous intervention. He had a history of peptic ulcer disease. Now he presents wildlife-threatening bleeding. The best antidote for this condition is:", "options": [{"label": "A", "text": "Vit. K", "correct": false}, {"label": "B", "text": "Whole blood", "correct": false}, {"label": "C", "text": "Protamine", "correct": true}, {"label": "D", "text": "Ascorbic acid", "correct": false}], "correct_answer": "C. Protamine", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Protamine sulfate is a blood factor used when the reversal of the anticoagulant effect of heparin is necessary and for the treatment of heparin overdose.</p>\n<p><strong>Highyeild:</strong></p><p>The antidote for heparin overdose is protamine sulfate Mild bleeding due to heparin usually can be controlled without the administration of an antagonist. If a life-threatening hemorrhage occurs, heparin can rapidly be reversed by the intravenous infusion of protamine sulfate Protamine sulfate is a mixture of basic polypeptides obtained from salmon sperm protamine sulfate binds tightly to heparin and neutralizes its anticoagulant effect The antagonism is chemical Vit K – antagonist of warfarin</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. K - antagonist of warfarin Option: B. Whole- blood can be used to reverse the anticoagulant dry effect in case antidot is not available Option: D. Ascorbic acid - Vit C required for collagen synthesis</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "10000 U of UFH was given to a patient before surgery and he had bleeding episodes. What is the dose of protamine sulfate required to antagonize 10000 U of heparin?", "options": [{"label": "A", "text": "1mg", "correct": false}, {"label": "B", "text": "2mg", "correct": false}, {"label": "C", "text": "10mg", "correct": false}, {"label": "D", "text": "100mg", "correct": true}], "correct_answer": "D. 100mg", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>100mg 1mg of protamine sulfate neutralizes 100U of heparin. So for 10000U, you need 100mg of protamine sulfate</p>\n<p><strong>Highyeild:</strong></p><p>Protamine Hypersensitivity Boxed warning: Rare hypotension, noncardiogenic pulmonary edema, pulmonary vasoconstriction observed with infusion Vasectomized men may develop antibodies to different sperm antigens - 75% with anti-sperm Abs, 25% with anti-protamine Abs, c/w 10% and 0% in non-vasectomized men in one series Prior use of protamine-containing drugs (e.g. NPH), fish allergies (for fish-derived protamine) may ↑ risk as well</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "LMWH has Better and consistent Bioavailability and needs no Laboratory monitoring. Among the Following options, which is not an LMWH?", "options": [{"label": "A", "text": "Dalteparin", "correct": false}, {"label": "B", "text": "Tinzaparin", "correct": false}, {"label": "C", "text": "Bivalirudin", "correct": true}, {"label": "D", "text": "Ardeparin", "correct": false}], "correct_answer": "C. Bivalirudin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Bivalirudin Bivalirudin : is a direct thrombin inhibitor used to treat heparin-induced thrombocytopenia and to prevent thrombosis during percutaneous coronary intervention. Bivalirudin is a synthetic 20-residue peptide (thrombin inhibitor) that reversibly inhibits thrombin.</p>\n<p><strong>Highyeild:</strong></p><p>LMWH: Remember LMWH ends with \"pain\" Bivalirudin is a parental direct thrombin inhibitor Bivalirudin is used to manage and treat patients undergoing percutaneous coronary intervention for acute MI. In contrast to hirudin, bivalirudin is not immunogenic</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not an advantage of LMWH over UFH?", "options": [{"label": "A", "text": "Better bioavailability on SC administration", "correct": false}, {"label": "B", "text": "Can be used to treat thrombosis in heparin-induced thrombocytopenia", "correct": true}, {"label": "C", "text": "Better half-life of 4-6 hrs", "correct": false}, {"label": "D", "text": "Laboratory monitoring not needed", "correct": false}], "correct_answer": "B. Can be used to treat thrombosis in heparin-induced thrombocytopenia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Can be used to treat thrombosis in heparin-induced thrombocytopenia</p>\n<p><strong>Highyeild:</strong></p><p>Advantages of LMWH over UFH Lesser HIT and Osteoporosis Better Bioavailability(90 percent ) on SC administration (once daily dosing) Better half-life (4-6 Hrs) Laboratory monitoring is not needed , due to no variation in PK & PD Lesser antiplatelet action and lower incidence of hemorrhagic complications In Heparin-Induced Thrombocytopenia Heparin and LMWH are not used Heparin-Induced Thrombocytopenia Fondaparinux can be used Drug of choice HIT syndrome is argatroban Lab monitoring is not needed due to no variation in its PK & PD LMWH binds less to plasma proteins / endothelial cells and thus better bioavailability and longer half-life The drug of choice in HIT syndrome is Argatroban It is based on the structure of L-arginine which is a direct–thrombin inhibitor that binds reversibly. Argatroban increases APTT, PT/INR, and thrombin time</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is to be used for cancer-induced venous thromboembolism?", "options": [{"label": "A", "text": "Direct Thrombin Inhibitors", "correct": false}, {"label": "B", "text": "XA inhibitors", "correct": false}, {"label": "C", "text": "LMWH", "correct": true}, {"label": "D", "text": "Warfarin", "correct": false}], "correct_answer": "C. LMWH", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>LMWH Patients with malignancies Such as SCCL are in a hypercoagulable state and there is a chance of developing venous thromboembolism Thrombotic events are the second leading cause of death in cancer patients after death from cancer itself LMWH is used for cancer-induced venous thromboembolism</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Direct thrombin inhibitors like lepirudin, and bivalirudin are not indicated for cancer patients Option: B. Xa inhibitors are used for prophylaxis and treatment of DVT. Option: D . Warfarin dose must be individualized by repeated measurement of prothrombin time.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following drugs should not be given in heparin-induced thrombocytopenia (HIT) patients except:", "options": [{"label": "A", "text": "Enoxaparin", "correct": false}, {"label": "B", "text": "Fondaparinux", "correct": true}, {"label": "C", "text": "Dalteparin", "correct": false}, {"label": "D", "text": "Warfarin", "correct": false}], "correct_answer": "B. Fondaparinux", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Fondaparinux In heparin-induced thrombocytopenia Thrombotic complications may occur after cessation of therapy, an alternative anticoagulant such as lepirudin , argatroban o r fondaparinux should be administered to patients with heparin-induced thrombocytopenia . The drug of choice is argatroban LMWH preparations should be avoided, because these drugs often cross-react with heparin in heparin-dependent antibody assays</p>\n<p><strong>Highyeild:</strong></p><p>Scoring System for Heparin-Induced Thrombocytopenia Factor 2 points 1 point 0 points Thrombocytopenia > 50% decrease in platelet count from baseline 30% to 50% decrease in platelet count from baseline <30% decrease in platelet count from baseline Timing of platelet fall Day 5 to 10 after exposure to heparin or < 1 day with previous exposure to heparin in the past month After day 10 of heparin exposure or < 1 day with previous exposure to heparin in > 1 month but < 1 year No recent heparin exposure Thrombosis Existing thrombosis after heparin administration or new skin necrosis Recurrent thrombosis None Differential No other potential differential diagnosis Possible differential diagnosis Definite differential diagnosis Interpretation of totaled scores: 6 to 8, high risk; 4 to 5, moderate risk; <3, low risk</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A . Enoxaparin is used to prevent blood clots in the leg in patients who are on bedrest or who are having a hip replacement, knee replacement, or stomach surgery. It is used in combination with aspirin to prevent complications from angina (chest pain) and heart attacks Option: C. Dalteparin: is also used to prevent deep vein thrombosis (DVT; a blood clot, usually in the leg), which can lead to pulmonary embolism (PE; a blood clot in the lung), in people who are on bed rest or who are having hip replacement or abdominal surgery. Option: D. Arfarin may precipitate venous limb gangrene or multicentric skin necrosis in patients with heparin-induced thrombocytopenia and should not be used until the thrombocytopenia has resolved and the patient is adequately anticoagulated with another agent.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with DVT has to be given an oral anticoagulant for prophylaxis. Which of the following is not an oral anticoagulant?", "options": [{"label": "A", "text": "Rivaroxaban", "correct": false}, {"label": "B", "text": "Warfarin", "correct": false}, {"label": "C", "text": "Dabigatran", "correct": false}, {"label": "D", "text": "Bivalirudin", "correct": true}], "correct_answer": "D. Bivalirudin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Bivalirudin</p>\n<p><strong>Highyeild:</strong></p><p>Bivalirudin is a parental LMWH The Oral Anticoagulants Available Are Vitamin K antagonist: Warfarin (But lab monitoring required) Direct-acting oral anticoagulants (DOACs) (No lab monitoring required) oral direct thrombin inhibitor dabigatran oral Xa Inhibitors are Rivaroxaban Apixaban Edoxaban betrixaban</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Rivaroxaban is used to treat deep vein thrombosis (DVT; a blood clot, usually in the leg) and pulmonary embolism (PE; a blood clot in the lung) in adults. Rivaroxaban is also used to prevent DVT and PE from happening again after initial treatment is completed in adults Option: B. Warfarin, Anticoagulant medicines, such as warfarin, are often prescribed for people who

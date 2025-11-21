@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Microbiology - AIIMS MAY 2018</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Microbiology - AIIMS MAY 2018</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                15 Questions | 15 Total Marks | 25 min Duration | ~100.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 15 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 25 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 15</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Microbiology - AIIMS MAY 2018 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 15</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 15 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Identify the organism in Bacitracin sensitivity disk test given below:", "options": [{"label": "A", "text": "Bacillus anthracis", "correct": false}, {"label": "B", "text": "Streptococcus pyogenes", "correct": true}, {"label": "C", "text": "Staphylococcus aureus", "correct": false}, {"label": "D", "text": "Corynebacterium", "correct": false}], "correct_answer": "B. Streptococcus pyogenes", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692792560516-QTDVPYQ172IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Streptococcus pyogenes Bacitracin test is used to determine the effect of a small amount of bacitracin (0.04 IU or 0.05 IU not higher) on an organism. Streptococcus pyogenes (Group A Streptococci) is inhibited by the small amount of bacitracin in the disk; other beta-hemolytic streptococci usually are not. Some laboratories do not recommend the use of 0.04 U bacitracin disk as Lancefield Group C and G streptococci may occasionally also show susceptibility to bacitracin. PYR reaction can confirm the isolate as S. pyogenes as it is the only beta-hemolytic streptococci that gives positive PYR reaction. Expected results of Bacitracin test: Sensitive: Any zone of inhibition around the disk Resistant: No zone of inhibition Quality control organisms used in Bacitracin test: Test for identifying Streptococcus pyogenes. Positive: Streptococcus pyogenes Negative: Streptococcus agalactiae</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A child with abdominal pain for 10 days presented to OPD. Stool microscopy was done which showed the egg of Hymenolepis nana in findings. What is the DOC for the disease caused by the given organism?", "options": [{"label": "A", "text": "Praziquantel", "correct": true}, {"label": "B", "text": "Albendazole", "correct": false}, {"label": "C", "text": "Mebendazole", "correct": false}, {"label": "D", "text": "Pyrantel pamoate", "correct": false}], "correct_answer": "A. Praziquantel", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692792560992-QTDVPYQ173IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Praziquantel Hymenolepis nana Also called Dwarf tapeworm Egg is infectious to man Only one host involved Autoinfection seen Armed scolex Larva form called cysticercoid larva Egg smaller, bile non-stained and has polar filament: Diagnostic form Treatment of Cestodes : Praziquantel is the DOC of all cestodes. Intestinal Cestodes - Humans are Definitive Host Tissue Cestodes - Humans are Intermediate Host •  Taenia saginata and T. solium •  Echinococcus: Causing hydatid disease (liver) •  Diphyllobothrium •  Taenia solium: Causing cysticercosis’ (CNS) •  Hymenolepis nana •  Taenia Multiceps: Causing coenurosis •  Dipylidium caninum •  Spirometra: Sparganosis (muscle)</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "SD plasma kills all lipid enveloped viruses. On SD plasma transfusion, which of the following infection is the likely possibility?", "options": [{"label": "A", "text": "HAV", "correct": true}, {"label": "B", "text": "HBV", "correct": false}, {"label": "C", "text": "HCV", "correct": false}, {"label": "D", "text": "HIV", "correct": false}], "correct_answer": "A. HAV", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>HAV All the above given viruses except HAV are enveloped so the HAV infection will spread even if the SD plasma destroys the lipid envelope of the virus.</p>\n<p><strong>Table:</strong></p><p>#MANTRA</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "STER-RAD is used for sterilization of surgical equipment. Which of the following is the active agent used in it?", "options": [{"label": "A", "text": "Ethylene oxide", "correct": false}, {"label": "B", "text": "Ozone gas", "correct": false}, {"label": "C", "text": "Hydrogen peroxide", "correct": true}, {"label": "D", "text": "Nitrogen dioxide", "correct": false}], "correct_answer": "C. Hydrogen peroxide", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hydrogen peroxide The Sterrad Sterilization System by Advanced Sterilization Products (ASP) exploits the synergism between peroxide and low temperature gas plasma (an excited or ionized gas) to rapidly destroy microorganisms. At the completion of the sterilization process based on this technology, no toxic residues remain on the sterilized items. The technology is particularly suited to the sterilization of heat and moisture sensitive instruments since process temperatures do not exceed about 50°C (140°F) and sterilization occurs in a low moisture environment. Total process time is about 1 hour. The efficacy of the process has been demonstrated against a broad spectrum or microorganisms and on a large number of substrates used in medical instruments. The Sterrad system offers a short cycle (averaging 75 minutes), low temperature and humidity, no aeration requirement, no chemical residues, negligible environmental impact, and wide compatibility with materials. Its drawback is an inability to process liquids, powders, or strong absorbers (e.g., cellulosic)</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient was suffering from hepatorenal syndrome. A urine sample was obtained from the patient and was examined under the microscope. Which of the following techniques is being used to make the organism visible?", "options": [{"label": "A", "text": "Dark field microscopy", "correct": true}, {"label": "B", "text": "Routine microscopy with negatively stained background", "correct": false}, {"label": "C", "text": "Phase contrast microscopy", "correct": false}, {"label": "D", "text": "Compound light microscopy", "correct": false}], "correct_answer": "A. Dark field microscopy", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692792561506-QTDVPYQ176IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Dark field microscopy Leptospira Leptospira comprises of two species: L. interrogans (pathogenic for humans): Causes leptospirosis or Weil’s disease involving liver and kidney. L. biflexa (saprophyte) Mode of transmission: It is zoonotic, direct human-to-human transmission does not occur. It is transmitted by: Although >100 animals can be infected, important sources of infection are rats, dogs, cattle, and pigs. Indirect contact with water, moist soil, and wet surfaces contaminated with animal urine or direct contact with urine and products of parturition, and placenta of infected animals. The characteristic triad of leptospirosis is jaundice, hemorrhagic manifestations with renal failure. Leptospirosis is also called the disease associated with 3R’s, as important epidemiological determinants for leptospirosis include exposure to rodents, rainfall, and rice fields.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the organism which shows effacement and attachment of intestinal cells as shown in the image given below:", "options": [{"label": "A", "text": "EPEC", "correct": true}, {"label": "B", "text": "ETEC", "correct": false}, {"label": "C", "text": "Enterohemorrhagic E. coli", "correct": false}, {"label": "D", "text": "Diffusely Entero adherent E. Coli", "correct": false}], "correct_answer": "A. EPEC", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692792561936-QTDVPYQ177IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>EPEC Enteropathogenic E. coli (EPEC) EPEC frequently causes infantile diarrhea (outbreaks) and rarely sporadic diarrhea in adults. It is nontoxigenic and non-invasive Mechanism of diarrhea: Adhesion to cup-like pedestals on the intestinal mucosa, mediated by plasmid coded bundle-forming pili brings about effacement of pili, i.e. A/E lesions (attaching and effacing lesions) on the intestinal epithelium.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the organism from the given viral replication cycle:", "options": [{"label": "A", "text": "Influenza", "correct": true}, {"label": "B", "text": "Parainfluenza", "correct": false}, {"label": "C", "text": "RSV", "correct": false}, {"label": "D", "text": "SARS virus", "correct": false}], "correct_answer": "A. Influenza", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692792564065-QTDVPYQ178IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Influenza Influenza virus The image shows the replication cycle of a virus having a segmented genome. There are certain RNA viruses which have segmented genome, e.g., Influenza virus Characteristic RNA genome of influenza viruses – 7 or 8 segments, negative sense, ssRNA Structure enveloped virus with glycoprotein spikes hemagglutinin (HA) and neuraminidase (NA) NP (nucleocapsid protein) Segmented (–) strand RNA gene Other proteins M2-form proton channel in membrane and promote uncoating and viral genome release (inhibited by amantadine and rimantadine) Epidemiology risk: Seronegative, people with underlying cardiorespiratory disease, immunodeficient, and smokers Epidemiology: Type A infects humans, swine, horses, seals, pigs, birds Mostly occurs in winter months. Hemagglutinin (HA) Binds to Sialic acid on epithelial surfaces promoting fusion of envelope - to cell membrane Can agglutinate red blood cells Elicits neutralizing, protective Ab response Responsible for antigenic drift and shift Neuraminidase (NA) Important in releasing mature virus from cells by degrading sialic acid Target for 2 antiviral drugs (Zanamivir and Oseltamivir (Tamiflu)</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 7-month old child presented with diarrhea and vomiting for 3 days. Which enterotoxin is most probably responsible for the condition?", "options": [{"label": "A", "text": "NSP1", "correct": false}, {"label": "B", "text": "VP3", "correct": false}, {"label": "C", "text": "VP7", "correct": false}, {"label": "D", "text": "NSP4", "correct": true}], "correct_answer": "D. NSP4", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>NSP4 Rotavirus non-structural protein 4 (NSP4) is known to function as an intracellular receptor at the endoplasmic reticulum (ER) critical to viral morphogenesis and is the first characterized viral enterotoxin. The association of NSP4 and caveolin-l contributes to NSP4 intracellular trafficking from the ER to the cell surface and speculates that exogenously added NSP4 stimulates signalling molecules located in caveolae micro domains. Rotavirus : Rotaviruses belong to the family Reoviridae; the only RNA virus family to have dsRNA. Surrounded by a triple layered capsid Possess segmented dsRNA (11 segments) Proteins: There are 6-structural viral proteins (VPs) and 6-nonstructural proteins (NSPs) Clinical manifestations: Rotaviruses are the most common cause of diarrheal illness in children. IP is about 1–3 days. It has an abrupt onset, characterized by vomiting followed by watery diarrhea, fever, and abdominal pain.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Organism most likely associated with VAP:", "options": [{"label": "A", "text": "Acinetobacter", "correct": true}, {"label": "B", "text": "Klebsiella", "correct": false}, {"label": "C", "text": "Clostridium", "correct": false}, {"label": "D", "text": "Mycobacterium tuberculosis", "correct": false}], "correct_answer": "A. Acinetobacter", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Acinetobacter Ventilator-associated pneumonia (VAP) Pneumonia that develops in a patient who has been on mechanical ventilation >48 hours. 2nd MC hospital-acquired infection among pediatrics and neonatal ICU patients. Rate of pneumonia in pediatric intensive care units (PICU) is lower than in adult intensive care units (ICU). In neonates, the rate of ventilator-associated pneumonia is inversely proportional to birth weight. Children with artificial airways, such as a tracheostomy tube for management of chronic respiratory failure or an endotracheal tube for acute airway management, are at risk for VAP. It is difficult to diagnose VAP. They have classified it into three types: Clinically defined, Pneumonia with laboratory findings, and Pneumonia in immune-compromised patients. Note: Infants and children are usually classified to the first category. Tracheitis Clinical signs of purulent tracheal discharge, fevers, respiratory distress, and the presence of bacteria and white blood cells in the tracheal aspirate without radiological signs of pneumonia. VAP Clinical signs of purulent tracheal discharge, fevers, respiratory distress, and micro-biological signs of the presence of microorganisms along with white blood cells in the tracheal aspirate along with radiological evidence of pneumonia. VAP is typically bacterial and from a single organism. However, polymicrobial infections are increasing. MC organisms are Staphylococcus aureus, Pseudomonas aeruginosa, and other gram negatives. Artificial airways become colonized with pathogenic bacteria soon after intubation or tracheostomy, and the major pathogens include both gram-positive and gram-negative bacteria: S. aureus (including MRSA), aeruginosa, and Klebsiella and Enterobacter species. Patients in an NICU have a risk of Enterococcus species and Group B Streptococcus as well. Other pathogens include the Streptococcus, Enterobacteriaceae, and Acinetobacter species. Anaerobic bacteria are an uncommon cause of ventilator-associated pneumonia but can play a role in polymicrobial infections, particularly when pneumonia is due to aspiration. Nosocomial viruses and fungi are rare causes of pneumonia in immunocompetent hosts. Early pneumonia •  Less than 4 days after admission to the hospital •  Due to antibiotic-sensitive community-acquired organisms Late pneumonia •  More than 4 days •  Due to antibiotic-resistant organisms. Study from AIIMS Surgical Department and ICUs shows that the Acinetobacter is nowadays the most common and most specific cause for ventilator-associated pneumonia (VAP).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are associated with HHV8 except:", "options": [{"label": "A", "text": "Kaposi sarcoma", "correct": false}, {"label": "B", "text": "Primary effusion lymphoma", "correct": false}, {"label": "C", "text": "Castleman disease", "correct": false}, {"label": "D", "text": "T-cell leukemia", "correct": true}], "correct_answer": "D. T-cell leukemia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>T-cell leukemia Human Herpesvirus-8 Aka Kaposi’s sarcoma-associated herpes virus (KSHV) Epidemiology: In high prevalence area: HHV-8 is endemic in Africa where it is transmitted by oral secretion. In low prevalence areas such as North America, Asia, Northern Europe, it affects homosexual Less common mode: Organ transplantation, IV drug abuse, and blood transfusion Manifestations: In immunocompromised individuals (e.g., HIV), HHV-8 causes: Kaposi sarcoma Primary effusion lymphoma (body cavity based lymphomas) Multicentric Cattleman’s disease (Lymphoproliferative disorder of B-cells) However, in immunocompetent host, HHV-8 produces fever and rash Rx: HHV infections respond well to Foscarnet, Ganciclovir, Cidofovir</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A known HIV patient on antiretroviral therapy presented with diarrhea of six months

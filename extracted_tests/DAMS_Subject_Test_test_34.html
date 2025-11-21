@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Swt Radiology Set B</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Swt Radiology Set B</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                100 Questions | 400 Total Marks | 110 min Duration | ~66.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 100 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 110 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 100</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Swt Radiology Set B - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 100</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 100 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which of the following increases the diagnostic capabilities of MRCP for evaluating pancreatic disorders?", "options": [{"label": "A", "text": "Octreotide", "correct": false}, {"label": "B", "text": "Secretin", "correct": true}, {"label": "C", "text": "Cholecystokinin", "correct": false}, {"label": "D", "text": "Serum lipase", "correct": false}], "correct_answer": "B. Secretin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with previous history of cardiac surgery now presents with dyspnoea, easy fatiguability and hepatomegaly. On Plain chest X RAY PA view, the following is seen. Identify the following condition.", "options": [{"label": "A", "text": "Constrictive pericarditis", "correct": true}, {"label": "B", "text": "Dilated cardiomyopathy", "correct": false}, {"label": "C", "text": "Pericardial effusion", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Constrictive pericarditis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-2.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents with low grade fever and headache. His CSF examination shows lymphocytosis, increased protein, reduced glucose. On contrast CT, leptomeningeal enhancement and basal exudates are found. What is the diagnosis?", "options": [{"label": "A", "text": "TB leptomeningitis", "correct": true}, {"label": "B", "text": "Diffuse leptomeningeal glioneuronal tumour", "correct": false}, {"label": "C", "text": "Leptomeningeal carcinomatosis", "correct": false}, {"label": "D", "text": "Post ictal hyperemia", "correct": false}], "correct_answer": "A. TB leptomeningitis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-3.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "25-year-old patient presents with a palpable breast mass. What is the best initial test?", "options": [{"label": "A", "text": "Diagnostic mammogram", "correct": false}, {"label": "B", "text": "Screening mammogram", "correct": false}, {"label": "C", "text": "Breast ultrasound", "correct": true}, {"label": "D", "text": "Breast MRI", "correct": false}], "correct_answer": "C. Breast ultrasound", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements concerning x-ray tubes is false?", "options": [{"label": "A", "text": "Electrons produced by thermionic emission in the cathode are accelerated towards the anode by the potential.", "correct": false}, {"label": "B", "text": "The anode is composed of a metal with a high melting temperature such as tungsten. . ,", "correct": false}, {"label": "C", "text": "X-rays are mostly produced by the sudden deceleration of electrons by the bremsstrahlung process.", "correct": false}, {"label": "D", "text": "Characteristic x-rays are used in the production of medical radiation in diagnostic x-ray units, linear accelerators, and betatrons.", "correct": true}], "correct_answer": "D. Characteristic x-rays are used in the production of medical radiation in diagnostic x-ray units, linear accelerators, and betatrons.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "¹²?B, ¹²?C, and ¹²?N are called:", "options": [{"label": "A", "text": "Isotopes", "correct": false}, {"label": "B", "text": "Isotones", "correct": false}, {"label": "C", "text": "Isobars", "correct": true}, {"label": "D", "text": "Isomers", "correct": false}], "correct_answer": "C. Isobars", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Photons hit the outer orbital electron, and the photon and electron scatter in different directions at a certain angle. This phenomenon is called:", "options": [{"label": "A", "text": "Coherent scattering", "correct": false}, {"label": "B", "text": "Photoelectric effect", "correct": false}, {"label": "C", "text": "Compton effect", "correct": true}, {"label": "D", "text": "Pair production", "correct": false}], "correct_answer": "C. Compton effect", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following radiation types has a Bragg peak?", "options": [{"label": "A", "text": "Gamma rays", "correct": false}, {"label": "B", "text": "Neutrons", "correct": false}, {"label": "C", "text": "Electrons", "correct": false}, {"label": "D", "text": "Protons", "correct": true}], "correct_answer": "D. Protons", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the most radiosensitive phase of the cell cycle?", "options": [{"label": "A", "text": "G1-S", "correct": false}, {"label": "B", "text": "G1-M", "correct": false}, {"label": "C", "text": "G2-M", "correct": true}, {"label": "D", "text": "G1-GO", "correct": false}], "correct_answer": "C. G2-M", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the unit of the equivalent dose?", "options": [{"label": "A", "text": "Gy", "correct": false}, {"label": "B", "text": "Sv", "correct": true}, {"label": "C", "text": "Rad", "correct": false}, {"label": "D", "text": "C/kg", "correct": false}], "correct_answer": "B. Sv", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 16 yr old male presented with chronic cough for 3 months. Chest xray revealed hypertransradiant hemithorax. Which of the following may not be your differential diagnosis", "options": [{"label": "A", "text": "Mcleod syndrome", "correct": false}, {"label": "B", "text": "Poland syndrome", "correct": false}, {"label": "C", "text": "Poliomyelitis", "correct": false}, {"label": "D", "text": "Pulmonary agenesis", "correct": true}], "correct_answer": "D. Pulmonary agenesis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presented with pain and tenderness in calf. He has acute venous thrombosis. The following are Doppler venography features in this case except:", "options": [{"label": "A", "text": "Non compressible venous segment", "correct": false}, {"label": "B", "text": "Decreased venous diameter in acute thrombus", "correct": true}, {"label": "C", "text": "Lack of flow augmentation of calf squeeze", "correct": false}, {"label": "D", "text": "Absent colour flow if completely occlusive", "correct": false}], "correct_answer": "B. Decreased venous diameter in acute thrombus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All the following are CXR findings of acute pulmonary embolism except:", "options": [{"label": "A", "text": "Westermark sign", "correct": false}, {"label": "B", "text": "Hampton Hump", "correct": false}, {"label": "C", "text": "McConnel Sign", "correct": true}, {"label": "D", "text": "Palla Sign", "correct": false}], "correct_answer": "C. McConnel Sign", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are true about basic tissue densities on plain x-ray except:", "options": [{"label": "A", "text": "Air is black or very dark", "correct": false}, {"label": "B", "text": "Fat is generally grey and darker than muscle /blood", "correct": false}, {"label": "C", "text": "Bone and calcium almost white", "correct": false}, {"label": "D", "text": "Items that contain metal or contrast material appears black", "correct": true}], "correct_answer": "D. Items that contain metal or contrast material appears black", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Abdominal pain and diarrhoea for 3 weeks. Past history of inflammatory arthritis", "options": [{"label": "A", "text": "Ulcerative Colitis", "correct": true}, {"label": "B", "text": "Pneumoperitoneum", "correct": false}, {"label": "C", "text": "Toxic Megacolon", "correct": false}, {"label": "D", "text": "Potts Spine", "correct": false}], "correct_answer": "A. Ulcerative Colitis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-15.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A child presents with post traumatic enlarging scalp mass, focal neurological deficit and seizures. CT head shows the following image. What is the probable diagnosis:", "options": [{"label": "A", "text": "Epidermoid cyst", "correct": false}, {"label": "B", "text": "Cephalhematoma", "correct": false}, {"label": "C", "text": "Leptomeningeal cyst", "correct": true}, {"label": "D", "text": "Subdural haemorrhage", "correct": false}], "correct_answer": "C. Leptomeningeal cyst", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-16.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with history of road traffic accident comes to the hospital.he undergoes FAST. Which of the following region is not included in FAST evaluation", "options": [{"label": "A", "text": "Pericardial view", "correct": false}, {"label": "B", "text": "Right flank view", "correct": false}, {"label": "C", "text": "Pleural cavity", "correct": true}, {"label": "D", "text": "Left flank view", "correct": false}], "correct_answer": "C. Pleural cavity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "1 year old child with multiple injuries brought by mother. Which radiological feature suggests non accidental injury", "options": [{"label": "A", "text": "Scapular fracture", "correct": true}, {"label": "B", "text": "Greenstick fracture", "correct": false}, {"label": "C", "text": "Mid clavicular fracture", "correct": false}, {"label": "D", "text": "Single diaphyseal fracture", "correct": false}], "correct_answer": "A. Scapular fracture", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/ANS-18.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with a 4 month history of severe upper abdominal pain undergoes an endoscopic USG.This reports hyperechoic foci scattered throughout the pancreas, an irregular contour of the pancreatic duct and thickening of the duct wall with some side duct dilatation. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Autoimmune pancreatitis", "correct": false}, {"label": "B", "text": "Pancreatic adenocarcinoma", "correct": false}, {"label": "C", "text": "lntraductal papillary mucinous tumour", "correct": false}, {"label": "D", "text": "Chronic pancreatitis", "correct": true}], "correct_answer": "D. Chronic pancreatitis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-19.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with dysphagia shows concentric, ring-like strictures of the esophagus on a barium swallow fluroscopy which is shown below. What is the probable diagnosis:", "options": [{"label": "A", "text": "GERD", "correct": false}, {"label": "B", "text": "Achalasia cardia", "correct": false}, {"label": "C", "text": "Eosinophilic esophagitis", "correct": true}, {"label": "D", "text": "Esophageal candidiasis", "correct": false}], "correct_answer": "C. Eosinophilic esophagitis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-20.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A neonate is brought with a history of unable to swallow saliva, blow bubbles and aspirate on feeding. When a feeding tube is inserted it cannot be passed distally. A radiograph is taken and it is shown beliw. What is the probable diagnosis:", "options": [{"label": "A", "text": "Esophageal atresia", "correct": true}, {"label": "B", "text": "Hiatus hernia", "correct": false}, {"label": "C", "text": "Pneumoperitoneum", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Esophageal atresia", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-21.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Best noninvasive investigation to check for viability of myocardium is", "options": [{"label": "A", "text": "Echocardiogram", "correct": false}, {"label": "B", "text": "FDG-18 PET CT", "correct": true}, {"label": "C", "text": "MIBI scintigraphy", "correct": false}, {"label": "D", "text": "Thallium scintigraphy", "correct": false}], "correct_answer": "B. FDG-18 PET CT", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Expansion of the contrast filled space in myelography is seen in", "options": [{"label": "A", "text": "Intramedullary tumor", "correct": false}, {"label": "B", "text": "Intradural extramedullary tumor", "correct": true}, {"label": "C", "text": "Spinal dysraphism", "correct": false}, {"label": "D", "text": "Extradural tumor", "correct": false}], "correct_answer": "B. Intradural extramedullary tumor", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Below is radioactive testing scan for thyroid pathology. Which of the following is the most probable diagnosis?", "options": [{"label": "A", "text": "Papillary ca thyroid", "correct": false}, {"label": "B", "text": "Hypersecreting adenoma", "correct": true}, {"label": "C", "text": "Graves disease", "correct": false}, {"label": "D", "text": "Lateral aberrant thyroid", "correct": false}], "correct_answer": "B. Hypersecreting adenoma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-24.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which will be not seen in xray osteoarthritis", "options": [{"label": "A", "text": "Cyst formation", "correct": false}, {"label": "B", "text": "Fibrosis of capsule", "correct": true}, {"label": "C", "text": "Focal loss of cartilage", "correct": false}, {"label": "D", "text": "bony growth", "correct": false}], "correct_answer": "B. Fibrosis of capsule", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is the most probable diagnosis out of the following options?", "options": [{"label": "A", "text": "Left upper lobe collapse", "correct": false}, {"label": "B", "text": "Left lower lobe collapse", "correct": true}, {"label": "C", "text": "Right middle lobe collapse", "correct": false}, {"label": "D", "text": "Right lower lobe collapse", "correct": false}], "correct_answer": "B. Left lower lobe collapse", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-26.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the name of structure marked by tip of arrow ?", "options": [{"label": "A", "text": "Left main coronary", "correct": true}, {"label": "B", "text": "Right coronary", "correct": false}, {"label": "C", "text": "Left azygos vein", "correct": false}, {"label": "D", "text": "IVC", "correct": false}], "correct_answer": "A. Left main coronary", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-27.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is the imaging diagnosis in a case of middle aged patient with acute abdominal pain -", "options": [{"label": "A", "text": "Acute appendicitis", "correct": true}, {"label": "B", "text": "Cystitis", "correct": false}, {"label": "C", "text": "Acute cholecystitis", "correct": false}, {"label": "D", "text": "UB Calculus", "correct": false}], "correct_answer": "A. Acute appendicitis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-28.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following sign is seen in -", "options": [{"label": "A", "text": "Pyelonephritis", "correct": false}, {"label": "B", "text": "Xanthogranulomatous pyelonephritis", "correct": true}, {"label": "C", "text": "Adrenal carcinoma", "correct": false}, {"label": "D", "text": "RCC", "correct": false}], "correct_answer": "B. Xanthogranulomatous pyelonephritis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-29(1).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the name of the structure marked by tip of arrow ?", "options": [{"label": "A", "text": "Splenium of corpus callosum", "correct": true}, {"label": "B", "text": "3rd ventricle", "correct": false}, {"label": "C", "text": "Thalamus", "correct": false}, {"label": "D", "text": "Pineal gland", "correct": false}], "correct_answer": "A. Splenium of corpus callosum", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-30.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are differential diagnosis except -", "options": [{"label": "A", "text": "Metastasis", "correct": true}, {"label": "B", "text": "Congenital absence", "correct": false}, {"label": "C", "text": "NF", "correct": false}, {"label": "D", "text": "Hemangioma", "correct": false}], "correct_answer": "A. Metastasis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-31.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "35 year old patient came with diplopia. CT scan is shown to you. What is the most likely diagnosis", "options": [{"label": "A", "text": "Orbital pseudotumour", "correct": false}, {"label": "B", "text": "Thyroid ophthalmopathy", "correct": true}, {"label": "C", "text": "Cavernous sinus thrombosis", "correct": false}, {"label": "D", "text": "Optic glioma", "correct": false}], "correct_answer": "B. Thyroid ophthalmopathy", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-32.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "57 year old male came with hearing loss and tinnitus. CEMR is provided to you. What is the likely diagnosis:", "options": [{"label": "A", "text": "Vestibular Schwanomma", "correct": true}, {"label": "B", "text": "Meningioma", "correct": false}, {"label": "C", "text": "Epidermoid Cyst", "correct": false}, {"label": "D", "text": "Metastases", "correct": false}], "correct_answer": "A. Vestibular Schwanomma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-33.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An ideal therapeutic radioisotope is", "options": [{"label": "A", "text": "Strong Beta; Strong Gamma emitter", "correct": false}, {"label": "B", "text": "Strong Beta; Low Gamma emitter", "correct": true}, {"label": "C", "text": "Low Beta; Low Gamma emitter", "correct": false}, {"label": "D", "text": "Low Beta; Strong Gamma emitter", "correct": false}], "correct_answer": "B. Strong Beta; Low Gamma emitter", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are indications for micturating cystourethrogram except", "options": [{"label": "A", "text": "Suspected renal tumor", "correct": true}, {"label": "B", "text": "Posterior urethral valve", "correct": false}, {"label": "C", "text": "Urethral obstruction", "correct": false}, {"label": "D", "text": "Recurrent UTI", "correct": false}], "correct_answer": "A. Suspected renal tumor", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the commonest site of brain metastasis?", "options": [{"label": "A", "text": "Gray Matter", "correct": false}, {"label": "B", "text": "White matter", "correct": false}, {"label": "C", "text": "Grey-white matter Junction", "correct": true}, {"label": "D", "text": "Intraventricular", "correct": false}], "correct_answer": "C. Grey-white matter Junction", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/ANS-36.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Multiple T1 hypointense, T2- Hyperintense, non-enhancing lesion limited to white-matter without any mass effect in an individual with AIDS:", "options": [{"label": "A", "text": "Toxoplasmosis", "correct": false}, {"label": "B", "text": "PCNSL", "correct": false}, {"label": "C", "text": "Disease Caused by BK virus", "correct": false}, {"label": "D", "text": "PMLE", "correct": true}], "correct_answer": "D. PMLE", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Mantle field Radiotherapy is useful for", "options": [{"label": "A", "text": "Lung secondaries", "correct": false}, {"label": "B", "text": "Neuroblastoma", "correct": false}, {"label": "C", "text": "Lymphoma", "correct": true}, {"label": "D", "text": "Seminoma", "correct": false}], "correct_answer": "C. Lymphoma", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/ANS-38.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Thickness of the lead apron is -", "options": [{"label": "A", "text": "0.2 mm", "correct": false}, {"label": "B", "text": "0.3 mm", "correct": false}, {"label": "C", "text": "0.5 mm", "correct": true}, {"label": "D", "text": "0.8 mm", "correct": false}], "correct_answer": "C. 0.5 mm", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "“Tip of iceberg\" sign is seen in radiologically in", "options": [{"label": "A", "text": "Cystadenoma of ovary", "correct": false}, {"label": "B", "text": "Ovarian metastasis", "correct": false}, {"label": "C", "text": "Ovarian dermoid", "correct": true}, {"label": "D", "text": "Endometrial carcinoma", "correct": false}], "correct_answer": "C. Ovarian dermoid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "IOC for Intraocular foreign body?", "options": [{"label": "A", "text": "CT scan", "correct": true}, {"label": "B", "text": "MRI", "correct": false}, {"label": "C", "text": "USG", "correct": false}, {"label": "D", "text": "X-Ray", "correct": false}], "correct_answer": "A. CT scan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The X-ray shown below is most likely to be that of a patient with?", "options": [{"label": "A", "text": "Achondroplasia", "correct": false}, {"label": "B", "text": "Rickets", "correct": false}, {"label": "C", "text": "Rheumatoid arthritis", "correct": false}, {"label": "D", "text": "Turner’s syndrome", "correct": true}], "correct_answer": "D. Turner’s syndrome", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-42.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Evaluate the below X-ray and give your diagnosis:", "options": [{"label": "A", "text": "Osteosarcoma", "correct": false}, {"label": "B", "text": "Ewings sarcoma", "correct": false}, {"label": "C", "text": "Callus formation", "correct": false}, {"label": "D", "text": "Chronic osteomyelitis", "correct": true}], "correct_answer": "D. Chronic osteomyelitis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-43.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the study:", "options": [{"label": "A", "text": "Barium swallow", "correct": false}, {"label": "B", "text": "Barium meal", "correct": false}, {"label": "C", "text": "Barium meal follow through", "correct": true}, {"label": "D", "text": "Barium enema", "correct": false}], "correct_answer": "C. Barium meal follow through", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-44.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Gamma knife uses what form of energy?", "options": [{"label": "A", "text": "Electron", "correct": false}, {"label": "B", "text": "Photon", "correct": true}, {"label": "C", "text": "Proton", "correct": false}, {"label": "D", "text": "Neutron", "correct": false}], "correct_answer": "B. Photon", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "4 R’s of Radiotherapy are", "options": [{"label": "A", "text": "Reoxygenation, repopulation, reimplantation, redistribution", "correct": false}, {"label": "B", "text": "Reoxygention, repopulation, redistribution, repair", "correct": true}, {"label": "C", "text": "Reoxygentation, reimplantation, redistribution, repair", "correct": false}, {"label": "D", "text": "Reoxygentation, repair, repopulation, reduction.", "correct": false}], "correct_answer": "B. Reoxygention, repopulation, redistribution, repair", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the phase of minimum motion of heart during cardiac imaging?", "options": [{"label": "A", "text": "Late systole", "correct": false}, {"label": "B", "text": "Mid systole", "correct": false}, {"label": "C", "text": "Late diastole", "correct": false}, {"label": "D", "text": "Mid diastole", "correct": true}], "correct_answer": "D. Mid diastole", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Triangular cord sign on USG is seen in", "options": [{"label": "A", "text": "Neonatal hepatitis", "correct": false}, {"label": "B", "text": "Biliary atresia", "correct": true}, {"label": "C", "text": "Choledocolithiasis", "correct": false}, {"label": "D", "text": "Stricture", "correct": false}], "correct_answer": "B. Biliary atresia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Patient with visual disturbance undergoes Radiological investigation. Which of the following is correct?", "options": [{"label": "A", "text": "CT scan showing craniopharyngioma", "correct": false}, {"label": "B", "text": "Plain MRI showing Pituitary macroadenoma", "correct": false}, {"label": "C", "text": "CEMR showing Pituitary macroadenoma", "correct": true}, {"label": "D", "text": "CEMR showing Pituitary microadenoma", "correct": false}], "correct_answer": "C. CEMR showing Pituitary macroadenoma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-49.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "18 year old boy presented with pain in arm after a fall. X-ray was done and is shown below. Most likely cause is", "options": [{"label": "A", "text": "Aneurysmal Bone Cyst", "correct": false}, {"label": "B", "text": "Giant Cell tumour", "correct": false}, {"label": "C", "text": "Ewing Sarcoma", "correct": false}, {"label": "D", "text": "Simple Bone cyst", "correct": true}], "correct_answer": "D. Simple Bone cyst", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-50.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following image shows which of the following procedure:", "options": [{"label": "A", "text": "TIPS", "correct": true}, {"label": "B", "text": "Stenting for kidney stone", "correct": false}, {"label": "C", "text": "ERCP", "correct": false}, {"label": "D", "text": "Percutaneous biliary drainage", "correct": false}], "correct_answer": "A. TIPS", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-51.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/ANS-51.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Iodine isotope not for scanning", "options": [{"label": "A", "text": "I-123", "correct": false}, {"label": "B", "text": "I-127", "correct": true}, {"label": "C", "text": "I-131", "correct": false}, {"label": "D", "text": "Tc99", "correct": false}], "correct_answer": "B. I-127", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most radiosensitive structure in eye", "options": [{"label": "A", "text": "Lens", "correct": true}, {"label": "B", "text": "Retina", "correct": false}, {"label": "C", "text": "Cornea", "correct": false}, {"label": "D", "text": "Optic nerve", "correct": false}], "correct_answer": "A. Lens", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "After child treated for medulloblastoma planned for radiotherapy for spinal metastasis preferred therapy is-", "options": [{"label": "A", "text": "Electron based", "correct": false}, {"label": "B", "text": "Photon based", "correct": false}, {"label": "C", "text": "Electron & photon", "correct": false}, {"label": "D", "text": "Proton & Photon", "correct": true}], "correct_answer": "D. Proton & Photon", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In the accompanying MRI image which letter indicates the cavernous internal carotid artery?", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": true}, {"label": "E", "text": "E", "correct": false}], "correct_answer": "D. D", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-55.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Signet-ring sign on CT-chest is suggestive of:", "options": [{"label": "A", "text": "Bronchiectasis", "correct": true}, {"label": "B", "text": "Active alveolitis", "correct": false}, {"label": "C", "text": "Aspergilloma", "correct": false}, {"label": "D", "text": "Sarcoidosis", "correct": false}], "correct_answer": "A. Bronchiectasis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A term neonate presents with tachypnea on day 1 after birth. The chest X-ray reveals yperexpanded lung fields, prominent vascular markings, and prominent interlobar fissure. Which of the following is the most probable diagnosis?", "options": [{"label": "A", "text": "Congenital lobar emphysema", "correct": false}, {"label": "B", "text": "Diaphragmatic hernia", "correct": false}, {"label": "C", "text": "Transient tachypnea of the newborn", "correct": true}, {"label": "D", "text": "Tracheoesophageal fistula", "correct": false}], "correct_answer": "C. Transient tachypnea of the newborn", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "‘Chain of Lakes’ appearance due to sacculation with intervening short strictures of pancreatic duct is seen on:", "options": [{"label": "A", "text": "ERCP", "correct": true}, {"label": "B", "text": "CECT abdomen", "correct": false}, {"label": "C", "text": "Plain X-ray abdomen", "correct": false}, {"label": "D", "text": "Ultrasonography", "correct": false}], "correct_answer": "A. ERCP", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/ANS-58.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The term mid-line shift is associated with:", "options": [{"label": "A", "text": "Head injury", "correct": true}, {"label": "B", "text": "Chest injury", "correct": false}, {"label": "C", "text": "Abdominal injury", "correct": false}, {"label": "D", "text": "Limb injury", "correct": false}], "correct_answer": "A. Head injury", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Hysterosalpingography (HSG) is least helpful in detecting which of the following?", "options": [{"label": "A", "text": "Tubal patency", "correct": false}, {"label": "B", "text": "Pelvic adhesions", "correct": true}, {"label": "C", "text": "Asherman syndrome", "correct": false}, {"label": "D", "text": "Congenital uterine anomaly", "correct": false}], "correct_answer": "B. Pelvic adhesions", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the disease shown:", "options": [{"label": "A", "text": "Ulcerative colitis", "correct": false}, {"label": "B", "text": "Intussusception", "correct": true}, {"label": "C", "text": "Bowel TB", "correct": false}, {"label": "D", "text": "Crohn’s Disease", "correct": false}], "correct_answer": "B. Intussusception", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-61.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60/M, HEAVY SMOKER bronchogenic carcinoma presenting with polyuria, pain abdomen, nausea, vomiting, altered sensorium with the below chest X-ray . The histological variant can be mostly:", "options": [{"label": "A", "text": "Small cell", "correct": false}, {"label": "B", "text": "Large cell", "correct": false}, {"label": "C", "text": "Adenocarcinoma", "correct": false}, {"label": "D", "text": "Squamous cell", "correct": true}], "correct_answer": "D. Squamous cell", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-62.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The deterministic effects of radiation are those for which?", "options": [{"label": "A", "text": "Severity of effect varies with dose, and there is a threshold", "correct": true}, {"label": "B", "text": "Severity of the effect varies with dose, but there is no threshold", "correct": false}, {"label": "C", "text": "Probability of the effect varies with dose, and there is a threshold", "correct": false}, {"label": "D", "text": "Probability of the effect varies with dose, but there is no threshold", "correct": false}], "correct_answer": "A. Severity of effect varies with dose, and there is a threshold", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The annual effective dose limit for occupationally exposed workers is", "options": [{"label": "A", "text": "10 mSv", "correct": false}, {"label": "B", "text": "20 mSv", "correct": true}, {"label": "C", "text": "30 mSv", "correct": false}, {"label": "D", "text": "40 mSv", "correct": false}], "correct_answer": "B. 20 mSv", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old man presents with altered conscious state and is evaluated with a non-contrast CT of the brain. What is the most likely underlying cause of the demonstrated abnormality?", "options": [{"label": "A", "text": "Cerebral amyloid angiopathy", "correct": false}, {"label": "B", "text": "High grade glioma", "correct": false}, {"label": "C", "text": "Moyamoya phenomenon", "correct": false}, {"label": "D", "text": "Poorly controlled hypertension", "correct": true}], "correct_answer": "D. Poorly controlled hypertension", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-65.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Skull bone sutures typically hinder the extension of", "options": [{"label": "A", "text": "Extradural haematomas", "correct": true}, {"label": "B", "text": "Subarachnoid haematomas", "correct": false}, {"label": "C", "text": "Subdural haematomas", "correct": false}, {"label": "D", "text": "Subgaleal haematomas", "correct": false}], "correct_answer": "A. Extradural haematomas", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The effective dose a patient receives from a single PA chest x-ray is approximately", "options": [{"label": "A", "text": "0.02 mSv", "correct": true}, {"label": "B", "text": "0.2 mSv", "correct": false}, {"label": "C", "text": "2 mSv", "correct": false}, {"label": "D", "text": "20 mSv", "correct": false}], "correct_answer": "A. 0.02 mSv", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The sievert (Sv) is a unit of:", "options": [{"label": "A", "text": "Absorbed dose", "correct": false}, {"label": "B", "text": "Effective dose", "correct": true}, {"label": "C", "text": "Exposure", "correct": false}, {"label": "D", "text": "Frequency", "correct": false}], "correct_answer": "B. Effective dose", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In the context of radiobiology which is FALSE?", "options": [{"label": "A", "text": "Cells tend to be more radiosensitive when young", "correct": false}, {"label": "B", "text": "Cells which divide rapidly are more radiation sensitive", "correct": false}, {"label": "C", "text": "Greater metabolic activity increases radiation resistance", "correct": true}, {"label": "D", "text": "Water is the most abundant source of free radicals", "correct": false}], "correct_answer": "C. Greater metabolic activity increases radiation resistance", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "According to the ICRP dose limits, the maximum permissible dose per annum to the lens of the eyes of persons occupationally exposed is...", "options": [{"label": "A", "text": "20 mSv", "correct": true}, {"label": "B", "text": "40 mSv", "correct": false}, {"label": "C", "text": "60 mSv", "correct": false}, {"label": "D", "text": "80 mSv", "correct": false}], "correct_answer": "A. 20 mSv", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/ANS-70.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is considered a stochastic effect of ionising radiation exposure?", "options": [{"label": "A", "text": "Cataract", "correct": false}, {"label": "B", "text": "Hair loss", "correct": false}, {"label": "C", "text": "Skin erythema", "correct": false}, {"label": "D", "text": "Solid tumour", "correct": true}], "correct_answer": "D. Solid tumour", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which radiologic sign describes the pathology on this chest radiograph?", "options": [{"label": "A", "text": "Hampton hump", "correct": false}, {"label": "B", "text": "Golden S sign", "correct": true}, {"label": "C", "text": "Drooping lily sign", "correct": false}, {"label": "D", "text": "Spinnaker sign", "correct": false}], "correct_answer": "B. Golden S sign", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-72.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the most likely underlying cause of this renal stone?", "options": [{"label": "A", "text": "Congenital cystinuria", "correct": false}, {"label": "B", "text": "Hyperparathyroidism", "correct": false}, {"label": "C", "text": "Poorly controlled gout", "correct": false}, {"label": "D", "text": "Repeated/chronic infection", "correct": true}], "correct_answer": "D. Repeated/chronic infection", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-73.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The most suitable plain radiographic chest projection to examine the area of the lung apices often obscured in a PA projection is...", "options": [{"label": "A", "text": "AP erect view", "correct": false}, {"label": "B", "text": "Lateral view", "correct": false}, {"label": "C", "text": "Lordotic view", "correct": true}, {"label": "D", "text": "RAO View", "correct": false}], "correct_answer": "C. Lordotic view", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the non-contrast T1 signal intensity of the posterior lobe of the pituitary in most individuals, compared to the anterior lobe?", "options": [{"label": "A", "text": "Significantly hypointense (similar to CSF)", "correct": false}, {"label": "B", "text": "Slightly hypointense (similar to white matter)", "correct": false}, {"label": "C", "text": "Isointense", "correct": false}, {"label": "D", "text": "Hyperintense", "correct": true}], "correct_answer": "D. Hyperintense", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The most useful imaging modality/sequence for detection and localisation of pituitary microadenomas is:", "options": [{"label": "A", "text": "CT thin axial soft tissue algorithm C+", "correct": false}, {"label": "B", "text": "CT thin coronal bone algorithm", "correct": false}, {"label": "C", "text": "DSA internal carotid artery angiography", "correct": false}, {"label": "D", "text": "MRI coronal dynamic T1 with contrast", "correct": true}], "correct_answer": "D. MRI coronal dynamic T1 with contrast", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following demonstrates EDH?", "options": [{"label": "A", "text": "A", "correct": true}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "A. A", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-77.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "This case demonstrates a contrecoup traumatic brain injury. Where is the most likely location of primary impact?", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": false}, {"label": "E", "text": "E", "correct": false}, {"label": "F", "text": "F", "correct": true}], "correct_answer": "F. F", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-78.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old female presents with a painful finger. An x-ray is performed. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Bone infarct", "correct": false}, {"label": "B", "text": "Chondrosarcoma", "correct": false}, {"label": "C", "text": "Enchondroma", "correct": true}, {"label": "D", "text": "Sarcoidosis", "correct": false}], "correct_answer": "C. Enchondroma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q-79.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What

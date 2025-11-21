@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Surgery General</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Surgery General</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                75 Questions | 300 Total Marks | 85 min Duration | ~68.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 75 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 85 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 75</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Surgery General - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 75</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 75 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "The commonest site of oral cancer among Indian population is", "options": [{"label": "A", "text": "Tongue", "correct": false}, {"label": "B", "text": "Floor of mouth", "correct": false}, {"label": "C", "text": "Alveobucal complex", "correct": true}, {"label": "D", "text": "Lip", "correct": false}], "correct_answer": "C. Alveobucal complex", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Saroj, a 32 year old female, from rural background presented with a h/o chronic tobacco chewing since 14 year of age. Now she has difficulty in opening her mouth. On oral examination, no ulcers are seen – Most probable diagnosis is", "options": [{"label": "A", "text": "Submucous oral fibrosis", "correct": true}, {"label": "B", "text": "Carcinoma of buccal mucosa", "correct": false}, {"label": "C", "text": "TM joint arthritis", "correct": false}, {"label": "D", "text": "Trigeminal nerve paralysis", "correct": false}], "correct_answer": "A. Submucous oral fibrosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The pre malignant condition with the highest probability of progression to malignancy is", "options": [{"label": "A", "text": "Dysplasia", "correct": false}, {"label": "B", "text": "Hyperplasia", "correct": false}, {"label": "C", "text": "Leucoplakia", "correct": false}, {"label": "D", "text": "Erythroplakia", "correct": true}], "correct_answer": "D. Erythroplakia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An old man who is edentulous developed squamous cell Ca in buccal mucosa that has infiltrated to the alveolus. Following is not indicated in treatment", "options": [{"label": "A", "text": "Radiotherapy", "correct": false}, {"label": "B", "text": "Segmental mandibulectomy", "correct": false}, {"label": "C", "text": "Marginal mandibulectomy involving removal of the outer table only", "correct": true}, {"label": "D", "text": "Marginal mandibulectomy involving removal of upper half of mandible", "correct": false}], "correct_answer": "C. Marginal mandibulectomy involving removal of the outer table only", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient has carcinoma of tongue in the right lateral aspect with lymph node of 4 cm size in level 3 on the left side of neck, what is the stage ?", "options": [{"label": "A", "text": "N0", "correct": false}, {"label": "B", "text": "N1", "correct": false}, {"label": "C", "text": "N2", "correct": true}, {"label": "D", "text": "N3", "correct": false}], "correct_answer": "C. N2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements best represent Ludwig’s angina ?", "options": [{"label": "A", "text": "A type of coronary artery spasm", "correct": false}, {"label": "B", "text": "An infection of the cellular tissues around submandibular salivary gland", "correct": true}, {"label": "C", "text": "Oesophageal spasm", "correct": false}, {"label": "D", "text": "Retropharyngeal infection", "correct": false}], "correct_answer": "B. An infection of the cellular tissues around submandibular salivary gland", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following best represents ‘ranula’ ?", "options": [{"label": "A", "text": "A type of epulis", "correct": false}, {"label": "B", "text": "A thyroglossal cyst", "correct": false}, {"label": "C", "text": "Cystic swelling in the floor of mouth", "correct": true}, {"label": "D", "text": "Forked uvula", "correct": false}], "correct_answer": "C. Cystic swelling in the floor of mouth", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A pt. with ca tongue is found to have lymph nodes in the lower neck. The t/t of choice for the lymph nodes is", "options": [{"label": "A", "text": "Lower cervical neck dissection", "correct": false}, {"label": "B", "text": "Suprahyoid neck dissection", "correct": false}, {"label": "C", "text": "Tele radiotherapy", "correct": false}, {"label": "D", "text": "Radical neck dissection", "correct": true}], "correct_answer": "D. Radical neck dissection", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Best diagnostic modality for parotid swelling is", "options": [{"label": "A", "text": "Enucleation", "correct": false}, {"label": "B", "text": "FNAC", "correct": true}, {"label": "C", "text": "Superficial parotidectomy", "correct": false}, {"label": "D", "text": "Excisional biopsy", "correct": false}], "correct_answer": "B. FNAC", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Treatment of choice for pleomorphic adenoma", "options": [{"label": "A", "text": "Superficial parotidectomy", "correct": true}, {"label": "B", "text": "Radical parotidectomy", "correct": false}, {"label": "C", "text": "Enucleation", "correct": false}, {"label": "D", "text": "Radiotherapy", "correct": false}], "correct_answer": "A. Superficial parotidectomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Ramavati a 40 years old female presented with a progressively increasing lump in the parotid region. On oral examination, the tonsil was pushed medially. Biopsy showed it to be pleomorphic adenoma. The6y appropriate treatment is :", "options": [{"label": "A", "text": "Superficial parotidectomy", "correct": false}, {"label": "B", "text": "Lumpectomy", "correct": false}, {"label": "C", "text": "Conservative total parotidectomy", "correct": true}, {"label": "D", "text": "Enucleation", "correct": false}], "correct_answer": "C. Conservative total parotidectomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Mixed tumours of the salivary glands are", "options": [{"label": "A", "text": "Most common in submandibular gland", "correct": false}, {"label": "B", "text": "Usually malignant", "correct": false}, {"label": "C", "text": "Most common in parotid gland", "correct": true}, {"label": "D", "text": "Associated with calculi", "correct": false}], "correct_answer": "C. Most common in parotid gland", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not an indication of radiotherapy in Pleomorphic adenoma of parotid", "options": [{"label": "A", "text": "Involvement of deep lobe", "correct": true}, {"label": "B", "text": "2nd histologically benign recurrence", "correct": false}, {"label": "C", "text": "Microscopically positive margins", "correct": false}, {"label": "D", "text": "Malignant transformation", "correct": false}], "correct_answer": "A. Involvement of deep lobe", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A Warthin’s tumour is", "options": [{"label": "A", "text": "An adenolymphoma of parotid gland", "correct": true}, {"label": "B", "text": "A pleomorphic adenoma of parotid", "correct": false}, {"label": "C", "text": "A carcinoma of the parotid", "correct": false}, {"label": "D", "text": "A carcinoma of submandibular salivary gland", "correct": false}], "correct_answer": "A. An adenolymphoma of parotid gland", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Treatment of choice for Warthin’s Tumor", "options": [{"label": "A", "text": "Superficial parotidectomy", "correct": true}, {"label": "B", "text": "Enucleation", "correct": false}, {"label": "C", "text": "Radiotherapy", "correct": false}, {"label": "D", "text": "Injection of a sclerosant agent", "correct": false}], "correct_answer": "A. Superficial parotidectomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Acinic cell carcinomas of the salivary gland arise most often in the", "options": [{"label": "A", "text": "Parotid salivary gland", "correct": true}, {"label": "B", "text": "Minor salivary glands", "correct": false}, {"label": "C", "text": "Submandibular salivary gland", "correct": false}, {"label": "D", "text": "Sublingual salivary gland", "correct": false}], "correct_answer": "A. Parotid salivary gland", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In which one of the following conditions the sialography is contraindicated", "options": [{"label": "A", "text": "Ductal calculus", "correct": false}, {"label": "B", "text": "Chronic parotitis", "correct": false}, {"label": "C", "text": "Acute parotitis", "correct": true}, {"label": "D", "text": "Recurrent sialadenitis", "correct": false}], "correct_answer": "C. Acute parotitis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 40 year old patient is suffering from carotid body tumor. Which of the following is the best choice of treatment for him", "options": [{"label": "A", "text": "Excision of tumor", "correct": true}, {"label": "B", "text": "Radiotherapy", "correct": false}, {"label": "C", "text": "Chemotherapy", "correct": false}, {"label": "D", "text": "Carotid artery ligation both proximal and distal to the tumor", "correct": false}], "correct_answer": "A. Excision of tumor", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Structures preserved in Radical Neck Dissection is :", "options": [{"label": "A", "text": "Vagus nerve", "correct": true}, {"label": "B", "text": "Submandibular gland", "correct": false}, {"label": "C", "text": "Sternocleidomastoid", "correct": false}, {"label": "D", "text": "Internal Jugular Vein", "correct": false}], "correct_answer": "A. Vagus nerve", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "True about branchial anomaly :", "options": [{"label": "A", "text": "Cysts are more common than sinuses", "correct": false}, {"label": "B", "text": "For sinuses surgery is not always indicated", "correct": false}, {"label": "C", "text": "Cysts present with dysphagia and hoarseness of voice", "correct": false}, {"label": "D", "text": "Most commonly due to 2nd branchial remnant", "correct": true}], "correct_answer": "D. Most commonly due to 2nd branchial remnant", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is more appropriately termed as penetrating Neck Injury?", "options": [{"label": "A", "text": "2cn deep", "correct": false}, {"label": "B", "text": "Injury to vital structure", "correct": false}, {"label": "C", "text": "Breach of platysma", "correct": true}, {"label": "D", "text": "Through and thought wound", "correct": false}], "correct_answer": "C. Breach of platysma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Complications of Hemaithyroidectomy are all except?", "options": [{"label": "A", "text": "Hypocalcemia", "correct": true}, {"label": "B", "text": "Wound hematoma", "correct": false}, {"label": "C", "text": "Recurrent laryngeal nerve palsy", "correct": false}, {"label": "D", "text": "External branch of superior laryngeal nerve palsy", "correct": false}], "correct_answer": "A. Hypocalcemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is not a landmark for facial nerve during surgery?", "options": [{"label": "A", "text": "Diagastric muscle", "correct": false}, {"label": "B", "text": "Inferior belly of omohyoid", "correct": true}, {"label": "C", "text": "Tragal pointer", "correct": false}, {"label": "D", "text": "Retrograde dissection of distal branch.", "correct": false}], "correct_answer": "B. Inferior belly of omohyoid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Abbe –Estlander Flap is used for:", "options": [{"label": "A", "text": "Lip", "correct": true}, {"label": "B", "text": "Tongue", "correct": false}, {"label": "C", "text": "Eyelid", "correct": false}, {"label": "D", "text": "Ears", "correct": false}], "correct_answer": "A. Lip", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The most common histologic type of thyroid cancer is", "options": [{"label": "A", "text": "Medullary type", "correct": false}, {"label": "B", "text": "Follicular type", "correct": false}, {"label": "C", "text": "Papillary type", "correct": true}, {"label": "D", "text": "Anaplastic type", "correct": false}], "correct_answer": "C. Papillary type", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not a histological variant of thyroid neoplasm ?", "options": [{"label": "A", "text": "Follicular", "correct": false}, {"label": "B", "text": "Merkel cell", "correct": true}, {"label": "C", "text": "Insular", "correct": false}, {"label": "D", "text": "Anaplastic", "correct": false}], "correct_answer": "B. Merkel cell", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most probable malignancy that develops in a case of long standing goiter is :", "options": [{"label": "A", "text": "Follicular Ca", "correct": true}, {"label": "B", "text": "Anaplastic Ca", "correct": false}, {"label": "C", "text": "Papillary Ca", "correct": false}, {"label": "D", "text": "Medullary CA", "correct": false}], "correct_answer": "A. Follicular Ca", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Amyloid stroma is seen in which Ca thyroid", "options": [{"label": "A", "text": "Papillary Ca", "correct": false}, {"label": "B", "text": "Medullary Ca", "correct": true}, {"label": "C", "text": "Anaplastic Ca", "correct": false}, {"label": "D", "text": "Follicular Ca", "correct": false}], "correct_answer": "B. Medullary Ca", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Least malignant thyroid cancer is", "options": [{"label": "A", "text": "Papillary carcinoma", "correct": true}, {"label": "B", "text": "Follicular carcinoma", "correct": false}, {"label": "C", "text": "Medullary carcinoma", "correct": false}, {"label": "D", "text": "Anaplastic carcinoma", "correct": false}], "correct_answer": "A. Papillary carcinoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Lateral aberrant thyroid refers to", "options": [{"label": "A", "text": "Congenital thyroid abnormality", "correct": false}, {"label": "B", "text": "Metastatic foci from primary in thyroid", "correct": true}, {"label": "C", "text": "Struma ovarii", "correct": false}, {"label": "D", "text": "Lingual thyroid", "correct": false}], "correct_answer": "B. Metastatic foci from primary in thyroid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Needle biopsy of solitary thyroid nodule in a young woman with palpable cervical lymph nodes on the same sides demonstrates amyloid in stroma of lesion. Likely diagnosis is :", "options": [{"label": "A", "text": "Medullary carcinoma thyroid", "correct": true}, {"label": "B", "text": "Follicular carcinoma thyroid", "correct": false}, {"label": "C", "text": "Thyroid adenoma", "correct": false}, {"label": "D", "text": "Multinodular goiter", "correct": false}], "correct_answer": "A. Medullary carcinoma thyroid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient with long standing multinodular goiter develops hoarseness of vice; also, the swelling undergoes sudden increase in size. Likely diagnosis is", "options": [{"label": "A", "text": "Follicular ca", "correct": false}, {"label": "B", "text": "Papillary ca", "correct": false}, {"label": "C", "text": "Medullary ca", "correct": false}, {"label": "D", "text": "Anaplastic ca", "correct": true}], "correct_answer": "D. Anaplastic ca", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are true about Lymphoma of the thyroid except", "options": [{"label": "A", "text": "More common in females", "correct": false}, {"label": "B", "text": "Slow growing", "correct": true}, {"label": "C", "text": "Clinically confused with undifferentiated tumours", "correct": false}, {"label": "D", "text": "May present with respiratory distress and dysphagia", "correct": false}], "correct_answer": "B. Slow growing", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 26 year woman presents with a palpable thyroid nodule, and needle biopsy demonstrates amyloid in the stroma of the lesion. A cervical lymph node is palpable on the same side as the lesion, the preferred treatment should be", "options": [{"label": "A", "text": "Removal of the involved node, the isthmus, and the enlarged lymph node.", "correct": false}, {"label": "B", "text": "Removal of the involved lobe, the isthmus, a portion of the opposite lobe, and the enlarged lymph node.", "correct": false}, {"label": "C", "text": "Total thyroidectomy and modified neck dissection on the side of the enlarged lymph node.", "correct": true}, {"label": "D", "text": "Total thyroidectomy and irradiation of the cervical lymph nodes.", "correct": false}], "correct_answer": "C. Total thyroidectomy and modified neck dissection on the side of the enlarged lymph node.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In treatment of papillary carcinomas thyroid, radioiodine destroys the neoplastic cells predominantly by", "options": [{"label": "A", "text": "X rays", "correct": false}, {"label": "B", "text": "Beta rays", "correct": true}, {"label": "C", "text": "Gama rays", "correct": false}, {"label": "D", "text": "Alpha particles", "correct": false}], "correct_answer": "B. Beta rays", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The treatment of choice for anaplastic carcinoma of thyroid infiltrating trachea and sternum will be", "options": [{"label": "A", "text": "Radical excision", "correct": false}, {"label": "B", "text": "Chemotherapy", "correct": false}, {"label": "C", "text": "Radiotherapy", "correct": false}, {"label": "D", "text": "Palliative/Symptomatic treatment", "correct": true}], "correct_answer": "D. Palliative/Symptomatic treatment", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45 year old male presents with 4x4 cm, mobile right solitary thyroid nodule of 5 months duration. The patient is euthyroid. The following statements about his management are true except", "options": [{"label": "A", "text": "Cold nodule on thyroid scan is diagnostic of malignancy", "correct": true}, {"label": "B", "text": "FNAC is the investigation of choice", "correct": false}, {"label": "C", "text": "The patient should undergo hemithyroidectomy if FNAC report is inconclusive", "correct": false}, {"label": "D", "text": "Indirect laryngoscopy should be done in the preoperative period to assess mobility of vocal cords.", "correct": false}], "correct_answer": "A. Cold nodule on thyroid scan is diagnostic of malignancy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 20 yr old girl presents with 9 month history of neck swelling with thyrotoxic symptoms. On investigation increased T4 and decreased TSH with palpable 2 cm nodule was found. Next investigation will be", "options": [{"label": "A", "text": "USG", "correct": false}, {"label": "B", "text": "Thyroid scan", "correct": true}, {"label": "C", "text": "Radioactive iodine uptake", "correct": false}, {"label": "D", "text": "CT scan", "correct": false}], "correct_answer": "B. Thyroid scan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the most appropriate operation for a solitary nodule in one lobe of thyroid", "options": [{"label": "A", "text": "Lobectomy", "correct": false}, {"label": "B", "text": "Hemithyroidectomy", "correct": true}, {"label": "C", "text": "Nodule removal", "correct": false}, {"label": "D", "text": "Partial lobectomy with 1 cm margin around nodule", "correct": false}], "correct_answer": "B. Hemithyroidectomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are associated with Thyroid storm, Except :", "options": [{"label": "A", "text": "Surgery for thyroiditis", "correct": true}, {"label": "B", "text": "Surgery for thyrotoxicosis", "correct": false}, {"label": "C", "text": "Stressful illness in thyrotoxicosis", "correct": false}, {"label": "D", "text": "I131 therapy for thyrotoxicosis", "correct": false}], "correct_answer": "A. Surgery for thyroiditis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Difference between thyrotoxicosis and malignant hyperthermia is", "options": [{"label": "A", "text": "Hyperthermia", "correct": false}, {"label": "B", "text": "Tachycardia", "correct": false}, {"label": "C", "text": "Muscle rigidity", "correct": false}, {"label": "D", "text": "Elevated serum CPK level", "correct": true}], "correct_answer": "D. Elevated serum CPK level", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Complications of total thyroidectomy include all except", "options": [{"label": "A", "text": "Hoarseness", "correct": false}, {"label": "B", "text": "Airway obstruction", "correct": false}, {"label": "C", "text": "Hemorrhage", "correct": false}, {"label": "D", "text": "Hypercalcemia", "correct": true}], "correct_answer": "D. Hypercalcemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Hypoparathyroidism following thyroid surgery occurs within", "options": [{"label": "A", "text": "24 hours", "correct": false}, {"label": "B", "text": "2-5 days", "correct": true}, {"label": "C", "text": "7-14 days", "correct": false}, {"label": "D", "text": "2-3 weeks", "correct": false}], "correct_answer": "B. 2-5 days", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A post –Thyroidectomy patient develops signs and symptoms of Tetany. The management is", "options": [{"label": "A", "text": "i.v Calcium gluconate", "correct": true}, {"label": "B", "text": "Bicarbonate", "correct": false}, {"label": "C", "text": "Calcitonin", "correct": false}, {"label": "D", "text": "Vitamin D", "correct": false}], "correct_answer": "A. i.v Calcium gluconate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "After thyroidectomy, pt. developed stridor within 2 hrs. All are likely cause of stridor except", "options": [{"label": "A", "text": "Hypocalcemia", "correct": true}, {"label": "B", "text": "Recurrent laryngeal nerve palsy", "correct": false}, {"label": "C", "text": "Laryngomalacia", "correct": false}, {"label": "D", "text": "Wound hematoma", "correct": false}], "correct_answer": "A. Hypocalcemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents with B/L proptosis, heat intolerance and palpitations; most unlikely diagnosis here would be", "options": [{"label": "A", "text": "Hashimoto’s thyroiditis", "correct": false}, {"label": "B", "text": "Thyroid adenoma", "correct": false}, {"label": "C", "text": "Diffuse thyroid goiter", "correct": false}, {"label": "D", "text": "Riedel’s thyroiditis", "correct": true}], "correct_answer": "D. Riedel’s thyroiditis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following gene defects is associated with development of medullary carcinoma of thyroid", "options": [{"label": "A", "text": "Ret proto oncogene", "correct": true}, {"label": "B", "text": "FAP gene", "correct": false}, {"label": "C", "text": "Rb gene", "correct": false}, {"label": "D", "text": "BRCA 1 gene", "correct": false}], "correct_answer": "A. Ret proto oncogene", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a patient presenting with a swelling of thyroid, the radionuclide scan showed a cold nodule and the ultrasound showed a non-cystic solid mass. The management of this patient would be:", "options": [{"label": "A", "text": "Lobectomy", "correct": false}, {"label": "B", "text": "Hemithyroidectomy", "correct": true}, {"label": "C", "text": "Eltroxin", "correct": false}, {"label": "D", "text": "Radio Iodine therapy", "correct": false}], "correct_answer": "B. Hemithyroidectomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Lateral aberrant thyroid refers to:", "options": [{"label": "A", "text": "Congenital thyroid abnormality", "correct": false}, {"label": "B", "text": "Metastatic foci from primary in thyroid", "correct": true}, {"label": "C", "text": "Struma ovarii", "correct": false}, {"label": "D", "text": "Lingual thyroid", "correct": false}], "correct_answer": "B. Metastatic foci from primary in thyroid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Thoracic extension of cervical goiter is usually approached through:", "options": [{"label": "A", "text": "Neck", "correct": true}, {"label": "B", "text": "Chest", "correct": false}, {"label": "C", "text": "Combined cervico-thoracic route", "correct": false}, {"label": "D", "text": "Thoracoscopic", "correct": false}], "correct_answer": "A. Neck", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45 year old patient presents with thyroid swelling and lymph node in neck, on aspiration amyloid material was found, management is:", "options": [{"label": "A", "text": "Total thyroidectomy with neck dissection.", "correct": true}, {"label": "B", "text": "Hemithyroidectomy.", "correct": false}, {"label": "C", "text": "Hemithyroidectomy with neck of dissection.", "correct": false}, {"label": "D", "text": "Total thyroidectomy with neck irradiation.", "correct": false}], "correct_answer": "A. Total thyroidectomy with neck dissection.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35 years old woman has had recurrent episodes of headache and sweating. Her mother had renal calculi and died of thyroid cancer. Physical observations revealed a thyroid nodule and ipsilateral enlarged cervical lymph nodes. Before performing thyroid surgery the woman’s should order:", "options": [{"label": "A", "text": "Thyroid scan", "correct": false}, {"label": "B", "text": "Estimation of hydroxy indole acetic acid in urine", "correct": false}, {"label": "C", "text": "Estimation of urinary metanephrine, VMA and catecholamines.", "correct": true}, {"label": "D", "text": "Estimation of TSH and TRH levels in serum.", "correct": false}], "correct_answer": "C. Estimation of urinary metanephrine, VMA and catecholamines.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Treatment of thyroid storm includes all, EXCEPT:", "options": [{"label": "A", "text": "Propranolol", "correct": false}, {"label": "B", "text": "Radioactive iodine", "correct": true}, {"label": "C", "text": "Hydrocortisone", "correct": false}, {"label": "D", "text": "Lugol’s iodine", "correct": false}], "correct_answer": "B. Radioactive iodine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Half life of I 131", "options": [{"label": "A", "text": "4 hours", "correct": false}, {"label": "B", "text": "8 days", "correct": true}, {"label": "C", "text": "4 days", "correct": false}, {"label": "D", "text": "10 days", "correct": false}], "correct_answer": "B. 8 days", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Investigation of choice in discrete thyroid swelling is:", "options": [{"label": "A", "text": "Ultrasonography", "correct": false}, {"label": "B", "text": "FNAC", "correct": true}, {"label": "C", "text": "Isotope scan", "correct": false}, {"label": "D", "text": "Autoantibody titers", "correct": false}], "correct_answer": "B. FNAC", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Struma-lymphomatosa term is used for:", "options": [{"label": "A", "text": "De-Quervain’s thyroiditis", "correct": false}, {"label": "B", "text": "Hashimoto’s thyroiditis", "correct": true}, {"label": "C", "text": "Riedel’s thyroiditis", "correct": false}, {"label": "D", "text": "Suppurative thyroiditis", "correct": false}], "correct_answer": "B. Hashimoto’s thyroiditis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Investigation of radioactive iodine uptake is diagnostic in:", "options": [{"label": "A", "text": "Autonomous toxic nodule", "correct": true}, {"label": "B", "text": "Euthyroid nodule", "correct": false}, {"label": "C", "text": "Hashimoto’s disease", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Autonomous toxic nodule", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following would be the best treatment for a 2cm thyroid nodule on the left lobe in a 50 yrs old man with FNAC revealing it to be a papillary carcinoma", "options": [{"label": "A", "text": "Near total thyroidectomy with modifed neck dissectin", "correct": false}, {"label": "B", "text": "Total thyroidectomy with modified neck dissection", "correct": true}, {"label": "C", "text": "Near total thyroidectomy and radiotherapy", "correct": false}, {"label": "D", "text": "Hemithyroidectomy and radiotherapy", "correct": false}], "correct_answer": "B. Total thyroidectomy with modified neck dissection", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following drugs is NOT typically used in the management of thyroid cancer following total thyroidectomy with modified neck dissection?", "options": [{"label": "A", "text": "Vincristine", "correct": false}, {"label": "B", "text": "Cyclophosphamide", "correct": false}, {"label": "C", "text": "Cisplatin", "correct": true}, {"label": "D", "text": "Daunorubicin", "correct": false}], "correct_answer": "C. Cisplatin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Structure preserved in functional neck dissection is:", "options": [{"label": "A", "text": "Carotid artery, vagus nerve", "correct": false}, {"label": "B", "text": "Sternomastoid muscle, internal jugular vein", "correct": true}, {"label": "C", "text": "Spinal accessory nerve submandibular salivary gland", "correct": false}, {"label": "D", "text": "Neck nodes", "correct": false}], "correct_answer": "B. Sternomastoid muscle, internal jugular vein", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50 year old man presented with 3 month history of right-sided cervical lymph node enlargement. The best investigation to establish the diagnosis in this case would be:", "options": [{"label": "A", "text": "FNAC", "correct": false}, {"label": "B", "text": "X-ray", "correct": false}, {"label": "C", "text": "Tuberculin test", "correct": false}, {"label": "D", "text": "Lymph node biopsy", "correct": true}], "correct_answer": "D. Lymph node biopsy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A carcinoma cheek, 6 cm. in size, with mobile contralateral lymph nodes, stage is:", "options": [{"label": "A", "text": "T 3 N 2", "correct": true}, {"label": "B", "text": "T 2 N 2", "correct": false}, {"label": "C", "text": "T 4 N 2", "correct": false}, {"label": "D", "text": "T 3 N 1", "correct": false}], "correct_answer": "A. T 3 N 2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Frey’s syndrome involves:", "options": [{"label": "A", "text": "IX nerve", "correct": false}, {"label": "B", "text": "X nerve", "correct": false}, {"label": "C", "text": "Auriculotemporal nerve", "correct": true}, {"label": "D", "text": "XII nerve", "correct": false}], "correct_answer": "C. Auriculotemporal nerve", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Mid line swelling in neck are all, EXCEPT:", "options": [{"label": "A", "text": "Thyroglossal cyst", "correct": false}, {"label": "B", "text": "Subhyoid bursitis", "correct": false}, {"label": "C", "text": "Ludwig’s angina", "correct": false}, {"label": "D", "text": "Branchial cyst", "correct": true}], "correct_answer": "D. Branchial cyst", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Commonest salivary gland tumour in children:", "options": [{"label": "A", "text": "Lymphoma", "correct": true}, {"label": "B", "text": "Adenoid cystic carcinoma", "correct": false}, {"label": "C", "text": "Pleomorphic adenoma", "correct": false}, {"label": "D", "text": "Mucoepidermoid carcinoma", "correct": false}], "correct_answer": "A. Lymphoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which carcinoma of parotid, spreads through neural sheath:", "options": [{"label": "A", "text": "Adenoid cystic carcinoma", "correct": true}, {"label": "B", "text": "Adenocarcinoma", "correct": false}, {"label": "C", "text": "Sarcoma", "correct": false}, {"label": "D", "text": "Pleomorphic adenoma with malignant change", "correct": false}], "correct_answer": "A. Adenoid cystic carcinoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The treatment of choice for a 1.8 cm in diameter, No, MO invasive breast cancer is", "options": [{"label": "A", "text": "Lumpectomy alone", "correct": false}, {"label": "B", "text": "Lumpectomy, sentinel node biopsy, and radiation", "correct": true}, {"label": "C", "text": "Mastectomy with sentinel node biopsy and radiation", "correct": false}, {"label": "D", "text": "Mastectomy with axillary node dissection and radiation", "correct": false}], "correct_answer": "B. Lumpectomy, sentinel node biopsy, and radiation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "BRCA-1 gene mutations", "options": [{"label": "A", "text": "Result in cancers that are usually hormone receptor negative", "correct": true}, {"label": "B", "text": "Have a high incidence in Sephardic Jews", "correct": false}, {"label": "C", "text": "Are associated with an increased risk of cancer of the bile ducts", "correct": false}, {"label": "D", "text": "Results in a lifetime risk of breast cancer of 20%", "correct": false}], "correct_answer": "A. Result in cancers that are usually hormone receptor negative", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Paget’s disease", "options": [{"label": "A", "text": "Is associated with underlying lobular carcinoma", "correct": false}, {"label": "B", "text": "Can be differentiated from melanoma by carcinoembryonic antigen staining", "correct": true}, {"label": "C", "text": "Is self-limiting and requires no treatment", "correct": false}, {"label": "D", "text": "Is diagnosed by characteristic skin changes in the axilla", "correct": false}], "correct_answer": "B. Can be differentiated from melanoma by carcinoembryonic antigen staining", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 43 year old lady presents with a 5 cm lump in right breast with a 3 cm node in the supraclavicular fossa. Which of the following TNM stage she belongs to as per the latest AJCC staging system:", "options": [{"label": "A", "text": "T 2 N 0 M 1", "correct": false}, {"label": "B", "text": "T 1 N 0 M 1", "correct": false}, {"label": "C", "text": "T 2 N 3 M 0", "correct": true}, {"label": "D", "text": "T 2 N 2 M 1", "correct": false}], "correct_answer": "C. T 2 N 3 M 0", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Breast conservation surgery for breast cancer is indicated in one of the following conditions:", "options": [{"label": "A", "text": "T1 breast tumour", "correct": true}, {"label": "B", "text": "Multicentric tumour", "correct": false}, {"label": "C", "text": "Extensive in situ cancer", "correct": false}, {"label": "D", "text": "T4b breast tumour", "correct": false}], "correct_answer": "A. T1 breast tumour", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Malti, a 45 years female patient with a family history of breast carcinoma. Showed diffuse microcalcification on mammography. Intraductal carcinoma in situ was seen on biopsy. Most appropriate management is:", "options": [{"label": "A", "text": "Quadrantectomy", "correct": false}, {"label": "B", "text": "Radical mastectomy", "correct": false}, {"label": "C", "text": "Simple mastectomy", "correct": true}, {"label": "D", "text": "Chemotherapy", "correct": false}], "correct_answer": "C. Simple mastectomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Commonest type of carcinoma breast is:", "options": [{"label": "A", "text": "Papillary carcinoma", "correct": false}, {"label": "B", "text": "Paget’s disease", "correct": false}, {"label": "C", "text": "Fibrosarcoma", "correct": false}, {"label": "D", "text": "Infiltrative ductal carcinoma", "correct": true}], "correct_answer": "D. Infiltrative ductal carcinoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Breast carcinoma which is multicentric and bilateral:", "options": [{"label": "A", "text": "Ductal", "correct": false}, {"label": "B", "text": "Lobular", "correct": true}, {"label": "C", "text": "Mucoid", "correct": false}, {"label": "D", "text": "Colloid", "correct": false}], "correct_answer": "B. Lobular", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Treatment of choice in ductal papilloma of breast is:", "options": [{"label": "A", "text": "Simple mastectomy", "correct": false}, {"label": "B", "text": "Microdochectomy", "correct": true}, {"label": "C", "text": "Local wide excision", "correct": false}, {"label": "D", "text": "Chemotherapy", "correct": false}], "correct_answer": "B. Microdochectomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

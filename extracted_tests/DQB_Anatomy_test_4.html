@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Anatomy Image Based Question</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Anatomy Image Based Question</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                80 Questions | 320 Total Marks | 90 min Duration | ~67.5 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 80 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 90 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 80</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Anatomy Image Based Question - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 80</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 80 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Paralysis of the muscle shown in the figure (shaded in green) causes loss of what movement of thumb?", "options": [{"label": "A", "text": "Flexion", "correct": false}, {"label": "B", "text": "Extension", "correct": false}, {"label": "C", "text": "Pinching", "correct": true}, {"label": "D", "text": "Abduction", "correct": false}], "correct_answer": "C. Pinching", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/21756321.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The area behind the stomach shown in the picture given below is constituted by all except:", "options": [{"label": "A", "text": "Splenic artery", "correct": false}, {"label": "B", "text": "Crus of diaphragm", "correct": false}, {"label": "C", "text": "Left gastric artery", "correct": true}, {"label": "D", "text": "Left suprarenal gland", "correct": false}], "correct_answer": "C. Left gastric artery", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/73040942.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A barefoot child steps on the sole of his foot and complaints of numbness of area marked 5 in the figure. Which nerve is most likely injured?", "options": [{"label": "A", "text": "Lateral plantar nerve", "correct": true}, {"label": "B", "text": "Tibial nerve", "correct": false}, {"label": "C", "text": "Sural nerve", "correct": false}, {"label": "D", "text": "Superficial peroneal nerve", "correct": false}], "correct_answer": "A. Lateral plantar nerve", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/77018043.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following structures forms the border of the space depicted by blue margins except:", "options": [{"label": "A", "text": "Teres major", "correct": false}, {"label": "B", "text": "Teres minor", "correct": false}, {"label": "C", "text": "Pectoralis minor", "correct": true}, {"label": "D", "text": "Long head of triceps brachii muscle", "correct": false}], "correct_answer": "C. Pectoralis minor", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/65913304.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the structure depicted below which is the most important source of noradrenergic innervations to cerebral cortex:", "options": [{"label": "A", "text": "Basal nucleus of Meynert", "correct": false}, {"label": "B", "text": "Locus coerulus", "correct": true}, {"label": "C", "text": "Raphe nucleus", "correct": false}, {"label": "D", "text": "Amygdala", "correct": false}], "correct_answer": "B. Locus coerulus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/16813435.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the muscle shown in figure?", "options": [{"label": "A", "text": "Teres major", "correct": false}, {"label": "B", "text": "Rhomboides major", "correct": true}, {"label": "C", "text": "Latissimus dorsi", "correct": false}, {"label": "D", "text": "Teres minor", "correct": false}], "correct_answer": "B. Rhomboides major", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/66583306.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/7088561Ans%206.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the structure marked as 6", "options": [{"label": "A", "text": "Coraco-acromial ligament", "correct": true}, {"label": "B", "text": "Coraco-clavicular ligament", "correct": false}, {"label": "C", "text": "Coraco-humeral ligament", "correct": false}, {"label": "D", "text": "Glenohumeral ligament", "correct": false}], "correct_answer": "A. Coraco-acromial ligament", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/15381157.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Diagnosis of the following condition is:", "options": [{"label": "A", "text": "Positive Trendelenburg sign", "correct": true}, {"label": "B", "text": "Ataxic gait", "correct": false}, {"label": "C", "text": "Parkinson’s gait", "correct": false}, {"label": "D", "text": "Paralysis of gluteus maximus", "correct": false}], "correct_answer": "A. Positive Trendelenburg sign", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/42411708.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The nerve shown in the picture below (in yellow) has its origin from", "options": [{"label": "A", "text": "C2, C3", "correct": true}, {"label": "B", "text": "C3, C4", "correct": false}, {"label": "C", "text": "C1,C2", "correct": false}, {"label": "D", "text": "C4, C5", "correct": false}], "correct_answer": "A. C2, C3", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/64251049.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Given below is the histology of which endocrine gland?", "options": [{"label": "A", "text": "Adrenal", "correct": false}, {"label": "B", "text": "Pancreas", "correct": false}, {"label": "C", "text": "Thyroid", "correct": false}, {"label": "D", "text": "Pituitary", "correct": true}], "correct_answer": "D. Pituitary", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/595710510.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the muscle shown in figure", "options": [{"label": "A", "text": "Pronator teres", "correct": false}, {"label": "B", "text": "Brachialis", "correct": false}, {"label": "C", "text": "Anconeus", "correct": true}, {"label": "D", "text": "Flexor carpi radialis", "correct": false}], "correct_answer": "C. Anconeus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/493994911.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the muscle shown in figure?", "options": [{"label": "A", "text": "Pronator teres", "correct": false}, {"label": "B", "text": "Pronator quadratus", "correct": true}, {"label": "C", "text": "Anconeus", "correct": false}, {"label": "D", "text": "Flexor digitorum profundus", "correct": false}], "correct_answer": "B. Pronator quadratus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/523037112.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the nerve supply of the muscle shown in figure?", "options": [{"label": "A", "text": "Median nerve", "correct": false}, {"label": "B", "text": "Radial nerve", "correct": false}, {"label": "C", "text": "Superficial branch of ulnar nerve", "correct": false}, {"label": "D", "text": "none of these", "correct": true}], "correct_answer": "D. none of these", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/660423413.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the nerve shown in the figure", "options": [{"label": "A", "text": "Radial nerve", "correct": false}, {"label": "B", "text": "Ulnar nerve", "correct": false}, {"label": "C", "text": "Musculocutaneous nerve", "correct": true}, {"label": "D", "text": "Axillary nerve", "correct": false}], "correct_answer": "C. Musculocutaneous nerve", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/160791114.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following structures doesn’t form a boundary of the anatomical triangle shown in the figure?", "options": [{"label": "A", "text": "Tricuspid valve ring", "correct": false}, {"label": "B", "text": "Coronary sinus", "correct": false}, {"label": "C", "text": "Tendon of Todaro", "correct": false}, {"label": "D", "text": "Limbus fossa ovalis", "correct": true}], "correct_answer": "D. Limbus fossa ovalis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/210210515.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the vertebral level of the part highlighted below?", "options": [{"label": "A", "text": "T5", "correct": false}, {"label": "B", "text": "T10", "correct": false}, {"label": "C", "text": "T7", "correct": true}, {"label": "D", "text": "T8", "correct": false}], "correct_answer": "C. T7", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/711065316.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The arrow in the figure points to?", "options": [{"label": "A", "text": "Foramen spinosum", "correct": true}, {"label": "B", "text": "Foramen rotundum", "correct": false}, {"label": "C", "text": "Foramen lacerum", "correct": false}, {"label": "D", "text": "Foramen ovale", "correct": false}], "correct_answer": "A. Foramen spinosum", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/621319317.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the action of the muscle depicted in the figure?", "options": [{"label": "A", "text": "Abduction of hip", "correct": false}, {"label": "B", "text": "Flexion of hip", "correct": false}, {"label": "C", "text": "Extension of knee", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/439450418.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents to the clinic with pain in the right hand following a fall. Xray of right elbow reveals the following finding. Which of the following nerve is most likely to be damaged?", "options": [{"label": "A", "text": "Radial nerve", "correct": false}, {"label": "B", "text": "Ulnar nerve", "correct": true}, {"label": "C", "text": "Anterior interosseus nerve", "correct": false}, {"label": "D", "text": "Musculocutaneous nerve", "correct": false}], "correct_answer": "B. Ulnar nerve", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/574234519.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the muscle shown in figure?", "options": [{"label": "A", "text": "Scalenus anterior", "correct": false}, {"label": "B", "text": "Scalenus medius", "correct": false}, {"label": "C", "text": "Scalenus posterior", "correct": false}, {"label": "D", "text": "Levator scapulae", "correct": true}], "correct_answer": "D. Levator scapulae", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/369567620.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the nerve which is most likely paralysed in this patient?", "options": [{"label": "A", "text": "Subscapular muscle", "correct": false}, {"label": "B", "text": "Long thoracic nerve", "correct": true}, {"label": "C", "text": "Circumflex scapular artery", "correct": false}, {"label": "D", "text": "Thoracodorsal nerve", "correct": false}], "correct_answer": "B. Long thoracic nerve", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/181783821.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which muscle among the following is inserted to the bony prominence shown in figure?", "options": [{"label": "A", "text": "Psoas major", "correct": false}, {"label": "B", "text": "Piriformis", "correct": true}, {"label": "C", "text": "Iliacus", "correct": false}, {"label": "D", "text": "Adductor magnus", "correct": false}], "correct_answer": "B. Piriformis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/30151622.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which muscle originates from the bony prominence shown?", "options": [{"label": "A", "text": "Sartorius", "correct": false}, {"label": "B", "text": "Vastus intermedius", "correct": false}, {"label": "C", "text": "Vastus lateralis", "correct": false}, {"label": "D", "text": "Rectus femoris", "correct": true}], "correct_answer": "D. Rectus femoris", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/268590023.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The ligament highlighted in green represents the degenerated tendon of which muscle?", "options": [{"label": "A", "text": "Adductor longus", "correct": false}, {"label": "B", "text": "Adductor magnus", "correct": true}, {"label": "C", "text": "Peroneus longus", "correct": false}, {"label": "D", "text": "Peroneus brevis", "correct": false}], "correct_answer": "B. Adductor magnus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/586137524.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the nerve shown in the cross section of brain(letter B)", "options": [{"label": "A", "text": "Facial nerve", "correct": false}, {"label": "B", "text": "Abducens nerve", "correct": false}, {"label": "C", "text": "Trochlear nerve", "correct": true}, {"label": "D", "text": "Cranial accessory nerve", "correct": false}], "correct_answer": "C. Trochlear nerve", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/486996725.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The diagram represents which ligament complex ?", "options": [{"label": "A", "text": "Spring ligament", "correct": false}, {"label": "B", "text": "Deltoid ligament", "correct": true}, {"label": "C", "text": "Calcaneofibular ligament", "correct": false}, {"label": "D", "text": "Talofibular ligament", "correct": false}], "correct_answer": "B. Deltoid ligament", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/540982426.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/7805402ANS%2026.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The posterior relation of the structure through which the finger is inserted is:", "options": [{"label": "A", "text": "Hepatic artery", "correct": false}, {"label": "B", "text": "Caudate lobe of liver", "correct": false}, {"label": "C", "text": "Inferior vena cava", "correct": true}, {"label": "D", "text": "Portal vein", "correct": false}], "correct_answer": "C. Inferior vena cava", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/67827127.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Histological picture of which structure is depicted below?", "options": [{"label": "A", "text": "Cerebral cortex", "correct": false}, {"label": "B", "text": "Basal ganglia", "correct": false}, {"label": "C", "text": "Cerebellum", "correct": true}, {"label": "D", "text": "Thalamus", "correct": false}], "correct_answer": "C. Cerebellum", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/115636328.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The main action of the muscle shown in the figure is:", "options": [{"label": "A", "text": "Medial rotation of thigh", "correct": false}, {"label": "B", "text": "Lateral rotation of thigh", "correct": true}, {"label": "C", "text": "Flexion of thigh", "correct": false}, {"label": "D", "text": "Extension of thigh", "correct": false}], "correct_answer": "B. Lateral rotation of thigh", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/15967429.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The structure 7 corresponds to which vertebral level?", "options": [{"label": "A", "text": "T10", "correct": false}, {"label": "B", "text": "T12-L1", "correct": true}, {"label": "C", "text": "L3-L4", "correct": false}, {"label": "D", "text": "L5", "correct": false}], "correct_answer": "B. T12-L1", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/656457230.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is the tendon present on the ulnar side of the area highlighted in the picture?", "options": [{"label": "A", "text": "Brachioradialis", "correct": false}, {"label": "B", "text": "Extensor carpi radialis brevis", "correct": false}, {"label": "C", "text": "Extensor carpi radialis longus", "correct": false}, {"label": "D", "text": "Extensor pollicis longus", "correct": true}], "correct_answer": "D. Extensor pollicis longus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/4906431.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following a fracture of the humerus, an adult patient has a biopsy of the healing area. Identify the predominant type of bone :", "options": [{"label": "A", "text": "Cancellous", "correct": false}, {"label": "B", "text": "Compact", "correct": false}, {"label": "C", "text": "Spongy", "correct": false}, {"label": "D", "text": "Woven", "correct": true}], "correct_answer": "D. Woven", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/56639432.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following corresponds to the arrow shown in figure?", "options": [{"label": "A", "text": "Incisive canal", "correct": true}, {"label": "B", "text": "Greater palatine canal", "correct": false}, {"label": "C", "text": "Lesser palatine canal", "correct": false}, {"label": "D", "text": "Mental foramen", "correct": false}], "correct_answer": "A. Incisive canal", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/359194933.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The anomaly shown in the figure occurs due to the failure of fusion between which of the following structures?", "options": [{"label": "A", "text": "Mandibular processes", "correct": false}, {"label": "B", "text": "Median nasal processes", "correct": true}, {"label": "C", "text": "Medial and lateral nasal process", "correct": false}, {"label": "D", "text": "Medial nasal and maxillary process", "correct": false}], "correct_answer": "B. Median nasal processes", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/190681434.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Von Brunn’s nest in urinary bladder shown below is associated with which of the following:", "options": [{"label": "A", "text": "Normal urothelium", "correct": true}, {"label": "B", "text": "Transitional cell carcinoma", "correct": false}, {"label": "C", "text": "Squamous cell carcinoma", "correct": false}, {"label": "D", "text": "Adenocarcinoma", "correct": false}], "correct_answer": "A. Normal urothelium", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/477147235.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The blue arrow in the figure points to?", "options": [{"label": "A", "text": "Hepatogastric ligament", "correct": false}, {"label": "B", "text": "Falciform ligament", "correct": false}, {"label": "C", "text": "Gastrophrenic ligament", "correct": true}, {"label": "D", "text": "Hepatoduodenal ligament", "correct": false}], "correct_answer": "C. Gastrophrenic ligament", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/504071036.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "With respect to submandibular region,which nerve corresponds to that marked by 19 in figure?", "options": [{"label": "A", "text": "Hypoglossal nerve", "correct": false}, {"label": "B", "text": "Lingual nerve", "correct": true}, {"label": "C", "text": "Vagus nerve", "correct": false}, {"label": "D", "text": "Facial nerve", "correct": false}], "correct_answer": "B. Lingual nerve", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/308717437.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The figure shows the superior view of cerebellum.What structures corresponds to that marked by number 2?", "options": [{"label": "A", "text": "Lingula", "correct": true}, {"label": "B", "text": "Central lobule", "correct": false}, {"label": "C", "text": "Folium", "correct": false}, {"label": "D", "text": "Declive", "correct": false}], "correct_answer": "A. Lingula", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/107735738.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the muscle pointed?", "options": [{"label": "A", "text": "Psoas major", "correct": false}, {"label": "B", "text": "Rectus abdominis", "correct": false}, {"label": "C", "text": "Quadratus lumborum", "correct": true}, {"label": "D", "text": "Iliacus", "correct": false}], "correct_answer": "C. Quadratus lumborum", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/476918039.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/5681848Ans%2039.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The red arrow in the image points to ?", "options": [{"label": "A", "text": "Celiac trunk", "correct": false}, {"label": "B", "text": "Superior mesenteric artery", "correct": false}, {"label": "C", "text": "Inferior mesenteric artery", "correct": true}, {"label": "D", "text": "Supra-renal artery", "correct": false}], "correct_answer": "C. Inferior mesenteric artery", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/240776540.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/3590885Ans%2040.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The arrow in the image points to which lobe of liver?", "options": [{"label": "A", "text": "Caudate", "correct": false}, {"label": "B", "text": "Quadrate", "correct": true}, {"label": "C", "text": "Lobe 2", "correct": false}, {"label": "D", "text": "Lobe 6", "correct": false}], "correct_answer": "B. Quadrate", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/434731341.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/7326415Ans%2041.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which among the following is the most common position of appendix?", "options": [{"label": "A", "text": "A", "correct": true}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "A. A", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/51988042.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The blue arrow in the image points to?", "options": [{"label": "A", "text": "Splenic vein", "correct": false}, {"label": "B", "text": "Superior mesenteric vein", "correct": true}, {"label": "C", "text": "Inferior mesenteric vein", "correct": false}, {"label": "D", "text": "Portal vein", "correct": false}], "correct_answer": "B. Superior mesenteric vein", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/326144543.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "With respect to floor of fourth ventricle,the alphabet A represents?", "options": [{"label": "A", "text": "Facial colliculus", "correct": true}, {"label": "B", "text": "Vagal triangle", "correct": false}, {"label": "C", "text": "Hypoglossal triangle", "correct": false}, {"label": "D", "text": "Nucleus cuneatus", "correct": false}], "correct_answer": "A. Facial colliculus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/783188244.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/7373209Ans%2044.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The joints highlighted in blue (2 to 5) belongs to which type:", "options": [{"label": "A", "text": "Plane synovial joint", "correct": false}, {"label": "B", "text": "Condyloid joint", "correct": true}, {"label": "C", "text": "Ball and socket joint", "correct": false}, {"label": "D", "text": "Saddle joint", "correct": false}], "correct_answer": "B. Condyloid joint", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/377209345.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following alphabets corresponds to cerebellar peduncle?", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "C", "correct": true}, {"label": "C", "text": "I", "correct": false}, {"label": "D", "text": "K", "correct": false}], "correct_answer": "B. C", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/131968946.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A newborn child has a mass in the midline in umbilical region which was membrane bound as shown in the figure:", "options": [{"label": "A", "text": "Omphalocele", "correct": true}, {"label": "B", "text": "Gastrochisis", "correct": false}, {"label": "C", "text": "Diaphragmatic hernia", "correct": false}, {"label": "D", "text": "Umbilical adenoma", "correct": false}], "correct_answer": "A. Omphalocele", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/482482447.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The arrow in the image points towards which structure?", "options": [{"label": "A", "text": "Parieto-occipital sulcus", "correct": true}, {"label": "B", "text": "Calcarine sulcus", "correct": false}, {"label": "C", "text": "Callosal sulcus", "correct": false}, {"label": "D", "text": "Collateral sulcus", "correct": false}], "correct_answer": "A. Parieto-occipital sulcus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/386514148.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/6594381Ans%2048.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The deformity shown in the picture is due to damage to which of the following nerves:", "options": [{"label": "A", "text": "Median nerve", "correct": false}, {"label": "B", "text": "Ulnar nerve", "correct": true}, {"label": "C", "text": "Both ulnar and median nerves", "correct": false}, {"label": "D", "text": "Posterior interosseus nerve", "correct": false}], "correct_answer": "B. Ulnar nerve", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/133595449.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The area highlighted in red corresponds to?", "options": [{"label": "A", "text": "Superior frontal gyrus", "correct": false}, {"label": "B", "text": "Cingulate gyrus", "correct": true}, {"label": "C", "text": "Paracentral lobule", "correct": false}, {"label": "D", "text": "Corpus callosum", "correct": false}], "correct_answer": "B. Cingulate gyrus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/323630850.jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/7379785Ans%2050.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The characteristic appearance shown below is due to the distension of:", "options": [{"label": "A", "text": "Inferior epigastric vein", "correct": false}, {"label": "B", "text": "Portal vein", "correct": false}, {"label": "C", "text": "Paraumbilical veins", "correct": true}, {"label": "D", "text": "Thoraco epigastric veins", "correct": false}], "correct_answer": "C. Paraumbilical veins", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/273371551.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28-year-old consumes a considerable quantity of alcohol and 

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Maternal &amp; Child Health</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Maternal &amp; Child Health</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                16 Questions | 16 Total Marks | 26 min Duration | ~97.5 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 16 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 26 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 16</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Maternal &amp; Child Health - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 16</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 16 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "As medical director of a health maintenance organization, you are asked to update screening recommendations for enrolled members. You find that recommendations are lacking in the field of sexually transmitted diseases. You decide to develop evidence-based screening guidelines for Chlamydia trachomatis. Which of the following criteria is the most important for developing routine screening recommendations?", "options": [{"label": "A", "text": "Number of sexual partners", "correct": false}, {"label": "B", "text": "Use barrier methods such as condoms", "correct": false}, {"label": "C", "text": "Age", "correct": true}, {"label": "D", "text": "Presence of symptoms", "correct": false}], "correct_answer": "C. Age", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Age Women are particularly at risk of developing complications from the disease and should be the first group to be targeted for screening. Age has consistently been shown to be a risk factor for disease, regardless of the other behaviors described. Women under 20 should be screened at any pelvic examination at least once a year.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option : A & B. Sexually active women between the ages of 20 and 24 should be screened yearly, regardless of the presence or absence of risky behaviors. Since most chlamydial infections are asymptomatic in both men and women, most transmissions occur among persons who are unknowingly infected. Option : D. When symptoms are present, the test is diagnostic. Screening, by definition, is detecting a condition before symptoms occur.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-week pregnant woman comes to an antenatal clinic at a nearby PHC. She has said that she doesn’t have any antenatal check-ups till now. In this case, the best approach regarding tetanus immunization would be to:", "options": [{"label": "A", "text": "Do not waste the TT vaccine as it would be of no use in this pregnancy", "correct": false}, {"label": "B", "text": "Give a dose of Tetanus Toxoid (TT) and explain to her that it will not protect the newborn and she should take the second dose after four weeks even if she delivers.", "correct": true}, {"label": "C", "text": "Give one dose of TT and explain that it will not be helpful for this pregnancy", "correct": false}, {"label": "D", "text": "Give her anti-Tetanus Immunoglobulin and the TT vaccine", "correct": false}], "correct_answer": "B. Give a dose of Tetanus Toxoid (TT) and explain to her that it will not protect the newborn and she should take the second dose after four weeks even if she delivers.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Give a dose of Tetanus Toxoid (TT) and explain to her that it will not protect the newborn and she should take the second dose after four weeks even if she delivers. TETANUS: If the mother was not immunized earlier, two doses of adsorbed tetanus toxoid should be given - the first at 16- 20 weeks and the second at 20-24 weeks of pregnancy. The minimum interval between the two doses should be one month. No pregnant woman should be denied even one dose of tetanus toxoid if she is seen late in pregnancy. One booster dose will be sufficient for a woman who has been immunized earlier. When such a booster has been given, it will provide the necessary cover for subsequent pregnancies during the next five It is advised not to inject tetanus toxoid at every successive pregnancy because of the risk of hyperimmunization and side effects.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a given country A, the total number of births in the year 2020 is 6150. From these Births, 50 neonates die within the first ten days of life, whereas the number of deaths within 10-28 days of life is 250. Still Birth in the year 2020 is 150. What is the Neonatal mortality rate in Country A?", "options": [{"label": "A", "text": "10.98", "correct": false}, {"label": "B", "text": "89.25", "correct": false}, {"label": "C", "text": "33.5", "correct": false}, {"label": "D", "text": "50", "correct": true}], "correct_answer": "D. 50", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>50 Total Births = 6150 But, Still Birth in the year 2020 = 150 So, Total Live Birth in 2020 = 6150 – 150 = 6000 Neonates Died Within ten days of life = 50 Number of deaths within 10-28 days of life = 250 Therefore, Total Deaths within 28 days of life = 300 So, Neonatal Mortality Rate = (300 x 1000) / 6000 = 50</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a population of 5000, with a birth rate of 30/1000 Population, 15 children died during the first year of life in one year: of these 9 died during the first month of life. What is the infant mortality rate in this population?", "options": [{"label": "A", "text": "100", "correct": true}, {"label": "B", "text": "60", "correct": false}, {"label": "C", "text": "150", "correct": false}, {"label": "D", "text": "45", "correct": false}], "correct_answer": "A. 100", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>100 So Population = 5000 , Birth Rate = 30/1000 Therefore Total Birth = 150 Children died Less than 1 yr of age = 15 So IMR = (15/150) x 1000 = 100</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 10-month-old child is presented in the primary health centre with a history of cough and cold for the last six days with unable to drink for the last 12 hours. On examination, he has a respiratory rate of 48 breaths per minute. There is an absence of chest indrawing the weight of the baby is 5 kg. On further investigation, he was a term baby with a normal vaginal delivery and no significant disease history after birth. Also, no significant family history was present. The child must be suffering from", "options": [{"label": "A", "text": "Severe pneumonia", "correct": false}, {"label": "B", "text": "Pneumonia", "correct": false}, {"label": "C", "text": "Very severe pneumonia", "correct": false}, {"label": "D", "text": "No pneumonia", "correct": true}], "correct_answer": "D. No pneumonia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>No pneumonia In the question the child is 10 months and has a respiratory rate of 48 per minute, which is normal but there is an absence of chest indrawing, which is a feature of severe pneumonia but also, the child has a weight 5kg is the expected weight at 10 month age is 92 9.5 kgs so the child is a severe malnutrition according to Gomez classification hence it is a case of very severe pneumonia.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. In severe pneumonia, there is not severe malnutrition Option: B. Presence of chest indrawing indicates it is not only pneumonia Option: C. No fast breathing present in plain cold and cough (no pneumonia) SIGNS CLASSIFY AS IDENTIFY TREATMENT (Urgent pre-referral treatments are in bold print) ●       Any general danger sign or ●       Chest indrawing or ●       Stridor in calm child SEVERE PNEUMONIA OR VERY SEVERE DISEASE ●       Give first dose of Cotrimoxazole ●       Refer URGENTLY to hospital ●       Fast breathing PNEUMONIA ●       Give Cotrimoxazole for 5 days. ●       Soothe the throat and relieve the cough with a safe remedy. ●       Advise mother when to return immediately. ●       Follow-up in 2 days. ●       No signs of pneumonia or very severe disease. NO PNEUMONIA: COUGH OR COLD ●       If coughing for more than 21 days, refer for assessment. ●       Soothe the throat and relieve the cough with a safe remedy ●       Advise mother when to return immediately ●       Follow-up in 5 days if not improving.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The most common indirect cause of maternal mortality in our country is:", "options": [{"label": "A", "text": "Hemorrhage", "correct": false}, {"label": "B", "text": "Anemia", "correct": true}, {"label": "C", "text": "Heart disease", "correct": false}, {"label": "D", "text": "Infection", "correct": false}], "correct_answer": "B. Anemia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Anemia The determinants of maternal mortality in INDIA ARE: MEDICAL CAUSES: toxemia of pregnancy, hemorrhage, infection, obstructed labour, unsafe abortion Non-Obstetric causes: anemia (M/C), associated diseases( cardiac, renal, hepatic or metabolic and infectious), malignancy, accidents Social factors: age at childbirth, parity, malnutrition, poverty, illiteracy, lack of maternal services, social customs etc. Hemorrhage is the most common direct cause of maternal mortality in india</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "According to the School health services, All of the following are minimum standards for sanitation of schools and its environment in India except:", "options": [{"label": "A", "text": "Combined doors + windows area = 25 % of floor space area", "correct": false}, {"label": "B", "text": "One urinal for 10 students and one latrine for 25 Students", "correct": true}, {"label": "C", "text": "Classroom should have sufficient natural light preferably from the left", "correct": false}, {"label": "D", "text": "There should be one urinal for 60 students and one latrine for 100 student", "correct": false}], "correct_answer": "B. One urinal for 10 students and one latrine for 25 Students", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>One urinal for 10 students and one latrine for 25 Students Healthful school environment: Suggested minimum standards for sanitation of schools and its environs in India include, Location: Away from noisy surroundings; kept fenced Site: 5 acres for primary schools; 10 acres for higher elementary schools Structure: Exterior walls 10 inches thick and heat resistant Classroom : 1 classroom per 40 students maximum; Per capita space > 10 sq. feet Furniture: Single desks of ‘minus (–) type’ Doors and windows: Doors and windows area > 25% of floor area Color: Inside color of walls should be white Lighting: Natural light from left side Water supply: Safe and potable and continuous supply through taps Lavatory: 1 urinal per 60 students and 1 latrine per 100 students</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In the given Image, a yellow colored zone is between which two curves:", "options": [{"label": "A", "text": "Just Below the 50th percentile for boys", "correct": false}, {"label": "B", "text": "Between the 3rd percentile for girls and 3SD below of reference", "correct": true}, {"label": "C", "text": "Between Reference Standard and 2SD below of reference standard", "correct": false}, {"label": "D", "text": "Between 3rd percentile for girls and 2SD below of reference", "correct": false}], "correct_answer": "B. Between the 3rd percentile for girls and 3SD below of reference", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1687064559614-QTDC013009IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Between the 3rd percentile for girls and 3SD below of reference The given Image is ICDS Growth Chart. ICDS Growth chart has 3 reference curves: Reference standard ( 50th percentile for boys) 2SD below of reference standard ( 3rd percentile for girls) 3SD below reference standard So yellow coloured zone (Underweight Zone) is between 2SD below of reference standard (3rd percentile for girls) and 3SD below reference standard.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The guidelines according to the given Image Initiative include all except", "options": [{"label": "A", "text": "Mothers to initiate breastfeeding within 4 hours of normal delivery", "correct": true}, {"label": "B", "text": "Mothers and infants to be together for 24 hours a day", "correct": false}, {"label": "C", "text": "Giving newborn infants no food or drink other than breast milk", "correct": false}, {"label": "D", "text": "Encouraging breastfeeding on demand", "correct": false}], "correct_answer": "A. Mothers to initiate breastfeeding within 4 hours of normal delivery", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1687064560230-QTDC013010IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Mothers to initiate breastfeeding within 4 hours of normal delivery BFHI is Supported by the major professional medical and nursing Bodies in India. The global BFHI has listed ten steps that the hospital must fulfill. This includes: Have a written Breastfeeding policy that is routinely communicated to all Health care st,:1ff: Train all health care staff in skills necessary to implement this policy; Inform all pregnant women about the benefits and management of breastfeeding; Help mothers initiate breastfeeding within one half-hour of birth; Show mother how to breastfeed and Maintain lactation. Even if they should be separated from Their infants; Give newborn infants no food or drink Other than breast milk, not even sips of water. Unless Medically indicated; Practice rooming-in – that is, allow Mothers and infants to remain together 24 hours a day; Encourage breastfeeding on demand; Provide no artificial teats or pacifiers (dummies or soothers) to breastfeeding infants, and (10) Foster the establishment of breastfeeding support groups and refer mothers to them on discharge from the hospital or clinic.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In Country A, with a Total Population of 100000, the Live Birth of this country is 5000, with an Infant Mortality Rate of 55. No. of children who died between 1-5 years of age are 225. What is the Child Survival Index of this Country A?", "options": [{"label": "A", "text": "105", "correct": false}, {"label": "B", "text": "69.5", "correct": false}, {"label": "C", "text": "15", "correct": false}, {"label": "D", "text": "90", "correct": true}], "correct_answer": "D. 90", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>90 So, Live Birth = 5000 Since, IMR = 55 then No of infants died = (55x5000)/1000 = 275 Given No of Children died between 1-5 yr age = 225 Total no. Of child death Under 5 yr of age = 275+225 = 500 Under 5 Mortality Rate = (500 x 1000) / 5000 = 100 Therefore, Child Survival Index = (1000 – 100)/10 = 90</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A Low Birthweight baby was born in Primary Healthcare Center. He was thin and hypoxic, and his body temperature was also low. Doctors suggested the mother for providing Kangaroo Mother care to the newborn. All are the components of Kangaroo Mother care except:", "options": [{"label": "A", "text": "Skin-to-skin positioning of a baby on the Mother’s chest", "correct": false}, {"label": "B", "text": "Adequate Nutrition through Breast feeding", "correct": false}, {"label": "C", "text": "Ambulatory Care as a result of earlier discharge from Hospital", "correct": false}, {"label": "D", "text": "Approach the cause of Prematurity of Baby", "correct": true}], "correct_answer": "D. Approach the cause of Prematurity of Baby", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Approach the cause of Prematurity of Baby Kangaroo Mother Care include: Skin-to-skin positioning of a baby on the mother

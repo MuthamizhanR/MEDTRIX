@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Psm E&amp;D Part 1, Mission 3.0 (Early Intern Batch)   04 05 2025   2025 05 04</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Psm E&amp;D Part 1, Mission 3.0 (Early Intern Batch)   04 05 2025   2025 05 04</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                75 Questions | 300 Total Marks | 85 min Duration | ~68.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 75 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 85 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 75</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Psm E&amp;D Part 1, Mission 3.0 (Early Intern Batch)   04 05 2025   2025 05 04 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 75</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 75 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A researcher is comparing two international indices: Human Development Index (HDI) and Physical Quality of Life Index (PQLI). Which of the following statements are true regarding these indices? HDI includes income measurement while PQLI does not. PQLI considers gross national income (GNI) as a parameter. HDI uses geometric mean, whereas PQLI uses simple averaging. Both indices incorporate infant mortality rate directly.", "options": [{"label": "A", "text": "Only 1 and 2", "correct": false}, {"label": "B", "text": "Only 1 and 3", "correct": true}, {"label": "C", "text": "Only 2 and 4", "correct": false}, {"label": "D", "text": "Only 3 and 4", "correct": false}], "correct_answer": "B. Only 1 and 3", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Only 1 and 3</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Regarding the Multi-dimensional Poverty Index (MDPI), which of the following statements are incorrect? The MDPI uses 3 dimensions and 10 indicators to assess poverty. A household without access to improved drinking water but within a 20-minute round trip is considered deprived. MDPI considers a child not attending school up to class 8 as educational deprivation. MDPI is heavily dependent on per capita income for scoring.", "options": [{"label": "A", "text": "1 and 3 only", "correct": false}, {"label": "B", "text": "2 and 4 only", "correct": true}, {"label": "C", "text": "1, 2, and 4 only", "correct": false}, {"label": "D", "text": "1 and 4 only", "correct": false}], "correct_answer": "B. 2 and 4 only", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) 2 and 4 only</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-year-old man dies due to a preventable road traffic accident. Health authorities decide to calculate the impact on public health statistics. Which of the following measures would most appropriately capture the premature mortality loss in this case?", "options": [{"label": "A", "text": "Sullivan’s Index", "correct": false}, {"label": "B", "text": "YPLL", "correct": true}, {"label": "C", "text": "HALE", "correct": false}, {"label": "D", "text": "DALYs", "correct": false}], "correct_answer": "B. YPLL", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) YPLL</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following are the characteristics of Sentinel Surveillance. All are correct except:", "options": [{"label": "A", "text": "Helps identify missing cases", "correct": false}, {"label": "B", "text": "Aims to monitor general population routinely", "correct": true}, {"label": "C", "text": "Supplements notified cases", "correct": false}, {"label": "D", "text": "Focuses on a specific clinical sub-population (e.g., STD clinics)", "correct": false}], "correct_answer": "B. Aims to monitor general population routinely", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Aims to monitor general population routinely</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Assertion (A): Disability can occur independently without any impairment if psychological adaptation is sufficient. Reason (R): Disability is always secondary to impairment and restricts normal activities.", "options": [{"label": "A", "text": "Both A and R are true, and R explains A", "correct": false}, {"label": "B", "text": "Both A and R are true, but R does not explain A", "correct": false}, {"label": "C", "text": "A is true but R is false", "correct": false}, {"label": "D", "text": "A is false but R is true", "correct": true}], "correct_answer": "D. A is false but R is true", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) A is false but R is true</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A hospital administrator is reviewing key metrics to evaluate healthcare utilization in a district hospital. Among the following measures, which one is not classified as a direct utilization rate?", "options": [{"label": "A", "text": "Population bed ratio", "correct": true}, {"label": "B", "text": "Bed occupancy rate", "correct": false}, {"label": "C", "text": "Bed turnover ratio", "correct": false}, {"label": "D", "text": "Average length of stay", "correct": false}], "correct_answer": "A. Population bed ratio", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Population bed ratio</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A community health program is implementing strategies aimed at preventing various cancers. As part of the review, which of the following interventions would not be classified as a primary prevention measure?", "options": [{"label": "A", "text": "Breast self-examination", "correct": true}, {"label": "B", "text": "Control of tobacco", "correct": false}, {"label": "C", "text": "Radiation protection", "correct": false}, {"label": "D", "text": "Cancer education", "correct": false}], "correct_answer": "A. Breast self-examination", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Breast self-examination</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A hospital infection control committee is updating its airborne isolation protocols. For which of the following diseases is airborne isolation specifically recommended to prevent transmission?", "options": [{"label": "A", "text": "Measles", "correct": true}, {"label": "B", "text": "NIPAH", "correct": false}, {"label": "C", "text": "Aseptic meningitis", "correct": false}, {"label": "D", "text": "Rabies", "correct": false}], "correct_answer": "A. Measles", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Measles</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An epidemiologist is analyzing an outbreak linked to a contaminated water supply, where new cases continued to appear steadily over several weeks. Which of the following features is most likely characteristic of a continuous common source epidemic?", "options": [{"label": "A", "text": "High secondary attack rate", "correct": false}, {"label": "B", "text": "Duration more than one incubation period", "correct": true}, {"label": "C", "text": "Rapid rise and fall of epidemic curve", "correct": false}, {"label": "D", "text": "Brief and simultaneous exposure", "correct": false}], "correct_answer": "B. Duration more than one incubation period", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Duration more than one incubation period</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In the classic iceberg analogy for disease burden, if the submerged portion grows disproportionately larger than the tip, which of the following public health strategies becomes critically important?", "options": [{"label": "A", "text": "Exclusive treatment of clinically diagnosed patients", "correct": false}, {"label": "B", "text": "Mass diagnosis of symptomatic individuals", "correct": false}, {"label": "C", "text": "Community-wide screening programs", "correct": true}, {"label": "D", "text": "Restricting access to healthcare facilities", "correct": false}], "correct_answer": "C. Community-wide screening programs", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Community-wide screening programs</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements regarding the Evidence Pyramid are true? Meta-analyses are considered higher in clinical relevance than individual randomized controlled trials. Cohort studies rank higher than case-control studies because they better establish temporal relationships. Systematic reviews are considered unfiltered information sources. Ideas and editorials rank above case reports in the evidence hierarchy", "options": [{"label": "A", "text": "1 and 2 only", "correct": true}, {"label": "B", "text": "2 and 3 only", "correct": false}, {"label": "C", "text": "1, 2, and 4 only", "correct": false}, {"label": "D", "text": "1, 2, and 3 only", "correct": false}], "correct_answer": "A. 1 and 2 only", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) 1 and 2 only</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In the region of Medora (population: 5,00,000 at mid-year), a new viral outbreak called \"Virogen-X\" occurs over one year. Data collected: Total deaths in Medora during the year: 3,500 Deaths specifically due to Virogen-X: 700 Total number of Virogen-X confirmed cases during the year: 4,000 Number of total new Virogen-X cases who survived: 3,300 Number of Virogen-X patients still alive at 5-year follow-up: 2,970 Which indicator gives the best estimate of the relative burden of Virogen-X deaths compared to all deaths?", "options": [{"label": "A", "text": "Crude Death Rate", "correct": false}, {"label": "B", "text": "Case Fatality Rate", "correct": false}, {"label": "C", "text": "Proportional Mortality Rate", "correct": true}, {"label": "D", "text": "Specific Death Rate", "correct": false}], "correct_answer": "C. Proportional Mortality Rate", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Proportional Mortality Rate</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements regarding standardization is true?", "options": [{"label": "A", "text": "Direct standardization can be used even without age-specific death rates available.", "correct": false}, {"label": "B", "text": "Indirect standardization adjusts observed deaths using standard ASDRs.", "correct": true}, {"label": "C", "text": "Segi World Population cannot be used unless national data is available.", "correct": false}, {"label": "D", "text": "Standardized Mortality Ratio (SMR) is used in direct standardization.", "correct": false}], "correct_answer": "B. Indirect standardization adjusts observed deaths using standard ASDRs.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Indirect standardization adjusts observed deaths using standard ASDRs</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a village of 5,000 people: 250 residents developed dengue fever during the monsoon. At the peak of the epidemic, 400 residents were simultaneously sick with dengue (old + new cases). What is the attack rate and point prevalence at the peak?", "options": [{"label": "A", "text": "Attack rate: 5%, Prevalence: 8%", "correct": true}, {"label": "B", "text": "Attack rate: 8%, Prevalence: 5%", "correct": false}, {"label": "C", "text": "Attack rate: 5%, Prevalence: 10%", "correct": false}, {"label": "D", "text": "Attack rate: 8%, Prevalence: 8%", "correct": false}], "correct_answer": "A. Attack rate: 5%, Prevalence: 8%", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Attack rate: 5%, Prevalence: 8%</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A study showed: RR = 2.5 for obesity and breast cancer AR = 60% PAR = 15% Which statement is incorrect?", "options": [{"label": "A", "text": "Obese women have 2.5 times the risk of breast cancer compared to non-obese.", "correct": false}, {"label": "B", "text": "60% of breast cancer in obese women is attributable to obesity.", "correct": false}, {"label": "C", "text": "Eliminating obesity would prevent 60% of breast cancer cases in the entire population.", "correct": true}, {"label": "D", "text": "15% of all new breast cancer cases in the population would reduce if obesity is eliminated.", "correct": false}], "correct_answer": "C. Eliminating obesity would prevent 60% of breast cancer cases in the entire population.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Eliminating obesity would prevent 60% of breast cancer cases in the entire population</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following advantages are unique to nested case-control studies (compared to traditional case-control)? Stronger internal validity Prospective exposure data available Lower cost than full cohort analysis Better external generalizability", "options": [{"label": "A", "text": "1, 2, and 3 only", "correct": true}, {"label": "B", "text": "2, 3, and 4 only", "correct": false}, {"label": "C", "text": "1 and 4 only", "correct": false}, {"label": "D", "text": "1, 2, 3, and 4", "correct": false}], "correct_answer": "A. 1, 2, and 3 only", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) 1, 2, and 3 only</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A researcher conducts a randomized controlled trial (RCT) for a new vaccine in a single elite hospital with young healthy volunteers. Which is most likely true?", "options": [{"label": "A", "text": "High internal validity but poor external validity", "correct": true}, {"label": "B", "text": "High external validity but poor internal validity", "correct": false}, {"label": "C", "text": "High both internal and external validity", "correct": false}, {"label": "D", "text": "Low both internal and external validity", "correct": false}], "correct_answer": "A. High internal validity but poor external validity", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) High internal validity but poor external validity</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is not a feature of a nested case-control study?", "options": [{"label": "A", "text": "Controls selected from cohort", "correct": false}, {"label": "B", "text": "Exposure data collected after outcome develops", "correct": true}, {"label": "C", "text": "Reduced recall bias", "correct": false}, {"label": "D", "text": "Increased internal validity", "correct": false}], "correct_answer": "B. Exposure data collected after outcome develops", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Exposure data collected after outcome develops</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A public health department reports that cities with higher rates of green space have lower rates of asthma admissions. Based on this finding, a physician concludes that every child living near parks will have lower asthma risk. This conclusion is most affected by which of the following?", "options": [{"label": "A", "text": "Recall bias", "correct": false}, {"label": "B", "text": "Temporal ambiguity", "correct": false}, {"label": "C", "text": "Ecological fallacy", "correct": true}, {"label": "D", "text": "Selection bias", "correct": false}], "correct_answer": "C. Ecological fallacy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Ecological fallacy</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a study examining the relationship between alcohol consumption and liver cirrhosis, the association is found to be much stronger among patients with hepatitis B infection compared to those without it. Which epidemiological concept best explains this?", "options": [{"label": "A", "text": "Confounding", "correct": false}, {"label": "B", "text": "Effect modification", "correct": true}, {"label": "C", "text": "Recall bias", "correct": false}, {"label": "D", "text": "Selection bias", "correct": false}], "correct_answer": "B. Effect modification", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Effect modification</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a large study investigating the relationship between aspirin use and gastric cancer, stratification for smoking is attempted, but the strata are too small for analysis. Which method would better control for multiple confounders simultaneously in this case?", "options": [{"label": "A", "text": "Restriction", "correct": false}, {"label": "B", "text": "Matching", "correct": false}, {"label": "C", "text": "Multivariate regression analysis", "correct": true}, {"label": "D", "text": "Randomization", "correct": false}], "correct_answer": "C. Multivariate regression analysis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Multivariate regression analysis</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "You are reviewing a meta-analysis evaluating aspirin use for primary prevention of cardiovascular disease. The authors note substantial variation among included studies regarding aspirin dosage, patient ages, and outcome definitions. Which limitation best describes this concern?", "options": [{"label": "A", "text": "Garbage in, garbage out (GIGO)", "correct": false}, {"label": "B", "text": "Publication bias", "correct": false}, {"label": "C", "text": "Apples and oranges effect", "correct": true}, {"label": "D", "text": "Recall bias", "correct": false}], "correct_answer": "C. Apples and oranges effect", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Apples and oranges effect</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements are true regarding specificity in Hill’s criteria? It implies a single cause leads to a single effect. It is the strongest proof of causal association. It is difficult to establish because diseases often have multiple causes. Specificity is more critical for infectious diseases than for multifactorial diseases.", "options": [{"label": "A", "text": "1 and 2 only", "correct": false}, {"label": "B", "text": "1, 3, and 4 only", "correct": true}, {"label": "C", "text": "2, 3, and 4 only", "correct": false}, {"label": "D", "text": "1, 2, 3, and 4", "correct": false}], "correct_answer": "B. 1, 3, and 4 only", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) 1, 3, and 4 only</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements about serial interval is correct?", "options": [{"label": "A", "text": "Serial interval is longer than generation time in most cases.", "correct": false}, {"label": "B", "text": "Serial interval provides an indirect measure of incubation period in primary cases.", "correct": true}, {"label": "C", "text": "Serial interval measures attack rate among susceptible contacts.", "correct": false}, {"label": "D", "text": "Serial interval applies only in non-communicable diseases.", "correct": false}], "correct_answer": "B. Serial interval provides an indirect measure of incubation period in primary cases.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Serial interval provides an indirect measure of incubation period in primary cases</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements regarding contraindications to vaccination is true?", "options": [{"label": "A", "text": "Typhoid vaccines are safe to administer during febrile illnesses.", "correct": false}, {"label": "B", "text": "Yellow fever vaccine is contraindicated in infants <6 months of age only.", "correct": false}, {"label": "C", "text": "Pneumococcal vaccine is contraindicated in children <1 year.", "correct": true}, {"label": "D", "text": "Pertussis vaccine is contraindicated in epilepsy controlled by medications.", "correct": false}], "correct_answer": "C. Pneumococcal vaccine is contraindicated in children <1 year.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Pneumococcal vaccine is contraindicated in children <1 year.</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28-year-old woman receives the seasonal influenza vaccine. She develops mild swelling and tenderness at the injection site. Which adjuvant, present in some influenza vaccines, is most likely responsible for this local inflammatory reaction?", "options": [{"label": "A", "text": "Aluminium hydroxide", "correct": false}, {"label": "B", "text": "Squalene-based MF59", "correct": true}, {"label": "C", "text": "Phospholipids and Cholesterol (Virosomes)", "correct": false}, {"label": "D", "text": "MPL (Monophosphoryl lipid A)", "correct": false}], "correct_answer": "B. Squalene-based MF59", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Squalene-based MF59</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements are true? Vaccine-associated paralytic poliomyelitis (VAPP) is most commonly associated with killed polio vaccine. Both Cholera vaccine and Yellow fever vaccine can be given together without contraindications.", "options": [{"label": "A", "text": "Only statement 1 is true", "correct": false}, {"label": "B", "text": "Only statement 2 is true", "correct": false}, {"label": "C", "text": "Both statements are true", "correct": false}, {"label": "D", "text": "Both statements are false", "correct": true}], "correct_answer": "D. Both statements are false", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Both statements are false</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following vaccines is not allowed to be reused even if expiry date, cold chain, VVM, and aseptic technique are maintained?", "options": [{"label": "A", "text": "OPV", "correct": false}, {"label": "B", "text": "Pentavalent", "correct": false}, {"label": "C", "text": "Hepatitis B", "correct": false}, {"label": "D", "text": "Measles", "correct": true}], "correct_answer": "D. Measles", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Measles</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following vaccines cannot be administered at the 10-week immunization visit according to the NIS 2023–24?", "options": [{"label": "A", "text": "DPT-2", "correct": false}, {"label": "B", "text": "OPV-2", "correct": false}, {"label": "C", "text": "Hep B-2", "correct": false}, {"label": "D", "text": "JE Live-1", "correct": true}], "correct_answer": "D. JE Live-1", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) JE Live-1</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A pilot project introduces the Mycobacterium indicus pranii (MIP) vaccine to high-risk individuals in Bihar. What is the key additional intervention necessary during MIP vaccine administration?", "options": [{"label": "A", "text": "Simultaneous BCG vaccination", "correct": false}, {"label": "B", "text": "Co-administration of Rifampicin", "correct": true}, {"label": "C", "text": "Screening for Mantoux positivity", "correct": false}, {"label": "D", "text": "Booster dose after 3 months", "correct": false}], "correct_answer": "B. Co-administration of Rifampicin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Co-administration of Rifampicin</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A new rapid test for influenza has a likelihood ratio for a positive test result (LR⁺) of 12 and likelihood ratio for a negative test result (LR⁻) of 0.08. Which of the following is the best conclusion about the performance of this test?", "options": [{"label": "A", "text": "It is useful to confirm disease only", "correct": false}, {"label": "B", "text": "It is useful to rule out disease only", "correct": false}, {"label": "C", "text": "It is useful for both confirming and ruling out disease", "correct": true}, {"label": "D", "text": "It is poor for both confirming and ruling out disease", "correct": false}], "correct_answer": "C. It is useful for both confirming and ruling out disease", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) It is useful for both confirming and ruling out disease</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Match the following tools with the appropriate analytical property: Which of the following sets correctly matches each tool to its primary purpose?", "options": [{"label": "A", "text": "1→C, 2→A, 3→Bm 4→D", "correct": true}, {"label": "B", "text": "1→B, 2→D, 3→A, 4→C", "correct": false}, {"label": "C", "text": "1→D, 2→C, 3→A, 4→B", "correct": false}, {"label": "D", "text": "1→A, 2→B, 3→C, 4→D", "correct": false}], "correct_answer": "A. 1→C, 2→A, 3→Bm 4→D", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_MUGzAGR.png"], "explanation_images": [], "explanation": "<p><strong>Ans. A) 1→C, 2→A, 3→B, 4→D</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following best describes the purpose of the log-rank test when comparing two Kaplan-Meier survival curves?", "options": [{"label": "A", "text": "Adjusts for confounding variables between groups", "correct": false}, {"label": "B", "text": "Tests the difference in median survival times", "correct": false}, {"label": "C", "text": "Compares the overall survival experience between groups", "correct": true}, {"label": "D", "text": "Measures the proportional hazards ratio directly", "correct": false}], "correct_answer": "C. Compares the overall survival experience between groups", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Compares the overall survival experience between groups</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A diagnostic test for pancreatic cancer has an area under the ROC curve (AUC) of 0.92. Which of the following most accurately describes this AUC value?", "options": [{"label": "A", "text": "The test has poor diagnostic ability", "correct": false}, {"label": "B", "text": "The test is equivalent to random guessing", "correct": false}, {"label": "C", "text": "The test has excellent ability to distinguish disease vs no disease", "correct": true}, {"label": "D", "text": "The test sensitivity is equal to its specificity", "correct": false}], "correct_answer": "C. The test has excellent ability to distinguish disease vs no disease", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) The test has excellent ability to distinguish disease vs no disease</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A public health department is choosing between four screening tools for community-based screening of a highly transmissible disease. Budget constraints allow use of only one. Based on the ROC curve, which test would most appropriately balance high sensitivity with minimal false positives for use in mass screening?", "options": [{"label": "A", "text": "Method 1", "correct": false}, {"label": "B", "text": "Method 2", "correct": false}, {"label": "C", "text": "Method 3", "correct": false}, {"label": "D", "text": "Method 4", "correct": true}], "correct_answer": "D. Method 4", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_97Gu2U2.png"], "explanation_images": [], "explanation": "<p><strong>Ans. D) Method 4</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the best interpretation of the data presented in the Kaplan-Meier plot, as shown below?", "options": [{"label": "A", "text": "Treatment A has a significantly longer median survival than Treatment B", "correct": false}, {"label": "B", "text": "Treatment B has a significantly longer median survival than Treatment A", "correct": true}, {"label": "C", "text": "There is no statistically significant difference between the treatments", "correct": false}, {"label": "D", "text": "The two treatments have equal survival probabilities at all time points", "correct": false}], "correct_answer": "B. Treatment B has a significantly longer median survival than Treatment A", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_ajIOVtJ.png"], "explanation_images": [], "explanation": "<p><strong>Ans. B) Treatment B has a significantly longer median survival than Treatment A</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 5-year-old presents with paroxysms of cough and inspiratory whoop. A sibling had similar symptoms 2 weeks ago. You suspect pertussis. At what stage is the affected sibling most likely to still be contagious?", "options": [{"label": "A", "text": "Until 24 hours after symptom onset", "correct": false}, {"label": "B", "text": "Until 3 weeks after paroxysmal stage begins", "correct": true}, {"label": "C", "text": "Until rash resolves", "correct": false}, {"label": "D", "text": "Pertussis is not contagious after catarrhal stage", "correct": false}], "correct_answer": "B. Until 3 weeks after paroxysmal stage begins", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Until 3 weeks after paroxysmal stage begins</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements about the period of communicability of infectious diseases is/are true? Meningococcal infection ceases to be communicable once nasal/throat secretions are absent. Rubella and Measles share the exact same communicable window relative to rash. Hepatitis B remains communicable as long as HBsAg is detectable. Tetanus is communicable in the early stage of wound infection.", "options": [{"label": "A", "text": "1 and 3 only", "correct": false}, {"label": "B", "text": "2 and 4 only", "correct": false}, {"label": "C", "text": "1, 2 and 3 only", "correct": false}, {"label": "D", "text": "All except 4", "correct": true}], "correct_answer": "D. All except 4", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) All except 4</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following disease pairs have the longest difference in incubation period ranges?", "options": [{"label": "A", "text": "Poliomyelitis vs Hepatitis C", "correct": false}, {"label": "B", "text": "Trachoma vs SARS", "correct": false}, {"label": "C", "text": "Ascaris vs Hookworm", "correct": false}, {"label": "D", "text": "HIV vs Scrub typhus", "correct": true}], "correct_answer": "D. HIV vs Scrub typhus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) HIV vs Scrub typhus</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 3-month-old infant is brought to the clinic with a 3-day history of cough. The mother reports that the baby is feeding normally and has no history of fever. On examination, the respiratory rate is 58/min, there is no chest indrawing, and no danger signs are noted. A bronchodilator trial was given but did not significantly reduce the respiratory rate. Which of the following is the most appropriate next step in management?", "options": [{"label": "A", "text": "Reassure the mother and advise home care", "correct": false}, {"label": "B", "text": "Start oral amoxicillin and review after 3 days", "correct": true}, {"label": "C", "text": "Refer urgently to a tertiary hospital", "correct": false}, {"label": "D", "text": "Observe the child for 1 hour and repeat RR before decision", "correct": false}], "correct_answer": "B. Start oral amoxicillin and review after 3 days", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Start oral amoxicillin and review after 3 days</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 40-year-old man previously diagnosed with hepatitis B is found to have the following serologic profile at his follow-up: HBsAg: Negative Anti-HBs: Positive Anti-HBc (IgG): Positive HBeAg: Negative Anti-HBe: Positive Which of the following best describes this patient

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Medicine Cnsendo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Medicine Cnsendo</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                20 Questions | 80 Total Marks | 30 min Duration | ~90.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 20 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 30 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 20</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Medicine Cnsendo - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 20</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 20 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A previously healthy 75-year-old man experienced a TIA 2 weeks ago. On physical examination, he is found to have a right carotid bruit. Duplex ultrasound demonstrates a 75% stenosis of the right carotid artery. Which of the following is the best therapy?", "options": [{"label": "A", "text": "Aspirin plus clopidogrel", "correct": false}, {"label": "B", "text": "Warfarin (Coumadin)", "correct": false}, {"label": "C", "text": "Carotid endarterectomy", "correct": true}, {"label": "D", "text": "Carotid artery stenting", "correct": false}], "correct_answer": "C. Carotid endarterectomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "One year ago, a 24-year-old woman had an episode of diplopia of 2 weeks’ duration. The symptoms resolved completely. Currently, she complains of left arm weakness but no headache. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Recurrent transient ischemic attacks", "correct": false}, {"label": "B", "text": "Subarachnoid hemorrhage", "correct": false}, {"label": "C", "text": "Complicated migraine", "correct": false}, {"label": "D", "text": "Multiple sclerosis", "correct": true}], "correct_answer": "D. Multiple sclerosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 78-year-old woman is diagnosed with early Alzheimer disease. Which of the following agents is most likely to help with the cognitive function?", "options": [{"label": "A", "text": "Haloperidol", "correct": false}, {"label": "B", "text": "Estrogen replacement therapy", "correct": false}, {"label": "C", "text": "Donepezil", "correct": true}, {"label": "D", "text": "High-dose vitamin B12 injections", "correct": false}], "correct_answer": "C. Donepezil", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old man is noted by his family members to be forgetful and become disoriented. He has difficulty making it to the bathroom in time and complains of feeling as though “he is walking like he was drunk.” Which of the following therapies is most likely to improve his condition?", "options": [{"label": "A", "text": "Intravenous penicillin for 21 days", "correct": false}, {"label": "B", "text": "Rivastigmine", "correct": false}, {"label": "C", "text": "Treatment with fluoxetine for 9 to 12 months", "correct": false}, {"label": "D", "text": "Ventriculoperitoneal shunt", "correct": true}], "correct_answer": "D. Ventriculoperitoneal shunt", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 74-year-old man was noted to have excellent cognitive and motor skill 12 months ago. His wife noted that 6 months ago his function deteriorated noticeably, and 2 months ago another level of deterioration was noted. Which of the following is most likely to reveal the etiology of his functional decline?", "options": [{"label": "A", "text": "HIV antibody test", "correct": false}, {"label": "B", "text": "Magnetic resonance imaging of the brain", "correct": true}, {"label": "C", "text": "Cerebrospinal fluid (CSF) Venereal Disease Research Laboratory (VDRL) test", "correct": false}, {"label": "D", "text": "Serum thyroid-stimulating hormone", "correct": false}], "correct_answer": "B. Magnetic resonance imaging of the brain", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 24-year-old man develops seizures following an emergent splenectomy after a car accident. His serum sodium level is initially 116 mEq/ L and is corrected to 120 mEq/ L over the next 3 hours with hypertonic saline. Which of the following factors most likely led to his hyponatremia?", "options": [{"label": "A", "text": "Elevation of serum vasopressin", "correct": true}, {"label": "B", "text": "Administration of hypertonic solutions", "correct": false}, {"label": "C", "text": "Volume depletion", "correct": false}, {"label": "D", "text": "Seizure-induced hyponatremia", "correct": false}], "correct_answer": "A. Elevation of serum vasopressin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An 83-year-old woman comes to your clinic complaining of a headache and mild confusion. Her medical history is remarkable only for hypertension, which is well controlled with hydrochlorothiazide. Her examination and laboratory tests show no signs of infection, but her serum sodium level is 119 mEq/L, and plasma osmolarity is 245 mOsm/kg. She appears to be clinically hypovolemic. Which of the following is the best initial therapy?", "options": [{"label": "A", "text": "Fluid restriction", "correct": false}, {"label": "B", "text": "Infusion of 0.9% saline", "correct": true}, {"label": "C", "text": "Infusion of 3% saline", "correct": false}, {"label": "D", "text": "Infusion of 3% saline with furosemide", "correct": false}], "correct_answer": "B. Infusion of 0.9% saline", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 42-year-old woman presents to your clinic for her annual physical examination. On examination, you note neck fullness. When you palpate her thyroid, it is enlarged, smooth, rubbery, and nontender. The patient is asymptomatic. Yo u sen d h er for t h yr oid fu n ct ion t est in g: her T4 , free T4 , and T3 are normal, but her TSH is slightly elevated. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Iodine deficiency", "correct": false}, {"label": "B", "text": "Thyroid cancer", "correct": false}, {"label": "C", "text": "Hashimoto thyroiditis", "correct": true}, {"label": "D", "text": "Graves disease", "correct": false}], "correct_answer": "C. Hashimoto thyroiditis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 42-year-old woman who developed gestational diabetes with her last pregnancy which was 10 years ago, is being screened for type 2 diabetes. Which of the following screening methods has the highest sensitivity?", "options": [{"label": "A", "text": "Fasting serum glucose", "correct": false}, {"label": "B", "text": "2-Hour glucose tolerance test", "correct": true}, {"label": "C", "text": "Hemoglobin A1 C", "correct": false}, {"label": "D", "text": "Random glucose", "correct": false}], "correct_answer": "B. 2-Hour glucose tolerance test", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old obese Hispanic woman presents for follow-up of her diabetes. She currently takes metformin 1000 mg twice per day, and her fasting morning glucose runs approximately 170 to 200 mg/ dL. Her last HbA1C was 7.9. She states that she conscientiously follows her diet and that she walks 30 minutes to 1 hour daily. Which of the following is the best next step in her care?", "options": [{"label": "A", "text": "Refer to an endocrinologist for an insulin pump.", "correct": false}, {"label": "B", "text": "Stop metformin and start on glimepiride.", "correct": false}, {"label": "C", "text": "Add once-a-day injection of insulin glargine (Lantus).", "correct": true}, {"label": "D", "text": "Hospitalize her urgently.", "correct": false}], "correct_answer": "C. Add once-a-day injection of insulin glargine (Lantus).", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An 18-year-old man is noted to be in diabetic ketoacidosis with pH 7.20 and serum glucose level 400 mg/dL. Which of the following is the most accurate statement regarding this patient’s potassium status?", "options": [{"label": "A", "text": "Likely to have a potassium level less than 3 mEq/L.", "correct": false}, {"label": "B", "text": "Likely to have a potassium level more than 5 mEq/ L.", "correct": false}, {"label": "C", "text": "Likely to have a total body potassium deficit regardless of the serum level.", "correct": true}, {"label": "D", "text": "Serum level is likely to increase with correction of the acidosis.", "correct": false}], "correct_answer": "C. Likely to have a total body potassium deficit regardless of the serum level.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 59-year-old man with a long history of diabetes with chronic renal insufficiency due to diabetic nephropathy is seen in clinic for routine laboratory work. He is asymptomatic, but his glucose is elevated at 258 mg/ dL, and his other chemistries are as follows: sodium 135 mEq/ L, potassium 5.4 mEq/ L, chloride 108 mEq/ L, and bicarbonate 18 mEq/ L. His creatinine is stable at 2.1 mg/dL. What is the most likely cause of his acidosis?", "options": [{"label": "A", "text": "Diabetic ketoacidosis", "correct": false}, {"label": "B", "text": "Lactic acidosis", "correct": false}, {"label": "C", "text": "Type 4 renal tubular acidosis", "correct": true}, {"label": "D", "text": "Accidental salicylate overdose", "correct": false}], "correct_answer": "C. Type 4 renal tubular acidosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 44-year-old woman is noted to be nervous and has heat intolerance. Her thyroid gland is diffusely enlarged, nontender, with an audible bruit. Her TSH level is very low. Which of the following is the most likely etiology?", "options": [{"label": "A", "text": "Lymphocytic thyroiditis", "correct": false}, {"label": "B", "text": "Hashimoto thyroiditis", "correct": false}, {"label": "C", "text": "Graves disease", "correct": true}, {"label": "D", "text": "Multinodular toxic goiter", "correct": false}], "correct_answer": "C. Graves disease", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 58-year-old woman is noted to have Graves disease and has a small goiter. Which of the following is the best therapy?", "options": [{"label": "A", "text": "Long-term propranolol", "correct": false}, {"label": "B", "text": "Lifelong oral propylthiouracil (PTU)", "correct": false}, {"label": "C", "text": "Radioactive iodine ablation", "correct": true}, {"label": "D", "text": "Surgical thyroidectomy", "correct": false}], "correct_answer": "C. Radioactive iodine ablation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 25-year-old man is brought to the emergency department after sustaining a head injury from a bike accident. He was not wearing a helmet at the time of the incident. Initially, he was conscious but later lost consciousness. CT shows a middle meningeal artery bleed. Upon further assessment, the patient was unconscious, began posturing, and eventually slipped into a coma. Which of the following conditions is characterized by a lucid interval followed by deterioration in consciousness?", "options": [{"label": "A", "text": "Meningitis", "correct": false}, {"label": "B", "text": "Subdural hemorrhage (SDH)", "correct": false}, {"label": "C", "text": "Extradural hemorrhage (EDH)", "correct": true}, {"label": "D", "text": "Cerebral contusion", "correct": false}], "correct_answer": "C. Extradural hemorrhage (EDH)", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old banker presents to the emergency department with sudden onset speech difficulties during a sales meeting. Upon examination, he is found to speak fluently but lacks comprehension or understanding of his speech. Which blood vessel is most likely involved in this patient

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Metabolic Disorders</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Metabolic Disorders</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                17 Questions | 17 Total Marks | 27 min Duration | ~95.29 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 17 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 27 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 17</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Metabolic Disorders - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 17</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 17 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A neonate presents with seizures 72 hours after birth. The neonate is jittery, hyper-alert and has a high-pitched cry. The pediatrician on duty suspects hypoglycemia as the underlying cause of seizures and a blood sugar sample is promptly sent to the lab for testing. Neonatal hypoglycemia will be confirmed if his blood sugar level will be less than.", "options": [{"label": "A", "text": "60mg/dl", "correct": false}, {"label": "B", "text": "55mg/dl", "correct": false}, {"label": "C", "text": "45mg/dl", "correct": false}, {"label": "D", "text": "40mg/dl", "correct": true}], "correct_answer": "D. 40mg/dl", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>40mg/dl Neonatal hypoglycemia is a common metabolic disorder , particularly common in preterms, IUGR babies, infants of diabetic mothers and sick babies.</p>\n<p><strong>Highyeild:</strong></p><p>Hypoglycemia in neonates is defined as a blood sugar less than 40 mg/dl (or plasma glucose less than 45 mg/dl). Screening for blood sugar is mandatory in all high-risk neonates (enumerated above) as neonatal hypoglycemia is often asymptomatic.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the maximum glucose infusion rate that can be given to a neonate through the peripheral IV line?", "options": [{"label": "A", "text": "8mg/kg/min", "correct": false}, {"label": "B", "text": "10mg/kg/min", "correct": false}, {"label": "C", "text": "12 mg/kg/min", "correct": true}, {"label": "D", "text": "14 mg/kg /min", "correct": false}], "correct_answer": "C. 12 mg/kg/min", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>12 mg/kg/min Hypoglycemic episodes in neonates can be managed by starting glucose infusion at 6 mg/kg/min and increasing the glucose infusion rate by 2 mg/kg/min until a maximum of 12 mg/kg/min is reached. In case neonates require a higher glucose infusion rate (above 12 mg/kg/min), a central IV line should be used.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the most commonly cited underlying cause for the phenomenon shown in the picture below", "options": [{"label": "A", "text": "Early-onset asphyxia", "correct": false}, {"label": "B", "text": "Temporary imbalance in the autonomic regulatory system", "correct": true}, {"label": "C", "text": "Temporary low surface temperature immediately after birth", "correct": false}, {"label": "D", "text": "Septicemia", "correct": false}], "correct_answer": "B. Temporary imbalance in the autonomic regulatory system", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1682883391129-QTDK018003IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Temporary imbalance in the autonomic regulatory system This phenomenon represents a Harlequin colour It presents as a well-demarcated colour change, with one half of the body displaying erythema and the other half pallor.</p>\n<p><strong>Highyeild:</strong></p><p>The presence of this phenomenon is not always pathological, and it may be transiently noted in about 10% of healthy newborns. It has also been reported with prematurity , Low Birth Weight LBW, hypoxia, and intracranial injury. Although the precise cause remains unknown, it may be related to a temporary imbalance in the tone of cutaneous blood vessels secondary to hypothalamic immaturity.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of these neonatal reflexes Appears after birth?", "options": [{"label": "A", "text": "Asymmetric tonic neck reflex (ATNR)", "correct": false}, {"label": "B", "text": "Moro’s reflex", "correct": false}, {"label": "C", "text": "Grasp reflex", "correct": false}, {"label": "D", "text": "Symmetric tonic neck reflex", "correct": true}], "correct_answer": "D. Symmetric tonic neck reflex", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Symmetric tonic neck reflex Neonatal reflexes that do not appear in the intrauterine period and therefore are not present at birth are not called primitive reflexes. Two important neonatal reflexes which appear after birth and therefore are not primitive are the symmetric tonic neck reflex and parachute reflex.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is the most common congenital malformation in the baby of a diabetic mother?", "options": [{"label": "A", "text": "Ventricular septal defect(VSD)", "correct": true}, {"label": "B", "text": "Myelomeningocele", "correct": false}, {"label": "C", "text": "Anencephaly", "correct": false}, {"label": "D", "text": "Sacral agenesis", "correct": false}], "correct_answer": "A. Ventricular septal defect(VSD)", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ventricular septal defect(VSD) Congenital heart defects are common in infants of diabetic mothers; in fact, the cardiovascular system is the most common organ system affected in infants of diabetic mothers. Although the relative prevalence of different congenital heart defects in these children is debatable, the most common Congenital heart defect (CHD) in them is believed to be ventricular septal defec t (VSD); the most specific is believed to be Transposition of the great arteries (TGA), and the least common is Autism spectrum disorder (ASD). Additionally, cardiomyopathy with ventricular hypertrophy and outflow tract obstruction is also common and seen in up to 30% of infants with diabetic mothers.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which disorder in the mother, among these leads to delayed fetal lung maturity?", "options": [{"label": "A", "text": "Heart diseases", "correct": false}, {"label": "B", "text": "Diabetes", "correct": true}, {"label": "C", "text": "Thalassemia minor", "correct": false}, {"label": "D", "text": "Epilepsy", "correct": false}], "correct_answer": "B. Diabetes", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Diabetes Poorly-controlled diabetes in pregnancy may delay fetal lung maturity, although reports indicate that diabetic women with good glycemic control have fetal lung maturation at the same age as those non-diabetic women. The precise mechanism remains unknown however abnormalities in the pulmonary surfactant system seem to be involved. Metabolic disruption in maternal diabetes is associated with major neonatal complications such as immature lung tissue and respiratory distress syndrome.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Cephalhematoma usually disappears by", "options": [{"label": "A", "text": "3-5 months", "correct": false}, {"label": "B", "text": "2-5 weeks", "correct": false}, {"label": "C", "text": "1-3 weeks", "correct": false}, {"label": "D", "text": "5-7 weeks", "correct": true}], "correct_answer": "D. 5-7 weeks", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>5-7 weeks Cephalhematoma is blood collection under the scalp (primarily between the periosteum and the bone); its boundaries are defined by the underlying bone , it is confined to the area on top of one of the cranial bones and does not cross the midline or the suture lines. The swelling of a cephalohematoma appears later than caput secundum, and it persists for a prolonged period of time (up to 5-7 weeks). Characteristic Caput succedaneum Cephalhematoma Incidence Common Less common Location Subcutaneous plane Between skull and periosteum (commonly seen over parietal bones) Time of presentation Maximum size and firmness at birth Increasing size for 12-24 hours and then stable Time to resolution Within 2-3 days 3-6 weeks Characteristic finding Diffuse, crosses suture line Does not cross suture line</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In all of the following indications exchange transfusion may be considered except", "options": [{"label": "A", "text": "Serum bilirubin 22 mg/dl in a 36-hour old term neonate", "correct": false}, {"label": "B", "text": "Cord hemoglobin < 10 gm/dl", "correct": false}, {"label": "C", "text": "Cord bilirubin < 5 mg/dl", "correct": true}, {"label": "D", "text": "Serum bilirubin 18 mg/dl in a 1.2 kg preterm neonate at 48 hours", "correct": false}], "correct_answer": "C. Cord bilirubin < 5 mg/dl", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cord bilirubin < 5 mg/dl Indications for Double Volume Exchange Transfusion (DVET) at birth are cord bilirubin > 5 mg/dl (and not < 5 mg/dl) and cord hemoglobin < 10 gm/dl. DVET should be performed (DVET) if the total serum bilirubin(TSB) levels reach the age-specific cut-off for exchange transfusion or the infant shows signs of bilirubin encephalopathy.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Not a correct sign of good attachment of the baby to the breast", "options": [{"label": "A", "text": "Baby’s mouth wide open", "correct": false}, {"label": "B", "text": "Lower areola more visible", "correct": true}, {"label": "C", "text": "Baby’s lower lip everted", "correct": false}, {"label": "D", "text": "Bab’s chin touching the breast", "correct": false}], "correct_answer": "B. Lower areola more visible", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Lower areola more visible The 4 important signs of a baby’s attachment to the breast are: More of the areola is visible above the newborn’s upper lip than below the lower lip. The Newborn’s mouth is wide open Newborn’s lower lip everted. A Newborn’s chin is touching or almost touching the breast.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 1.5 kg neonate born at 32 weeks by Lower segment cesarean section (LSCS) has moderate respiratory difficulty with a respiratory rate of 66/minute. There are minimal chest retractions. Which of these is the most appropriate next line of management?", "options": [{"label": "A", "text": "Mechanical ventilation", "correct": false}, {"label": "B", "text": "Continuous positive airway pressure (CPAP)", "correct": true}, {"label": "C", "text": "Surfactant by INSURE technique", "correct": false}, {"label": "D", "text": "Warm humidified oxygen", "correct": false}], "correct_answer": "B. Continuous positive airway pressure (CPAP)", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Continuous positive airway pressure (CPAP) Indications for CPAP in a neonate with HMD are mild respiratory distress, paO2 < 50 mmHg, gestational maturity > 30-32 weeks and weight > 1.5 kg. On the other hand, the indication for surfactant administration is severe respiratory distress and gestational maturity < 28 weeks.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Neonate 33 weeks gestation will best be provided feeding with", "options": [{"label": "A", "text": "IV fluids", "correct": false}, {"label": "B", "text": "Orogastric feeds", "correct": false}, {"label": "C", "text": "Spoon/Palidae feeds", "correct": true}, {"label": "D", "text": "Breastfeeding", "correct": false}], "correct_answer": "C. Spoon/Palidae feeds", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Spoon/Palidae feeds Gestational maturity > 34 weeks – Breastfeeding; Gestational maturity 32-34 weeks – Spoon/Palidae feeding Gestational maturity 28-31 weeks – Orogastric/nasogastric feeds Gestational maturity < 28 weeks – IV fluids.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 7-day neonate admitted to the nursery develops signs of neonatal sepsis. Which of these is the most likely source of infection?", "options": [{"label": "A", "text": "Local nursery environment", "correct": true}, {"label": "B", "text": "Umbilical cord", "correct": false}, {"label": "C", "text": "Gastrointestinal tract", "correct": false}, {"label": "D", "text": "Maternal vaginal flora", "correct": false}], "correct_answer": "A. Local nursery environment", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Local nursery environment Neonatal sepsis is a bloodstream infection in a neonate. Early-onset sepsis refers to sepsis in neonates at or before 72 hours of life, and late-onset sepsis is defined as sepsis occurring at or after 72 hours of life.</p>\n<p><strong>Highyeild:</strong></p><p>Early-onset sepsis results from the transmission of pathogens from the female genitourinary system to the fetus/newborn, main organisms including Group B streptococcus , Escherichia coli, coagulase-negative Staphylococcus, and Listeria monocytogenes. Late-onset sepsis usually results from the transmission of pathogens from the environment after delivery, Coagulase-negative staphylococcal species being the commonest cause accounting for > 50% of cases.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a child of 9 months, the persistence of which neonatal reflex is most likely abnormal?", "options": [{"label": "A", "text": "Parachute reflex", "correct": false}, {"label": "B", "text": "Symmetric tonic neck reflex", "correct": false}, {"label": "C", "text": "Asymmetric tonic neck reflex (ATNR)", "correct": true}, {"label": "D", "text": "Persistence of all of these is abnormal", "correct": false}], "correct_answer": "C. Asymmetric tonic neck reflex (ATNR)", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Asymmetric tonic neck reflex (ATNR) Asymmetric tonic neck reflex (ATNR) should disappear by 5-6 months symmetric tonic neck reflex disappears by 8-9 months; parachute reflex persists throughout life. Therefore in a 9-month-old child, the persistence of Asymmetric tonic neck reflex (ATNR) is definitely abnormal.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Respiratory distress of hyaline membrane disease most commonly appears", "options": [{"label": "A", "text": "In the first 6 hours of birth", "correct": true}, {"label": "B", "text": "12-24 hours of birth", "correct": false}, {"label": "C", "text": "24-48 hours after birth", "correct": false}, {"label": "D", "text": "> 48 hours of birth", "correct": false}], "correct_answer": "A. In the first 6 hours of birth", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>In the first 6 hours of birth Hyaline membrane disease (HMD) is a common cause of respiratory distress in the premature infants ; however, it is also seen in infants whose mothers have diabetes during pregnancy.</p>\n<p><strong>Highyeild:</strong></p><p>The characteristic presentation of (HMD) Hyaline membrane diseases is respiratory distress starting within a few hours of birth (usually within 6 hours of birth) associated with tachypnea, nasal flaring, grunting, and subcostal, intercostal, and/or suprasternal retractions.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The intravenous dose of epinephrine (1:10000) recommended in neonatal resuscitation is", "options": [{"label": "A", "text": "0.05-0.1 ml/kg", "correct": false}, {"label": "B", "text": "0.05-0.1 mg/kg", "correct": false}, {"label": "C", "text": "0.1-0.3 ml/kg", "correct": true}, {"label": "D", "text": "0.1-0.3 mg/kg", "correct": false}], "correct_answer": "C. 0.1-0.3 ml/kg", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>0.1-0.3 ml/kg For neonatal resuscitation, epinephrine (1:10000) dilution should be used. The IV dose is 0.1-0.3 ml/kg or 0.01-0.03 mg/kg. The dose through the endotracheal is 0.5-1 ml/kg or 0.05-0.1 mg/kg.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is unlikely to lead to Transient tachypnea of the newborn(TTNB)", "options": [{"label": "A", "text": "Infants of diabetic mother", "correct": false}, {"label": "B", "text": "Precipitous delivery", "correct": false}, {"label": "C", "text": "Cesarean section", "correct": false}, {"label": "D", "text": "Mother with a heart defect", "correct": true}], "correct_answer": "D. Mother with a heart defect", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Mother with a heart defect TTNB is a frequent cause of early respiratory distress in term and late-preterm infants resulting from impaired fetal lung fluid clearance. Usually, the fetal lung is filled with fluid however late in the gestational period (immediately before birth) the chloride and fluid-secreting channels in the lung epithelium are reversed so that fluid absorption predominates and fluid is removed from the lungs. Therefore neonates delivered before labour onset (elective cesarean sections, precipitous delivery) have a high risk of fluid retaining inside the lungs leading to Transient tachypnea of the newborn (TTNB). The risk of Transient tachypnea of the newborn(TTNB) is also higher in infants of diabetic mothers.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Wrong statement about chest compression in a neonate", "options": [{"label": "A", "text": "Should be started at a heart rate (HR) < 100/minute", "correct": true}, {"label": "B", "text": "Two-thumb technique preferred", "correct": false}, {"label": "C", "text": "Chest compression to ventilation rate 3:1", "correct": false}, {"label": "D", "text": "Performed with 100% oxygen", "correct": false}], "correct_answer": "A. Should be started at a heart rate (HR) < 100/minute", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Should be started at a heart rate (HR) < 100/minute Chest compression is an important step in neonatal resuscitation , its main indication being neonatal HR < 60/minute. While both the “two thumb technique” and “two finger technique” can be used, the “two thumb technique” is preferred for neonatal chest compression. Chest compression: ventilation rate should be 3:1 in neonates, and chest compression should be performed with 100% oxygen (otherwise room air in terms and 21-30% oxygen in preterms < 35 weeks gestation).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

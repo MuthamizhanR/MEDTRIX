@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Grand Test 18 Clinical New Pattern</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Grand Test 18 Clinical New Pattern</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                200 Questions | 800 Total Marks | 210 min Duration | ~63.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 200 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 210 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 200</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Grand Test 18 Clinical New Pattern - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 200</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 200 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which is formed by 3 bones?", "options": [{"label": "A", "text": "Foramen Magnum,", "correct": false}, {"label": "B", "text": "Foramen jugulare", "correct": false}, {"label": "C", "text": "Foramen rotundum", "correct": false}, {"label": "D", "text": "Foramen lacerum", "correct": true}], "correct_answer": "D. Foramen lacerum", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Blood supply of the marked structure.", "options": [{"label": "A", "text": "ACA, MCA", "correct": false}, {"label": "B", "text": "ACA, PCA", "correct": true}, {"label": "C", "text": "PCA, MCA", "correct": false}, {"label": "D", "text": "ACA , Post Communicating", "correct": false}], "correct_answer": "B. ACA, PCA", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(725).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A known case of leprosy presented to the Dermatology OPD with the complaints of deformity in his left hand as shown in the figure. Such a deformity is because of palsy of:", "options": [{"label": "A", "text": "Ulnar nerve", "correct": true}, {"label": "B", "text": "Radial nerve", "correct": false}, {"label": "C", "text": "Both ulnar & median nerve", "correct": false}, {"label": "D", "text": "Median nerve", "correct": false}], "correct_answer": "A. Ulnar nerve", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3(586).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a hunting accident, an arrow pierces the mid-calf of a hunter. A major artery is lacerated in the posterior leg, and you notice that the sole of his foot is cold and pale. The dorsum of the foot is warm and normally colored. The artery that seems to be injured is the:", "options": [{"label": "A", "text": "Fibular artery", "correct": false}, {"label": "B", "text": "Posterior tibial artery", "correct": true}, {"label": "C", "text": "Femoral artery", "correct": false}, {"label": "D", "text": "Popliteal artery", "correct": false}], "correct_answer": "B. Posterior tibial artery", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Neurotransmitter secreted by the marked area is", "options": [{"label": "A", "text": "GABA", "correct": false}, {"label": "B", "text": "Glutamate", "correct": false}, {"label": "C", "text": "Dopamine", "correct": true}, {"label": "D", "text": "Ach", "correct": false}], "correct_answer": "C. Dopamine", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5(520).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A systolic murmur that becomes more prominent on standing is a feature of:", "options": [{"label": "A", "text": "Valvular aortic stenosis", "correct": false}, {"label": "B", "text": "Rheumatic mitral regurgitation", "correct": false}, {"label": "C", "text": "HOCM", "correct": true}, {"label": "D", "text": "Pulmonary stenosis", "correct": false}], "correct_answer": "C. HOCM", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1_1(114).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Atrial fibrillation leads to disappearance of following clinical sign/signs:", "options": [{"label": "A", "text": "a-wave on JVP", "correct": false}, {"label": "B", "text": "Audible S4", "correct": false}, {"label": "C", "text": "Presystolic accentuation of murmur", "correct": false}, {"label": "D", "text": "All the above features", "correct": true}], "correct_answer": "D. All the above features", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following statements about Barlow’s syndrome are true except:", "options": [{"label": "A", "text": "Myxomatous degeneration affects posterior valve leaflet more commonly", "correct": false}, {"label": "B", "text": "Tricuspid valve maybe involved", "correct": false}, {"label": "C", "text": "MVP is the most common cause of isolated mitral regurgitation", "correct": false}, {"label": "D", "text": "Risk of IE is low when it is associated with Mitral regurgitation", "correct": true}], "correct_answer": "D. Risk of IE is low when it is associated with Mitral regurgitation", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3_1(101).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "10 yr boy is admitted with infective endocarditis. On examination Gibson’s murmur is audible. Mother gives H/O Rubella infection during pregnancy. The most likely diagnosis in this case is:", "options": [{"label": "A", "text": "ASD", "correct": false}, {"label": "B", "text": "VSD", "correct": false}, {"label": "C", "text": "PDA", "correct": true}, {"label": "D", "text": "Coarctation of Aorta", "correct": false}], "correct_answer": "C. PDA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following features are seen in Pseudobulbar palsy EXCEPT:", "options": [{"label": "A", "text": "Quadriparesis", "correct": false}, {"label": "B", "text": "Emotional lability", "correct": false}, {"label": "C", "text": "Diminished Jaw-jerk reflex", "correct": true}, {"label": "D", "text": "Dysphagia", "correct": false}], "correct_answer": "C. Diminished Jaw-jerk reflex", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5_1(91).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 63-year-old female presented to the emergency room with an acute aneurysmal subarachnoid hemorrhage (SAH) and underwent a clipping procedure on admission. She has since been recovering in the intensive care unit. On the tenth postoperative day, she was noted to have slurred speech, worsening right facial droop, and right arm weakness. She was more difficult to rouse. NCCT and four-vessel angiogram are shown shows ischemia in MCA territory. Which of the following is the best treatment for her condition?", "options": [{"label": "A", "text": "Thrombolysis by Alteplase", "correct": false}, {"label": "B", "text": "Intra-arterial Calcium channel blockers", "correct": true}, {"label": "C", "text": "Ventriculo-Peritoneal Shunt", "correct": false}, {"label": "D", "text": "Intravenous Fosphenytoin", "correct": false}], "correct_answer": "B. Intra-arterial Calcium channel blockers", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following statements about Subdural hematoma are true Except:", "options": [{"label": "A", "text": "Maybe Spontaneous in Elderly and alcoholics", "correct": false}, {"label": "B", "text": "Lucid interval maybe present", "correct": false}, {"label": "C", "text": "Source of bleeding is Bridging veins", "correct": false}, {"label": "D", "text": "Prognosis with early surgery is excellent.", "correct": true}], "correct_answer": "D. Prognosis with early surgery is excellent.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 26-year-old woman with prior history of IV drug abuse resulting in hepatitis C coinfection is seen in a prenatal clinic for routine care. She is in the third trimester of pregnancy with her first child. Which of the following statements regarding transmission of hepatitis C virus (HCV) to neonate is true?", "options": [{"label": "A", "text": "Caesarean section reduces the risk of transmission to a greater degree than vaginal delivery.", "correct": false}, {"label": "B", "text": "Risk of transmission is 5% to neonate.", "correct": true}, {"label": "C", "text": "Breastfeeding is associated with very high risk of transmission.", "correct": false}, {"label": "D", "text": "Patients with HCV genotype 1 have a greater risk of transmission than other genotypes.", "correct": false}], "correct_answer": "B. Risk of transmission is 5% to neonate.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 32-year-old female with past history of rheumatic fever (20 years back) that was treated with antibiotics. She is asymptomatic. Her physical examination shows a heart rate of 70 beats per minute with a blood pressure of 122/77 mm Hg. She has no jugular venous distention. Her lungs are clear. She has a regular rate and rhythm with a loud S1. A soft early diastolic rumble is heard at the apex with an opening snap after S2. There is wide separation between A2 and the opening snap. No peripheral edema is present. Which of the following is the most appropriate next recommendation for this patient?", "options": [{"label": "A", "text": "Observation.", "correct": false}, {"label": "B", "text": "Start benzathine penicillin.", "correct": true}, {"label": "C", "text": "Start diuretics.", "correct": false}, {"label": "D", "text": "Refer for balloon valvotomy.", "correct": false}], "correct_answer": "B. Start benzathine penicillin.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the true statement regarding the condition shown in the following Xray:", "options": [{"label": "A", "text": "Majority cases are due to trauma", "correct": false}, {"label": "B", "text": "It is a surgical emergency", "correct": false}, {"label": "C", "text": "Intercostal drainage tube placement is indicated", "correct": true}, {"label": "D", "text": "Pleurodesis must be performed to prevent recurrence in all cases", "correct": false}], "correct_answer": "C. Intercostal drainage tube placement is indicated", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/10(372).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "a a a a Identify the phenomenon in DM and choose the correct statement/s about it. 1. The picture shows Dawn phenomenon 2. It is due to excess night-time dose of Insulin 3. Patient needs Increase in night-time dose of Insulin 4. The phenomenon is physiological due to GH surge in early morning hours", "options": [{"label": "A", "text": "1 & 2 are true statements", "correct": false}, {"label": "B", "text": "2 is the true statement", "correct": true}, {"label": "C", "text": "3 & 4 are true statements", "correct": false}, {"label": "D", "text": "4 is the true statement", "correct": false}], "correct_answer": "B. 2 is the true statement", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/WhatsApp%20Image%202022-09-14%20at%206_18_16%20PM.jpeg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following parameter is no longer recommended for the diagnosis of AKI?", "options": [{"label": "A", "text": "Urine output", "correct": false}, {"label": "B", "text": "Rise in Serum creatinine", "correct": false}, {"label": "C", "text": "GFR", "correct": true}, {"label": "D", "text": "All are recommended", "correct": false}], "correct_answer": "C. GFR", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Match the urinary casts with probable diagnosis", "options": [{"label": "A", "text": "A-4, B-3, C-1, D-2", "correct": true}, {"label": "B", "text": "A-4, B-3, C-2, D-1", "correct": false}, {"label": "C", "text": "A-3, B-4, C-1, D-2", "correct": false}, {"label": "D", "text": "A-2, B-4, C-1, D-3", "correct": false}], "correct_answer": "A. A-4, B-3, C-1, D-2", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/13(273).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/13_1(70).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "25-year-old male presents to an ENT clinic with sensorineural deafness. He has no history of ear infection or any illicit drug use in the past. Systemic examination reveals normal Blood pressure. He complains of recurrent loin pain in the past with hematuria. His renal function test reveals elevated Creatinine and urine examination revealed eumorphic RBC’s. other systemic examination is normal. What is the likely diagnosis?", "options": [{"label": "A", "text": "Alport’s syndrome", "correct": false}, {"label": "B", "text": "Barrter’s syndrome", "correct": true}, {"label": "C", "text": "Liddle’s syndrome", "correct": false}, {"label": "D", "text": "Gordon’s syndrome", "correct": false}], "correct_answer": "B. Barrter’s syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "55-year-old male suffering from DM and HTN for 7 years underwent a routine ECG. ECG revealed Tall t waves and prolonged PR interval. Laboratory results revealed an elevated serum Potassium level, normal Creatinine with low Bicarbonate levels. His medications include Glimepiride+Metformin combination for his diabetes along with Telmisartan+Amlodepine combination for hypertension. Which finding is expected in this patient?", "options": [{"label": "A", "text": "High Anion gap metabolic acidosis", "correct": false}, {"label": "B", "text": "Low Urinary Anion gap", "correct": false}, {"label": "C", "text": "High Urinary chloride levels", "correct": false}, {"label": "D", "text": "Urine ph < 5.5", "correct": true}], "correct_answer": "D. Urine ph < 5.5", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The least effective drug in severe COVID is", "options": [{"label": "A", "text": "Dexamethasone", "correct": false}, {"label": "B", "text": "Favipiravir", "correct": true}, {"label": "C", "text": "Remdesivir", "correct": false}, {"label": "D", "text": "LMWH", "correct": false}], "correct_answer": "B. Favipiravir", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following statements about Tocilizumab in COVID are true except", "options": [{"label": "A", "text": "It is used in the management of cytokine storm", "correct": false}, {"label": "B", "text": "It is an IL6 antagonist", "correct": false}, {"label": "C", "text": "There is decrease in IL6 levels post-tocilizumab use", "correct": true}, {"label": "D", "text": "Risk of anaphylaxis is present", "correct": false}], "correct_answer": "C. There is decrease in IL6 levels post-tocilizumab use", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is a cause of Lactic Acidosis- Type A?", "options": [{"label": "A", "text": "Malignancy", "correct": false}, {"label": "B", "text": "NNRTI used in HIV", "correct": false}, {"label": "C", "text": "Cardiac failure", "correct": true}, {"label": "D", "text": "Ethylene glycol toxicity", "correct": false}], "correct_answer": "C. Cardiac failure", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45/M had COVID pneumonia with spo2 85 % & had to be intubated for respiratory failure. His Neutrophil / Lymphocyte ratio is 7, CRP is 80 ug /mL , ferritin 1000ng /ml , D-dimer : 0.4 ug/ml & he weighs 60 Kg. At a fraction of inspired O2 (FiO2) of 60%, with a PEEP of 10cm h20, tidal volume 600ml his SpO2 was 97% (normal 94–100%) . Suddenly, he developed oxygen desaturation (SpO 2) of 77% and a worse respiratory pattern. His chest xray is given below . True regarding management is :.", "options": [{"label": "A", "text": "Increase the tidal volume to 700ml", "correct": false}, {"label": "B", "text": "Start IV infusion of unfractionated heparin", "correct": false}, {"label": "C", "text": "Check for any tube block", "correct": false}, {"label": "D", "text": "Insertion of Intercostal drain", "correct": true}], "correct_answer": "D. Insertion of Intercostal drain", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/19(207).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28 year old actress presented with a four week history of breathlessness. She had returned from Himalayan trekking six weeks ago. She had no cough but had intermittent chest tightness and had been started on Salbutamol with no improvement. Results showed a normal Chest X-ray, ECG and spirometry. Oxygen saturations were 99% on air at rest and after walking up a flight of stairs. Her ABG Shows Ph ; 7.50 , Pao2 : 94 mmhg , Paco2 : 28 mmhg , HCO3- : 20 meq /L . What is the most likely diagnosis?", "options": [{"label": "A", "text": "Pulmonary Embolism", "correct": false}, {"label": "B", "text": "Asthma", "correct": false}, {"label": "C", "text": "Pulmonary hypertension", "correct": false}, {"label": "D", "text": "Hyperventilation Syndrome", "correct": true}], "correct_answer": "D. Hyperventilation Syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Very slow, irregular, twisting movement, one movement perpetually blending with another is called:", "options": [{"label": "A", "text": "Hemiballismus", "correct": false}, {"label": "B", "text": "Chorea", "correct": false}, {"label": "C", "text": "Athetosis", "correct": true}, {"label": "D", "text": "Tremors", "correct": false}], "correct_answer": "C. Athetosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Ankylosing spondylitis is a type of Axial dominant arthropathy. Which of the following components of patient history is more commonly associated with ankylosing spondylitis?", "options": [{"label": "A", "text": "Acute, spontaneous onset of low back pain", "correct": false}, {"label": "B", "text": "Onset of symptoms after age 50 years", "correct": false}, {"label": "C", "text": "Worsening of symptoms with exercise", "correct": false}, {"label": "D", "text": "Symptoms are typically worse in the morning", "correct": true}], "correct_answer": "D. Symptoms are typically worse in the morning", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the disease based on the polarising microscopy finding", "options": [{"label": "A", "text": "Gout", "correct": true}, {"label": "B", "text": "Pseudogout", "correct": false}, {"label": "C", "text": "Osteoarthritis", "correct": false}, {"label": "D", "text": "Septic arthritis", "correct": false}], "correct_answer": "A. Gout", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/23(171).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 70-year-old female presents with complaints of severe unilateral headache which is unresponsive to anti-migraine treatment. She also reports myalgia with low grade fever and weight loss. She is most likely suffering from:", "options": [{"label": "A", "text": "Immune complex mediated vasculitis", "correct": false}, {"label": "B", "text": "T-cell mediated vasculitis", "correct": true}, {"label": "C", "text": "ANCA mediated vasculitis", "correct": false}, {"label": "D", "text": "Idiopathic vasculitis", "correct": false}], "correct_answer": "B. T-cell mediated vasculitis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "35 years old male comes with cough associated with haemoptysis. He also noticed passing blood in the urine. He has a purpuric skin rash over the lower limbs. Ocular examination reveals pan-uveitis and he also has conductive deafness due to serous otitis media. What is the diagnosis?", "options": [{"label": "A", "text": "Goodpasture’s syndrome", "correct": false}, {"label": "B", "text": "Wegener’s granulomatosis", "correct": true}, {"label": "C", "text": "Henoch Schonlein purpura", "correct": false}, {"label": "D", "text": "Churg Strauss syndrome", "correct": false}], "correct_answer": "B. Wegener’s granulomatosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30-hour-old boy, who has not yet passed meconium, develops abdominal distention associated with bilious vomiting. A plain radiograph of the abdomen shows distended loops of bowel with air-fluid levels. A contrast enema demonstrates a normal caliber rectum, a small caliber sigmoid, and a descending colon with an abrupt caliber transition at the splenic flexure. Which of the following medications did the mother of this infant most likely require during her pregnancy?", "options": [{"label": "A", "text": "Insulin", "correct": true}, {"label": "B", "text": "Captopril", "correct": false}, {"label": "C", "text": "Lithium", "correct": false}, {"label": "D", "text": "Phenytoin", "correct": false}, {"label": "E", "text": "Fluoxetine", "correct": false}], "correct_answer": "A. Insulin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following findings on newborn physical examination is most often associated with congenital abnormalities?", "options": [{"label": "A", "text": "Pinkish-red macular stains of the eyelid(s)", "correct": false}, {"label": "B", "text": "Ankyloglossia", "correct": false}, {"label": "C", "text": "Harlequin color change", "correct": false}, {"label": "D", "text": "Branchial cleft cyst", "correct": false}, {"label": "E", "text": "Single umbilical artery", "correct": true}], "correct_answer": "E. Single umbilical artery", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "You are called to the delivery of a preterm infant whose mother received no prenatal care. She presented to the hospital ready to deliver. By dates, the infant is 34 weeks of gestational age. In the delivery room, the baby requires intubation and mechanical ventilation. On physical examination, bulging of the abdominal wall and absence of abdominal wall musculature are noted. Ultrasound demonstrates dysplastic kidneys and severe dilatation of the bladder resulting from urinary flow obstruction. Which of the following is the anomaly most commonly associated with this disorder?", "options": [{"label": "A", "text": "Microcephaly", "correct": false}, {"label": "B", "text": "Low-set ears", "correct": false}, {"label": "C", "text": "Unilateral cryptorchidism", "correct": false}, {"label": "D", "text": "Micrognathia", "correct": false}, {"label": "E", "text": "Bilateral cryptorchidism", "correct": true}], "correct_answer": "E. Bilateral cryptorchidism", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following developmental reflexes can be elicited in a healthy 1-year-old child?", "options": [{"label": "A", "text": "Grasp reflex", "correct": false}, {"label": "B", "text": "Asymmetric tonic neck reflex", "correct": false}, {"label": "C", "text": "Stepping reflex", "correct": false}, {"label": "D", "text": "Parachute reflex", "correct": true}, {"label": "E", "text": "Moro reflex", "correct": false}], "correct_answer": "D. Parachute reflex", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 2-month-old infant presents with his foster parents for an initial evaluation. Little is known about his biological mother’s medical history. She reportedly received no prenatal care and presented to the emergency department in active labor while denying previous knowledge of her pregnancy. The infant is noted to have several dysmorphic features that include arched eyebrows, hypertelorism, a short upturned nose, and shortened stubby digits with hypoplastic nails. Which of the following was the infant most likely exposed to in utero?", "options": [{"label": "A", "text": "Alcohol", "correct": false}, {"label": "B", "text": "Methotrexate", "correct": false}, {"label": "C", "text": "Phenytoin", "correct": true}, {"label": "D", "text": "Retinoic acid", "correct": false}, {"label": "E", "text": "Lithium", "correct": false}], "correct_answer": "C. Phenytoin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "During a health maintenance visit a 4-month-old female is noted to have a skull deformity due to premature fusion of both coronal sutures and 1 sagittal suture. Which of the following additional findings on physical examination would indicate that this patient’s cranial abnormalities are consistent with Apert, rather than Crouzon

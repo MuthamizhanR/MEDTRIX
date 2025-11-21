@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>HIV - Opportunistic Infections (Part 2)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">HIV - Opportunistic Infections (Part 2)</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                25 Questions | 25 Total Marks | 35 min Duration | ~84.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 25 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 35 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 25</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">HIV - Opportunistic Infections (Part 2) - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 25</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 25 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Miliary tuberculosis is a potentially fatal form of the disseminated disease due to the hematogenous spread of tubercle bacilli to the lungs, and other organs. Which among the following is pathognomonic of miliary TB:", "options": [{"label": "A", "text": "Snowstorm appearance in CXR", "correct": false}, {"label": "B", "text": "Choroid tubercles on fundus examination", "correct": true}, {"label": "C", "text": "Pericardial TB", "correct": false}, {"label": "D", "text": "Peritoneal TB", "correct": false}], "correct_answer": "B. Choroid tubercles on fundus examination", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Choroid tubercles on fundus examination Fundus examination may reveal choroidal tubercles, which are pathognomonic of miliary TB , in up to 30% of cases. Meningismus occurs in < 10% of cases. A high index of suspicion is required for the diagnosis of military TB. Frequently, a chest radiograph reveals a military reticulonodular pattern (more easily seen on underpenetrated film), although no radiographic abnormality may be evident early in the course and among HIV-infected. Other radiologic findings include large infiltrates, interstitial infiltrates (especially in HIV- infected patients), pleural effusion.</p>\n<p><strong>Extraedge:</strong></p><p>Miliary TB is a form of disseminated TB or Extra pulmonary TB that is caused by sudden diffuse dissemination of tubercle bacilli through the bloodstream ( hematogenous spread of TB) The foci are possible caseous-necrotic In miliary TB foci formed small ( 1-2 mm ) with productive tissue reaction Small foci look like millet grains</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An 18-year-old female presented with a history of low-grade fever, malaise, loss of weight, and appetite for 4 weeks. For the last 10 days, she complains of a headache and she has become drowsy since this morning. On examination, neck rigidity is present. LP CSF shows 450 cells (90% lymphocytes.), glucose 40 mg/dl, and protein 300 mg/dl. How will you manage this patient?", "options": [{"label": "A", "text": "Start ATT immediately", "correct": false}, {"label": "B", "text": "Start ATT+pyridoxine immediately", "correct": false}, {"label": "C", "text": "Start ATT+pyridoxine dexamethasone IV", "correct": true}, {"label": "D", "text": "Start ceftriaxone vancomycin immediately", "correct": false}], "correct_answer": "C. Start ATT+pyridoxine dexamethasone IV", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Start ATT+pyridoxine dexamethasone IV This patient has presented with features of meningitis associated with CSF findings of lymphocyte predominant cells , low glucose, and high protein suggestive of tuberculous meningitis Along with ATT, WHO recommends adjuvant glucocorticoid therapy with either dexamethasone or prednisolone taper over 6-8 weeks The dexamethasone schedule is 4mg/kg per day iv with tapering by 0.1mg/kg per week until the fourth week followed by 4 mg/day given per oral with tapering by 1mg/week until the 4th week. Options A, B, and D are not the correct choices in this clinical case.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Options A, B, and D are not the correct choices in this clinical case.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old chronic alcoholic presented with a fever and cough for 2 weeks. Sputum AFB was positive and he was started on a suitable ATT regimen as per NTEP. 3 weeks after starting ATT he presents with nausea, vomiting, and dark urine. LFT shows AST-450 IU/l and ALT-823 IU/L .All are indications for stopping offending ATT drugs permanently except?", "options": [{"label": "A", "text": "Gout", "correct": false}, {"label": "B", "text": "Autoimmune Thrombocytopenia", "correct": false}, {"label": "C", "text": "Optic neuritis", "correct": false}, {"label": "D", "text": "Hepatitis", "correct": true}], "correct_answer": "D. Hepatitis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hepatitis Hyper-uricemia and arthralgia caused by pyrazinamide can usually be managed by the administration of acetylsalicylic acid; however, pyrazinamide treatment should be stopped if the patient develops gouty arthritis. Individuals who develop autoimmune thrombo-cytopenia secondary to rifampicin therapy should not receive the drug thereafter. Similarly, the occurrence of optic neuritis with ethambutol is an indication for permanent discontinuation of this drug. For patients with symptomatic hepatitis and those with marked (five- to six-fold) elevations in serum levels of aspartate aminotransferase, treatment should be stopped and drugs reintroduced one at a time after liver function has returned to normal.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- So, Options A, B, and C are an indication for permanent discontinuation of a drug.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "White blood cells from most persons that have been infected with M. tuberculosis will release interferon-gamma (IFN-g) when mixed with antigens (substances that can produce an immune response) derived from M. tuberculosis. Interferon-gamma release assay measures IFN release against which M. TB antigen:", "options": [{"label": "A", "text": "ESAT6", "correct": true}, {"label": "B", "text": "ESAT7", "correct": false}, {"label": "C", "text": "CF 11", "correct": false}, {"label": "D", "text": "CF 12", "correct": false}], "correct_answer": "A. ESAT6", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>ESAT6 Interferon-gamma release assay (IGRA) measures T cell release of gamma interferon against TB antigen ESAT 6 and CF 10. This test also called Quantiferon - TB Gold test is more specific than Tuberculin skin testing as a result of less cross-reactivity due to BCG vaccination and sensitization by non-tuberculosis mycobacteria. It is also logistically convenient as it reduces patient visits and gives the ability to perform serial testing without the hassle of boosting the phenomenon caused by Tuberculin skin testing.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Options B, C, and D are not the correct options.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 48-year-old patient on treatment for HIV-AIDS presents with progressive shortness of breath. On examination, he is found to have a woody dull note in the right infrascapular, axillary, and interscapular areas. There are decreased breath sounds in the same areas. A chest x-ray is shown. Which of the following is least likely to cause this condition in HIV:", "options": [{"label": "A", "text": "Kaposi Sarcoma", "correct": false}, {"label": "B", "text": "TB", "correct": false}, {"label": "C", "text": "Pneumocystis Jiroveci", "correct": true}, {"label": "D", "text": "Streptococcus pneumoniae", "correct": false}], "correct_answer": "C. Pneumocystis Jiroveci", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1684545959270-QTDM090005IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Pneumocystis Jiroveci In PCP, The most common finding on chest X-ray is either a normal film, if the disease is suspected early , or a faint bilateral interstitial infiltrate. The classic finding of a dense perihilar infiltrate is unusual in patients with AIDS In patients with PCP who have been receiving aerosolized pentamidine for prophylaxis , one may see an X-ray picture of upper lobe cavitary disease , reminiscent of TB.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A - Pulmonary involvement with KS generally presents with shortness of breath . The chest X-ray characteristically shows bilateral lower lobe infiltrates that obscure the margins of the mediastinum and diaphragm. Pleural effusions are seen in 70% of cases of pulmonary KS. Option B - Extrapulmonary TB such as tubercular pleural effusion is common in HIV and Strep pneumonia may cause parapneumonic pleural effusion</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which among the following statements is true about toxoplasma:", "options": [{"label": "A", "text": "In adults it is mostly asymptomatic", "correct": true}, {"label": "B", "text": "IgG antibodies in the newborn are confirmatory of the diagnosis", "correct": false}, {"label": "C", "text": "Toxoplasmic encephalitis can occur in immunocompetent", "correct": false}, {"label": "D", "text": "Most infections are transmitted by blood products", "correct": false}], "correct_answer": "A. In adults it is mostly asymptomatic", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>In adults it is mostly asymptomatic In persons whose immune system is intact , toxoplasmosis is usually asymptomatic and self-limited . It can go unrecognized in 80-90% of adults and children with acquired infection</p>\n<p><strong>Highyeild:</strong></p><p>The most common manifestation of acute toxoplasmosis in adults is cervical lymphadenopathy Monoclonal gammopathy of the IgG class can occur in congenitally infected infants. IgM levels may be increased in newborns with congenital infections.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:-- Option: B. Within the host, gondii rapidly induces detectable levels of both IgM and IgG serum antibodies. Option: C . In persons whose immune systems are intact, acute toxoplasmosis is usually asymptomatic and self-limited. This condition can go unrecognized in 80-90% of Cases. Option: D. Most infections are thought to be acquired by oral route from contaminated food, soil, or water.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28-year-old patient presented with fever, sore throat, dry cough, and wheezing. Chest x-ray showed peribronchial pneumonia with thickened bronchial markings. He developed a skin lesion as shown below which is involving the trunk limbs and lesions in the oral cavity. What is the causative organism?", "options": [{"label": "A", "text": "Moraxella", "correct": false}, {"label": "B", "text": "Legionella", "correct": false}, {"label": "C", "text": "Mycoplasma", "correct": true}, {"label": "D", "text": "Chlamydia", "correct": false}], "correct_answer": "C. Mycoplasma", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1684545959308-QTDM090007IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Mycoplasma The image shown is suggestive of erythema multiforme major which is the most clinically significant skin eruption associated with mycoplasma pneumonia infection Clinical findings, non-microbiological laboratory tests, and chest radiography are not useful for differentiating M. pneumoniae pneumonia from other types of community-acquired pneumonia. In addition, since pneumoniae lacks a cell wall, it is not visible on gram stain.</p>\n<p><strong>Highyeild:</strong></p><p>Mycoplasma infection may begin with a sore throat and the most common presenting symptom is dry cough. The possibility of Pneumoniae infection needs particular consideration when community-acquired pneumonia fails to respond to treatment with penicillin or cephalosporin-antibiotics that are ineffective against mycoplasmas. (Due to lack of cell wall )</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:-- Option: A . Moraxella - Is a pathogen that is commonly found in the upper respiratory tract of humans. Option: B. Legionella - Are common in natural water sources such as rivers, lakes, and reservoirs, but usually in low numbers. Option: D. Chlamydia - Is a bacterial infection that is usually spread by sex or contact with infected genital fluids (semen or vaginal fluid).</p>\n<p><strong>Extraedge:</strong></p><p>Erythema multiforme minor (EMm): It essentially touches the skin with typical lesions with symmetrical acral disposition. The mucosal involvement is rare , and when it is present, it is light and affects a single mucosa, often the mouth Erythema multiforme major (EMM): The skin lesions are more extensive , but they do not exceed 10% of the body surface area. Typical target lesions are present. The mucosal involvement is severe , and affects at least two different mucosal sites; the oral mucosa typically is affected.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Given below is the image of skin lesions noted in a patient who is HIV positive. Which of the following is FALSE regarding this condition?", "options": [{"label": "A", "text": "Lymph node involvement indicates a poor prognosis", "correct": true}, {"label": "B", "text": "Its occurrence is not related to depression in cd4 count", "correct": false}, {"label": "C", "text": "70% of patients with pulmonary disease have pleural effusion", "correct": false}, {"label": "D", "text": "Lesions can infiltrate the gall bladder and biliary tree and lead to a clinical picture of obstructive jaundice.", "correct": false}], "correct_answer": "A. Lymph node involvement indicates a poor prognosis", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1684545959353-QTDM090008IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Lymph node involvement indicates a poor prognosis The image shows reddish to purple nodular lesions in a patient of HIV -the diagnosis is Kaposi sarcoma Kaposi sarcoma (KS) is an indolent angio-proliferative spindle-cell tumor derived from endothelial and immune cells infected with human herpesvirus type 8 (HHV-8; also known as Kaposi sarcoma herpes virus [KSHV]) In contrast to most malignancies in which lymph node metastasis implies a poor prognosis, lymph node involvement may be seen very early in KS and is of no special clinical significance.</p>\n<p><strong>Highyeild:</strong></p><p>Kaposi sarcoma - (MC) seen in the Palate in HIV In non-HIV patients- seen on the back, trunk, and extremities. Start on Fluconazole</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:-- Option: B. Although KS is an opportunistic disease, its occurrence is not strictly related to depression of CD4 counts. Option: C. 70% of Pulmonary KS is associated with pleural effusion and the most common presenting symptom in pulmonary KS is shortness of breath Option: D. Lesions can infiltrate the gallbladder and biliary tree, leading to a clinical picture of obstructive jaundice, similar to sclerosing cholangitis.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following anti-HIV drugs can cause the changes shown in the image below?", "options": [{"label": "A", "text": "Maraviroc", "correct": false}, {"label": "B", "text": "Enfuvirtide", "correct": false}, {"label": "C", "text": "Ritonavir", "correct": true}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "C. Ritonavir", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1684545959403-QTDM090009IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ritonavir The image shows the characteristics changes of lipodystrophy Image A -truncal obesity and buffalo hump Image B- facial wasting Image C- accumulation of intra-abdominal fat seen on CT scan. These are all features of Lipodystrophy which is a common side of protease inhibitors like ritonavir. They occur due to fat redistribution. Laboratory findings include Elevation of plasma triglycerides, Total cholesterol, and Apolipoprotein B as well as Hyperinsulinemia and Hyperglycemia</p>\n<p><strong>Highyeild:</strong></p><p>Other side effects of Ritonavir include Nausea, abdominal pain Hyperglycemia Paresthesias Hepatitis</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:-- Option: A. Maraviroc side effects include hepatotoxicity, nasopharyngitis, fever, cough, rash, and musculoskeletal symptoms Option: B. Enfuvirtide side effects include hypersensitivity reactions and an increased rate of bacterial pneumonia.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old HIV patient presented with fever, dyspnea, and shortness of breath for 1 week. CT thorax done is shown below. Covid RTPCR is negative. Which of the following is FALSE regarding this condition?", "options": [{"label": "A", "text": "The causative organism can cause otic involvement and lead to the formation of a polypoidal mass in the external auditory canal", "correct": false}, {"label": "B", "text": "It can be associated with retrosternal chest pain", "correct": false}, {"label": "C", "text": "Upper lobe cavities may be seen in those receiving clindamycin", "correct": true}, {"label": "D", "text": "Elevation of lactate dehydrogenase levels is common", "correct": false}], "correct_answer": "C. Upper lobe cavities may be seen in those receiving clindamycin", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1684545959413-QTDM090010IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Upper lobe cavities may be seen in those receiving clindamycin The CT thorax shows bilateral patchy ground glass opacities . These findings are associated with symptoms of Fever, Dry cough and Dyspnea in an HIV patients suggest a diagnosis of pneumocystis carinii pneumonia (PCP) In those receiving aerosolized pentamidine for prophylaxis , an x-ray of upper lobe cavitary lesions like TB may be seen.</p>\n<p><strong>Highyeild:</strong></p><p>Indications for PCP prophylaxis:- CD4 count < 200/ul or CD4 percentage less than 15% Prior bout of PCP Any HIV patient with unexplained fever >2 weeks Recent history of oropharyngeal candidiasis PCP prophylaxis can be discontinued in a patient treated with ART who maintains good suppression of HIV (<50 copies/ml) and CD4 counts >200 /ul for at least 3 months Cotrimoxazole which is used as prophylaxis against PCP also protects toxoplasmosis and some bacterial respiratory pathogens</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:-- Option: A . Otic involvement may be seen as a primary infection , presenting as a polypoidal mass involving the external auditory canal Option: B . Patients may complain of a characteristic retrosternal pain that is worse on inspiration and is described as sharp or burning Option: D. Mild leukocytosis , elevated LDH and increased arterial alveolar gradient on ABG are common findings.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old male presents with fever, and dry cough for 10 days. His vitals are as follows: PR-110 bpm BP-110/60mmHg RR-26cpm Spo2 -85% on room air. During one examination he is found to have bibasal crepitations. Chest x-ray done shows bilateral interstitial infiltrate. ABG done shows type 1 respiratory failure with PaO2 54mmHg. The patient was first stabilized and then taken up for bronchoscopy. His BAL fluid with GMS stain is shown below. How will you treat this patient:", "options": [{"label": "A", "text": "Trimethoprim-sulfamethoxazole", "correct": false}, {"label": "B", "text": "Trimethoprim-sulfamethoxazole + steroids", "correct": true}, {"label": "C", "text": "Ceftriaxone iv azithromycin", "correct": false}, {"label": "D", "text": "Dapsone steroids", "correct": false}], "correct_answer": "B. Trimethoprim-sulfamethoxazole + steroids", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1684545959457-QTDM090011IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Trimethoprim-sulfamethoxazole + steroids The diagnosis of this case scenario is Pneumocystis carinii pneumonia Points in favor diagnosis are:- HIV patient with fever and dry cough Chest x-ray with bilateral interstitial infiltrates and ABG showing type 1 respiratory failure The image shows cysts of pneumocystis carinii on gomori methenamine silver staining-“ crushed ping pong ball appearance ” The standard treatment of PCP is trimethoprim-sulfamethoxazole However, steroids are also indicated in moderate-severe cases.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- - Option: A. Only cotrimoxazole should not be given as PaO2 <70mmHg Option: C. Ceftriaxone and azithromycin are given for bacterial pneumonia Option: D . Dapsone is not a first-line agent for PCP</p>\n<p><strong>Extraedge:</strong></p><p>Indications of adjunct steroid therapy PaO2 < 70mmHg a-A gradient >35mmHg Overall treatment should be given for 21 days</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old HIV-positive male presented a history of worsening headaches since last week 1 week. MRI brain is shown to you. Which of the following can be considered in the differential diagnosis?", "options": [{"label": "A", "text": "Toxoplasma", "correct": false}, {"label": "B", "text": "Primary CNS lymphoma", "correct": false}, {"label": "C", "text": "Tubercular abscess", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1684545959478-QTDM090013IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above Image A:- Axial contrast-enhanced T1-weighted magnetic resonance imaging showed ring-enhancing lesions (white arrows) Image B:- Axial T2-flair images showed ring-enhancing lesions surrounding hyperintensity, consistent with vasogenic edema (white arrows). The differential diagnosis for ring-enhancing lesions in HIV patients are Toxoplasma gondii (usually multiple ring-enhancing lesions in multiple locations) Primary CNS lymphoma TB/fungal/bacterial abscess IT IS UNUSUAL TO SEE A SINGLE LESION OF TOXOPLASMOSIS - A SINGLE LESION ESPECIALLY >4 CM-MORE LIKELY TO BE CNS LYMPHOMA</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 38-year patient diagnoses with HIV-AIDS with a CD4 count of 36 cells/ul presents with fever, and headache and subsequently has an episode of GTCS. MRI brain done shows multiple ring-enhancing lesions. Toxoplasma IgG is positive. What is the drug of choice for this condition?", "options": [{"label": "A", "text": "Spiramycin", "correct": false}, {"label": "B", "text": "Sulfadiazine+pyrimethamine+leucovorin", "correct": true}, {"label": "C", "text": "Trimethoprim-sulfamethoxazole", "correct": false}, {"label": "D", "text": "Doxycycline", "correct": false}], "correct_answer": "B. Sulfadiazine+pyrimethamine+leucovorin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Sulfadiazine+pyrimethamine+leucovorin The drug of choice for the treatment of toxoplasmosis is sulfadiazine+pyrimethamine+leucovorin It is given for a minimum of 4-6 weeks Relapses are common and all patients with a history of prior toxoplasma encephalitis receive maintenance therapy with sulfadiazine, pyrimethamine, and leucovorin as long as their CD4 counts remain <200 cells/ul</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:-- Option: A. It is the drug of choice for toxoplasmosis in pregnancy Option: C. Co Trimoxazole is used in primary prophylaxis of toxoplasmosis Option: D. There is no role of doxycycline in the treatment of toxoplasmosis</p>\n<p><strong>Extraedge:</strong></p><p>Alternate therapies include:- Clindamycin+pyrimethamine, Atovaquone+pyrimethamine and Azithromycin+pyrimethamine+rifabutin</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 56-year-old HIV-positive male with a CD4 count of 18 cells/ul presented with visual field defects, ataxia, and hemiparesis in the last few months. His MRI is shown below. What is the causative agent?", "options": [{"label": "A", "text": "Herpes simplex Virus", "correct": false}, {"label": "B", "text": "Cytomegalovirus", "correct": false}, {"label": "C", "text": "John Cunnigham virus", "correct": true}, {"label": "D", "text": "Primary CNS lymphoma", "correct": false}], "correct_answer": "C. John Cunnigham virus", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1684545959489-QTDM090015IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>John Cunnigham virus The MRI which is a T2-weighted MRI image, shows multiple hyperintense lesions. this is suggestive of a diagnosis of Progressive multifocal leukoencephalopathy (PMLE) The lesions are typically hypointense on T1 and hyperintense on T2. The causative organism is John Cunningham (JC) virus. 80% of the general adult population has antibodies to the JC virus, indicative of prior infection < 10% of healthy adults show any evidence of ongoing viral replication. PMLE is The only known clinical manifestation of JC virus infection. It is a late manifestation of HIV infection</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Does not cause this kind of CNS manifestations in HIV Option: B. CMV can cause retinitis or colitis Option: D. Primary CNS lymphoma usually presents as a ring-enhancing lesion</p>\n<p><strong>Extraedge:</strong></p><p>Natalizumab , a drug used In The treatment of Multiple Sclerosis, can increase The risk of development of PMLE Therefore testing for antibodies against the JC virus must be done prior to starting The drug</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old HIV positive male complained of episodes of headache since last 2-3 months.CD 4 count is 21 cells/ul. MRI brain done showed features of primary CNS lymphoma. The same was confirmed by brain biopsy. Which of the following organisms is associated with this neoplasm?", "options": [{"label": "A", "text": "HHV-8", "correct": false}, {"label": "B", "text": "EBV", "correct": true}, {"label": "C", "text": "CMV", "correct": false}, {"label": "D", "text": "HPV", "correct": false}], "correct_answer": "B. EBV", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>EBV Primary CNS lymphoma accounts for 20% of cases of lymphoma in HIV. In contrast to HIV-associated Burkitt lymphoma, CNS lymphomas are usually positive for EBV (Epstein Barr Virus). In one study, the incidence of EBV positivity was 100%. The median CD4 count at the time of diagnosis is ~50 cells/ul. The CNS lymphoma generally presents at a later stage of HIV infection and this may explain at least In part, The poorer prognosis for this subset of patients. It is a Diffuse Large B cell lymphoma</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:-- Option: A . HHV-8 is associated with Kaposi sarcoma Option: C . CMV causes retinitis and colitis Option: D. HPV causes invasive cervical cancer.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 38 year HIV positive male presented with fever, headache, and altered sensorium for the last 1 week, he is an IV drug abuser. His CD4 count is 45 cells/ul. On examination kerning and Brudzinski signs are positive. LP CSF examination done shows high opening pressures, 120 cells (70% lymphocytes), protein of 70mg/dl, and glucose of 40mg/dl. A special stain used for staining CSF is shown below. Which of the following statements is false regarding this condition?", "options": [{"label": "A", "text": "There is a high incidence of seizures and focal neurological deficits", "correct": true}, {"label": "B", "text": "It generally occurs when the CD 4 count is less than 100 cells/ul", "correct": false}, {"label": "C", "text": "It is the leading cause of meningitis in patients with AIDS", "correct": false}, {"label": "D", "text": "Prostate gland may serve as a reservoir .", "correct": false}], "correct_answer": "A. There is a high incidence of seizures and focal neurological deficits", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1684545959498-QTDM090017IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>There is a high incidence of seizures and focal neurological deficits The image shows India ink preparations which shows a capsule of Cryptococcus neoformans India ink staining of cerebrospinal fluid is a sensitive test for the presence of cryptococcus neoformans. Cryptococcus is surrounded by a thick capsule ; the carbon grains cannot penetrate the capsule resulting in a clear halo around the refractile wall of the yeast. Therefore the diagnosis of this case is cryptococcal meningitis . Points In favor of diagnosis are HIV positive patient with CD4 count of < 100 with Fever, headache altered sensorium</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old HIV-positive male on ART complains of a painful burning sensation over his bilateral feet for the last 3 months . He is not a diabetic. He consumes a mixed diet. A diagnosis of HIV-associated peripheral neuropathy is considered. Which is the most common peripheral neuropathy in HIV?", "options": [{"label": "A", "text": "Large fiber neuropathy", "correct": false}, {"label": "B", "text": "Hiv-associated myelopathy", "correct": false}, {"label": "C", "text": "Distal sensory polyneuropathy", "correct": true}, {"label": "D", "text": "Polyradiculopathy", "correct": false}], "correct_answer": "C. Distal sensory polyneuropathy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Distal sensory polyneuropathy Peripheral neuropathies are common In patients with HIV infection . They occur at all stages and take a variety of forms. The most common Peripheral neuropathy is distal sensory polyneuropathy(DSPN) also referred painful sensory neuropathy(HIV-SN) This condition may be a direct consequence of HIV infection or a side effect of ART with dideoxynucleotides. It is more common In taller individuals, older individuals, and those with lower CD counts</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Large fiber neuropathy - manifests with the loss of joint position and vibration sense and sensory ataxia , whereas small fiber neuropathy manifests with the impairment of pain, temperature, and autonomic functions. Option: B. HIV-associated myelopathy - is a common neurologic complication of AIDS. Pathologically, VM is characterized by vacuolization in the lateral and posterior columns of the thoracic spinal cord and has a striking similarity with the myelopathy of vitamin B12 deficiency. Option: D. Polyradiculopathy - refers to damage to multiple nerve roots sufficient to produce neurologic symptoms and signs such as pain, weakness, and sensory loss.</p>\n<p><strong>Extraedge:</strong></p><p>On examination, a stocking type of sensory loss to pinprick, temperature, and touch sensation may be present along with a loss of ankle reflexes. Motor changes are mild and limited to the weakness of intrinsic foot muscles.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 52-year-old HIV-positive male with a CD4 count of 60 cells/ul presented with a history of diarrhea for the last 2 weeks. It is a high-volume diarrhea, associated with crampy abdominal pain. Stool examination revealed oocysts that stain with acid-fast dyes. All the following can be considered as a differential diagnosis in this condition EXCEPT?", "options": [{"label": "A", "text": "Cryptosporidium", "correct": false}, {"label": "B", "text": "Microsporidia", "correct": false}, {"label": "C", "text": "Isospora", "correct": false}, {"label": "D", "text": "Giardia", "correct": true}], "correct_answer": "D. Giardia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Giardia The most common opportunistic protozoa which infect the GI tract and cause diarrhea in HIV are Cryptosporidium Microsporidia Isospora belli Giardia Consider the table below:- PARASITE STOOL FECAL ACID-FAST STAIN FECAL ANTIGEN IMMUNOASSAYS FECAL NAATS OTHER Giardia + + + DFA Cryptosporidium ± + + + DFA Cystoisospora ± + + Cyclospora ± + + Dientamoeba ± + + Balantidium + Microsporidia - + Special fecal stains, tissue biopsies Abbreviations: DFA, direct immunofluorescence assay; NAATs, nucleic acid amplification tests; O+P, conventional ova, and parasites. As per this table, the fecal acid-fast stain is positive for Cryptosporidium Cyclospora Cystoisospora (aka corpora belli) Therefore Giardia cannot be considered in the differential diagnosis of this case as it is not acid-fast</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 48-year-old HIV-positive female presented with a history of diarrhea and crampy abdominal pain and bloating sensation. Microbiological examination of stool samples revealed oocysts of cryptosporidium. What is the drug of choice for this condition?", "options": [{"label": "A", "text": "Cotrimoxazole", "correct": false}, {"label": "B", "text": "Nitazoxanide", "correct": true}, {"label": "C", "text": "Albendazole", "correct": false}, {"label": "D", "text": "Doxycycline", "correct": false}], "correct_answer": "B. Nitazoxanide", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Nitazoxanide Cryptosporidium is a known cause of diarrhea In HIV-positive patients. It can present In a variety of ways ranging from self-limited or intermittent diarrheal illness In patients with early stages of HIV infection to severe, life-threatening diarrhea In severely immunodeficient individuals. In 75% of cases there is associated crampy abdominal pain and in 25% there may be nausea and vomiting. Therapy with up to 2000 mg/day of Nitazoxanide along with ART is the treatment of choice</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A . Cotrimoxazole is DOC for infection with corpora belli Option: C . Albendazole can be used in infection with microsporidia Option: D . Doxycycline 300 mg single dose is used in the treatment of cholera</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Immune reconstitution inflammatory syndrome (IRIS) is a state of hyperinflammatory response that usually occurs in the first six months of treatment of HIV/AIDS patients. Which of the following statements is false regarding Immune Reconstitution Inflammatory syndrome (IRIS)?", "options": [{"label": "A", "text": "Occurs weeks to months following the initiation of Antiretroviral therapy", "correct": false}, {"label": "B", "text": "It is most common in patients starting therapy with a CD4 count of <100 cells/ul who experience a precipitous drop in viral load", "correct": true}, {"label": "C", "text": "It is frequently seen in setting of TB, particularly when ART is started soon after initiation of ATT", "correct": false}, {"label": "D", "text": "It can be fatal", "correct": false}], "correct_answer": "B. It is most common in patients starting therapy with a CD4 count of <100 cells/ul who experience a precipitous drop in viral load", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>It is most common in patients starting therapy with a CD4 count of <100 cells/ul who experience a precipitous drop in viral load A paradoxical clinical worsening of a known condition or The appearance of a new condition after initiating antiretroviral therapy In HIV-infected patients is defined as immune reconstitution inflammatory syndrome ( IRIS ) IRIS related to a known pre-existing infection or neoplasm or called paradoxical IRIS, while IRIS associated with a previously undiagnosed condition is called unmasking IRIS. It is most common in patients starting therapy with a CD4 count of < 50 cells/ul who experience a precipitous drop in viral load.</p>\n<p><strong>Highyeild:</strong></p><p>Characteristics of Immune Reconstitution Inflammatory Syndrome (IRIS) Paradoxical worsening of an existing clinical condition or abrupt appearance of a new clinical finding (unmasking) is seen following the initiation of antiretroviral therapy Occurs weeks to months following the initiation of antiretroviral therapy Is most common in patients starting therapy with a CD4+ T-cell count <50/µL who experience a precipitous drop in viral load Is frequently seen in the setting of tuberculosis; particularly when cART is starting soon after initiation of anti-TB therapy Can be fatal</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:-- Option: A . Signs and symptoms of IRIS can occur anywhere from 2 weeks to 2 years after initiation of ART Option: C. Mycobacterium tuberculosis (TB) is among the most frequently reported pathogens associated with IRIS. Option: D. The clinical course can be protracted and severe cases can be fatal</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old HIV=positive male with a CD4 count of 43 cells/ul has a significant exposure to a patient suffering from chicken pox who is in the infective stage. There is no history of prior exposure to chicken pox and there is no history of prior immunization. What is the appropriate management of this condition?", "options": [{"label": "A", "text": "No further action is warranted", "correct": false}, {"label": "B", "text": "Administer Varicella zoster immunoglobulin iv within 10 days", "correct": false}, {"label": "C", "text": "Administer Acyclovir 1g tid for 5-7 days", "correct": false}, {"label": "D", "text": "Varicella zoster immune globulin IM within 10 days of exposure", "correct": true}], "correct_answer": "D. Varicella zoster immune globulin IM within 10 days of exposure", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Varicella zoster immune globulin IM within 10 days of exposure Management of exposure to Varicella zoster virus in HIV patients INDICATIONS Significant exposure to chickenpox or shingles in a patient with no history of immunization or prior exposure FIRST CHOICE- Varicella zoster immune globulin IM within 10 days of exposure</p>\n<p><strong>Highyeild:</strong></p><p>ALTERNATIVES - Acyclovir 800 mg PO 5 x day for 5-7 days Or Valacyclovir 1g PO TID for 5-7 days</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Further action is definitely warranted in the form of VZ immunoglobulin Option: B. Varicella zoster immune globulin is given IM and not IV. Option: C. Acyclovir is given at a dose of 800mg 5 times a day for 5-7 days. It is an alternative regimen</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 52-year-old HIV-positive female with a CD4 count of 32 cells/ul presents with painless progressive loss of vision. She also complains of floaters and scintillations. The Fundus examination is shown below. What is the diagnosis?", "options": [{"label": "A", "text": "Progressive outer retinal necrosis(PORN)", "correct": false}, {"label": "B", "text": "P. jirovecii lesion of choroid", "correct": false}, {"label": "C", "text": "CMV retinitis", "correct": true}, {"label": "D", "text": "HSV mediated acute retinal necrosis", "correct": false}], "correct_answer": "C. CMV retinitis", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1684545959511-QTDM090023IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>CMV retinitis Ophthalmic problems occur in ~50% of patients with advanced HIV infection. The image shows fundus showing perivascular hemorrhage and exudate indicative of CMV retinitis The majority of cases of CMV retinitis occur in patients with CD4 count <50 cells/u It usually presents as a ‘painless Progressive loss of vision’. The patient may also complain of blurry vision, floaters, and scintillations. CMV infection of the retina results In an inflammatory necrotic process, and The visual loss that develops is irreversible . Therapy for CMV retinitis consists of Oral valganciclovir , IV ganciclovir or IV foscarnet , With cidofovir as an alternative.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A . It is associated with pain, keratitis, and iritis. Fundus shows pale gray peripheral lesions Option: B. P jirovecii causes lesion of choroid which is typically bilateral and appears as slightly elevated yellow white plaques -they are usually asymptomatic . Option: D. Acute retinal necrosis aka progressive outer retinal necrosis due to HSV is a painful condition Images:- Progressive outer retinal necrosis(PORN) HSV mediated acute retinal necrosis</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which among the following statements is false regarding Bartonella infection in HIV ?", "options": [{"label": "A", "text": "Bartonella infection is considered an AIDS-defining illness by the CDC", "correct": true}, {"label": "B", "text": "Bacillary angiomatosis is linked to exposure with flea-infested cats", "correct": false}, {"label": "C", "text": "Treatment is with either doxycycline or erythromycin for at least 3 months", "correct": false}, {"label": "D", "text": "All the above are true statements", "correct": false}], "correct_answer": "A. Bartonella infection is considered an AIDS-defining illness by the CDC", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Bartonella infection is considered an AIDS-defining illness by the CDC Bartonella is a gram-negative, Rickettsia-like organism that is seen with increased frequency In patients with HIV infection. It is not considered an AIDS-defining manifestation by CDC. It Is usually seen when CD4 counts are less than 100 cells/ul. The clinical manifestations include Bacillary angiomatosis caused by henselae and associated with exposure to flea-bitten cats . It presents with skin lesions which can be confused with Kaposi sarcoma Cat scratch disease caused by henselae. It begins as a papule at the site of inoculation and progresses to the development of regional lymphadenopathy and malaise. Trench fever was caused by Quintana and transmitted by lice. Treatment of Bartonella infection is with either doxycycline or erythromycin for 3 months</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old HIV-positive male presented with recurrent episodes of bleeding from gums and excessive fatigue. A laboratory workup revealed pancytopenia. Which of the following are causes of bone marrow suppression in HIV", "options": [{"label": "A", "text": "Parvovirus B19", "correct": false}, {"label": "B", "text": "Zidovudine", "correct": false}, {"label": "C", "text": "Mycobacterial infections", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above All are the causes of bone marrow suppression in patients with HIV infection A Significant percentage of bone marrow aspirates from patients with HIV Infection have been reported to contain lymphoid aggregates , the precise significance of which is unknown. Anemia is the most common hematologic abnormality in HIV-infected patients and, in the absence of a specific treatable cause, is independently associated with a poor prognosis.</p>\n<p><strong>Highyeild:</strong></p><p>The causes of bone marrow suppression in HIV are mentioned Here:- INFECTION MEDICATIONS Mycobacterial infection Zidovudine Fungal infection Dapsone B19 parvovirus infection Cotrimoxazole Lymphoma Pyrimethamine 5-flucytosine Ganciclovir Interferon alpha Trimetrexate Foscarnet</p>\n<p><strong>Extraedge:</strong></p><p>A characteristic feature of Zidovudine therapy is an elevated Mean Corpuscular Volume (MCV) The risk for venous thromboembolic disease is 1% per year-which approximately 10 times higher than that seen in an age-matched population.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 37-year-old HIV-positive male with a CD4 count of 21 cells/ul is to be started on prophylaxis for Mycobacterium avium complex. Which of the following agents is used for the same?", "options": [{"label": "A", "text": "Azithromycin", "correct": true}, {"label": "B", "text": "Isoniazid", "correct": false}, {"label": "C", "text": "Dapsone", "correct": false}, {"label": "D", "text": "Cotrimoxazole", "correct": false}], "correct_answer": "A. Azithromycin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Azithromycin MAC infection can present with clinical features such as Fever, diarrhea, sweating Hepatosplenomegaly Intra Abdominal lymphadenopathy Weight loss, wasting, and anemia Agents used for prophylaxis Azithromycin Clarithromycin Ethambutol Alternative agent- Rifabutin</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- So, We can

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Surgery E&amp;D Part 1 (Mission Neet Pg)   01 09 2023   2023 09 01</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Surgery E&amp;D Part 1 (Mission Neet Pg)   01 09 2023   2023 09 01</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                60 Questions | 240 Total Marks | 70 min Duration | ~70.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 60 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 70 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 60</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Surgery E&amp;D Part 1 (Mission Neet Pg)   01 09 2023   2023 09 01 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 60</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 60 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Following head trauma, patient opens eyes to pain, localize pain on right trapezium and but withdraws on left side, and speaks incoherent words. His GCS is:", "options": [{"label": "A", "text": "8", "correct": false}, {"label": "B", "text": "9", "correct": false}, {"label": "C", "text": "10", "correct": true}, {"label": "D", "text": "11", "correct": false}], "correct_answer": "C. 10", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) 10</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Glasgow Coma Scale scoring: E (Eye opening), V (Verbal response), and M (Motor response), and recognize that for dual motor responses, the higher score should be selected.</li><li>➤ Glasgow coma scale</li><li>➤ Glasgow coma scale</li><li>➤ Best Eye opening (4 to 1): Spontaneous/verbal/pain/none -Best Verbal (5 to 1): oriented/confused/inappropriate words/sounds /none Best Motor (6 to 1): Obeys commands/localizes pain/ withdraws/ flexion/ extension/none</li><li>➤ Best Eye opening (4 to 1): Spontaneous/verbal/pain/none</li><li>➤ -Best Verbal (5 to 1): oriented/confused/inappropriate words/sounds /none</li><li>➤ Best Motor (6 to 1): Obeys commands/localizes pain/ withdraws/ flexion/ extension/none</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient was brought to the emergency following a car accident. His Blood Pressure is 90/60 mm of Hg, His Glasgow coma scale is 9. He has suffered injuries to the abdominal viscera. The least likely cause of hypovolemia in this patient is?", "options": [{"label": "A", "text": "Splenic injury", "correct": false}, {"label": "B", "text": "Subdural hematoma", "correct": true}, {"label": "C", "text": "Retroperitoneal hematoma", "correct": false}, {"label": "D", "text": "Hemothorax", "correct": false}], "correct_answer": "B. Subdural hematoma", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Subdural hematoma</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Subdural hematomas are serious due to their impact on intracranial pressure, they do not cause hypovolemia, unlike injuries involving major blood loss in the abdomen or thoracic cavities.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old lady presents to ER with history of road accident. On examination, pulse is 110/m, BP 90/60 mm Hg, JVP is elevated with prominent neck veins. On chest examination, left side is normal but right shows hyper-resonance and bruising. An attempt at needle insertion in 5th intercostal space yields no improvement in BP. What is the next step?", "options": [{"label": "A", "text": "Immediate intercostal drain insertion", "correct": false}, {"label": "B", "text": "Finger thoracotomy", "correct": true}, {"label": "C", "text": "Emergency room thoracotomy", "correct": false}, {"label": "D", "text": "Chest X ray PA view", "correct": false}], "correct_answer": "B. Finger thoracotomy", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/09/01/image-1.jpg"], "explanation": "<p><strong>Ans. B) Finger thoracotomy</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In failed needle decompression for tension pneumothorax, proceed with finger thoracotomy to prevent rapid deterioration.</li><li>➤ TENSION PNEUMO</li><li>➤ TENSION PNEUMO</li><li>➤ Do Not Wait for X-Ray Immediate needle thoracotomy-> then X ray-> ICD insertion in triangle of safety If needle thoracotomy fails → Finger thoracotomy is attempted Boundaries- P Major, Latissimus Dorsi and 5th IC space</li><li>➤ Do Not Wait for X-Ray</li><li>➤ Immediate needle thoracotomy-> then X ray-> ICD insertion in triangle of safety</li><li>➤ If needle thoracotomy fails → Finger thoracotomy is attempted</li><li>➤ Boundaries- P Major, Latissimus Dorsi and 5th IC space</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A young patient suffered from Blunt trauma to the abdomen and was brought to the Emergency room. He is unstable with a blood pressure of 90/60 mm of Hg. You the doctor, basic resuscitation is done with Intravenous fluids, FAST is positive. He is not improving despite Intravenous fluids. The next step is?", "options": [{"label": "A", "text": "Repeat FAST", "correct": false}, {"label": "B", "text": "CECT", "correct": false}, {"label": "C", "text": "Surgery", "correct": true}, {"label": "D", "text": "MRI", "correct": false}], "correct_answer": "C. Surgery", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Surgery</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In hemodynamically unstable patients with a positive FAST, proceed with immediate surgery to manage potential intra-abdominal bleeding.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "MC abdominal injury seen during primary blast trauma is:", "options": [{"label": "A", "text": "Terminal ileal/Cecal perforation", "correct": false}, {"label": "B", "text": "Sub-serosal hemorrhage", "correct": true}, {"label": "C", "text": "Mesenteric tear", "correct": false}, {"label": "D", "text": "Liver tear", "correct": false}], "correct_answer": "B. Sub-serosal hemorrhage", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Sub-serosal hemorrhage</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Sub-serosal hemorrhage is the most common abdominal injury resulting from primary blast trauma, followed by terminal ileal or cecal perforation.</li><li>➤ BLAST MECHANISMS</li><li>➤ BLAST MECHANISMS</li><li>➤ Primary- Overpressure- TM perf, blast lung, GI hemorrhage (MC), cecal perforation Secondary- Fragment injury Tertiary- Propelling/blunt injury- Crush injury Quaternary- Others- burns, inhalation</li><li>➤ Primary- Overpressure- TM perf, blast lung, GI hemorrhage (MC), cecal perforation</li><li>➤ Secondary- Fragment injury</li><li>➤ Tertiary- Propelling/blunt injury- Crush injury</li><li>➤ Quaternary- Others- burns, inhalation</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Following blunt chest trauma, patient is unconscious. There is disparity in BP between upper and lower limbs. Likely injury?", "options": [{"label": "A", "text": "Cardiac tamponade", "correct": false}, {"label": "B", "text": "Cardiac contusion", "correct": false}, {"label": "C", "text": "Aortic injury", "correct": true}, {"label": "D", "text": "Diaphragmatic rupture", "correct": false}], "correct_answer": "C. Aortic injury", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Aortic injury</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ BP disparity between limbs following chest trauma indicates possible aortic injury, particularly due to disruption near the ligamentum arteriosum.</li><li>➤ AORTIC INJURY</li><li>➤ AORTIC INJURY</li><li>➤ Decelerating chest trauma or penetrating injury MC site: Just distal to lig arteriosum/ left subclavian C/F: widening of pulse pressure/ diff BP in UL and LL CXR: widening of mediastinum Mx: Reduce BP, endovasc stent or sx repair</li><li>➤ Decelerating chest trauma or penetrating injury</li><li>➤ MC site: Just distal to lig arteriosum/ left subclavian</li><li>➤ C/F: widening of pulse pressure/ diff BP in UL and LL</li><li>➤ CXR: widening of mediastinum</li><li>➤ Mx: Reduce BP, endovasc stent or sx repair</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presented to the OPD with chronic abdominal pain. On USG, the patient was found to have multiple calculi in the gall bladder and a dilated CBD. What is the next appropriate investigation?", "options": [{"label": "A", "text": "ERCP", "correct": false}, {"label": "B", "text": "MRCP", "correct": true}, {"label": "C", "text": "CECT", "correct": false}, {"label": "D", "text": "Percutaneous cholangiography", "correct": false}], "correct_answer": "B. MRCP", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) MRCP</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In patients with gallstones and a dilated CBD but no confirmed CBD stones, MRCP is the appropriate next step for non-invasive visualization of the biliary system.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presented to the emergency department with severe right upper quadrant pain. On evaluation, she was found to have cholecystitis. Laparoscopic cholecystectomy was performed for this patient and was discharged the next day. The patient presented on the 3rd day complaining of abdominal pain. On USG, a 5x5 cm fluid collection was seen in the subhepatic location. What is the next step in management?", "options": [{"label": "A", "text": "Peritoneal lavage and T-tube insertion", "correct": false}, {"label": "B", "text": "Give antibiotics and send home", "correct": false}, {"label": "C", "text": "ERCP and stenting", "correct": false}, {"label": "D", "text": "USG guided pigtail catheter drainage", "correct": true}], "correct_answer": "D. USG guided pigtail catheter drainage", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) USG guided pigtail catheter drainage</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In post-cholecystectomy patients with a suspected bile leak and localized fluid collection, the first step is to drain the collection with USG-guided pigtail catheter insertion to manage sepsis and prevent further complications.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the finding on endoscopy in the image shown:", "options": [{"label": "A", "text": "Gastric Antral Vascular Ectasia", "correct": true}, {"label": "B", "text": "Dieulafoy lesion", "correct": false}, {"label": "C", "text": "Gastric varices", "correct": false}, {"label": "D", "text": "H pylori gastritis", "correct": false}], "correct_answer": "A. Gastric Antral Vascular Ectasia", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/09/01/image-6.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/09/01/image-7.jpg"], "explanation": "<p><strong>Ans. A) Gastric Antral Vascular Ectasia</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The classic endoscopic appearance of Gastric Antral Vascular Ectasia (GAVE) as red, parallel streaks in the gastric antrum, often termed \"watermelon stomach,\" and differentiate it from other gastric bleeding sources based on location and visual characteristics.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Shown below is a popular sign that occurs in acute appendicitis. What is the name of this sign?", "options": [{"label": "A", "text": "Blumberg sign", "correct": false}, {"label": "B", "text": "McBurney’s sign", "correct": false}, {"label": "C", "text": "Rovsing’s sign", "correct": true}, {"label": "D", "text": "Pointing sign", "correct": false}], "correct_answer": "C. Rovsing’s sign", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/09/01/image-9.jpg"], "explanation_images": [], "explanation": "<p><strong>Ans. C) Rovsing’s sign</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In acute appendicitis, Rovsing’s sign is identified when pressing on the left lower quadrant produces pain in the right lower quadrant, suggesting referred peritoneal irritation.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most common ectopic tissue found in Meckel’s diverticulum is/are? Gastric Colonic Pancreatic Thyroid", "options": [{"label": "A", "text": "1 and 3", "correct": true}, {"label": "B", "text": "1 and 2", "correct": false}, {"label": "C", "text": "1 and 4", "correct": false}, {"label": "D", "text": "2 and 3", "correct": false}], "correct_answer": "A. 1 and 3", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) 1 and 3</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The most common types of ectopic tissue in Meckel’s diverticulum are gastric (most common) and pancreatic.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A pregnant female underwent LSCS for delivery and had meconium stained liquor. After 3–4 days of operation, she developed complains of vomiting, distension and constipation. Her BP and HR were normal. Bowel sounds were absent. What is the likely diagnosis?", "options": [{"label": "A", "text": "Adhesive obstruction", "correct": false}, {"label": "B", "text": "Paralytic ileus", "correct": true}, {"label": "C", "text": "Bowel injury", "correct": false}, {"label": "D", "text": "Meconium peritonitis", "correct": false}], "correct_answer": "B. Paralytic ileus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Paralytic ileus</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Postoperative paralytic ileus is a common temporary bowel dysfunction after abdominal surgery, presenting with absent bowel sounds, abdominal distension, and no signs of mechanical obstruction.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 54-year-old male presented with right groin swelling, located above inguinal ligament, medial to inferior epigastric artery. Cough impulse was present. What is the type of hernia and its management?", "options": [{"label": "A", "text": "Direct hernia and Bassini repair", "correct": false}, {"label": "B", "text": "Direct hernia and Lichtenstein repairs", "correct": true}, {"label": "C", "text": "Indirect hernia and Bassini repair", "correct": false}, {"label": "D", "text": "Indirect hernia and Lichtenstein repair", "correct": false}], "correct_answer": "B. Direct hernia and Lichtenstein repairs", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Direct hernia and Lichtenstein repairs</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ A hernia located medial to the inferior epigastric artery is a direct inguinal hernia, and the preferred management is the Lichtenstein tension-free mesh repair.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30-year-old male presented with recurrent painful perianal nodules on buttocks with serous discharge. The image is given below. What is the best diagnostic test?", "options": [{"label": "A", "text": "Fistulogram", "correct": false}, {"label": "B", "text": "MRI perineum", "correct": true}, {"label": "C", "text": "Rigid sigmoidoscopy", "correct": false}, {"label": "D", "text": "Flexible sigmoidoscopy", "correct": false}], "correct_answer": "B. MRI perineum", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/09/01/image-14.jpg"], "explanation_images": [], "explanation": "<p><strong>Ans. B) MRI perineum</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In cases of suspected perianal fistula with recurrent nodules and discharge, MRI of the perineum is the preferred diagnostic test for accurately assessing the fistula

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Pcos</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Pcos</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                27 Questions | 108 Total Marks | 37 min Duration | ~82.22 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 27 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 37 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 27</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Pcos - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 27</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 27 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which of the following statements is incorrect regarding polycystic ovarian disease?", "options": [{"label": "A", "text": "Elevated LH hormone", "correct": false}, {"label": "B", "text": "Can cause infertility", "correct": false}, {"label": "C", "text": "May be associated with abnormal glucose tolerance test", "correct": false}, {"label": "D", "text": "Results in postdated pregnancy", "correct": true}], "correct_answer": "D. Results in postdated pregnancy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19753481701856192/19753481701856192.m3u8"}, {"text": "The following hormone is raised in polycystic ovarian syndrome:", "options": [{"label": "A", "text": "17- OH progesterone", "correct": false}, {"label": "B", "text": "Follicular stimulating hormone", "correct": false}, {"label": "C", "text": "Luteinizing hormone", "correct": true}, {"label": "D", "text": "Thyroid stimulating hormone.", "correct": false}], "correct_answer": "C. Luteinizing hormone", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78280011701856204/78280011701856204.m3u8"}, {"text": "PCOD – Hormonal status :", "options": [{"label": "A", "text": "LH decreased", "correct": false}, {"label": "B", "text": "LH Increased, FSH Normal to Low", "correct": true}, {"label": "C", "text": "FSH increased", "correct": false}, {"label": "D", "text": "17 OH progesterone", "correct": false}], "correct_answer": "B. LH Increased, FSH Normal to Low", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/1140141701856216/1140141701856216.m3u8"}, {"text": "Which of the following is the most likely diagnosis in 27 year old obese woman presenting with Oligomenorrhea, infertility and hirsutism?", "options": [{"label": "A", "text": "Polycystic ovaries", "correct": true}, {"label": "B", "text": "Endomettriosis", "correct": false}, {"label": "C", "text": "Pelvic inflammatory disease", "correct": false}, {"label": "D", "text": "Turner’s syndrome", "correct": false}], "correct_answer": "A. Polycystic ovaries", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13633021701856228/13633021701856228.m3u8"}, {"text": "In Polycystic ovarian diseases, all of the following are seen except: (Pgi type)", "options": [{"label": "A", "text": "Endometrial carcinoma", "correct": false}, {"label": "B", "text": "Increased FSH", "correct": false}, {"label": "C", "text": "Streak Ovaries", "correct": false}, {"label": "D", "text": "Insulin resistance", "correct": false}, {"label": "E", "text": "Hirutism", "correct": false}], "correct_answer": "Unknown", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53630191701856238/53630191701856238.m3u8"}, {"text": "All are true about polycytic ovarian disease except:", "options": [{"label": "A", "text": "Persistently elevated LH", "correct": false}, {"label": "B", "text": "Increased LH/ FSH ratio", "correct": false}, {"label": "C", "text": "Increased Dheas", "correct": false}, {"label": "D", "text": "Increased prolactin", "correct": true}], "correct_answer": "D. Increased prolactin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/40197921701856249/40197921701856249.m3u8"}, {"text": "The first step in the management of hirsutism due to stein- Leventhal syndrome is :", "options": [{"label": "A", "text": "OCP", "correct": true}, {"label": "B", "text": "HMG", "correct": false}, {"label": "C", "text": "Spironolactone", "correct": false}, {"label": "D", "text": "Bromocriptine", "correct": false}], "correct_answer": "A. OCP", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/68570891701856274/68570891701856274.m3u8"}, {"text": "Treatment of Hirsutism in PCOD, drugs used are:", "options": [{"label": "A", "text": "Menopausal Gonadotropin", "correct": false}, {"label": "B", "text": "GnRH", "correct": false}, {"label": "C", "text": "Spironolactone", "correct": false}, {"label": "D", "text": "Hcg", "correct": false}], "correct_answer": "Unknown", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26307581701856287/26307581701856287.m3u8"}, {"text": "Most common cause of Hirsutism:", "options": [{"label": "A", "text": "Polycystic ovary disease", "correct": true}, {"label": "B", "text": "Arrhenoblastoma", "correct": false}, {"label": "C", "text": "cushing syndrome", "correct": false}, {"label": "D", "text": "Congential adrenal hyperplasia", "correct": false}], "correct_answer": "A. Polycystic ovary disease", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31521651701856300/31521651701856300.m3u8"}, {"text": "All of the following are associated with polycystic ovarian syndrome except :", "options": [{"label": "A", "text": "Ovarian Carcinoma", "correct": false}, {"label": "B", "text": "Endometrial Carcinoma", "correct": false}, {"label": "C", "text": "Insulin resistance", "correct": false}, {"label": "D", "text": "Osteoporosis", "correct": true}], "correct_answer": "D. Osteoporosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60585701701856311/60585701701856311.m3u8"}, {"text": "The biochemical changes in established cases of sterinleventhal syndrome are as mentioned except:", "options": [{"label": "A", "text": "Marked elevation of LH in contrast to FSH", "correct": false}, {"label": "B", "text": "Insulin resistance", "correct": false}, {"label": "C", "text": "Elevation of plasma testosterone", "correct": false}, {"label": "D", "text": "Elevation in the level of sex hormone binding globulin (SHBG) level", "correct": true}], "correct_answer": "D. Elevation in the level of sex hormone binding globulin (SHBG) level", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/16289061701856331/16289061701856331.m3u8"}, {"text": "As regard the PCOS and hyperinsulinaemia:", "options": [{"label": "A", "text": "Hyperinsulinaemia is observed in about 40% to 80% of women with PCOS", "correct": true}, {"label": "B", "text": "Hyperinsulinaemia stimulates hepatic synthesis of SHBG", "correct": false}, {"label": "C", "text": "Metformin causes hypoglycaemia in normoglycaemic women", "correct": false}, {"label": "D", "text": "Metformin has many other health benefits", "correct": false}], "correct_answer": "A. Hyperinsulinaemia is observed in about 40% to 80% of women with PCOS", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The side effect of clomiphene because of which its use should be immediately stopped:", "options": [{"label": "A", "text": "Hotflashes", "correct": false}, {"label": "B", "text": "Multiple pregnancy", "correct": false}, {"label": "C", "text": "Terato genecity", "correct": false}, {"label": "D", "text": "Visual symptoms", "correct": true}], "correct_answer": "D. Visual symptoms", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31575121701856406/31575121701856406.m3u8"}, {"text": "A 30 year – old female complains of facial hair growth and oligomenorrhea. 1st investigation needed in this case is :", "options": [{"label": "A", "text": "TVS", "correct": false}, {"label": "B", "text": "S. testosterone levels", "correct": true}, {"label": "C", "text": "S. DhEAs level", "correct": false}, {"label": "D", "text": "17 – OH progesterone levels", "correct": false}], "correct_answer": "B. S. testosterone levels", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/50305881701856417/50305881701856417.m3u8"}, {"text": "Measuring 17 – OHP is useful in all of the following cases of hirsutism except :", "options": [{"label": "A", "text": "Rapid onset hirsutism", "correct": true}, {"label": "B", "text": "Early onset hirsutism", "correct": false}, {"label": "C", "text": "Family H/O CAH", "correct": false}, {"label": "D", "text": "Hirsutism in a premenarcheal female", "correct": false}], "correct_answer": "A. Rapid onset hirsutism", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54733521701856564/54733521701856564.m3u8"}, {"text": "Clitoromegaly is defined if clitoris is:", "options": [{"label": "A", "text": ">5 mm", "correct": false}, {"label": "B", "text": ">7 mm", "correct": false}, {"label": "C", "text": ">10 mm", "correct": true}, {"label": "D", "text": ">15 mm", "correct": false}], "correct_answer": "C. >10 mm", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52202031701856580/52202031701856580.m3u8"}, {"text": "According to Ferriman- Gallwey scoring system hirsutism is diagnosed when score is more than", "options": [{"label": "A", "text": "8", "correct": true}, {"label": "B", "text": "12", "correct": false}, {"label": "C", "text": "16", "correct": false}, {"label": "D", "text": "20", "correct": false}], "correct_answer": "A. 8", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56626861701856592/56626861701856592.m3u8"}, {"text": "BMI of an overweight female is :", "options": [{"label": "A", "text": "19 – 24", "correct": false}, {"label": "B", "text": "25 – 29", "correct": true}, {"label": "C", "text": "30 – 34", "correct": false}, {"label": "D", "text": "Less than 19", "correct": false}], "correct_answer": "B. 25 – 29", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are used in management of hirsutism except :", "options": [{"label": "A", "text": "Spironolactone", "correct": false}, {"label": "B", "text": "GnRH", "correct": false}, {"label": "C", "text": "Danazol", "correct": true}, {"label": "D", "text": "OCPs", "correct": false}], "correct_answer": "C. Danazol", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/30278371701856772/30278371701856772.m3u8"}, {"text": "In PCOD, which of the following drugs is not used for infertility ?", "options": [{"label": "A", "text": "Spironolactone", "correct": true}, {"label": "B", "text": "Tamoxifen", "correct": false}, {"label": "C", "text": "Clomiphene", "correct": false}, {"label": "D", "text": "OC pill", "correct": false}], "correct_answer": "A. Spironolactone", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/62354621701856783/62354621701856783.m3u8"}, {"text": "Cytokine involved in ovarian hyperstimulation syn-drome:", "options": [{"label": "A", "text": "IL-2", "correct": false}, {"label": "B", "text": "VEGF", "correct": true}, {"label": "C", "text": "TNF-alpha", "correct": false}, {"label": "D", "text": "Endothelin", "correct": false}], "correct_answer": "B. VEGF", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15910331701856795/15910331701856795.m3u8"}, {"text": "A 31-year-old female presents to her physician complaining of rapid onset of hirsutism, deepening of the voice, irregular menses, clitoral enlargement, and acne. Which of the following is the most likely cause of this clinical presentation?", "options": [{"label": "A", "text": "Polycystic ovary syndrome (PCOS)", "correct": false}, {"label": "B", "text": "Androgen secreting tumour", "correct": true}, {"label": "C", "text": "Type II diabetes mellitus", "correct": false}, {"label": "D", "text": "Cushing syndrome", "correct": false}], "correct_answer": "B. Androgen secreting tumour", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/32148081701856820/32148081701856820.m3u8"}, {"text": "A 29-year-old woman and her partner are seen in the gynaecology outpatient clinic with primary infertility. They stopped using condoms 2 years ago and have had regular inter- course since then. The partner has no previous medical history of note The woman also has no specific previous medical history except for an appendectomy aged 12 years. Her periods occur every 31 to 46 days and can be heavy at times but not painful. The following is the ultrasound image. What is the diagnosis", "options": [{"label": "A", "text": "Endometriosis", "correct": false}, {"label": "B", "text": "PCOS", "correct": true}, {"label": "C", "text": "Unexplained infertility", "correct": false}, {"label": "D", "text": "Ovarian failure", "correct": false}], "correct_answer": "B. PCOS", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/image(1063).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59026421701856864/59026421701856864.m3u8"}, {"text": "All the following are correct lab associations with this syndrome except", "options": [{"label": "A", "text": "Raised LH", "correct": false}, {"label": "B", "text": "Normal FSH", "correct": false}, {"label": "C", "text": "Raised SHBG", "correct": true}, {"label": "D", "text": "Normal prolactin", "correct": false}], "correct_answer": "C. Raised SHBG", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Q20(6).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14187821701856920/14187821701856920.m3u8"}, {"text": "A 22-year-old woman consults you for treatment of hirsutism. She is obese and has facial acne and hirsusm and periareolar regions and a male escutcheon. Serum LH level is 35 mIU/mL and FSH is 9 mIU/mL. Androstenedione and testosterone levels are mildly elevated, but serum DHEAS is normal. The patient does not wish to conceive at this me. Which of the following single agents is the most appropriate treatment of her condition?", "options": [{"label": "A", "text": "Oral contraceptives", "correct": true}, {"label": "B", "text": "Corticosteroids", "correct": false}, {"label": "C", "text": "GnRH", "correct": false}, {"label": "D", "text": "Eflornithine hydrochloride", "correct": false}], "correct_answer": "A. Oral contraceptives", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/46278721701856943/46278721701856943.m3u8"}, {"text": "One of your patients with polycystic ovarian syndrome presents to the emergency room complaining of prolonged, heavy vaginal bleeding. She started having heavy vaginal bleeding 8 days ago. On arrival at the emergency room, the patient has a supine blood pressure of 102/64 mm Hg with a pulse of 96 bpm but has orthostatic hypotension. While you wait for lab work to come back, you order intravenous fluids. After 2 hours, the patient is no longer orthostatic. A transvaginal ultrasound showed an atrophic appearing endometrial stripe. She continues to have heavy bleeding. Which of the following is the best next step in the management of this patient?", "options": [{"label": "A", "text": "Perform a dilation and curettage", "correct": false}, {"label": "B", "text": "Administer a blood transfusion to treat her severe anemia.", "correct": false}, {"label": "C", "text": "Administer high-dose estrogen therapy.", "correct": true}, {"label": "D", "text": "Administer antiprostaglandins", "correct": false}], "correct_answer": "C. Administer high-dose estrogen therapy.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/2413841701856960/2413841701856960.m3u8"}, {"text": "A 32-year-old G0P0 woman is noted to have irregular menses and hirsutism. Which of the following is consistent with polycystic ovarian syndrome?", "options": [{"label": "A", "text": "Elevated 17-hydroxyprogesterone level", "correct": false}, {"label": "B", "text": "Finding of a 9-cm right ovarian mass", "correct": false}, {"label": "C", "text": "Vaginal bleeding after a 5-day course of progesterone oral therapy", "correct": true}, {"label": "D", "text": "DEXA scan showing osteopenia", "correct": false}], "correct_answer": "C. Vaginal bleeding after a 5-day course of progesterone oral therapy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/75206211701856974/75206211701856974.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

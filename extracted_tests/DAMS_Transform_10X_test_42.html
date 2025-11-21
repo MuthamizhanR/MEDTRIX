@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Sarpo  Fmt</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Sarpo  Fmt</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                30 Questions | 120 Total Marks | 40 min Duration | ~80.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 30 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 40 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 30</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Sarpo  Fmt - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 30</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 30 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 30-year-old male presents with following finding. Which of the following clinical tests will aid in diagnosis?", "options": [{"label": "A", "text": "Grattage Test", "correct": true}, {"label": "B", "text": "Nikolsky test", "correct": false}, {"label": "C", "text": "Asboe Hansen test", "correct": false}, {"label": "D", "text": "Patch test", "correct": false}], "correct_answer": "A. Grattage Test", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(1174).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient is being administered flumazenil to reverse benzodiazepine anesthesia. Which of the following is the most appropriate way to administer this drug?", "options": [{"label": "A", "text": "Oral via ryles tube", "correct": false}, {"label": "B", "text": "Continuous infusion", "correct": true}, {"label": "C", "text": "Single bolus dose", "correct": false}, {"label": "D", "text": "Inhalational via endotracheal tube", "correct": false}], "correct_answer": "B. Continuous infusion", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A newborn male baby is being evaluated for posterior urethral valve. What is the investigation of choice?", "options": [{"label": "A", "text": "MCU", "correct": true}, {"label": "B", "text": "Tc DTPA scan", "correct": false}, {"label": "C", "text": "USG", "correct": false}, {"label": "D", "text": "DMSA scan", "correct": false}], "correct_answer": "A. MCU", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 32-year-old man is brought to the psychiatric OPD with complaints that he misidentifies stranger’s as a single persecutor wearing different disguises. What is this syndrome called?", "options": [{"label": "A", "text": "Cotard syndrome", "correct": false}, {"label": "B", "text": "Capgras syndrome", "correct": false}, {"label": "C", "text": "Fregoli syndrome", "correct": true}, {"label": "D", "text": "Magnan syndrome", "correct": false}], "correct_answer": "C. Fregoli syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A person with a gunshot wound of size 3 cm presents with a comminuted fracture of the tibia. On examination, the distal pulse could not be felt. Which grade does this belong to according to the Gustilo-Anderson classification?", "options": [{"label": "A", "text": "II", "correct": false}, {"label": "B", "text": "IIIA", "correct": false}, {"label": "C", "text": "IIIB", "correct": false}, {"label": "D", "text": "IIIC", "correct": true}], "correct_answer": "D. IIIC", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-year-old man presents with complaints of constipation, abdominal cramps, and tingling in the extremities. His bloodwork shows a lead level of 50 µg/dL. What is the antidote preferred for this patient?", "options": [{"label": "A", "text": "Dimercaprol", "correct": false}, {"label": "B", "text": "DMSA", "correct": true}, {"label": "C", "text": "Penicillamine", "correct": false}, {"label": "D", "text": "DMPS", "correct": false}], "correct_answer": "B. DMSA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A man presents with multiple lesions on his face and upper back, diagnosed as acne vulgaris. Which of the following is the most effective treatment for his symptoms?", "options": [{"label": "A", "text": "Systemic Minocycline", "correct": false}, {"label": "B", "text": "Systemic Isoretinoin", "correct": true}, {"label": "C", "text": "Systemic Doxycycline", "correct": false}, {"label": "D", "text": "Topical Dapsone", "correct": false}], "correct_answer": "B. Systemic Isoretinoin", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7(536).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient undergoing surgery receives succinylcholine for muscle relaxation and later develops hyperthermia, rigidity, tremors, and tachycardia. What is the most appropriate treatment for this condition?", "options": [{"label": "A", "text": "Diazepam", "correct": false}, {"label": "B", "text": "Dantrolene", "correct": true}, {"label": "C", "text": "Promethazine", "correct": false}, {"label": "D", "text": "Halothane", "correct": false}], "correct_answer": "B. Dantrolene", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 69-year-old man has been experiencing worsening headaches and new-onset seizures. MRI with contrast was done and is given below. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Glioblastoma", "correct": true}, {"label": "B", "text": "Ependymoma", "correct": false}, {"label": "C", "text": "Meningioma", "correct": false}, {"label": "D", "text": "Acoustic schwannoma", "correct": false}], "correct_answer": "A. Glioblastoma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/9(457).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A middle-aged man presents to the psychiatry OPD with a history of speaking to himself, hearing two people talk about him, reduced affect, and impaired judgment which is present for more than 6 months. What is the likely diagnosis?", "options": [{"label": "A", "text": "Schizophreniform disorder", "correct": false}, {"label": "B", "text": "Schizoaffective disorder", "correct": false}, {"label": "C", "text": "Schizophrenia", "correct": true}, {"label": "D", "text": "Schizoid personality disorder", "correct": false}], "correct_answer": "C. Schizophrenia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 12-year-old boy complains of bony pain and swelling in his left upper arm for 3 months. On plain X-ray, the following findings were seen. What is the most likely gene mutation involved in this disease?", "options": [{"label": "A", "text": "RAS gene", "correct": false}, {"label": "B", "text": "p53 gene", "correct": true}, {"label": "C", "text": "APC gene", "correct": false}, {"label": "D", "text": "PTEN gene", "correct": false}], "correct_answer": "B. p53 gene", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/11(356).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A deceased man is being evaluated for suspected poisoning. During an autopsy, you get a peculiar garlicky smell from the nose and mouth of the body. Which of the following agents would you suspect?", "options": [{"label": "A", "text": "Thallium sulphate", "correct": false}, {"label": "B", "text": "Hydrogen sulphide", "correct": false}, {"label": "C", "text": "Cyanide", "correct": false}, {"label": "D", "text": "Phosphorus", "correct": true}], "correct_answer": "D. Phosphorus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the ulcer shown in the in a patient?", "options": [{"label": "A", "text": "Arterial ulcer", "correct": false}, {"label": "B", "text": "Venous ulcer", "correct": true}, {"label": "C", "text": "Callous ulcer", "correct": false}, {"label": "D", "text": "Neuropathic ulcer", "correct": false}], "correct_answer": "B. Venous ulcer", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/13(307).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Shortly after receiving an epidural anesthesia with 1.5% lignocaine containing epinephrine, the patient developed bradycardia, hypotension, and apnea. What is the most probable diagnosis?", "options": [{"label": "A", "text": "Accidental subdural injection", "correct": false}, {"label": "B", "text": "Accidental subarachnoid injection", "correct": true}, {"label": "C", "text": "Accidental intravascular injection", "correct": false}, {"label": "D", "text": "Allergic manifestation to lignocaine", "correct": false}], "correct_answer": "B. Accidental subarachnoid injection", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A female presented with breathlessness and pleuritic chest pain. D-dimer levels were elevated and pulmonary embolism was suspected. What is the next best investigation?", "options": [{"label": "A", "text": "MRI", "correct": false}, {"label": "B", "text": "V/Q scan", "correct": false}, {"label": "C", "text": "Plain CT", "correct": false}, {"label": "D", "text": "CT angiography", "correct": true}], "correct_answer": "D. CT angiography", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 26-year-old woman comes for a follow-up, 1 week after her first child was born. Her husband reports that his wife appears uninterested in taking care of the baby, has sudden crying outbursts and seems sad for no reason for the last 2 days. Her sleep is disturbed and she feels fatigued. She is able to carry out the daily chores and enjoys watching television like before. The most likely diagnosis is?", "options": [{"label": "A", "text": "Postpartum blues", "correct": true}, {"label": "B", "text": "Postpartum depression", "correct": false}, {"label": "C", "text": "Postpartum psychosis", "correct": false}, {"label": "D", "text": "Postpartum delirium", "correct": false}], "correct_answer": "A. Postpartum blues", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "X-ray spine of a patient with chronic back pain shows characteristic appearance of cod fish vertebrae. What is the investigation of choice to diagnose the underlying condition?", "options": [{"label": "A", "text": "DEXA", "correct": true}, {"label": "B", "text": "Serum calcium, ALP levels", "correct": false}, {"label": "C", "text": "Bone scan", "correct": false}, {"label": "D", "text": "Quantitative CT", "correct": false}], "correct_answer": "A. DEXA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A woman gave birth to twins. Although a detailed evaluation revealed the same gestational age, the father believed that the children did not belong to him and requested DNA testing. After testing, it was found that one child did not belong to him. What is this case best described as?", "options": [{"label": "A", "text": "Spurious pregnancy", "correct": false}, {"label": "B", "text": "Superfecundation", "correct": true}, {"label": "C", "text": "Feigned pregnancy", "correct": false}, {"label": "D", "text": "Superfetation", "correct": false}], "correct_answer": "B. Superfecundation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following malignancies is most commonly associated with the paraneoplastic manifestation shown below?", "options": [{"label": "A", "text": "Breast carcinoma", "correct": false}, {"label": "B", "text": "Bladder cancer", "correct": false}, {"label": "C", "text": "Gastric adenocarcinoma", "correct": true}, {"label": "D", "text": "Lung adenocarcinoma", "correct": false}], "correct_answer": "C. Gastric adenocarcinoma", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/19(189).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a patient scheduled for gastric surgery, what is the most likely cause when, under general anesthesia, the left lung collapses after intubation, with auscultation showing breath sounds exclusively on the right side?", "options": [{"label": "A", "text": "Mucus buildup blocking the endotracheal tube", "correct": false}, {"label": "B", "text": "Pneumothorax on the left side caused by positive pressure ventilation", "correct": false}, {"label": "C", "text": "Bronchospasm", "correct": false}, {"label": "D", "text": "Endobronchial intubation of the right main bronchus", "correct": true}], "correct_answer": "D. Endobronchial intubation of the right main bronchus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 39-year-old woman comes to the ED with complaints of severe, right-sided, colicky flank pain that radiates to her groin. She has a history of recurrent kidney stones. What is the investigation of choice?", "options": [{"label": "A", "text": "USG", "correct": false}, {"label": "B", "text": "Non contrast CT", "correct": true}, {"label": "C", "text": "Contrast enhanced CT", "correct": false}], "correct_answer": "B. Non contrast CT", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 16-year-old girl presented with overfamiliarity, flight of ideas, elevated mood, increased sexual desire, and pseudohallucination. What is the likely diagnosis?", "options": [{"label": "A", "text": "Mania", "correct": true}, {"label": "B", "text": "Hypomania", "correct": false}, {"label": "C", "text": "Cyclothymia", "correct": false}, {"label": "D", "text": "Schizomania", "correct": false}], "correct_answer": "A. Mania", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A young man presented to your OPD with pain and swelling over the right knee following a traumatic injury. Aspiration of the joint revealed hemarthrosis. Injury to which of the following structures would not have led to this presentation?", "options": [{"label": "A", "text": "Lateral meniscus", "correct": false}, {"label": "B", "text": "Anterior cruciate ligament", "correct": false}, {"label": "C", "text": "Posterior cruciate ligament", "correct": false}, {"label": "D", "text": "Medial collateral ligament", "correct": true}], "correct_answer": "D. Medial collateral ligament", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A man sexually aroused when he wears his female partner’s dress and heels. He denies getting attracted to male. What is this condition called?", "options": [{"label": "A", "text": "Gay sexual preference", "correct": false}, {"label": "B", "text": "Transvestic fetishism", "correct": true}, {"label": "C", "text": "Gender dysphoria", "correct": false}, {"label": "D", "text": "Voyeurism", "correct": false}], "correct_answer": "B. Transvestic fetishism", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A female presented a few weeks ago to the OPD with an itchy skin rash. She was prescribed a topical ointment that relieved the itching. However, after a few days of stopping the ointment application, she presented to the OPD again with the same complaints. The lesions are shown below. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Tinea corporis", "correct": false}, {"label": "B", "text": "Tinea incognito", "correct": true}, {"label": "C", "text": "Tinea cruris", "correct": false}, {"label": "D", "text": "Psoriasis", "correct": false}], "correct_answer": "B. Tinea incognito", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/25(140).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old man was posted for open inguinal hernia repair. He is a known hypertensive for the past 6 years and is poorly controlled on medications. Which of the following muscle relaxant can exacerbate hypertension in this patient?", "options": [{"label": "A", "text": "Pancuronium", "correct": true}, {"label": "B", "text": "Atracuronium", "correct": false}, {"label": "C", "text": "Vecuronium", "correct": false}, {"label": "D", "text": "Rocuronium", "correct": false}], "correct_answer": "A. Pancuronium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 59-year-old male patient presented with fever and non-productive cough for 1 month. Chest x-ray was normal. HRCT is given below. What is the diagnosis?", "options": [{"label": "A", "text": "Endobronchial tuberculosis", "correct": true}, {"label": "B", "text": "Alveolar proteinosis", "correct": false}, {"label": "C", "text": "Wegener’s granulomatosis", "correct": false}, {"label": "D", "text": "Sarcoidosis", "correct": false}], "correct_answer": "A. Endobronchial tuberculosis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/27(98).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A girl presented with multiple episodes of loss of consciousness. The episodes usually happen in the presence of the family members in the morning. She regains consciousness after 15 to 30 minutes and usually remembers the events during these episodes. There is no history of tongue bite or urinary incontinence. What should be done in this scenario?", "options": [{"label": "A", "text": "Start on ketogenic diet", "correct": false}, {"label": "B", "text": "Initiate aversion therapy", "correct": false}, {"label": "C", "text": "Give valproate", "correct": false}, {"label": "D", "text": "Start behavioural therapy", "correct": true}], "correct_answer": "D. Start behavioural therapy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 13-year-old boy developed sudden pain and tenderness over his left hip following a minor fall. There is restricted abduction and internal rotation. He is a known case of hypothyroidism and weighs 80kg. What is the likely diagnosis?", "options": [{"label": "A", "text": "Perthes disease", "correct": false}, {"label": "B", "text": "DDH", "correct": false}, {"label": "C", "text": "Fracture femur neck", "correct": false}, {"label": "D", "text": "SCFE", "correct": true}], "correct_answer": "D. SCFE", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A female died due to an unnatural cause within 7 years of marriage, and allegations have been raised. Under which section will the inquest be conducted?", "options": [{"label": "A", "text": "304A IPC/106 BNS", "correct": false}, {"label": "B", "text": "174 CrPC/194 BNSS", "correct": false}, {"label": "C", "text": "176 CrPC/196 BNSS", "correct": true}, {"label": "D", "text": "313 IPC/89 BNS", "correct": false}], "correct_answer": "C. 176 CrPC/196 BNSS", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

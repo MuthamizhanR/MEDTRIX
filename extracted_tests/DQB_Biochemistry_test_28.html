@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Vitamins</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Vitamins</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                83 Questions | 376 Total Marks | 93 min Duration | ~67.23 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 83 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 93 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 83</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Vitamins - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 83</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 83 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which of the following is a water soluble vitamin?", "options": [{"label": "A", "text": "Vitamin A", "correct": false}, {"label": "B", "text": "Vitamin K", "correct": false}, {"label": "C", "text": "Linolenic acid", "correct": false}, {"label": "D", "text": "Folic acid", "correct": true}], "correct_answer": "D. Folic acid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/48299561704269919/48299561704269919.m3u8"}, {"text": "Endogenous vitamin is", "options": [{"label": "A", "text": "Ascorbate", "correct": false}, {"label": "B", "text": "Cobalamine", "correct": false}, {"label": "C", "text": "Folic acid", "correct": false}, {"label": "D", "text": "Niacin", "correct": true}], "correct_answer": "D. Niacin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64241411704269943/64241411704269943.m3u8"}, {"text": "Vitamin formed in the body", "options": [{"label": "A", "text": "Vitamin B 1", "correct": false}, {"label": "B", "text": "Vitamin B 3", "correct": true}, {"label": "C", "text": "Vitamin B 6", "correct": false}, {"label": "D", "text": "Vitamin B 12", "correct": false}], "correct_answer": "B. Vitamin B 3", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12724791704269959/12724791704269959.m3u8"}, {"text": "Which of the following vitamin acts via intranuclear receptors", "options": [{"label": "A", "text": "Vitamin B 1", "correct": false}, {"label": "B", "text": "Vitamin D", "correct": true}, {"label": "C", "text": "Vitamin E", "correct": false}, {"label": "D", "text": "Vitamin K", "correct": false}], "correct_answer": "B. Vitamin D", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74211431704270375/74211431704270375.m3u8"}, {"text": "Which of the following vitamin is excreted in the urine", "options": [{"label": "A", "text": "Vitamin A", "correct": false}, {"label": "B", "text": "Vitamin C", "correct": true}, {"label": "C", "text": "Vitamin K", "correct": false}, {"label": "D", "text": "Vitamin D", "correct": false}], "correct_answer": "B. Vitamin C", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/66650531704270395/66650531704270395.m3u8"}, {"text": "Which of the following is not an antioxidant", "options": [{"label": "A", "text": "Vitamin B 1", "correct": true}, {"label": "B", "text": "Vitamin E", "correct": false}, {"label": "C", "text": "Vitamin C", "correct": false}, {"label": "D", "text": "Beta-carotene", "correct": false}], "correct_answer": "A. Vitamin B 1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9556271704270415/9556271704270415.m3u8"}, {"text": "Which of the following is a component of the visual pigment rhodopsin", "options": [{"label": "A", "text": "Retinal", "correct": true}, {"label": "B", "text": "Retinol", "correct": false}, {"label": "C", "text": "Retinoic acid", "correct": false}, {"label": "D", "text": "Beta-carotene", "correct": false}], "correct_answer": "A. Retinal", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56962891704270429/56962891704270429.m3u8"}, {"text": "Most abundant form of pro vitamin A is", "options": [{"label": "A", "text": "Beta- carotene", "correct": true}, {"label": "B", "text": "Alpha carotene", "correct": false}, {"label": "C", "text": "Lycopene", "correct": false}, {"label": "D", "text": "Cryptoxanthine", "correct": false}], "correct_answer": "A. Beta- carotene", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/38631621704270447/38631621704270447.m3u8"}, {"text": "Biologically active molecules of vitamin A consists of following combinations", "options": [{"label": "A", "text": "Retinal, conjugase and retinoic acid", "correct": false}, {"label": "B", "text": "Retinal, retinol and retinoic acid", "correct": true}, {"label": "C", "text": "Retinal, retinol and tetrahydrofolate", "correct": false}, {"label": "D", "text": "Retinal, retinaldehyde and PABA", "correct": false}], "correct_answer": "B. Retinal, retinol and retinoic acid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/73070921704270460/73070921704270460.m3u8"}, {"text": "Vitamin A is stored mnly as retinol esters in", "options": [{"label": "A", "text": "Liver", "correct": true}, {"label": "B", "text": "Kidney", "correct": false}, {"label": "C", "text": "Retina", "correct": false}, {"label": "D", "text": "Muscle", "correct": false}], "correct_answer": "A. Liver", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/16697311704270475/16697311704270475.m3u8"}, {"text": "Papilledema and headache are features of which vitamin’s toxicity", "options": [{"label": "A", "text": "Vitamin A", "correct": true}, {"label": "B", "text": "Vitamin C", "correct": false}, {"label": "C", "text": "Vitamin E", "correct": false}, {"label": "D", "text": "Vitamin K", "correct": false}], "correct_answer": "A. Vitamin A", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/38473551704270528/38473551704270528.m3u8"}, {"text": "Vitamin A intoxication causes injury to", "options": [{"label": "A", "text": "Endoplasmic reticulum", "correct": false}, {"label": "B", "text": "Mitochondria", "correct": false}, {"label": "C", "text": "Microtubules", "correct": false}, {"label": "D", "text": "Lysosomes", "correct": true}], "correct_answer": "D. Lysosomes", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59097401704270545/59097401704270545.m3u8"}, {"text": "Which of the following vitamin is teratogenic in large doses", "options": [{"label": "A", "text": "Vitamin A", "correct": true}, {"label": "B", "text": "Vitamin D", "correct": false}, {"label": "C", "text": "Vitamin E", "correct": false}, {"label": "D", "text": "Vitamin K", "correct": false}], "correct_answer": "A. Vitamin A", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14556301704270565/14556301704270565.m3u8"}, {"text": "Active form of vitamin D is", "options": [{"label": "A", "text": "Cholecalciferol", "correct": false}, {"label": "B", "text": "25-OH vit-D", "correct": false}, {"label": "C", "text": "24, 25(OH)2 vit-D", "correct": false}, {"label": "D", "text": "1, 25 (OH)2 vit-D", "correct": true}], "correct_answer": "D. 1, 25 (OH)2 vit-D", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/609811704270585/609811704270585.m3u8"}, {"text": "Hormonal vitamin is", "options": [{"label": "A", "text": "Niacin", "correct": false}, {"label": "B", "text": "Riboflavin", "correct": false}, {"label": "C", "text": "Pyridoxin", "correct": false}, {"label": "D", "text": "Vitamin D", "correct": true}], "correct_answer": "D. Vitamin D", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/8831011704270602/8831011704270602.m3u8"}, {"text": "Best source of vitamin D", "options": [{"label": "A", "text": "Milk", "correct": false}, {"label": "B", "text": "Egg yolk", "correct": false}, {"label": "C", "text": "Papaya", "correct": false}, {"label": "D", "text": "Fish liver", "correct": true}], "correct_answer": "D. Fish liver", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/51523231704270618/51523231704270618.m3u8"}, {"text": "Vitamin E deficiency causes all except", "options": [{"label": "A", "text": "Areflexia", "correct": false}, {"label": "B", "text": "Ataxia", "correct": false}, {"label": "C", "text": "Neuropathy", "correct": false}, {"label": "D", "text": "Opthalmoplegia", "correct": false}, {"label": "E", "text": "None of the above", "correct": true}], "correct_answer": "E. None of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60976341704270634/60976341704270634.m3u8"}, {"text": "Major function of vitamin E in the body", "options": [{"label": "A", "text": "Carboxylation reaction", "correct": false}, {"label": "B", "text": "Blood clotting", "correct": false}, {"label": "C", "text": "Protection of biological membrane from free radical damage", "correct": true}, {"label": "D", "text": "Regulation of energy metabolism", "correct": false}], "correct_answer": "C. Protection of biological membrane from free radical damage", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19774031704270831/19774031704270831.m3u8"}, {"text": "All of the following are chain breaking anti oxidant except", "options": [{"label": "A", "text": "Ascorbic acid", "correct": false}, {"label": "B", "text": "Polyphenolic flavinols", "correct": false}, {"label": "C", "text": "Tocopherol", "correct": false}, {"label": "D", "text": "Superoxide dismutase", "correct": true}], "correct_answer": "D. Superoxide dismutase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/38856371704270847/38856371704270847.m3u8"}, {"text": "Lipid soluble plasma membrane associated antioxidant is", "options": [{"label": "A", "text": "Vitamin C", "correct": false}, {"label": "B", "text": "Vitamin E", "correct": true}, {"label": "C", "text": "Glutathione", "correct": false}, {"label": "D", "text": "Ubiquitin", "correct": false}], "correct_answer": "B. Vitamin E", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5365391704270859/5365391704270859.m3u8"}, {"text": "Which of the following is a most potent or powerful chn breaking antioxidant", "options": [{"label": "A", "text": "Glutathione peroxidase", "correct": false}, {"label": "B", "text": "Vitamin D", "correct": false}, {"label": "C", "text": "Alpha tocopherol", "correct": true}, {"label": "D", "text": "Vitamin K", "correct": false}], "correct_answer": "C. Alpha tocopherol", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/2031361704270889/2031361704270889.m3u8"}, {"text": "The role of vitamin K in the epoxide cycle is", "options": [{"label": "A", "text": "Carboxylation of aspartate", "correct": false}, {"label": "B", "text": "Carboxylation of the glutamate", "correct": true}, {"label": "C", "text": "Dehydrogenation of the aspartate", "correct": false}, {"label": "D", "text": "Dehydrogenation of the glutamate", "correct": false}], "correct_answer": "B. Carboxylation of the glutamate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3108451704270903/3108451704270903.m3u8"}, {"text": "Vitamin K dependent coagulation factors are", "options": [{"label": "A", "text": "II and III", "correct": false}, {"label": "B", "text": "VIII and XII", "correct": false}, {"label": "C", "text": "IX and X", "correct": true}, {"label": "D", "text": "III and V", "correct": false}], "correct_answer": "C. IX and X", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61441291704270943/61441291704270943.m3u8"}, {"text": "Which of the following mineral require for function of the vitamin K", "options": [{"label": "A", "text": "Iron", "correct": false}, {"label": "B", "text": "Selenium", "correct": false}, {"label": "C", "text": "Calcium", "correct": true}, {"label": "D", "text": "Magnesium", "correct": false}], "correct_answer": "C. Calcium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24806501704270963/24806501704270963.m3u8"}, {"text": "Similarity between vitamin K and vitamin C", "options": [{"label": "A", "text": "Both have anti infective activity", "correct": false}, {"label": "B", "text": "Both help in post translational modifications", "correct": true}, {"label": "C", "text": "Both are involved in coagulation cascade", "correct": false}, {"label": "D", "text": "Both help in conversion of proline to hydroxyproline", "correct": false}], "correct_answer": "B. Both help in post translational modifications", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/49414901704270971/49414901704270971.m3u8"}, {"text": "Which of the following is true for vitamin K", "options": [{"label": "A", "text": "Chronic use of antibiotics cause deficiency of vitamin K", "correct": true}, {"label": "B", "text": "It is water soluble vitamin", "correct": false}, {"label": "C", "text": "It helps in carboxylation of factor VI", "correct": false}, {"label": "D", "text": "Vitamin K deficiency manifests as multiple thrombotic episodes", "correct": false}], "correct_answer": "A. Chronic use of antibiotics cause deficiency of vitamin K", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/50985131704270983/50985131704270983.m3u8"}, {"text": "Which of the following vitamin is not needed in TCA cycle", "options": [{"label": "A", "text": "Thiamine", "correct": false}, {"label": "B", "text": "Niacin", "correct": false}, {"label": "C", "text": "Riboflavin", "correct": false}, {"label": "D", "text": "Pyridoxin", "correct": true}], "correct_answer": "D. Pyridoxin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54888451704270996/54888451704270996.m3u8"}, {"text": "All of the following vitamins are used in energy metabolism except", "options": [{"label": "A", "text": "Vitamin B 1", "correct": false}, {"label": "B", "text": "Vitamin B 3", "correct": false}, {"label": "C", "text": "Vitamin B 7", "correct": false}, {"label": "D", "text": "Vitamin B 12", "correct": true}], "correct_answer": "D. Vitamin B 12", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4894271704271009/4894271704271009.m3u8"}, {"text": "Vitamin B1 is a cofactor for", "options": [{"label": "A", "text": "Aldolase A", "correct": false}, {"label": "B", "text": "Aldolase B", "correct": false}, {"label": "C", "text": "Transaldolase", "correct": false}, {"label": "D", "text": "Transketolase", "correct": true}], "correct_answer": "D. Transketolase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/50277221704271023/50277221704271023.m3u8"}, {"text": "Thiamine acts as a cofactor in", "options": [{"label": "A", "text": "Transamination reactions", "correct": false}, {"label": "B", "text": "Conversion of pyridoxal to pyridoxal phosphate", "correct": false}, {"label": "C", "text": "Conversion of pyruvate to ayl CoA", "correct": true}, {"label": "D", "text": "Oxidation in respiratory chn", "correct": false}], "correct_answer": "C. Conversion of pyruvate to ayl CoA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5848571704271040/5848571704271040.m3u8"}, {"text": "Thiamine is not used in which of the following reactions", "options": [{"label": "A", "text": "Alphaketoglutarate to succinyl CoA", "correct": false}, {"label": "B", "text": "Lactate to pyruvate", "correct": true}, {"label": "C", "text": "Oxidative decarboxylation of alpha keto acids", "correct": false}, {"label": "D", "text": "Glucose to pentose", "correct": false}], "correct_answer": "B. Lactate to pyruvate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6430541704271122/6430541704271122.m3u8"}, {"text": "Thiamine requirement increases in excessive intake of", "options": [{"label": "A", "text": "Amino acid", "correct": false}, {"label": "B", "text": "Carbohydrates", "correct": true}, {"label": "C", "text": "Fat", "correct": false}, {"label": "D", "text": "Leucine", "correct": false}], "correct_answer": "B. Carbohydrates", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Thiamine deficiency causes decreased energy production because", "options": [{"label": "A", "text": "It is cofactor in oxidation reduction", "correct": false}, {"label": "B", "text": "It is required for the process of transamination", "correct": false}, {"label": "C", "text": "It is coenzyme for pyruvate dehydrogenase", "correct": true}, {"label": "D", "text": "It is coenzyme for transketolase in pentose pathway", "correct": false}], "correct_answer": "C. It is coenzyme for pyruvate dehydrogenase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63603221704271332/63603221704271332.m3u8"}, {"text": "The pyruvate utilization in tissues is decreased by", "options": [{"label": "A", "text": "Beriberi", "correct": true}, {"label": "B", "text": "Scurvy", "correct": false}, {"label": "C", "text": "Pellagra", "correct": false}, {"label": "D", "text": "Pernicious anemia", "correct": false}], "correct_answer": "A. Beriberi", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/42526811704271345/42526811704271345.m3u8"}, {"text": "Which of the following is true for the thiamine", "options": [{"label": "A", "text": "Coenzyme function is done by thiamine monophosphate", "correct": false}, {"label": "B", "text": "It is a coenzyme for lactate dehydrogenase", "correct": false}, {"label": "C", "text": "It is a coenzyme for pyruvate dehydrogenase and alpha ketoglutarate dehydrogenase", "correct": true}, {"label": "D", "text": "Its deficiency is associated with scurvy", "correct": false}], "correct_answer": "C. It is a coenzyme for pyruvate dehydrogenase and alpha ketoglutarate dehydrogenase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/47448261704271360/47448261704271360.m3u8"}, {"text": "Thiamine deficiency causes", "options": [{"label": "A", "text": "Pellagra", "correct": false}, {"label": "B", "text": "Night blindness", "correct": false}, {"label": "C", "text": "Scurvy", "correct": false}, {"label": "D", "text": "Wernicke’s psychosis", "correct": true}], "correct_answer": "D. Wernicke’s psychosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24260631704271374/24260631704271374.m3u8"}, {"text": "A 50 year male present with symptoms of fatigue and has swelling on feet, loss of sensation in legs and anemia. He has also dilatation of ventricles and high cardiac output state. Which of the following vitamin deficiency is associated with this type of presentation", "options": [{"label": "A", "text": "Vitamin B 1", "correct": true}, {"label": "B", "text": "Vitamin B 2", "correct": false}, {"label": "C", "text": "Vitamin B 3", "correct": false}, {"label": "D", "text": "Vitamin B 12", "correct": false}], "correct_answer": "A. Vitamin B 1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/50034091704271399/50034091704271399.m3u8"}, {"text": "Which vitamin deficiency cause generalized oedema", "options": [{"label": "A", "text": "Vitamin A", "correct": false}, {"label": "B", "text": "Vitamin B1", "correct": true}, {"label": "C", "text": "Vitamin B2", "correct": false}, {"label": "D", "text": "Vitamin B12", "correct": false}], "correct_answer": "B. Vitamin B1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54559961704271416/54559961704271416.m3u8"}, {"text": "A 45 year women present with fatigue and tingling sensation in both hands and legs. On examination, she is found to have fissured red tongue, lesions at angle of mouth and peripheral neuropathy with a decreased glutathione reductase activity. What is the likely deficient vitamin?", "options": [{"label": "A", "text": "Thiamine", "correct": false}, {"label": "B", "text": "Riboflavin", "correct": true}, {"label": "C", "text": "Pyridoxine", "correct": false}, {"label": "D", "text": "Methylcobalamine", "correct": false}], "correct_answer": "B. Riboflavin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Vitamin deficiency which cause oculo-orogenital syndrome", "options": [{"label": "A", "text": "Zinc", "correct": false}, {"label": "B", "text": "Vitamin B 2", "correct": true}, {"label": "C", "text": "Vitamin B 3", "correct": false}, {"label": "D", "text": "Vitamin B 12", "correct": false}], "correct_answer": "B. Vitamin B 2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78904621704271500/78904621704271500.m3u8"}, {"text": "Seborrheic dermatitis is produced by deficiency of", "options": [{"label": "A", "text": "Vitamin A", "correct": false}, {"label": "B", "text": "Vitamin C", "correct": false}, {"label": "C", "text": "Vitamin B 1", "correct": false}, {"label": "D", "text": "Vitamin B 2", "correct": true}], "correct_answer": "D. Vitamin B 2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39167351704271514/39167351704271514.m3u8"}, {"text": "Which vitamin deficiency cause circum corneal vascularisation", "options": [{"label": "A", "text": "Thiamine", "correct": false}, {"label": "B", "text": "Riboflavin", "correct": true}, {"label": "C", "text": "Biotin", "correct": false}, {"label": "D", "text": "Vitamin D", "correct": false}], "correct_answer": "B. Riboflavin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36608191704271530/36608191704271530.m3u8"}, {"text": "Vitamin which is formed from the amino acids", "options": [{"label": "A", "text": "Thiamine", "correct": false}, {"label": "B", "text": "Biotin", "correct": false}, {"label": "C", "text": "Niacin", "correct": true}, {"label": "D", "text": "Riboflavin", "correct": false}], "correct_answer": "C. Niacin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64203201704271543/64203201704271543.m3u8"}, {"text": "True about NADP", "options": [{"label": "A", "text": "Involved in HMP pathway", "correct": false}, {"label": "B", "text": "Not involved in glycolysis", "correct": false}, {"label": "C", "text": "Acts as a coenzyme form of niacin", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/1316791704271559/1316791704271559.m3u8"}, {"text": "Pellagra is due to deficiency of which vitamin", "options": [{"label": "A", "text": "Thiamine", "correct": false}, {"label": "B", "text": "Niacin", "correct": true}, {"label": "C", "text": "Riboflavin", "correct": false}, {"label": "D", "text": "Folic acid", "correct": false}], "correct_answer": "B. Niacin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26206131704271576/26206131704271576.m3u8"}, {"text": "Regarding NAD and NADP, true is", "options": [{"label": "A", "text": "High leucine causes niacin deficiency", "correct": true}, {"label": "B", "text": "Malic enzyme is NAD dependent enzyme", "correct": false}, {"label": "C", "text": "Niacin deficiency causes cutaneous vasodilatation", "correct": false}, {"label": "D", "text": "Precursor is tyrosine", "correct": false}], "correct_answer": "A. High leucine causes niacin deficiency", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which vitamin toxicity causes fulminant hepatitis", "options": [{"label": "A", "text": "Thiamine", "correct": false}, {"label": "B", "text": "Riboflavin", "correct": false}, {"label": "C", "text": "Niacin", "correct": true}, {"label": "D", "text": "Biotin", "correct": false}], "correct_answer": "C. Niacin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/8548201704271593/8548201704271593.m3u8"}, {"text": "Which of the following is a component of coenzyme A ?", "options": [{"label": "A", "text": "Glycine", "correct": false}, {"label": "B", "text": "Pyrrolysine", "correct": false}, {"label": "C", "text": "Beta-alanine", "correct": true}, {"label": "D", "text": "Selenocysteine", "correct": false}], "correct_answer": "C. Beta-alanine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/47339401704271606/47339401704271606.m3u8"}, {"text": "Pyridoxin is required in", "options": [{"label": "A", "text": "TCA cycle", "correct": false}, {"label": "B", "text": "Glycolysis", "correct": false}, {"label": "C", "text": "Glycogenolysis", "correct": true}, {"label": "D", "text": "Glycogenesis", "correct": false}], "correct_answer": "C. Glycogenolysis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31014261704271621/31014261704271621.m3u8"}, {"text": "Which of the following vitamin is associated with glycogen phosphorylase", "options": [{"label": "A", "text": "Pyridoxin", "correct": true}, {"label": "B", "text": "Niacin", "correct": false}, {"label": "C", "text": "Thiamine", "correct": false}, {"label": "D", "text": "Riboflavin", "correct": false}], "correct_answer": "A. Pyridoxin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Coenzyme form of pyridoxine is", "options": [{"label": "A", "text": "NAD", "correct": false}, {"label": "B", "text": "FAD", "correct": false}, {"label": "C", "text": "ADP", "correct": false}, {"label": "D", "text": "PLP", "correct": true}], "correct_answer": "D. PLP", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/32261881704271640/32261881704271640.m3u8"}, {"text": "Which vitamin is involved in decarboxylation", "options": [{"label": "A", "text": "Thiamine", "correct": false}, {"label": "B", "text": "Niacin", "correct": false}, {"label": "C", "text": "Pyridoxin", "correct": true}, {"label": "D", "text": "Biotin", "correct": false}], "correct_answer": "C. Pyridoxin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13138971704271665/13138971704271665.m3u8"}, {"text": "Which cofactor is required for cystathionine lyase", "options": [{"label": "A", "text": "Thiamine", "correct": false}, {"label": "B", "text": "Biotin", "correct": false}, {"label": "C", "text": "Pyridoxin", "correct": true}, {"label": "D", "text": "Riboflavin", "correct": false}], "correct_answer": "C. Pyridoxin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13471701704271692/13471701704271692.m3u8"}, {"text": "Pyridoxin is required as a co factor in all of the following reactions except", "options": [{"label": "A", "text": "Glycogen phosphorylase", "correct": false}, {"label": "B", "text": "Transamination", "correct": false}, {"label": "C", "text": "Decarboxylation", "correct": false}, {"label": "D", "text": "Transketolation", "correct": true}], "correct_answer": "D. Transketolation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54709581704271728/54709581704271728.m3u8"}, {"text": "Pyridoxin helps in generation of which coenzymes", "options": [{"label": "A", "text": "ATP", "correct": false}, {"label": "B", "text": "FAD", "correct": false}, {"label": "C", "text": "NAD", "correct": true}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "C. NAD", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not pyridoxine dependent", "options": [{"label": "A", "text": "Maple syrup urine disease", "correct": true}, {"label": "B", "text": "Cystathionuria", "correct": false}, {"label": "C", "text": "Homocystinuria", "correct": false}, {"label": "D", "text": "Oxaluria", "correct": false}], "correct_answer": "A. Maple syrup urine disease", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/50989731704271749/50989731704271749.m3u8"}, {"text": "Which enzyme deficiency cause excretion of xantheurenic acid in urine", "options": [{"label": "A", "text": "Folic acid", "correct": false}, {"label": "B", "text": "Pyridoxin", "correct": true}, {"label": "C", "text": "Niacin", "correct": false}, {"label": "D", "text": "Cobalamine", "correct": false}], "correct_answer": "B. Pyridoxin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19305921704271763/19305921704271763.m3u8"}, {"text": "Tryptophan load test helps in evaluation of which vitamin deficiency", "options": [{"label": "A", "text": "Niacinamide", "correct": false}, {"label": "B", "text": "Cynocobalamine", "correct": false}, {"label": "C", "text": "Folic acid", "correct": false}, {"label": "D", "text": "Pyridoxin", "correct": true}], "correct_answer": "D. Pyridoxin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/75730231704271792/75730231704271792.m3u8"}, {"text": "Vitamin for which RDA is based on protein intake", "options": [{"label": "A", "text": "Riboflavin", "correct": false}, {"label": "B", "text": "Niacin", "correct": false}, {"label": "C", "text": "Thiamine", "correct": false}, {"label": "D", "text": "Pyridoxin", "correct": true}], "correct_answer": "D. Pyridoxin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/66811171704271856/66811171704271856.m3u8"}, {"text": "Isoniazid toxicity can be prevented by intake of", "options": [{"label": "A", "text": "Vitamin B 1", "correct": false}, {"label": "B", "text": "Vitamin B 3", "correct": false}, {"label": "C", "text": "Vitamin B 6", "correct": true}, {"label": "D", "text": "Vitamin B 12", "correct": false}], "correct_answer": "C. Vitamin B 6", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5248301704271871/5248301704271871.m3u8"}, {"text": "Neurotoxicity occurs in excess of", "options": [{"label": "A", "text": "Vitamin C", "correct": false}, {"label": "B", "text": "Vitamin B 2", "correct": false}, {"label": "C", "text": "Vitamin B 6", "correct": true}, {"label": "D", "text": "Vitamin B 12", "correct": false}], "correct_answer": "C. Vitamin B 6", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63681231704271883/63681231704271883.m3u8"}, {"text": "Consumption of raw egg leads to deficiency of", "options": [{"label": "A", "text": "Thiamine", "correct": false}, {"label": "B", "text": "Avidin", "correct": false}, {"label": "C", "text": "Riboflavin", "correct": false}, {"label": "D", "text": "Biotin", "correct": true}], "correct_answer": "D. Biotin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56517531704271896/56517531704271896.m3u8"}, {"text": "The activity of the following enzyme affected by biotin deficiency", "options": [{"label": "A", "text": "Oxidase", "correct": false}, {"label": "B", "text": "Carboxylase", "correct": true}, {"label": "C", "text": "Transketolase", "correct": false}, {"label": "D", "text": "Dehydrogenase", "correct": false}], "correct_answer": "B. Carboxylase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/21074261704271918/21074261704271918.m3u8"}, {"text": "Cobalt forms a component of which vitamin", "options": [{"label": "A", "text": "Thiamine", "correct": false}, {"label": "B", "text": "Riboflavin", "correct": false}, {"label": "C", "text": "Vitamin A", "correct": false}, {"label": "D", "text": "Vitamin B 12", "correct": true}], "correct_answer": "D. Vitamin B 12", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78684791704271935/78684791704271935.m3u8"}, {"text": "Which of the following compound is not obtained from the plant", "options": [{"label": "A", "text": "Thiamine", "correct": false}, {"label": "B", "text": "Vitamin A", "correct": false}, {"label": "C", "text": "Riboflavin", "correct": false}, {"label": "D", "text": "Cobalamine", "correct": true}], "correct_answer": "D. Cobalamine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41415661704271952/41415661704271952.m3u8"}, {"text": "Vitamin B 12 is absorbed from which site", "options": [{"label": "A", "text": "Stomach", "correct": false}, {"label": "B", "text": "Duodenum", "correct": false}, {"label": "C", "text": "Jejunum", "correct": false}, {"label": "D", "text": "Ileum", "correct": true}], "correct_answer": "D. Ileum", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/45950321704271964/45950321704271964.m3u8"}, {"text": "Coenzyme for methylmalonyl-CoA isomerase is", "options": [{"label": "A", "text": "Cobalamine", "correct": true}, {"label": "B", "text": "Biotin", "correct": false}, {"label": "C", "text": "Niacin", "correct": false}, {"label": "D", "text": "Thiamine", "correct": false}], "correct_answer": "A. Cobalamine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/16479181704272067/16479181704272067.m3u8"}, {"text": "Vitamin B 12 acts as coenzyme to which one of the following enzymes", "options": [{"label": "A", "text": "Glycogen synthase", "correct": false}, {"label": "B", "text": "G6PD dehydrogenase", "correct": false}, {"label": "C", "text": "Isocitrate dehydrogenase", "correct": false}, {"label": "D", "text": "Homocysteine methyl transferase", "correct": true}], "correct_answer": "D. Homocysteine methyl transferase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3226671704272080/3226671704272080.m3u8"}, {"text": "Richest source of vitamin B 12 is", "options": [{"label": "A", "text": "Liver", "correct": true}, {"label": "B", "text": "Legumes", "correct": false}, {"label": "C", "text": "Intestinal bacteria", "correct": false}, {"label": "D", "text": "White meat", "correct": false}], "correct_answer": "A. Liver", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Vitamin B 12 is required for cofactor for following conversion", "options": [{"label": "A", "text": "Cysteine to homocysteine", "correct": false}, {"label": "B", "text": "Methyl malonyl CoA to succinyl CoA", "correct": true}, {"label": "C", "text": "Dopamine to norepinephrine", "correct": false}, {"label": "D", "text": "Propionyl CoA to methylmalonyl CoA", "correct": false}], "correct_answer": "B. Methyl malonyl CoA to succinyl CoA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Vitamin B 12 deficiency causes", "options": [{"label": "A", "text": "Dermatitis", "correct": false}, {"label": "B", "text": "Burning foot syndrome", "correct": false}, {"label": "C", "text": "Beriberi", "correct": false}, {"label": "D", "text": "Demyelination", "correct": true}], "correct_answer": "D. Demyelination", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74787861704272093/74787861704272093.m3u8"}, {"text": "Which change occurs in vitamin B12 deficiency", "options": [{"label": "A", "text": "Increased methylmalonic acid in urine", "correct": true}, {"label": "B", "text": "Increased homocysteine in urine", "correct": false}, {"label": "C", "text": "Phenylalanine in urine", "correct": false}, {"label": "D", "text": "FIGLU in urine", "correct": false}], "correct_answer": "A. Increased methylmalonic acid in urine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Vitamin B12 is required for which step in folate synthesis", "options": [{"label": "A", "text": "Methylene tetrahydrofolate to methyl tetrahydrofolate", "correct": false}, {"label": "B", "text": "Methyl tetrahydrofolate to tetrahydrofolate", "correct": true}, {"label": "C", "text": "Tetrahydrofolate to folinic acid", "correct": false}, {"label": "D", "text": "Formyl tetrahydrofolate to tetrahydrofolate", "correct": false}], "correct_answer": "B. Methyl tetrahydrofolate to tetrahydrofolate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67983091704272106/67983091704272106.m3u8"}, {"text": "Which treatment is given in neurological worsening with anemia", "options": [{"label": "A", "text": "Folic acid alone", "correct": false}, {"label": "B", "text": "Iron", "correct": false}, {"label": "C", "text": "Pyridoxine", "correct": false}, {"label": "D", "text": "Folic acid with hydroxycobalamine", "correct": true}], "correct_answer": "D. Folic acid with hydroxycobalamine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5943231704272131/5943231704272131.m3u8"}, {"text": "Blood form of folic acid is", "options": [{"label": "A", "text": "Pteroglutamate", "correct": false}, {"label": "B", "text": "Methyl THF", "correct": true}, {"label": "C", "text": "Folinic acid", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "B. Methyl THF", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Major form of folic acid which transfers one carbon", "options": [{"label": "A", "text": "Formyl THF", "correct": false}, {"label": "B", "text": "Methyl THF", "correct": false}, {"label": "C", "text": "Methylene THF", "correct": true}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "C. Methylene THF", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Serine to glycine conversion requires?", "options": [{"label": "A", "text": "Thiamine", "correct": false}, {"label": "B", "text": "Vitamin C", "correct": false}, {"label": "C", "text": "Folic acid", "correct": true}, {"label": "D", "text": "Fe +2", "correct": false}, {"label": "E", "text": "Pyridoxal phosphate", "correct": false}], "correct_answer": "C. Folic acid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/16509841704272146/16509841704272146.m3u8"}, {"text": "Diagnosis of folic acid deficiency is done by", "options": [{"label": "A", "text": "Peripheral blood smear", "correct": false}, {"label": "B", "text": "FIGLU excretion", "correct": false}, {"label": "C", "text": "CAR excretion", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Deficiency of which vitamin during pregnancy predisposes to meningomyelocele", "options": [{"label": "A", "text": "Biotin", "correct": false}, {"label": "B", "text": "Thiamine", "correct": false}, {"label": "C", "text": "Folic acid", "correct": true}, {"label": "D", "text": "Pyridoxin", "correct": false}], "correct_answer": "C. Folic acid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52036891704272157/52036891704272157.m3u8"}, {"text": "Folic acid and vitamin B 12 supplement in megaloblastic anemia leads to improvement of anemia due to", "options": [{"label": "A", "text": "Increased haemoglobin production", "correct": false}, {"label": "B", "text": "Increased iron absorption", "correct": false}, {"label": "C", "text": "Increased DNA synthesis in bone marrow", "correct": true}, {"label": "D", "text": "Erythroid hyperplasia", "correct": false}], "correct_answer": "C. Increased DNA synthesis in bone marrow", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/59000161704272170/59000161704272170.m3u8"}, {"text": "Vitamin C is required for the", "options": [{"label": "A", "text": "Tyrosine metabolism", "correct": false}, {"label": "B", "text": "Post-translational modification", "correct": false}, {"label": "C", "text": "Synthesis of epinephrine", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/10967641704272190/10967641704272190.m3u8"}, {"text": "Level of tocopherol and ascorbate in the crystalline lens is maintained by", "options": [{"label": "A", "text": "Glucose", "correct": false}, {"label": "B", "text": "Fatty acid", "correct": false}, {"label": "C", "text": "Glutathione", "correct": true}, {"label": "D", "text": "Glycoprotein", "correct": false}], "correct_answer": "C. Glutathione", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The pro-oxidant action of vitamin C is potentiated by", "options": [{"label": "A", "text": "Copper", "correct": true}, {"label": "B", "text": "Iron", "correct": false}, {"label": "C", "text": "Selenium", "correct": false}, {"label": "D", "text": "Calcium", "correct": false}], "correct_answer": "A. Copper", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

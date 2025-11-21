@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Localization of Myocardial Damage with ECG</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Localization of Myocardial Damage with ECG</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                6 Questions | 6 Total Marks | 16 min Duration | ~160.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 6 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 16 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 6</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Localization of Myocardial Damage with ECG - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 6</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 6 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Physical examination of a 41-year-old narcotic abuser reveals an early systolic murmur. The physician also notes a 7 cm distance between the height of the blood in his right internal jugular vein and the sternal angle (normal = 3 cm). Which of the following conditions is most likely responsible for the physical findings?", "options": [{"label": "A", "text": "Mitral stenosis", "correct": false}, {"label": "B", "text": "Tricuspid regurgitation", "correct": true}, {"label": "C", "text": "Atherosclerosis", "correct": false}, {"label": "D", "text": "Aortic regurgitation", "correct": false}], "correct_answer": "B. Tricuspid regurgitation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Tricuspid regurgitation The physical findings of an early systolic murmur and a 7 cm distance between the height of the blood in the right internal jugular vein and the sternal angle are most suggestive of tricuspid regurgitation. Tricuspid regurgitation is a valvular heart disease characterized by the backflow of blood from the right ventricle into the right atrium during systole. This can cause a systolic murmur to be heard on auscultation, and can also result in jugular venous distension, which can be seen as an elevated jugular venous pressure and a taller column of blood in the jugular vein.</p>\n<p><strong>Highyeild:</strong></p><p>The combination of an early systolic murmur and high right atrial pressure is indicative of tricuspid regurgitation. This lesion is common in narcotic abusers with infective endocarditis. Early systolic murmurs begin with the first heart sound and end in mid-systole. The higher-than-normal height of the jugular blood column reflects an increased right atrial pressure.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Options A & D: Mitral stenosis and aortic regurgitation produce diastolic murmurs. Mitral stenosis typically presents with a diastolic murmur Option C: Atherosclerosis causes most carotid artery stenosis.</p>\n<p><strong>Extraedge:</strong></p><p>The pansystolic murmur associated with tricuspid regurgitation is high pitched and is loudest in the fourth intercostal space in the parasternal region.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old male reports several recent episodes of syncope. An electrocardiogram is performed. Which of the following arrhythmias is most commonly associated with syncope?", "options": [{"label": "A", "text": "Sinus arrhythmia", "correct": false}, {"label": "B", "text": "First-degree heart block", "correct": false}, {"label": "C", "text": "Second-degree heart block", "correct": false}, {"label": "D", "text": "Third-degree heart block", "correct": true}], "correct_answer": "D. Third-degree heart block", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Third-degree heart block Patients with third-degree atrioventricular (AV) block (complete heart block) are frequently hemodynamically unstable; as a result, experience syncope, hypotension, and cardiovascular collapse.</p>\n<p><strong>Highyeild:</strong></p><p>Syncope (fainting) is a transient loss of consciousness caused by inadequate blood flow to the brain. Transient decreases in cerebral blood flow are usually due to one of three general mechanisms: disorders of vascular tone or blood volume, cardiovascular disorders, or cerebrovascular disease. Approximately one-fourth of syncopal episodes are of cardiac origin and are due to either transient obstruction of blood flow through the heart or sudden decreases in cardiac output due to cardiac arrhythmias, such as bradycardia, heart block, or sinus arrest (neuro cardiogenic syncope). Third-degree (complete) heart block results when the conduction of the action potential from the atria to the ventricles is completely interrupted. Under these conditions, pacemaker cells within the His-Purkinje system or the ventricular muscle cause the ventricles to beat at a low rate (idioventricular rhythm) independently of the atria. Although the heart rate may be high enough to adequately perfuse the brain under resting conditions, Third-degree heart block is caused by conduction system disturbances, inferior wall MI, and digitalis toxicity.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option A. When the conduction disturbance is due to disease in the AV node, the idioventricular rhythm is normally about 45 beats/min. When the conduction disturbance is below the AV node (infranodal block) due to disease in the bundle of His, firing of more peripheral ventricular pacemakers can decrease heart rate to below 30 beats/min with periods of asystole that may last a minute or more. The resultant cerebral ischemia causes dizziness and fainting (Stokes-Adams syndrome). Sinus arrhythmia is a change in the heart rate produced by the normal variation in the rate of phase 4 depolarization of the SA nodal pacemaker cells between inspiration and expiration. Option B. First-degree heart block is defined as a higher-than-normal PR interval (greater than 0.2 seconds). Second-degree heart block occurs when the action potential fails to reach the ventricles some, but not all, of the time. Tachycardia is a heart rate above 100 beats per minute. Option C. There are two non-distinct types of second-degree AV blocks, called Type 1 and Type 2. In both types, a P wave is blocked from initiating a QRS complex; but, in Type 1, there are increasing delays in each cycle before the omission, whereas, in Type 2, there is no such pattern .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "During a routine physical examination, a 32-year-old female is found to have a second-degree heart block. Which of the following ECG recordings was obtained from the patient during her physical examination?", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": true}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "C. C", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1683533765455-QTDY036003IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>C Conduction abnormalities can produce first-degree, second-degree, or third-degree heart blocks. In a second-degree heart block, a P wave is not always followed by a QRS complex as in trace C, where the second P wave is not followed by a QRS complex.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Option: D. - It is a case of first-degree heart block as the interval between the beginning of the P wave and the beginning of the QRS complex (the PR interval) is longer than normal (greater than 0.2 seconds). In a third-degree heart block, conduction between the atria and ventricles is completely blocked so the atrial beats (represented by the P waves) and the ventricular beats (represented by the QRS complex) are completely dissociated.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The spouse of a 58-year-old man calls 9-1-1 because her husband complains of chest pain radiating down his left arm. He is transported to the Emergency Department, where an electrocardiogram and cardiac enzymes indicate a recent myocardial infarction. The man is sent for cardiac catheterization, including coronary angiography and hemodynamic recordings throughout the cardiac cycle. No valvular defects were present. During ventricular ejection, the pressure difference is smallest in magnitude between which of the following?", "options": [{"label": "A", "text": "Pulmonary artery and left atrium", "correct": false}, {"label": "B", "text": "Right ventricle and right atrium", "correct": false}, {"label": "C", "text": "Left ventricle and aorta", "correct": true}, {"label": "D", "text": "Left ventricle and left atrium", "correct": false}], "correct_answer": "C. Left ventricle and aorta", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Left ventricle and aorta The pressure gradient between regions of the cardiovascular system is directly proportional to the resistance of the intervening structures. During ventricular ejection, the aortic valves are open and do not offer any significant resistance to blood flow.</p>\n<p><strong>Highyeild:</strong></p><p>Therefore, there is very little, if any, pressure difference between the left ventricle and the aorta. Because the tricuspid valve is closed during ventricular ejection, there is an appreciable pressure difference between the right ventricle and the left atrium, although this pressure difference is opposite in direction to the flow of blood through the circulatory system. Although pulmonary vascular resistance is relatively small compared with systemic vascular resistance, it nonetheless produces a pressure drop between the right ventricle and the left atrium. Because most of the resistance in the systemic vasculature occurs at the level of the arterioles, there is a large pressure gradient between the aorta and the capillaries.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options: Rest options are inappropriate. Ventricular ejection: when the ventricles eject blood to the body (via the aorta) and to the lungs (via the pulmonary artery).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old man works in a multinational company in a higher position. He seems to be fit but for the last few days, he is feeling difficulty breathing. And it is getting worse since this morning. So he went to the emergency department of the nearby hospital. In the hospital, he was further asked about his illness. He said that he is also feeling fatigued and weak for the last few months. His vitals were taken. ECG was done and then sent for echocardiography. Echo visualizes a holo-diastolic murmur which can be auscultated on the upper right sternal border. His BP recorded was 158/64 mmHg. Which of the below-given pathologies best describes the above scenario?", "options": [{"label": "A", "text": "Aortic valve stenosis", "correct": false}, {"label": "B", "text": "Aortic valve regurgitation", "correct": true}, {"label": "C", "text": "Pulmonic stenosis", "correct": false}, {"label": "D", "text": "Both A and B", "correct": false}], "correct_answer": "B. Aortic valve regurgitation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Aortic valve regurgitation The aortic valve is located at the right 2nd intercostal space. And diastolic murmur is heard in aortic valve regurgitation out of the all given options. Murmur heard at the upper right sternal border further adds confirmation to the above explanation. So, the correct answer is B.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option A. Aortic valve stenosis produces a systolic murmur. Option C. Pulmonic valve stenosis also produces systolic murmurs.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not a feature of a complete heart block on the ECG?", "options": [{"label": "A", "text": "Constant RR interval", "correct": false}, {"label": "B", "text": "Constant PP interval", "correct": false}, {"label": "C", "text": "Constant PR interval", "correct": true}, {"label": "D", "text": "PP interval shorter than RR interval", "correct": false}], "correct_answer": "C. Constant PR interval", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Constant PR interval PR Interval is prolonged in cases of complete heart block.</p>\n<p><strong>Highyeild:</strong></p><p>COMPLETE HEART BLOCK When conduction from the atria to the ventricles is completely interrupted, complete (third-degree) heart block results, and the ventricles beat at a low rate (idioventricular rhythm) independently of the atria. The block may be due to disease in the AV node (AV nodal block) or the conducting system below the node (infranodal block). In patients with AV nodal block, the remaining nodal tissue becomes the pacemaker and the rate of the idioventricular rhythm is approximately 45 beats/min. In patients with infranodal block due to disease in the bundle of His, the ventricular pacemaker is located more peripherally in the conduction system and the ventricular rate is lower; it averages 35 beats/min, but in individual cases, it can be as low as 15 beats/min. Causes of third-degree heart block include septal myocardial infarction and damage to the bundle of His during surgical correction of congenital interventricular septal defects</p>\n<p><strong>Extraedge:</strong></p><p>Atrioventricular block Representative electrocardiogram recordings of the different degrees of heart block.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

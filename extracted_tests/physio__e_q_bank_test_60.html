@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Transport Across Membrane (Part 1)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Transport Across Membrane (Part 1)</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                7 Questions | 7 Total Marks | 17 min Duration | ~145.71 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 7 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 17 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 7</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Transport Across Membrane (Part 1) - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 7</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 7 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 49-year-old male with end-stage renal failure is able to perform peritoneal dialysis at home. The osmolality of the solution chosen for peritoneal dialysis will determine the rate of ultrafiltration. Which of the following statements best characterizes a molecule whose osmolality is zero?", "options": [{"label": "A", "text": "It will not permeate the membrane", "correct": false}, {"label": "B", "text": "It can only cross the membrane through the lipid bilayer", "correct": false}, {"label": "C", "text": "It causes water to flow across the membrane", "correct": false}, {"label": "D", "text": "It is as diffusible through the membrane as water", "correct": true}], "correct_answer": "D. It is as diffusible through the membrane as water", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>It is as diffusible through the membrane as water A molecule with an osmolality of zero means that it does not exert any osmotic pressure and does not cause water to flow across the membrane. Therefore, the correct answer is: \"It is as diffusible through the membrane as water.\"</p>\n<p><strong>Highyeild:</strong></p><p>The osmolality of a substance i s the number of osmoles per kg of solvent. One osmole (Osm) equals the gram molecular weight of a substance divided by the number of free-moving particles that each molecule liberates in solution. Osmotically active substances in the body are dissolved in water, and the density of water is 1. Thus, osmolar concentrations can be expressed as osmoles (or milliosmoles) per liter of water. If the osmolality is zero, there are no free-moving particles, and thus, the molecule is as diffusible as water through the membrane.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Molecules with a low molecular weight, small size, and high diffusibility are preferred in dialysis solutions because they can pass through the semipermeable membrane easily and efficiently. In contrast, molecules that are too large or have low diffusibility may not be effectively removed by peritoneal dialysis.</p>\n<p><strong>Extraedge:</strong></p><p>A. The rate of is diffusion directly proportional to:- Concentration gradient. Solubility in the membrane. Temperature. The surface area of the membrane B. The rate of diffusion is inversely proportional with: The molecular weight of the diffusible substance. The thickness of the membrane</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Jitendra was bitten by a dog 2 days back and now presents with fever, hydrophobia, and salivation from the mouth. What is the mechanism by which the disease spreads?", "options": [{"label": "A", "text": "Facilitated diffusion", "correct": false}, {"label": "B", "text": "Simple diffusion", "correct": false}, {"label": "C", "text": "Primary active transport", "correct": true}, {"label": "D", "text": "Second active transport", "correct": false}], "correct_answer": "C. Primary active transport", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Primary active transport The clinical scenario is of rabies and virus spread by binding to acetylcholine nicotinamide receptor on the axon. It is vesicular transport.</p>\n<p><strong>Highyeild:</strong></p><p>The mechanism of action of rabies The fusion of the rabies virus envelope to the host cell membrane (adsorption) initiates the infection process. The interaction of the G protein and specific cell surface receptors may be involved. After adsorption, the virus penetrates the host cell and enters the cytoplasm.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option A. Facilitated diffusion. To increase the rate of transport, carrier or transporters are used . Option B Simple diffusion does not follow saturation kinetics. Option D Secondary active transport, Indirect use via pumps. Active transport is against the gradient and requires energy.</p>\n<p><strong>Extraedge:</strong></p><p>Primary active transport is the transport of molecules against a concentration gradient by the use of energy from ATP Secondary active transport is the transport two different molecules across a transport membrane using energy in other forms than ATP A single molecule is transported Two types of molecules are transported at once Uses energy from ATP Concentration gradient of the driving ion provides the energy for the transport of driven ion/molecule against its concentration gradient Ions like sodium, potassium, and calcium are transported across the cell membrane Ions serve as driving molecules, while ions or other molecules serve as driven molecules Transmembrane proteins are unique to the ion transported through them Symports and antiports are the two types of transmembrane proteins Sodium-potassium pump, calcium pump in the muscles, and proton pump in the stomach are examples Glucose-sodium pump, Na+/Ca2+ exchanger, and sodium/phosphate cotransporter are examples</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old smoker having difficulty in breathing was diagnosed with pulmonary lung fibrosis with a saturation of 89%. The cause of this reduced saturation is a defect in which mechanism?", "options": [{"label": "A", "text": "Facilitated diffusion", "correct": false}, {"label": "B", "text": "Simple diffusion", "correct": true}, {"label": "C", "text": "Primary active transport", "correct": false}, {"label": "D", "text": "Second active transport", "correct": false}], "correct_answer": "B. Simple diffusion", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Simple diffusion Pulmonary lung fibrosis causes a reduction in diffusion across members and therefore there is a reduction in oxygen saturation.</p>\n<p><strong>Highyeild:</strong></p><p>Pulmonary fibrosis leads to a decrease in oxygen diffusion, in particular during exercise. Bronchial obstruction also could decrease the partial pressure of oxygen (P(a)O(2)). The most common signs and symptoms of idiopathic pulmonary fibrosis are shortness of breath and a persistent dry, hacking cough. Many affected individuals also experience a loss of appetite and gradual weight loss.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options: Option A: To increase the rate of transport, carriers or transporters are used. Option C: Direct use of ATPs. Option D: Secondary active transport, Indirect use via pumps. Active transport is against gradients and requires energy.</p>\n<p><strong>Extraedge:</strong></p><p>Simple diffusion is an unassisted type of diffusion in which a particle moves from higher to a lower concentration Facilitated diffusion is the transport of substances across a biological membrane through a concentration gradient by means of a carrier molecule Occurs through the phospholipid bilayer Occurs through transmembrane proteins Transports small, non-polar particles Transports large or polar particles Occurs directly through the cell membrane Occurs through specific facilitator molecules Rate of diffusion is directly proportional to the concentration gradient and the membrane permeability of the solute molecule Rate of diffusion depends on the kinetics of carrier- mediated transport Examples: Diffusion of gases across the respiratory membrane, diffusion of molecules from the blood to the cells through the interstitial fluid Examples: Counter-transport of chloride/bicarbonate in renal tubular cells, cotransport of sodium with sugars like glucose, galactose,etc.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An obese patient consulting a nutritionist has advised a calorie-deficit diet. The patient was concerned about not getting enough energy. The patient was explained that the required amount of glucose is mentioned in the diet as glucose follows ___ mechanism:", "options": [{"label": "A", "text": "Facilitated diffusion", "correct": true}, {"label": "B", "text": "Simple diffusion", "correct": false}, {"label": "C", "text": "Primary active transport", "correct": false}, {"label": "D", "text": "Second active transport", "correct": false}], "correct_answer": "A. Facilitated diffusion", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Facilitated diffusion To increase the rate of transport, carriers or transporters are used. Glucose is transported via GLUT receptors. It follows saturation kinetics.</p>\n<p><strong>Highyeild:</strong></p><p>Since glucose is a large molecule, its diffusion across a membrane is difficult. Hence, it diffuses across membranes through facilitated diffusion, down the concentration gradient. The carrier protein at the membrane binds to the glucose and alters its shape such that it can easily be transported.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option B: Simple diffusion does not follow saturation kinetics. Option C: Direct use of ATPs. Option D: Secondary active transport, Indirect use via pumps. Active transport is against gradients and requires energy.</p>\n<p><strong>Extraedge:</strong></p><p>Simple diffusion is an unassisted type of diffusion in which a particle moves from higher to a lower concentration Facilitated diffusion is the transport of substances across a biological membrane through a concentration gradient by means of a carrier molecule Occurs through the phospholipid bilayer Occurs through transmembrane proteins Transports small, non-polar particles Transports large or polar particles Occurs directly through the cell membrane Occurs through specific facilitator molecules Rate of diffusion is directly proportional to the concentration gradient and the membrane permeability of the solute molecule Rate of diffusion depends on the kinetics of carrier- mediated transport Examples: Diffusion of gases across the respiratory membrane, diffusion of molecules from the blood to the cells through the interstitial fluid Examples: Counter-transport of chloride/bicarbonate in renal tubular cells, cotransport of sodium with sugars like glucose, galactose,etc.</p>\n<p><strong>Table:</strong></p><p>Simple or passive diffusion Facilitated diffusion Diffusion is unassisted Diffusion is assisted by carrier proteins Occurs through the lipid bilayer of cell membrane Occurs through the transmembrane proteins Only small molecules and non polar molecules are transported Large and polar molecules are transported Rate of diffusion is directly proportional to the concentration\n  gradient and membrane permeability of the solute molecule Rate of diffusion depends on the rate at which carrier proteins\n  transport the molecules</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a medical college, research was being done on obesity. It was shown that on giving insulin the transport of D-glucose across the plasma membrane of adipose tissue is much faster than the transport of L-glucose. Which of the following options explains this concept?", "options": [{"label": "A", "text": "Carrier-mediated transport of glucose", "correct": true}, {"label": "B", "text": "Simple diffusion of glucose", "correct": false}, {"label": "C", "text": "Primary active transport of glucose", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Carrier-mediated transport of glucose", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Carrier-mediated transport of glucose Glucose transport across the membranes of adipose tissue is mediated by transporters called GLUT4. These are the carrier proteins. These have specificity and have stereo selectivity for D-glucose. So option A is true</p>\n<p><strong>Highyeild:</strong></p><p>Different types of GLUT Transporter Tissues Function GLUT 1 All tissues, especially red cells, brain Basal uptake of glucose; transport across the blood-brain barrier GLUT 2 Beta cells of pancreas; liver, kidney; gut Regulation of insulin release, other aspects of glucose homeostasis GLUT 3 Brain, kidney, placenta, other tissues Uptake into neurons, other tissues GLUT 4 Muscle, adipose Insulin-mediated uptake of glucose GLUT 5 Gut, kidney Absorption of fructose</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option B. Glucose molecules have a large size, so they can’t be transported through cell membranes through simple diffusion. So option B is false Option C. Primary active transport of glucose occurs in the gut and not in the adipose tissue so option C is false.</p>\n<p><strong>Extraedge:</strong></p><p>GLUT4 is one of the most important downstream sites of the insulin receptor because it sits at the rate-limiting step in the insulin transduction signal pathway. GLUT4, unlike other facilitative GLUTs, is primarily localized intracellularly in the unstimulated state and is acutely redistributed to the plasma membrane in response to insulin and other stimuli.</p>\n<p><strong>Table:</strong></p><p>Simple or passive diffusion Facilitated diffusion Diffusion is unassisted Diffusion is assisted by carrier proteins Occurs through the lipid bilayer of cell membrane Occurs through the transmembrane proteins Only small molecules and non polar molecules are transported Large and polar molecules are transported Rate of diffusion is directly proportional to the concentration\n  gradient and membrane permeability of the solute molecule Rate of diffusion depends on the rate at which carrier proteins\n  transport the molecules</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 36-year-old woman visits the hospital complaining that abdominal pain occurs after she eats. She says it has been almost 1 month. Endoscopy was done and it came out to be a peptic ulcer. The doctor prescribed her to take Omeprazole before eating. The type of cell membrane transport will be inhibited by the medicine?", "options": [{"label": "A", "text": "Osmosis", "correct": false}, {"label": "B", "text": "Primary active transport", "correct": true}, {"label": "C", "text": "Secondary active transport", "correct": false}, {"label": "D", "text": "Simple diffusion", "correct": false}], "correct_answer": "B. Primary active transport", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Primary active transport Proton pump inhibitors inhibit the proton pump (H+/K+ -ATPase) and reduce acid production. It is the primary active transport mechanism since it requires ATP to move ions against their electrochemical gradients. So, option B is correct.</p>\n<p><strong>Highyeild:</strong></p><p>Primary active transport, also called direct active transport, directly uses chemical energy (such as from adenosine triphosphate or ATP in the case of the cell membrane) to transport all species of solutes across a membrane against their concentration gradient.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Options A & D: whereas osmosis and simple diffusion are passive transport with no requirement of ATP. Option C: Secondary transport utilizes energy stored in an electrochemical gradient to cotransport the substance.</p>\n<p><strong>Table:</strong></p><p>Simple or passive diffusion Facilitated diffusion Diffusion is unassisted Diffusion is assisted by carrier proteins Occurs through the lipid bilayer of cell membrane Occurs through the transmembrane proteins Only small molecules and non polar molecules are transported Large and polar molecules are transported Rate of diffusion is directly proportional to the concentration\n  gradient and membrane permeability of the solute molecule Rate of diffusion depends on the rate at which carrier proteins\n  transport the molecules</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What type of membrane protein selectively moves a polar substance or ion through a plasma membrane without the use of a pore:", "options": [{"label": "A", "text": "Enzyme", "correct": false}, {"label": "B", "text": "Carrier protein", "correct": true}, {"label": "C", "text": "Linker protein", "correct": false}, {"label": "D", "text": "Ion channel", "correct": false}], "correct_answer": "B. Carrier protein", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Carrier protein Many of the integral proteins provide structural channels (or pores) through which water molecules and water-soluble substances, especially ions, can diffuse between the extracellular and intracellular fluids. These protein channels also have selective properties that allow preferential diffusion of some substances over others. Other integral proteins act as carrier proteins for transporting substances that otherwise could not penetrate the lipid bilayer. A notable example is GLUT: These are carrier proteins that transport glucose in the direction of a concentration gradient.</p>\n<p><strong>Highyeild:</strong></p><p>Carrier proteins bind to the substances they transport across the membrane via facilitated diffusion, whereas channel proteins provide a pore for substances to move across the membrane via facilitated diffusion.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option A. Membrane proteins are enzymes, which catalyze chemical reactions and thus have domains that are specialized for catalysis. Option C. Plasma membrane of eukaryotic cells is connected to the underlying cytoskeleton via linking proteins such as Ezrin, Radixin, and Moesin (ERM) and myosin 1 proteins. Option D. Ion channels are protein molecules that span across the cell membrane allowing the passage of ions from one side of the membrane to the othe</p>\n<p><strong>Extraedge:</strong></p><p>Different types of GLUT Transporter Tissues Function GLUT 1 All tissues, especially red cells, brain Basal uptake of glucose; transport across the blood-brain barrier GLUT 2 Beta cells of pancreas; liver, kidney; gut Regulation of insulin release, other aspects of glucose homeostasis GLUT 3 Brain, kidney, placenta, other tissues Uptake into neurons, other tissues GLUT 4 Muscle, adipose Insulin-mediated uptake of glucose GLUT 5 Gut, kidney Absorption of fructose</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

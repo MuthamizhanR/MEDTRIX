@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>FM - AIIMS MAY 2018</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">FM - AIIMS MAY 2018</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                9 Questions | 9 Total Marks | 19 min Duration | ~126.67 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 9 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 19 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 9</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">FM - AIIMS MAY 2018 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 9</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 9 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Male skull can be differentiated from the female skull with the help of all given features EXCEPT:", "options": [{"label": "A", "text": "Large tooth sockets", "correct": false}, {"label": "B", "text": "Large frontal sinuses", "correct": false}, {"label": "C", "text": "Large parietal eminence", "correct": true}, {"label": "D", "text": "Large foramen", "correct": false}], "correct_answer": "C. Large parietal eminence", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Large parietal eminence Parietal and frontal eminence are large in females as compared to male.</p>\n<p><strong>Highyeild:</strong></p><p>Determination of Sex by Bones Bones in case of male are larger, heavier and with prominent muscular markings. In females, bones are lighter, smaller and not so prominent muscular marking CRITERIA MALE SKULL FEMALE SKULL 1. Capacity 1500-1550 cc 1350-1450 cc 2. Eminences Glabella Supraorbital ridge Zygomatic arch External occipital Protuberance Are Prominent in males Less prominent 3. Frontal & Parietal Eminences Not prominent in males Prominent in females 4. Orbits Smaller, square round margins Larger, circular sharp margins 5. Mastoid process Large and blunt Small and sharp 6. Digastric groove ↓ Groove which runs just by the side of mastoid in skull Deep & prominent Shallow and less prominent 7. Foramen Large & broad Small & Narrow 8. Palate Large, broad U shaped Small, narrow parabolic</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A.Large tooth sockets,B.Large frontal sinuses and D.Large foramen- All structures are large and prominent in male skull except frontal and parietal eminence is prominent in females , females have larger, circular  orbital margin .</p>\n<p><strong>Table:</strong></p><p>#MANTRA Krogman’s Accuracy of Sexing/ Krogman’s table/ K.chart To what percentage of Accuracy we can say, whether the bone belongs to a male or female accuracy When entire/ whole skeleton available 100% Only pelvis available 95% Skull 90% Long bones 80% Pelvis + Skull 98% Pelvis + Long bones 98% Skull + Long bones 96</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 14-year-old girl comes to OPD with a fractured forearm. On asking her about the injury, she says that she fell and hit her hand. On examination, the doctor observes that there are cigarette burn marks on her forearm. What should be done next?", "options": [{"label": "A", "text": "Do a complete physical examination", "correct": true}, {"label": "B", "text": "To call local social worker for help", "correct": false}, {"label": "C", "text": "Inform the proper authorities immediately", "correct": false}, {"label": "D", "text": "Tell your colleagues that you are sure that this is a case of child abuse and take action", "correct": false}], "correct_answer": "A. Do a complete physical examination", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Do a complete physical examination The first step after suspecting a case of abuse is to do a complete detailed history taking and physical examination of the patient to see any other injuries which can confirm the findings.</p>\n<p><strong>Highyeild:</strong></p><p>BATTERED BABY SYNDROME - Also called Caffey’s syndrome, child abuse syndrome. Battered child is one which has received repetitive non accidental physical injuries by the parent or guardian . In addition to physical injuries, there is deprivation of love, care, affection and nutrition. Criteria for diagnosis - Obvious discrepancy between the history given & nature of injury on the body Undue / unexplained delay in seeking medical intervention for injury Injuries of all ages Features- At < 3 years, but no age exemption Slightly male preponderance Low socioeconomic status → may be unwanted child Injuries- All types of mechanical injuries – Abrasions,lacerations, contusions, incised wound seen. Fractures Cigarette injuries Infantile whiplash syndrome- Lifts the child at the armpit and shakes the child vigorously, thereby head of the child is thrown into whiplash motion Most Common findings – subdural haemorrhage Also called shaken baby syndrome Butterfly bruises- due to pinching effect Cause of death- Head injury Rupture of abdominal organs.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B,C and D. Coming to a conclusion just by seeing a burn which looks like cigarette burn on forearm can be misleading at times so a thorough examination of whole body is mandatory to confirm the above finding to child abuse.”</p>\n<p><strong>Table:</strong></p><p>#MANTRA POCSO act 2012 (Protection Of Children from Sexual Offences) Amended in 2019- It is a gender neutral law. Children- MALE/FEMALE<18 years. Not reporting abuse is an offence (sec 19,21). No time limit for reporting abuse. Maintaining confidentiality of the victim’s identity. (sec.23) The police officer while recording the statement of the child shall not be in Woman police officer not below the rank of sub-inspector. Special court: Additional district court. Trial should be completed in 1 year. In camera trial. The child shall not see accused in any proceedings. Sections 3,5,7,9,11,13-definitions. Sections 4,6,8,10,12,14- punishment. Classes of offence under POCSO act- Class of offence Includes Punishable under section Punishment Penetrative sexual assault Penetration/ Insertion/ Manipulation/ application into mouth/vagina/anus. section 4 10 year to life imprisonment Aggravated Penetrative sexual assault Penetrative sexual assault with Mentally ill child. OR someone in position of trust/authority OR Child become pregnant OR gang rape OR Multiple time sexual assault OR Child gets HIV. section 6 20 year to life imprisonment Sexual assault Physical contact with Sexual intent but NO Penetration/ Insertion/ Manipulation/ application Section 8 3 to 5 year imprisonment. Aggravated sexual assault Sexual assault with Mentally ill child. OR someone in position of trust/authority OR Child become pregnant OR gang rape OR Multiple time sexual assault OR Child gets HIV. Section 10 5 to 7 year imprisonment. Sexual harassment Sexual intent is present. Showing pornography/eve teasing/child body part exhibition /threatening by media Section 12 Imprisonment upto 3 year with fine Child pornography is banned. section 14 3 to 7 year imprisonment.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements is correct about the image given below?", "options": [{"label": "A", "text": "Atropine is the antidote", "correct": false}, {"label": "B", "text": "Flower are most poisonous", "correct": false}, {"label": "C", "text": "Causes AV block", "correct": false}, {"label": "D", "text": "First symptom is sweet taste", "correct": true}], "correct_answer": "D. First symptom is sweet taste", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692720099849-QTDFPYQ140IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>First symptom is sweet taste</p>\n<p><strong>Highyeild:</strong></p><p>Aconite Called as Mithazehar , because it has a bitter but sweet Also called as Blue Rocket,Monk’s Hood,Devils Helmet All parts are poisonous , particularly Root of Aconite resembles the “ HORSERADISH ROOT ”. Active principle : Aconitine Clinical features: Tingling and numbers ( most common presentation ) Initially seen in hands, then lips, mouth and all parts of body Hippus : alternate constriction and dilatation of pupils. (Poison causing Hippus : alternate constriction and dilatation of pupils. Aconite barbiturate.) Fatal Dose : 1-2g of dried root Fatal Period : 2-6 hrs Death is due to ventricular fibrillation Medicolegal Importance- Ideal homicidal agent- Cheap Amount of fatal dose less Fatal period less Death resembles acute MI Post Mortem resembles natural heart disease Easily mixed with juice No specific antidote. No specific test. Highly unstable, it doesn’t stay in the body very long.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A.Atropine is the antidote -for Organophosphorus poisoning. Aconite is ideal homicidal with no antidote. Option B.Flower are most poisonous-Aconite roots are most poisonous. Option C.Causes AV block-Aconite causes Ventricular fibrillation.</p>\n<p><strong>Extraedge:</strong></p><p>Ideal Homicidal Poisoning Cheap and easily available Colorless, odorless and tasteless, so that it can be easily mixed with food or It should mimic naturally occurring disease. No specific antidote No specific post mortem change No test to detect. Should be unstable so that it moves away fast Eg : Fluorine and thallium satisfy most of these Most Commonly used : Arsenic, Aconite Ideal suicidal Poisoning Cheap, easily available Easily mixed with food or drink Should produce sudden, instantaneous and painless death. Eg : Opioids and Barbiturates Most Commonly used : Organophosphorus compounds</p>\n<p><strong>Table:</strong></p><p>#MANTRA Cardiac poison:</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "First-hand knowledge refers to:", "options": [{"label": "A", "text": "Opinion of a doctor in court", "correct": false}, {"label": "B", "text": "Handwriting expert", "correct": false}, {"label": "C", "text": "Common witness", "correct": true}, {"label": "D", "text": "Fingerprint expert", "correct": false}], "correct_answer": "C. Common witness", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Common witness means knowledge of a circumstance or fact gained through first-hand observation or experience . Only common witnesses can be considered as First-hand knowledge in court of law.</p>\n<p><strong>Highyeild:</strong></p><p>Personal knowledge/First hand knowledge - Means knowledge of a circumstance or fact gained through first-hand observation or experience . Generally, statements in affidavits are presumed to have been made on personal knowledge , unless it appears affirmatively, or by fair inference, that they could not have been, and were not on such knowledge. In the court procedures, this phrase refers to the personal understanding of circumstances and events, which is retold and explained by a witness in a courtroom , during a court hearing on the concrete lawsuit. In other words, the witness has been an eye-witness of these circumstances or events and so has accepted directly. Therefore, they have clear and detailed personal knowledge of it. An example is a statement in affidavits. e.g., A has seen B and C, fighting with sticks on a certain road on a particular day and time. In a case of traffic accident the person who witnessed the accident becomes a common witness.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A, B and D - Except for the common witness option, all other options are expert witnesses . Only Common Witnesses can be considered as first-hand knowledge in court of law.</p>\n<p><strong>Table:</strong></p><p>#MANTRA Witness are of 2 types- Common Witness Expert Witness 1.Common witness- Common witness is a person who gives witness or evidence of the facts which are seen or heard or perceived by him. He possesses first-hand knowledge. Gives the facts observed by him. 2.Expert witness- Expert witness is a person who, with help of his knowledge, skill and expertise, can derive conclusions and opinions from the facts he has Eg: Forensic expert, Ballistic expert, Fingerprint expert. A doctor can be both a common witness and expert witness.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Match the following columns:", "options": [{"label": "A", "text": "A-2, B-1, C-4, D-3", "correct": false}, {"label": "B", "text": "A-3, B-2, C-1, D-4", "correct": false}, {"label": "C", "text": "A-4, B-2, C-1, D-3", "correct": true}, {"label": "D", "text": "A-3, B-4, C-1, D-2", "correct": false}], "correct_answer": "C. A-4, B-2, C-1, D-3", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692720105844-QTDFPYQ142IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>A-4, B-2, C-1, D-3 Option C is the correct match for toxins with Common names.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A, B and D. are Incorrect matches.</p>\n<p><strong>Table:</strong></p><p>#MANTRA Irritant organic vegetable poison:</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are true about Doctrine of Borrowed Servant except:", "options": [{"label": "A", "text": "Hospital administration is responsible for the action, of interns and trainees", "correct": false}, {"label": "B", "text": "A nurse assisting a surgery is a borrowed servant of the hospital", "correct": false}, {"label": "C", "text": "Doctor assisting a surgeon for fee in OT", "correct": true}, {"label": "D", "text": "Physician is responsible for the acts done according to his orders by other staffs", "correct": false}], "correct_answer": "C. Doctor assisting a surgeon for fee in OT", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Doctor assisting a surgeon for fee in OT When two doctors practice as partners , each is liable for negligence of the other, even though he may have no part in the negligent act.</p>\n<p><strong>Highyeild:</strong></p><p>Borrowed servant doctrine(Captain of the ship doctrine): An employee may serve more than one employer , e.g., the nurse employed by a hospital to assist in operations may be the \"borrowed servant\" of the operating surgeon during the operation , and the servant of the hospital for all other purposes. In this case, the lending employer temporarily surrenders control over his worker and the borrowing employer temporarily takes over control.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A,B and D. are incorrect.</p>\n<p><strong>Table:</strong></p><p>#MANTRA Defenses against negligence for doctor- No duty owed to the patient Duty discharged as per prevailing / accepted standards Contributory Negligence (only for civil cases) Patient Negligence Medical Maloccurrence Therapeutic Misadventure Diagnostic Misadventure Experimental Misadventure Novus Actus Interveniens Res Judicata 11 . Res Indicata Calculated Risk doctrine Defenses for patient against Doctor : Res Ipsa Loquitur : The thing / fact speaks for itself Doctrine of common knowledge : Issue of negligence is not related to the expert knowledge of doctors, but rather it is due to lack of common sense.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 14-year-old female was claimed to be kidnapped. On interrogation, she claims that she is not a minor and left home with the person of her own will. Court ordered for her age estimation. Given below are the X-rays of pelvis, wrist, and bilateral elbow. What is her most probable age based on these ?", "options": [{"label": "A", "text": "14 years", "correct": false}, {"label": "B", "text": "16–17 years", "correct": false}, {"label": "C", "text": "17–19 years", "correct": false}, {"label": "D", "text": "21–22 years", "correct": true}], "correct_answer": "D. 21–22 years", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1692720106625-QTDFPYQ144IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>21–22 years In figure 1 , all the ossification centers are fused around the elbow , so the age must be ≥ 16 years . In figure 2 , the lower end of radius and ulna are fused, so the age must be at least 18 years . In figure 3 , Ischial tuberosity is fused, so the age must be around 20–21 years. So the best answer for this question would be option (D) 21–22 years .</p>\n<p><strong>Highyeild:</strong></p><p>Important tables of ossification center, its appearance and fusion , are given below. Shoulder Ossification center Appearance Fusion Shoulder Joint 1 year Humeral Head 1 year Greater Tubercle 3 years 18 years Lesser Tubercle 5 years Coracoid process 10–11 years 16 years Acromion Process 14–16 years 17–18 years Medial End of Clavicle 18–20 years 21–22 years Elbow joint centers Appearance Fusion Capitulum 1 year 14–16 years Medial epicondyle 5–7 years 16 years Trochlea 9 years 14–16 years Lateral epicondyle 11 years 13 years Upper end of radius 5 year 14–16 years 0lecronon process of ulna 9 years 14–16 years Wrist joint centers Appearance Fusion Lower end of radius 2 years 18–19 years Lower end of ulna 5–6 years 17–18 years Capitate 2 months–1 year - Hamate 3 months Triquetral 3 years Lunate 4 years Trapezium 5 years Trapezoid 6 years Scaphoid 5 years Pisiform 10–12 years Base of 1st metacarpal At birth 15 years Pelvis ossification centers Appearance Fusion Ischio-Pubic Ramus 6th year Triradiate cartilage 13–15 years Ischial tuberosity 16 years 20–22 years Iliac crest 14 years 18–20 years Head of Femur 1 year 17–18 years Greater Trochanter 4 years 17–18 years Lesser Trochanter 12–14 years 17–18 years Other  important  centers Appearance Fusion Basi-sphenoid fuses with the Basi-occiput 18–20 years Calcaneum 5 th I. U. Month Talus 7 th I. U. Month Lower end of Femur 9 th I. U. Month 18–19 years Upper end of Tibia At birth 18–19 years Upper end of Fibula 4 years</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A, B & C are Incorrect.</p>\n<p><strong>Table:</strong></p><p>#MANTRA All the ossification centers around the elbow joint will fuse with their respective shafts by 16 – 17 years ,hence the best X-ray to determine the age of 16 – 17 years is elbow joint. As head of femur, lesser trochanter and greater trochanter fuse by 17 -18 years ,the best X-ray to determine the age of 17 -18 years is the hip joint. Lower end of femur, upper end of tibia and upper end of fibula fuses by 18 – 19 years .Best X-ray for 18 – 19 years is Knee joint. Upper end of femur, because iliac crest & ischial tuberosity fuses by 20 – 21 years .Best X-ray for 20 – 21 years is Hip joint.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Calculate the age of the fetus having CRL 23 cm, foot length 8 cm. Talus is present and testes are present at superficial inguinal rings?", "options": [{"label": "A", "text": "5 months", "correct": false}, {"label": "B", "text": "6 months", "correct": false}, {"label": "C", "text": "7 months", "correct": true}, {"label": "D", "text": "8 months", "correct": false}], "correct_answer": "C. 7 months", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>7 months Fetus having CRL 23 cm, Talus is present ,testes are present in superficial inguinal rings Which are seen at 7 mth of Intrauterine gestation.</p>\n<p><strong>Highyeild:</strong></p><p>Gestational age can be determined from maturation of chorionic villi, foot length and ossification centers. Age (End of) Features First month Length 1 cm; weight 2.5 g. The eyes are seen as two dark spots , and the mouth as a cleft. Second month Length 4 cm; weight 10 g. The hands and feet are webbed. The placenta begins to form. The anus is seen as a dark spot. First ossification center in a fetus appears in the clavicle (4 to 5 weeks), followed by maxilla (6 weeks). Third month Length 9 cm; weight 30 g. The eyes are closed and the pupillary membrane appears. Nails appear and the neck is formed Fourth month Length 16 cm; weight 120 g. Sex can be recognized. Lanugo hair is seen on the body. Convolutions begin to develop in brain. Meconium is found in the duodenum. Fifth month Length 25 cm; weight 400 g. Nails are distinct and soft. Light hair appears on the head. Skin is covered with vernix caseosa. Meconium is seen at the beginning of the large intestine. Ossification centers are present in the middle segments of the sacrum. Sixth month Length 30 cm; weight 700 g. Eyebrows and eyelashes appear. Skin is red and wrinkled and subcutaneous fat begins to the deposit. Vernix caseosa is present. Meconium in the transverse colon. The testes are seen close to the kidneys. Seventh month Length 35 cm; crown-rump length 23 cm; foot length 8 cm; weight 900 to 1200 g. Nails are thick. Eyelids open and the pupillary membrane disappears. Skin is dusky-red, thick and fibrous. Meconium is found in the entire large intestine. Testes are found at the external inguinal ring . Gallbladder contains bile and caecum is seen in the right iliac fossa. Ossification Center is present in the talus. Eighth month Length 40 cm; weight one-and-half to two kg. Nails reach the tips of fingers. Scalp hair is thicker, 1.5 cm in length. Ninth month Length 45 cm ; weight 2.2–3 kg. Scalp hair is dark and 4 cm. long. Meconium is seen at the end of the large intestine. Scrotum is wrinkled and contains both testes. Placenta weighs 500 g. Ossification centers are usually present in the lower end of the femur. Tenth month (full-term child) Length 48 to 52 cm; crown-rump length 28 to 32 cm; weight 2.5 to 5 kg; average about 3–4 kg. The length is much less variable than the weight. The length is much less variable than the weight. The male infant weighs about 100 g. more than the female. The circumference of the head is 33 to 38 cm. Six fontanels are usually present in the neonatal skull. The anterior fontanel (bregma) is located at the junction of sagittal and coronal sutures. The posterior fontanel (occipital) lies at the junction of sagittal and lambdoid sutures. At each sphenoparietal junction, a lateral fontanel is present. The poster lateral fontanels (mastoid) as located at the mastoid- occipital junctions. Anterior fontanel is 4 x 2.5 cm. At full term the head of a child is nearly one-fourth of the whole length of the body. The surface of the brain shows convolutions and the grey matter begins to form. The scalp hair is dark, 3 to 5 em long. The face is not wrinkled. Lanugo is absent except on the shoulders. The skin is pale and covered with vernix caseosa. The nails project beyond the end of fingers, but reach only the tip of the toes. The cartilages have formed in the nose and ears. The testes are present in the scrotum ; vulva is closed and labia minora are covered by full developed labia majora. The rectum contains dark brownish, green or black meconium. The umbilicus is situated midway between pubis and xiphoid cartilage. The umbilical cord is 50 to 55 cm. long, and one em. thick. The center of ossification is found in the lower end of femur and sometimes in the cuboid and in the upper end of the tibia.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A.5 months-Ossification centers are present in the middle segments of the sacrum. Option B.6 months-The testes are seen close to the kidneys. Option D.8 months- foetal length 40 cm .</p>\n<p><strong>Table:</strong></p><p>#MANTRA Rule of Hasse : This is a rough method of calculating the age of the fetus. The length of the foetus is measured from the crown to the heel in centimetres. During the first five months of pregnancy the square root of the length gives the approximate age of the foetus in months, e.g. a foetus of 16 em. is four months. Morrison

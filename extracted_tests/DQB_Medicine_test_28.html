@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Git Clinical Vignettes</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Git Clinical Vignettes</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                47 Questions | 252 Total Marks | 57 min Duration | ~72.77 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 47 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 57 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 47</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Git Clinical Vignettes - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 47</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 47 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 56-year-old woman presents with weight loss and watery diarrhea. She also notices periumbilical pain and bloating after eating. She also complains of flushing episodes. On examination-rhonchi present, CVS-pansystolic murmur at tricuspid area increasing on inspiration noted. A small bowel x-ray reveals an area of narrowing and the lesion is surgically resected. The pathology report will be most likely", "options": [{"label": "A", "text": "Polypoid adenoma", "correct": false}, {"label": "B", "text": "Leiomyoma", "correct": false}, {"label": "C", "text": "Adenocarcinoma", "correct": false}, {"label": "D", "text": "Carcinoid tumor", "correct": true}], "correct_answer": "D. Carcinoid tumor", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/38025401700657205/38025401700657205.m3u8"}, {"text": "A 72-year-old man presented with dyspnea on exertion gradually progressive and fatigue. On examination pallor is present. Hb is 8.0 g% and Serum ferritin is low. There is no clinical history of upper or lower GI bleeding, but his stools are fecal occult blood positive. His colonoscopy is negative for any obvious sources of bleeding, but upper endoscopy reveals ulceration in the distal duodenum that is biopsied. What will be the most likely cause", "options": [{"label": "A", "text": "Lymphoma", "correct": false}, {"label": "B", "text": "Leiomyoma", "correct": false}, {"label": "C", "text": "Lipoma", "correct": false}, {"label": "D", "text": "Adenocarcinoma", "correct": true}], "correct_answer": "D. Adenocarcinoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/71462451700657221/71462451700657221.m3u8"}, {"text": "A 23-year-old man presented with chronic diarrhea, vomiting, and abdominal cramps for 3-4 months. He gives history of weight loss of 6 kg during this period. There is no history of fever, jaundice or abdomen distension. He is not on any medication. On examination- vitals are stable, per abdomen-no organomegaly. A small bowel x-ray shows diffuse nonspecific mucosal abnormality. Upper endoscopy is performed to visualize the small bowel and obtain biopsies. The pathology report revealed immunoproliferative small intestinal disease. The infectious cause for this abnormality is", "options": [{"label": "A", "text": "Campylobacter", "correct": true}, {"label": "B", "text": "Shigella", "correct": false}, {"label": "C", "text": "Salmonella", "correct": false}, {"label": "D", "text": "Yersenis", "correct": false}], "correct_answer": "A. Campylobacter", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/17267881700657233/17267881700657233.m3u8"}, {"text": "A 21-year-old woman complains of acute periumbilical pain that localizes to the right lower quadrant. She appears unwell, and on examination, there is tenderness and guarding in the right lower quadrant. A pregnancy test is negative and a pelvic examination rules out pelvic inflammatory disease. A clinical diagnosis of acute appendicitis is made and she has an uncomplicated laparoscopic appendectomy. The biopsy report showed acute inflammation and a tumor for which the appendix is a very common site of involvement. Identify the tumor", "options": [{"label": "A", "text": "Leiomyoma", "correct": false}, {"label": "B", "text": "Lipoma", "correct": false}, {"label": "C", "text": "Fibroma", "correct": false}, {"label": "D", "text": "Carcinoid tumor", "correct": true}], "correct_answer": "D. Carcinoid tumor", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15408961700657294/15408961700657294.m3u8"}, {"text": "A 57-year-old woman with a 20-year history of celiac disease now presents with weight loss, cramps, and abdominal discomfort. She is adherent to her gluten-free diet, and is not taking any new medications. On examination, her abdomen is soft and there is fullness in the right lower quadrant. A small bowel x-ray reveals an area of narrowing in the distal ileum, and there is thickening and nodularity of the mucosal folds. She undergoes surgical resection of the lesion and specimen sent for biopsy. What will be likely cause of this presentation", "options": [{"label": "A", "text": "Refractory sprue", "correct": false}, {"label": "B", "text": "Small intestinal lymphoma", "correct": true}, {"label": "C", "text": "Tropical sprue", "correct": false}, {"label": "D", "text": "Inflammatory bowel disease", "correct": false}], "correct_answer": "B. Small intestinal lymphoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67931561700657306/67931561700657306.m3u8"}, {"text": "A 29-year-old woman presented with abdomen pain and distension. She has increased frequency of stools. Symptoms has started recently for one week and are more whenever she takes milk. She is better after fasting. Per abdomen examination reveals mild diffuse tenderness, there is no organomegaly. Stool pH is acidic and stool osmolar gap is more than 150.What can be the etiology of her symptoms", "options": [{"label": "A", "text": "Viral intestinal infection", "correct": false}, {"label": "B", "text": "Bacterial intestinal infection", "correct": false}, {"label": "C", "text": "Giardiasis", "correct": false}, {"label": "D", "text": "All", "correct": true}], "correct_answer": "D. All", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/55281541700657317/55281541700657317.m3u8"}, {"text": "A 19-year-old man complaint of 6 month history of weight loss, abdominal distention, bloating, and increased frequency of stools. He has go 6-7 times/day. The stools are oily with foul smell. There is no blood in stools. He also has rashes on trunk with itching. Past history-type 1 diabetes. Skin examination-rashes over trunk present. On Investigations- steatorrhea is present and a small bowel biopsy reveals blunting and flattening of villi. What is the likely cause of this presentation?", "options": [{"label": "A", "text": "Tropical sprue", "correct": false}, {"label": "B", "text": "Celiac sprue", "correct": true}, {"label": "C", "text": "Ulcerative colitis", "correct": false}, {"label": "D", "text": "Irritable bowel syndrome", "correct": false}], "correct_answer": "B. Celiac sprue", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4849501700657329/4849501700657329.m3u8"}, {"text": "A 57-year-old man presents with weight loss, low-grade fever and diarrhea for almost one month. He also gives history of migratory joint pains 6 months back. Recently he complaint of memory lapses. On examination- peripheral lymphadenopathy present. Lab investigations showed steatorrhea. Small bowel biopsy reveals para-amino salicylic acid (PAS) positive macrophages containing bacilli. What is the etiology of this presentation", "options": [{"label": "A", "text": "Bacterial overgrowth syndrome", "correct": false}, {"label": "B", "text": "Whipple’s disease", "correct": true}, {"label": "C", "text": "Crohn’s disease", "correct": false}, {"label": "D", "text": "Celiac sprue", "correct": false}], "correct_answer": "B. Whipple’s disease", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/48231571700657341/48231571700657341.m3u8"}, {"text": "A 43-year-old woman has had a 10-year history of severe and recurrent peptic ulcer disease that is refractory to medical therapy. She has had ulcers at multiple sites of the small bowel including the distal duodenum and jejunum. She also has chronic diarrhea with stool osmotic gap less than 50. Stool fat is insignificant. Evaluation for Helicobacter pylori infection is negative. Which of the following condition should be ruled out in this female", "options": [{"label": "A", "text": "Gastrinoma", "correct": true}, {"label": "B", "text": "VIPoma", "correct": false}, {"label": "C", "text": "Carcinoid syndrome", "correct": false}, {"label": "D", "text": "Ulcerative colitis", "correct": false}], "correct_answer": "A. Gastrinoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22730621700657355/22730621700657355.m3u8"}, {"text": "A 77-year-old woman is brought to the emergency room because of nonspecific abdominal discomfort. She has no anorexia, fever, chills, or weight loss. Her abdomen is soft and nontender on physical examination. Abdominal x-rays show lots of stool in the colon, but no free air or air-fluid levels. The amylase is 150 U/L (25–125 U/L), and the rest of her biochemistry and complete blood count are normal. Which of the following conditions can cause a false positive elevation in the serum amylase?", "options": [{"label": "A", "text": "Maturity-onset diabetes mellitus", "correct": false}, {"label": "B", "text": "Gastric ulcer", "correct": false}, {"label": "C", "text": "Renal failure", "correct": true}, {"label": "D", "text": "Sulfonamide therapy", "correct": false}], "correct_answer": "C. Renal failure", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/30814371700657366/30814371700657366.m3u8"}, {"text": "A 23-year-old woman presents with weight loss and chronic diarrhea. She appears unwell and cachectic. Routine laboratory tests reveal a low hemoglobin level and an increased international normalized ratio (INR) even though she is not taking any anticoagulants. The liver enzymes are normal, but the albumin and calcium levels are low, suggesting generalized malnutrition. Which of the following is the most appropriate initial diagnostic test for malabsorption?", "options": [{"label": "A", "text": "Xylose absorption", "correct": false}, {"label": "B", "text": "Schilling test", "correct": false}, {"label": "C", "text": "X-ray studies", "correct": false}, {"label": "D", "text": "Stool fat quantitation", "correct": true}], "correct_answer": "D. Stool fat quantitation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26109021700657378/26109021700657378.m3u8"}, {"text": "A 33-year-old man comes for donating blood. He is asymptomatic. On further history he has never been vaccinated for hepatitis B. On examination there is no icterus and per abdomen examination shows no hepatomegaly. There are no signs of chronic liver disease. Serologic tests reveal negative hepatitis B surface antigen (HBsAg) and positive antibody to surface antigen. Which of the following conditions does this serologic pattern best fit with?", "options": [{"label": "A", "text": "Previous hepatitis B infection", "correct": true}, {"label": "B", "text": "Chronic active hepatitis", "correct": false}, {"label": "C", "text": "Acute hepatitis B infection", "correct": false}, {"label": "D", "text": "Poor prognosis", "correct": false}], "correct_answer": "A. Previous hepatitis B infection", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12237071700657391/12237071700657391.m3u8"}, {"text": "A 29-year-old woman is coming for a routine health checkup. She gives history of slight increase in yellowness of eyes during prolong fasting and whenever there is stress. There is no significant past medical history and family history. She is not taking any medications and doesn’t consume alcohol. On examination icterus is absent, there is no pallor, no hepatomegaly and no splenomegaly. Blood tests done showed an increase in unconjugated bilirubin. There is no evidence of hemolysis and liver tests are otherwise normal. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Crigler-Najjar syndrome", "correct": false}, {"label": "B", "text": "Dubin-Johnson syndrome", "correct": false}, {"label": "C", "text": "Rotor’s syndrome", "correct": false}, {"label": "D", "text": "Gilbert’s syndrome", "correct": true}], "correct_answer": "D. Gilbert’s syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34396261700657402/34396261700657402.m3u8"}, {"text": "A 29-year-old man with acquired immune deficiency syndrome (AIDS) comes to the emergency department because of progressively increasing abdominal pain located in epigastric area and radiates to back. Examination shows voluntary guarding in the upper abdomen. There is no ascites, hepatomegaly or splenomegaly. His biochemistry is normal except for an elevated amylase at 370 U/L (25–125 U/L). Which of the following infections can trigger this disorder in AIDS patients?", "options": [{"label": "A", "text": "Toxoplasmosis", "correct": false}, {"label": "B", "text": "Mycobacterium avium complex", "correct": true}, {"label": "C", "text": "Mycobacterium tuberculosis", "correct": false}, {"label": "D", "text": "Pneumocystis carinii", "correct": false}], "correct_answer": "B. Mycobacterium avium complex", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/16867481700657412/16867481700657412.m3u8"}, {"text": "A 55-year-old man presented with weight loss, reduced appetite and early satiety. He has noticed yellowness of eyes gradually increasing along with abdomen distension. Past medical history reveals that he is known case of chronic liver disease, secondary to hepatitis B infection. On examination icterus is present. Ascites is noted. His Hb is 19 g% which was 13 g% last year. Which of the following is the most appropriate initial diagnostic test?", "options": [{"label": "A", "text": "Alkaline phosphatase", "correct": false}, {"label": "B", "text": "Alpha-fetoprotein (AFP)", "correct": true}, {"label": "C", "text": "Aspartate transaminase (AST)", "correct": false}, {"label": "D", "text": "Alanine transaminase (ALT)", "correct": false}], "correct_answer": "B. Alpha-fetoprotein (AFP)", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22310021700657424/22310021700657424.m3u8"}, {"text": "A 63-year-old man with a long history of alcohol abuse presents with ascites. He is experiencing mild abdominal discomfort and nausea. Examination reveals icterus. Per abdomen revealed tense ascites and generalized tenderness but no rigidity. A diagnostic paracentesis of the fluid is performed. Which of the following ascitic fluid results is most likely to suggest an uncomplicated ascites due to portal hypertension from cirrhosis?", "options": [{"label": "A", "text": "Hemorrhagic fluid", "correct": false}, {"label": "B", "text": "Protein >25 g/L", "correct": false}, {"label": "C", "text": "Bilirubin level twice that of serum", "correct": false}, {"label": "D", "text": "Serum to ascites albumin gradient >1.1 g/dL", "correct": true}], "correct_answer": "D. Serum to ascites albumin gradient >1.1 g/dL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/18831991700657435/18831991700657435.m3u8"}, {"text": "A 52-year-old man presents with watery diarrhea for 2 months. He also complains of facial flushing. Physical examination reveals facial telangiectasias and a heart murmur located at left lower parasternal area and is pansystolic. This murmur is increased by inspiration and abdomen compression. Which of the following is the most appropriate initial diagnostic test?", "options": [{"label": "A", "text": "Urinary 5-HIAA", "correct": true}, {"label": "B", "text": "Serum noradrenaline levels", "correct": false}, {"label": "C", "text": "Barium enema", "correct": false}, {"label": "D", "text": "Serum serotonin levels", "correct": false}], "correct_answer": "A. Urinary 5-HIAA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/48947961700657448/48947961700657448.m3u8"}, {"text": "A 59-year-old man presents with abdominal pain, anorexia, and nausea. He complaint of early satiety. He has lost weight and started to develop swelling in feet. On examination- BP-120/70 mmHg, pitting edema present on legs, chest is clear, CVS-normal. Lab tests showed lymphocytopenia and serum albumin is low. Endoscopy reveals large gastric mucosal folds. Which of the following explanations for the edema is most likely correct?", "options": [{"label": "A", "text": "Hypoalbuminemia secondary to malnutrition", "correct": false}, {"label": "B", "text": "Hypoalbuminemia secondary to protein loss", "correct": true}, {"label": "C", "text": "Impaired hepatic synthesis of albumin", "correct": false}, {"label": "D", "text": "Increased hydrostatic pressure", "correct": false}], "correct_answer": "B. Hypoalbuminemia secondary to protein loss", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5607201700657460/5607201700657460.m3u8"}, {"text": "A 45-year-old man with a long history of alcohol intake comes into the emergency room with hematemesis. He was diagnosed a case of chronic liver disease due to alcohol intake. On examination-BP-80/50 mmHg, Icterus is present and per abdomen shows ascites. Urgent endoscopy reveals the following findings as shown in figure Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Esophageal varices", "correct": true}, {"label": "B", "text": "Esophageal carcinoma", "correct": false}, {"label": "C", "text": "Foreign body", "correct": false}, {"label": "D", "text": "Barrett’s esophagus", "correct": false}], "correct_answer": "A. Esophageal varices", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/28(106).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15053501700657472/15053501700657472.m3u8"}, {"text": "A 33-year-old woman develops epigastric abdominal pain with nausea and vomiting of 2 days duration. Pain is more in supine position and decreased on sitting and leaning forward. Pulse is 120/min, BP-100/70 mmHg. Her abdomen is tender on palpation in the epigastric region and the remaining examination is normal. Her white count is 13,000/mL, and amylase is 300 U/L (25–125 U/L). Which of the following is the most common predisposing factor for this disorder?", "options": [{"label": "A", "text": "Drugs", "correct": false}, {"label": "B", "text": "Gallstones", "correct": true}, {"label": "C", "text": "Malignancy", "correct": false}, {"label": "D", "text": "Alcohol", "correct": false}, {"label": "E", "text": "Hypertriglyceridemia", "correct": false}], "correct_answer": "B. Gallstones", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/7004341700657484/7004341700657484.m3u8"}, {"text": "A 30-year-old man complains of chronic diarrhea for the past 6 months. There is no weight loss, fever, or abdominal pain. He takes no medications and feels fine. His physical examination is completely normal. Further history reveals that this man does not take laxatives; however, in an effort to stay slim he eats a lot of sugar-free gum and sugarless candy. Which of the following explanations is the most likely cause of his diarrhea?", "options": [{"label": "A", "text": "Non absorbed carbohydrates", "correct": true}, {"label": "B", "text": "Lack of fiber in his diet", "correct": false}, {"label": "C", "text": "Pancreatic insufficiency secondary to chronic protein-calorie malnutrition", "correct": false}, {"label": "D", "text": "Secondary intestinal mucosal atrophy", "correct": false}], "correct_answer": "A. Non absorbed carbohydrates", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/46610691700657495/46610691700657495.m3u8"}, {"text": "A 73-year-old woman presents to the emergency room with black tarry stools and symptoms of presyncope when standing up. Digital rectal examination confirms the presence of melena. She recently started using ibuprofen for her knee pain. Upper endoscopy confirms the diagnosis of a gastric ulcer. Which of the following is the most likely explanation for the gastric ulcer?", "options": [{"label": "A", "text": "Increasing acid production", "correct": false}, {"label": "B", "text": "Inhibiting mucosal repair", "correct": true}, {"label": "C", "text": "Promoting replication of Helicobacter pylori", "correct": false}, {"label": "D", "text": "An antiplatelet effect", "correct": false}], "correct_answer": "B. Inhibiting mucosal repair", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3341311700657507/3341311700657507.m3u8"}, {"text": "A 52-year-old woman is experiencing abdominal discomfort after meals as well as early in the morning. There is no weight loss or constitutional symptoms, and she has tried antacids but experienced minimal relief. Occasionally stools are black. Vitals are stable. There is no hepatosplenomegaly. Upper endoscopy reveals a duodenal ulcer and the biopsy is negative for malignancy. Breath urea test is positive. Which of the following is the most appropriate next step in management?", "options": [{"label": "A", "text": "6–8 weeks of omeprazole", "correct": false}, {"label": "B", "text": "Bismuth citrate therapy", "correct": false}, {"label": "C", "text": "Antibiotic therapy", "correct": false}, {"label": "D", "text": "Antibiotic therapy with omeprazole", "correct": true}], "correct_answer": "D. Antibiotic therapy with omeprazole", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/40433611700657522/40433611700657522.m3u8"}, {"text": "A 24-year-old man develops acute onset of anorexia, nausea, and vomiting. This is followed by clinical jaundice and right upper quadrant discomfort 1 week later.2 months back he was traveling where he ate food from street vendors. He also had unprotected sex with a new partner while there. On examination, he is icteric with right upper quadrant tenderness but the rest of the examination is normal. You made a clinical diagnosis of acute viral hepatitis. His hepatitis serology comes positive for an agent that could have been prevented with vaccination. Identify the virus", "options": [{"label": "A", "text": "Hepatitis A", "correct": false}, {"label": "B", "text": "Hepatitis B", "correct": false}, {"label": "C", "text": "Hepatitis E", "correct": false}, {"label": "D", "text": "Both A and B", "correct": true}], "correct_answer": "D. Both A and B", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/68294051700657535/68294051700657535.m3u8"}, {"text": "A 23-year old female develops acute onset jaundice and seeks medical attention. She has high grade fever, arthritis and skin rashes. There is no history of intravenous drug use or travel. On examination, she is icteric, there is no lymphadenopathy, and the heart and lungs are normal. Her liver span is 14 cm and the liver edge is smooth but tender. Splenomegaly 2 cm below costal margin is present. Her pelvic examination is normal. What is the most likely cause of her clinical presentation", "options": [{"label": "A", "text": "Hepatitis A", "correct": false}, {"label": "B", "text": "Hepatitis B", "correct": true}, {"label": "C", "text": "Hepatitis C", "correct": false}, {"label": "D", "text": "Hepatitis E", "correct": false}], "correct_answer": "B. Hepatitis B", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/47999291700657551/47999291700657551.m3u8"}, {"text": "A 34-year-old man comes for routine checkup. He appears well and in physical examination there is no icterus, pallor, ascites and liver enlargement. There is no prior history of intravenous drug use, blood transfusions, or multiple sex partners. Lab tests shows SGPT-70 IU/L (normal upto 40 IU/L). Ultrasound is showing fatty liver. His hepatitis serology will be most likely is positive for which virus.", "options": [{"label": "A", "text": "Hepatitis A", "correct": false}, {"label": "B", "text": "Hepatitis B", "correct": false}, {"label": "C", "text": "Hepatitis C", "correct": true}, {"label": "D", "text": "Hepatitis E", "correct": false}], "correct_answer": "C. Hepatitis C", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/75860911700657563/75860911700657563.m3u8"}, {"text": "A 45-year-old woman is evaluated for chronic elevations in her liver enzymes (AST and ALT). She feels well and asymptomatic. She is not consuming alcohol. She is not taking any medications presently.She was treated for polyarteritis nodosa 10 years back and is now in remission. There is no history of diabetes, thyroid and hypertension. She has normal weight and BMI. Her physical examination is normal. Lab tests- serum iron, ferritin, ceruloplasmin, ANA are within normal range. Which hepatitis viral serology will be positive", "options": [{"label": "A", "text": "Anti HAV", "correct": false}, {"label": "B", "text": "HbsAg", "correct": true}, {"label": "C", "text": "Anti HCV", "correct": false}, {"label": "D", "text": "Anti HEV", "correct": false}], "correct_answer": "B. HbsAg", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/44314181700657574/44314181700657574.m3u8"}, {"text": "A 24-year-old woman is pregnant with her first baby at 14 weeks. She feels well and the pregnancy is noncomplicated. There is history of road traffic accident 4 years back when she received blood transfusion in a remote hospital. Presently physical examination reveals mild icterus. There is no asterixis. Lab test SGPT 80 IU/L and serum bilirubin 2.5 mg/dl. Routine screening is positive for chronic viral hepatitis for which perinatal transmission is of major epidemiologic significance. Identify the virus", "options": [{"label": "A", "text": "Hepatitis A", "correct": false}, {"label": "B", "text": "Hepatitis B", "correct": true}, {"label": "C", "text": "Hepatitis C", "correct": false}, {"label": "D", "text": "Hepatitis E", "correct": false}], "correct_answer": "B. Hepatitis B", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13845041700657585/13845041700657585.m3u8"}, {"text": "A 53-year-old man presents to the emergency department with severe epigastric abdominal pain. His temperature is 37.2°C, blood pressure 110/70 mm Hg, pulse 110/min, and respirations 20/min. Examination of the heart and lungs is normal, and his abdomen is tender in the epigastric region. His white count is 15,000/mL and amylase is 450 U/L (25–125 U/L). Which of the following laboratory abnormalities is also most likely to be present?", "options": [{"label": "A", "text": "Hypoglycemia", "correct": false}, {"label": "B", "text": "Hypercholesterolemia", "correct": false}, {"label": "C", "text": "Hyperglycemia", "correct": true}, {"label": "D", "text": "Hypercalcemia", "correct": false}], "correct_answer": "C. Hyperglycemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/2512331700657598/2512331700657598.m3u8"}, {"text": "You are asked to examine a 43-year-old man by your consultant in OPD. Patient feels vaguely unwell. There is no fever, vomiting or weight loss, Physical examination is unremarkable except for evidence of scleral icterus. The skin appears normal. Which of the following is the most likely explanation for why early jaundice is visible in the eyes but not the skin?", "options": [{"label": "A", "text": "The high type II collagen content of scleral tissue", "correct": false}, {"label": "B", "text": "The high elastin content of scleral tissue", "correct": true}, {"label": "C", "text": "The high blood flow to the head with consequent increased bilirubin delivery", "correct": false}, {"label": "D", "text": "Lighter color of the sclera", "correct": false}], "correct_answer": "B. The high elastin content of scleral tissue", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6909841700657609/6909841700657609.m3u8"}, {"text": "A 25-year-old previously healthy man experiences fatigue and malaise. One week ago he had a “viral”-type illness consisting of a sore throat, fever, and myalgias. He now appears jaundiced, but the rest of the physical examination is normal. His investigations reveal a total bilirubin of 4 mg/dL (0.1–1.0 mg/dL) and a direct bilirubin of 0.3 mg/dL (0.0–0.3 mg/dL). Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Hemolysis", "correct": true}, {"label": "B", "text": "Dubin-Johnson syndrome", "correct": false}, {"label": "C", "text": "Alcoholic liver disease", "correct": false}, {"label": "D", "text": "Pancreatic carcinoma", "correct": false}], "correct_answer": "A. Hemolysis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4718621700657622/4718621700657622.m3u8"}, {"text": "A 28-year-old man presents with symptoms of frequent bowel movements, crampy abdominal pain, and the passage of mucus. There is no history of any bloody diarrhea, but recently, he developed joint discomfort in his hands, knees, and back. On examination he is thin, and his abdomen is soft with voluntary guarding in the left lower quadrant. His joints are not actively inflamed and there is an asymmetric distribution. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Lymphoma of the bowel", "correct": false}, {"label": "B", "text": "Amyloid infiltration", "correct": false}, {"label": "C", "text": "Chronic pancreatitis", "correct": false}, {"label": "D", "text": "Ulcerative colitis", "correct": true}], "correct_answer": "D. Ulcerative colitis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/28591051700657634/28591051700657634.m3u8"}, {"text": "A 42-year-old previously well woman presents with pruritus. She is not taking any medications, and only drinks alcohol on a social basis. Her physical examination shows xanthelasmas otherwise is entirely normal with no signs of chronic liver disease or jaundice. Laboratory evaluation reveals an alkaline phosphatase level of three times normal, and an ultrasound of the liver and gallbladder is normal. Which of the following is the most appropriate next step in diagnosis?", "options": [{"label": "A", "text": "Anti CCP ab", "correct": false}, {"label": "B", "text": "Antinuclear antibodies", "correct": false}, {"label": "C", "text": "p-ANCA", "correct": false}, {"label": "D", "text": "Antimitochondrial antibodies", "correct": true}], "correct_answer": "D. Antimitochondrial antibodies", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56369801700657647/56369801700657647.m3u8"}, {"text": "A 53-year-old man presented with weight loss and chronic diarrhea. Stools are greasy with foul smell. Lab investigations revealed 72 hour stool fat more than 7%. He undergoes diagnostic investigations including small bowel biopsies. The biopsy report reveals normal small bowel mucosa. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Tropical sprue", "correct": false}, {"label": "B", "text": "Post gastrectomy steatorrhea", "correct": true}, {"label": "C", "text": "Whipple’s disease", "correct": false}, {"label": "D", "text": "Abetalipoproteinemia", "correct": false}], "correct_answer": "B. Post gastrectomy steatorrhea", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/65677971700657665/65677971700657665.m3u8"}, {"text": "A 22-year-old man presented with chronic diarrhea associated with pain abdomen. Sometimes it is associated with blood in stools. He also complaints of joint pains and red painful nodules on shin area. On examination erythema nodosum present. Blood test showed ASCA positivity. Barium enema is done which showed “string sign” in the ileal area. In which of the following conditions is this sign most often seen?", "options": [{"label": "A", "text": "In the stenotic or non-stenotic phase of the disease", "correct": true}, {"label": "B", "text": "In the stenotic phase only", "correct": false}, {"label": "C", "text": "With rectal involvement", "correct": false}, {"label": "D", "text": "With gastric involvement", "correct": false}], "correct_answer": "A. In the stenotic or non-stenotic phase of the disease", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/76307391700657676/76307391700657676.m3u8"}, {"text": "A 22-year-old woman presents with chronic diarrhea. She has no abdominal discomfort, feels well, and reports no weight loss or systemic symptoms. Physical examination reveals a healthy young woman. The complete physical examination is normal. Chest-bilateral clear, CVS-no murmurs. Lab tests-Hb is normal with stool osmotic gap of less than 50. You made a diagnosis of secretory diarrhea. Which of the following is the most likely cause of a secretory diarrhea in this young woman?", "options": [{"label": "A", "text": "Surreptitious use of stimulant laxatives", "correct": true}, {"label": "B", "text": "Carcinoid tumor", "correct": false}, {"label": "C", "text": "Ulcerative colitis", "correct": false}, {"label": "D", "text": "Lactose deficiency", "correct": false}], "correct_answer": "A. Surreptitious use of stimulant laxatives", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53204631700657688/53204631700657688.m3u8"}, {"text": "A 27-year-old man with HIV complains of pain every time he swallows (odynophagia).Symptoms occur with both solid and liquid food. He is not on any antiretroviral therapy and otherwise feels well. Examination of the mouth and pharynx are normal. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Mid esophageal cancer", "correct": false}, {"label": "B", "text": "Distal esophageal cancer", "correct": false}, {"label": "C", "text": "Peptic stricture", "correct": false}, {"label": "D", "text": "Candida infection", "correct": true}], "correct_answer": "D. Candida infection", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77997741700657700/77997741700657700.m3u8"}, {"text": "A 53-year-old woman complaint of fatigue and pruritis for 1 year. She also noticed pale stools. On examination icterus is present with eyelids showing xanthelasma. Lab tests showed serum bilirubin 3 mg/dl,SGPT-50 IU/L,ALP-600 IU/L. Ultrasound is normal without any common bile duct dilatation. Antimitochondrial Ab is positive. Liver biopsy revealed non neutrophilic intra hepatic bile ductules inflammation. You made a diagnosis of primary biliary cirrhosis (PBC). She is inquiring about available treatments for this condition, including if there is a cure for the disease. Which of the following treatments is most likely to cure her PBC?", "options": [{"label": "A", "text": "Ursodiol", "correct": false}, {"label": "B", "text": "Methotrexate", "correct": false}, {"label": "C", "text": "Glucocorticoids", "correct": false}, {"label": "D", "text": "Liver transplantation", "correct": true}], "correct_answer": "D. Liver transplantation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/44155341700657711/44155341700657711.m3u8"}, {"text": "A 52-year-old man has episodes of severe chest pain associated with dysphagia. He has been seen twice in the emergency room, and both times the symptoms responded to sublingual nitroglycerin. He then had a full cardiac evaluation including electrocardiogram (ECG), cardiac biomarkers, and an exercise stress test, which were all normal. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Herpetic infection", "correct": false}, {"label": "B", "text": "A motor disorder", "correct": true}, {"label": "C", "text": "Mid-esophageal cancer", "correct": false}, {"label": "D", "text": "Peptic stricture", "correct": false}], "correct_answer": "B. A motor disorder", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/20622281700657724/20622281700657724.m3u8"}, {"text": "A 16-year old girl has presented in your OPD. She has been taking isoniazid (INH) and rifampin for uncomplicated pulmonary tuberculosis. On examination mild icterus seen. Per abdomen examination is normal. Routine blood tests are unremarkable, except for an elevated direct bilirubin. Other liver enzymes and function tests are completely normal. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Hemolytic anemia", "correct": false}, {"label": "B", "text": "INH toxicity", "correct": false}, {"label": "C", "text": "Rifampin toxicity", "correct": false}, {"label": "D", "text": "Rotor’s syndrome", "correct": true}], "correct_answer": "D. Rotor’s syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53703441700657736/53703441700657736.m3u8"}, {"text": "A 45-year-old woman presents with a 1-week history of jaundice, anorexia, and right upper quadrant discomfort. On examination she is icteric, with a tender right upper quadrant and liver span of 14 cm. There is no shifting dullness or pedal edema and the heart and lungs are normal. On further inquiry, she reports consuming one bottle of wine a day for the past 6 months. Which of the following laboratory tests is most likely to be characteristic of a patient with jaundice secondary to alcoholic hepatitis?", "options": [{"label": "A", "text": "Ratio of AST:ALT is 3:1 and the AST is 500 U/L", "correct": false}, {"label": "B", "text": "Ratio of AST:ALT is 2:1 and the AST is 250 U/L", "correct": true}, {"label": "C", "text": "Ratio of AST:ALT is 1:1 and the AST is 500 U/L", "correct": false}, {"label": "D", "text": "Ratio of AST:ALT is 1:1 and the AST is 250 U/L", "correct": false}], "correct_answer": "B. Ratio of AST:ALT is 2:1 and the AST is 250 U/L", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22923951700657747/22923951700657747.m3u8"}, {"text": "A 16-year-old girl is referred to the OPD because of chronic diarrhea and weight loss. She is experiencing large-volume watery diarrhea that is painless. The symptoms persist even when she is fasting, and there is no relationship to foods or liquids. She is not on any medications, and there is no travel history or other constitutional symptoms. Her physical examination is normal. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Partial small bowel obstruction", "correct": false}, {"label": "B", "text": "Partial large bowel obstruction", "correct": false}, {"label": "C", "text": "Osmotic diarrhea", "correct": false}, {"label": "D", "text": "Secretory diarrhea", "correct": true}], "correct_answer": "D. Secretory diarrhea", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/44376701700657774/44376701700657774.m3u8"}, {"text": "A 52-year-old man has suffered with chronic diarrhea for several years, but has refused to see a doctor. He finally comes because he is having trouble driving at night, because of difficulty seeing. Physical examination reveals a slender, pale, unwell-looking man. He has a microcytic anemia, low calcium, and albumin levels. Which of the following is the most likely cause for his diarrhea?", "options": [{"label": "A", "text": "Malabsorption", "correct": true}, {"label": "B", "text": "Osmotic diarrhea", "correct": false}, {"label": "C", "text": "Secretory diarrhea", "correct": false}, {"label": "D", "text": "Inflammatory bowel disease", "correct": false}], "correct_answer": "A. Malabsorption", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37874681700657786/37874681700657786.m3u8"}, {"text": "A 49-year-old woman c/o chronic diarrhea and weight loss. Stools are oily and floats in toilet.On examination pallor is present with ecchymosis seen. Per abdomen is normal with no organomegaly. Blood tests-low Hb with reduced levels of serum ferritin, calcium and folic acid. Malabsorption is suspected. Which of the following investigations is most likely to make a definitive diagnosis?", "options": [{"label": "A", "text": "Presence of fecal osmotic gap", "correct": false}, {"label": "B", "text": "D-xylose test", "correct": false}, {"label": "C", "text": "Stool fat measurements", "correct": false}, {"label": "D", "text": "Mucosal biopsy", "correct": true}], "correct_answer": "D. Mucosal biopsy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/58185701700657805/58185701700657805.m3u8"}, {"text": "A 67-year-old man is admitted to the intensive care unit (ICU) because of respiratory failure from pneumonia. He requires artificial ventilation and inotropic support. On the third day in the ICU, he develops melena and a drop in his hemoglobin. Urgent upper endoscopy is performed and it reveals three gastric ulcers in the fundus and body of the stomach. Appropriate treatment is started. What is the likely cause of this complication", "options": [{"label": "A", "text": "Bile acid reflux", "correct": false}, {"label": "B", "text": "Autoimmune", "correct": false}, {"label": "C", "text": "Ischemia of the gastric mucosa", "correct": true}, {"label": "D", "text": "Helicobacter pylori infection", "correct": false}], "correct_answer": "C. Ischemia of the gastric mucosa", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/71697701700657817/71697701700657817.m3u8"}, {"text": "A 57-year-old woman experiences frequent symptoms of heartburn. She reports no weight loss, diarrhea, or dysphagia symptoms. Past medical history is significant for B12 deficiency treated with monthly injections. She appears well, and the examination is normal, except for some patches on her arms where she has lost all the skin pigmentation. Her upper endoscopy is normal, except for gastric biopsies commenting on gastritis. What is likely etiopathogenesis", "options": [{"label": "A", "text": "MALT lymphoma", "correct": false}, {"label": "B", "text": "Pernicious anemia", "correct": true}, {"label": "C", "text": "Chronic pancreatitis", "correct": false}, {"label": "D", "text": "Helicobacter pylori infection", "correct": false}], "correct_answer": "B. Pernicious anemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63086531700657828/63086531700657828.m3u8"}, {"text": "A 54-year-old man is investigated for weight loss, epigastric pain, nausea, and vomiting. He appears ill; on examination, there is epigastric tenderness and marked peripheral edema. Upper endoscopy reveals large mucosal folds in the body and fundus of the stomach. Biopsies are consistent with a diagnosis of Menetrier’s disease.What is the pathogenesis", "options": [{"label": "A", "text": "Autoimmune", "correct": false}, {"label": "B", "text": "Infection", "correct": false}, {"label": "C", "text": "TGF alpha", "correct": true}, {"label": "D", "text": "Autoimmune", "correct": false}], "correct_answer": "C. TGF alpha", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19119941700657840/19119941700657840.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

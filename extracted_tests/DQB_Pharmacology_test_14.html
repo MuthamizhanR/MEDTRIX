@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Pharmacology Clinical Vignettes</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Pharmacology Clinical Vignettes</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                148 Questions | 592 Total Marks | 158 min Duration | ~64.05 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 148 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 158 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 148</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Pharmacology Clinical Vignettes - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 148</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 148 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A child with known case of bronchial asthma comes with respiratory distress with respiratory rate 48/min, cannot speak two words, occasional wheeze and oxygen saturation is 95%. You have given 3 doses of salbutamol by nebulization and patient get stabilised and now able to speak a sentence but oxygen saturation falls to 85% . What can be the most probable reason for fall in saturation?", "options": [{"label": "A", "text": "Ventilation Perfusion mismatch", "correct": true}, {"label": "B", "text": "Right to left shunt", "correct": false}, {"label": "C", "text": "CO2 excess", "correct": false}, {"label": "D", "text": "Faulty pulse oxymeter", "correct": false}], "correct_answer": "A. Ventilation Perfusion mismatch", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52271061700304713/52271061700304713.m3u8"}, {"text": "A 60 yr old male, K/C/O DM-II, HTN, dyslipidemia with BPH, taking metformin 500mg twice daily, enalapril 5mg once daily, rosuvas 5 mg once daily and tamsulosin 0.4 mg HS. He underwent cataract surgery and had significant intraoperative events with loosely hanging & billowing of the iris and progressive intraoperative constriction of the pupil despite mydriatic eye drops was being added to maintain dilatation & ultimately prolapse of the iris occurs through the surgical wound, which eventually led to endophthalmitis. He also gave history of recent addition of glimepride 2mg to his ongoing medical treatment due to uncontrolled sugar level. Which of the drug is most likely responsible for above complication?", "options": [{"label": "A", "text": "Rosuvastatin", "correct": false}, {"label": "B", "text": "Enalapril", "correct": false}, {"label": "C", "text": "Glimepride", "correct": false}, {"label": "D", "text": "Tamsulosin", "correct": true}], "correct_answer": "D. Tamsulosin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29560221700304740/29560221700304740.m3u8"}, {"text": "An old patient suffering from dementia , diagnosed to have Alzhimer’s disease. As a part of his medical treatment . tablet donepezil 10 mg daily is started but patient can’t tolerate it due to repeated diarrhoea. Which of the following can be used as alternative of donepezil by different route to avoid GIT side effects", "options": [{"label": "A", "text": "Donepezil", "correct": false}, {"label": "B", "text": "Rivastigmine", "correct": true}, {"label": "C", "text": "Memantine", "correct": false}, {"label": "D", "text": "Galantamine", "correct": false}], "correct_answer": "B. Rivastigmine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/48739571700304764/48739571700304764.m3u8"}, {"text": "A 60 yr old patient with history of MI on irregular treatment, comes with a history of dyspnoea on exertion, occasional PND and edema. On examination, BP is 130/80, Mitral regurgitation is present, X Ray shows cardiomegaly, Echo has EF 35% and Serum Creatinine is 1.3. All of the following are true for treatment of this patient except?", "options": [{"label": "A", "text": "Enalapril is contraindicated", "correct": true}, {"label": "B", "text": "Furosemide will relieve the symptom but no effect on overall mortality", "correct": false}, {"label": "C", "text": "Digoxin is useful if atrial arrhythmias are present", "correct": false}, {"label": "D", "text": "Eplerenone is useful", "correct": false}], "correct_answer": "A. Enalapril is contraindicated", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78221391700304780/78221391700304780.m3u8"}, {"text": "A 26 year old male presented to you with irregular pulse rate, diziness, history of syncope in recent past. On proper diagnosis he is found to be suffering from atrial flutter and immediately started with antiarrythmic treatment. After few weeks of therapy patient again comes to emergency department in unconsious state with BP 90/60. Resident doctor has taken ECG and found changes given below Which drug is responsible for above changes?", "options": [{"label": "A", "text": "Tocainide", "correct": false}, {"label": "B", "text": "Verapamil", "correct": false}, {"label": "C", "text": "Procainamide", "correct": true}, {"label": "D", "text": "Flecainide", "correct": false}], "correct_answer": "C. Procainamide", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(188).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34685081700304792/34685081700304792.m3u8"}, {"text": "A 28 yr old female, known case of myoclonic epilepsy, taking sodium valproate since 2years and her epilepsy is well controlled. Now patient has become pregnant and comes to you for advise as she has come to know that valproate is a strongly associated with teratogenesis. What will be best advice for her antiepileptic treatment?", "options": [{"label": "A", "text": "Stop sodium valproate and start lamotrigine as it is more safe in pregnancy", "correct": false}, {"label": "B", "text": "Stop all medicaltions at all", "correct": false}, {"label": "C", "text": "Add lamotrigine to sodium valproate for better control of seizure as pregnancy lead to more incidence of seizures", "correct": false}, {"label": "D", "text": "Continue with sodium valproate and add folic acid to prevent neural tube defects", "correct": true}], "correct_answer": "D. Continue with sodium valproate and add folic acid to prevent neural tube defects", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/58224611700304843/58224611700304843.m3u8"}, {"text": "A psychotic patient, has been started on tablet haloperidol 5 days back, presented with rolling up of eye balls(oculogyric crisis) and abnormal spasm of lower limb. Which side effect is most likely caused by above drug?", "options": [{"label": "A", "text": "Akathisia", "correct": false}, {"label": "B", "text": "Acute dystonia", "correct": true}, {"label": "C", "text": "Malignant hyperthermia", "correct": false}, {"label": "D", "text": "Tardive dyskinesia", "correct": false}], "correct_answer": "B. Acute dystonia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69467111700304861/69467111700304861.m3u8"}, {"text": "A 26-yrs-old woman with reactive depression complains of missing her period and having milk discharge from her breasts. Pregnancy tests are negative. Which of the following is most likely to have caused these findings?", "options": [{"label": "A", "text": "Amoxapine", "correct": true}, {"label": "B", "text": "Clomipramine", "correct": false}, {"label": "C", "text": "Fluoxetine", "correct": false}, {"label": "D", "text": "Sertraline", "correct": false}], "correct_answer": "A. Amoxapine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/21978141700304877/21978141700304877.m3u8"}, {"text": "22 year old pregnant female presented with complaints of Nervousness, Anxiety, Increased perspiration, Heat intolerance, Hyperactivity, Palpitations. Her TSH level was found to be 0.05microIU/L(normal: 0.4-4 mIU/L). She was started with oral drug treatment for above problem but when she delivered, the baby is born with deformity shown in the picture below Which of the following drug is responsible for the above outcome?", "options": [{"label": "A", "text": "Propylthiouracil", "correct": false}, {"label": "B", "text": "Carbimazole", "correct": true}, {"label": "C", "text": "Propranolol", "correct": false}, {"label": "D", "text": "lugol’s iodine", "correct": false}], "correct_answer": "B. Carbimazole", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(166).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/55239141700304898/55239141700304898.m3u8"}, {"text": "A child has come to you with multiple different types of seizures, particularly tonic and atonic seizures. Intellectual development of this child is impaired. The EEG shows a classic pattern of background slowing and spike-wave bursts at frequencies less than 2.5 per second. Which drug shouldn’t be a part of the treatment for the above disease?", "options": [{"label": "A", "text": "Sodium valproate", "correct": false}, {"label": "B", "text": "Rufinamide", "correct": false}, {"label": "C", "text": "Topiramate", "correct": false}, {"label": "D", "text": "Carbamzepine", "correct": true}], "correct_answer": "D. Carbamzepine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/17729631700304923/17729631700304923.m3u8"}, {"text": "A patient, known case of open angle glaucoma, using some anti glaucoma drug since 1year. Now patient has visited to your clinic with problems shown in image. Which drug is responsible for this?", "options": [{"label": "A", "text": "Timolol", "correct": false}, {"label": "B", "text": "Brimonidine", "correct": false}, {"label": "C", "text": "Bimatoprost", "correct": true}, {"label": "D", "text": "Brinzolamide", "correct": false}], "correct_answer": "C. Bimatoprost", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4(134).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/900671700304936/900671700304936.m3u8"}, {"text": "A patient, who was suffering from WPW syndrome, started taking a drug and now come to you with hyper pigmentation of skin and slit lamp examination finding in eyes is given below . Which of the following drug is responsible for these changes ?", "options": [{"label": "A", "text": "Digoxin", "correct": false}, {"label": "B", "text": "Amiodarone", "correct": true}, {"label": "C", "text": "Warfarin", "correct": false}, {"label": "D", "text": "Tocainide", "correct": false}], "correct_answer": "B. Amiodarone", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5(115).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/25441411700304958/25441411700304958.m3u8"}, {"text": "A schizophrenic patient comes to OPD with relapse of symptoms due to non compliance with oral drugs he had been taking. He was then prescribed to take depot injection of an antipsychotic drugs. Within two days of depot injection, he developed confusion, disorientation, anxiety, dizziness, excessive sedation, and extrapyramidal symptoms. Which of the following long acting depot injectable responsible for above complication ?", "options": [{"label": "A", "text": "Haloperidol", "correct": false}, {"label": "B", "text": "Olanzapine", "correct": true}, {"label": "C", "text": "Risperidone", "correct": false}, {"label": "D", "text": "Aripiprazole", "correct": false}], "correct_answer": "B. Olanzapine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/51389661700304971/51389661700304971.m3u8"}, {"text": "A 44-year-old unemployed nurse with bipolar disorder history since her teens, admitted to the Emergency Departmnt due to high fever (>38°C), severe nonproductive cough, skin rashes, facial swelling, especially around the nose, and erythema on the hands. Her laboratory abnormalities were as follows: leukocytosis (>11x 10 9/L), eosinophilia (>1.5x 10 9/L), atypical lymphocytes (>5%) and liver abnormalities (ALT>100 IU/L). The patient was on multiple mood stabilizers since she was discharged from the Psychiatric Hospital two months before, where she was hospitalized under the diagnosis of acute depressive episode. Which of the following drug is responsible for above complication?", "options": [{"label": "A", "text": "Lithium", "correct": false}, {"label": "B", "text": "Divalproex", "correct": false}, {"label": "C", "text": "Lamotrigine", "correct": true}, {"label": "D", "text": "Paroxetine", "correct": false}], "correct_answer": "C. Lamotrigine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41006281700304985/41006281700304985.m3u8"}, {"text": "A 52 year old male, known case of stage 4 CKD, on hemodialysis, comes to you with severe pain. As a pain management physician, you want to prescribe opioids as the pain is mainly nociceptive in origin. Which of the following drug shouldn’t be the part of regime which you want to prescribe to this patient?", "options": [{"label": "A", "text": "Morphine", "correct": true}, {"label": "B", "text": "Methadone", "correct": false}, {"label": "C", "text": "Buprenorphine", "correct": false}, {"label": "D", "text": "Alfentanil", "correct": false}], "correct_answer": "A. Morphine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23365711700304998/23365711700304998.m3u8"}, {"text": "A patient taking a diuretic for several months presents with significantly elevated serum glucose levels. You suspect it is diuretic induced. Which of the following is the most likely cause?", "options": [{"label": "A", "text": "Acetazolamide", "correct": false}, {"label": "B", "text": "Amiloride", "correct": false}, {"label": "C", "text": "Chlorothiazide", "correct": true}, {"label": "D", "text": "Spironolactone", "correct": false}], "correct_answer": "C. Chlorothiazide", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/30148371700305021/30148371700305021.m3u8"}, {"text": "A patient has very high serum uric acid levels and is at imminent risk of developing acute nephropathy. Which of the following might be used to reduce the risk of this serious response by increasing the solubility of uric acid in the urine?", "options": [{"label": "A", "text": "Acetazolamide", "correct": true}, {"label": "B", "text": "ADH", "correct": false}, {"label": "C", "text": "Ethacrynic acid", "correct": false}, {"label": "D", "text": "Furosemide", "correct": false}], "correct_answer": "A. Acetazolamide", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/18225461700305039/18225461700305039.m3u8"}, {"text": "A patient of essential HTN is treated with usually effective doses of an ACE Inhibitor. After a suitable period of time, BP has not been lowered satisfactorily. A thiazide is added to the regimen . Which of the following is most likely and earliest untoward outcome of this drug add on, for which you should monitor closely?", "options": [{"label": "A", "text": "Fall of blood pressure sufficient to cause syncope", "correct": true}, {"label": "B", "text": "Onset of acute heart failure from depression of ventricular contractility", "correct": false}, {"label": "C", "text": "Paradoxical hypertensive crisis", "correct": false}, {"label": "D", "text": "Sudden prolongation of the P-R interval and increasing degrees of the heart block", "correct": false}], "correct_answer": "A. Fall of blood pressure sufficient to cause syncope", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39355301700305067/39355301700305067.m3u8"}, {"text": "A 70-year-old man is admitted with a history of heart failure and an acute left ventricular myocardial infarction. He has severe pulmonary edema. Which of the following drugs is LEAST likely to prove useful in the treatment of acute pulmonary edema?", "options": [{"label": "A", "text": "Bumetanide", "correct": false}, {"label": "B", "text": "Torsemide", "correct": false}, {"label": "C", "text": "Furosemide", "correct": false}, {"label": "D", "text": "Hydrochlorothiazide", "correct": true}], "correct_answer": "D. Hydrochlorothiazide", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54329691700305081/54329691700305081.m3u8"}, {"text": "A 50-year-old man has a history of frequent episodes of renal colic with high-calcium renal stones. The most useful agent in the treatment of recurrent calcium stones is", "options": [{"label": "A", "text": "Acetazolamide", "correct": false}, {"label": "B", "text": "Furosemide", "correct": false}, {"label": "C", "text": "Spironolactone", "correct": false}, {"label": "D", "text": "Hydrochlorothiazide", "correct": true}], "correct_answer": "D. Hydrochlorothiazide", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/58903341700305094/58903341700305094.m3u8"}, {"text": "A patient with long-standing diabetic renal disease and hyperkalemia and recent-onset congestive heart failure requires a diuretic. Which of the following agents would be LEAST harmful in a patient with severe hyperkalemia?", "options": [{"label": "A", "text": "Amiloride", "correct": false}, {"label": "B", "text": "Hydrochlorothiazide", "correct": true}, {"label": "C", "text": "Losartan", "correct": false}, {"label": "D", "text": "Spironolactone", "correct": false}], "correct_answer": "B. Hydrochlorothiazide", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23833921700305108/23833921700305108.m3u8"}, {"text": "A 70-year-old woman is admitted to the emergency room because of a \"fainting spell\" at home. She appears to have suffered no trauma from her fall, but her blood pressure is 110/60 when lying down and 60/40 when she sits up. Neurologic examination and an ECG are within normal limits when she is lying down. Questioning reveals that she has recently started taking diuretics for a heart condition. Which of the following drugs is the most likely cause of her fainting spell?", "options": [{"label": "A", "text": "Acetazolamide", "correct": false}, {"label": "B", "text": "Amiloride", "correct": false}, {"label": "C", "text": "Furosemide", "correct": true}, {"label": "D", "text": "Hydrochlorothiazide", "correct": false}], "correct_answer": "C. Furosemide", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (B) Amiloride Amiloride is a potassium-sparing diuretic that blocks epithelial sodium channels (ENaC) in the collecting duct. It has mild diuretic effects and is not typically associated with significant volume depletion or orthostatic hypotension, making it an unlikely cause of the patient’s fainting.</li><li>• (D) Hydrochlorothiazide Hydrochlorothiazide (HCTZ) is a thiazide diuretic that acts on the distal convoluted tubule, causing moderate natriuresis. While it can cause hypotension, it is less potent than furosemide in causing volume depletion. Additionally, thiazides cause more gradual sodium loss rather than the rapid volume depletion seen with loop diuretics like furosemide, making it a less likely cause of the patient’s acute symptoms.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36013761700305122/36013761700305122.m3u8"}, {"text": "A 55-year-old patient with severe post-hepatitis cirrhosis is started on a diuretic for another condition. Two days later he is found in a coma. The drug most likely to cause coma in a patient with cirrhosis is", "options": [{"label": "A", "text": "Acetazolamide", "correct": true}, {"label": "B", "text": "Amiloride", "correct": false}, {"label": "C", "text": "Furosemide", "correct": false}, {"label": "D", "text": "Hydrochlorothiazide", "correct": false}], "correct_answer": "A. Acetazolamide", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (C) Furosemide Furosemide is a loop diuretic that causes potent natriuresis by inhibiting the Na + /K + /2Cl - transporter in the thick ascending limb of the loop of Henle. While furosemide can cause electrolyte imbalances, volume depletion, and worsen hepatorenal syndrome, it does not directly precipitate metabolic acidosis, making it less likely to cause coma in a cirrhotic patient.</li><li>• (D) Hydrochlorothiazide Hydrochlorothiazide (HCTZ) is a thiazide diuretic that works on the distal convoluted tubule, leading to moderate sodium excretion. It does not significantly alter acid-base balance, and while it can cause hypokalemia and hyponatremia, it is less likely to trigger hepatic coma than acetazolamide.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/70742811700305135/70742811700305135.m3u8"}, {"text": "A patient who has been taking an oral antihypertensive drug for about a year develops a positive Coomb’s test. Which of the following is the most likely cause?", "options": [{"label": "A", "text": "Captopril", "correct": false}, {"label": "B", "text": "Clonidine", "correct": false}, {"label": "C", "text": "Labetalol", "correct": false}, {"label": "D", "text": "Methyldopa", "correct": true}], "correct_answer": "D. Methyldopa", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (B) Clonidine Clonidine is another centrally acting β 1 -agonist, like methyldopa, but it does not cause hemolytic anemia. Instead, it can cause rebound hypertension if suddenly discontinued, along with sedation, dry mouth, and bradycardia.</li><li>• (C) Labetalol Labetalol is a nonselective β-blocker and α 3 -blocker used for hypertension, including hypertensive emergencies and pregnancy-related hypertension. While it can cause hypotension, dizziness, and bradycardia, it is not associated with autoimmune hemolytic anemia.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12869901700305154/12869901700305154.m3u8"}, {"text": "A 52-year-old woman with essential hypertension, hypercholesterolemia, and chronic-stable angina develops severe constipation. It is attributed to one of her medications. Which was the most likely cause?", "options": [{"label": "A", "text": "Atorvastatin", "correct": false}, {"label": "B", "text": "Captopril", "correct": false}, {"label": "C", "text": "Labetalol", "correct": false}, {"label": "D", "text": "Verapamil", "correct": true}], "correct_answer": "D. Verapamil", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (B) Captopril Captopril is an ACE inhibitor commonly used for hypertension and heart failure. Its adverse effects include cough (due to bradykinin accumulation), angioedema, hyperkalemia, and hypotension, but it does not cause constipation.</li><li>• (C) Labetalol Labetalol is a nonselective β-blocker and α 1 -blocker used for hypertension, including hypertensive emergencies and pregnancy-induced hypertension. Its side effects include bradycardia, dizziness, fatigue, and orthostatic hypotension, but it is not a significant cause of constipation.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61707031700305170/61707031700305170.m3u8"}, {"text": "A 7-year-old child is brought to the emergency department in coma with cyanosis. Her mother states that the girl was given codeine with paracetamol because of severe bruising after a fall. Shortly after the first dose, the child became unresponsive and “turned blue.” Which of the following alleles might be responsible for this presentation?", "options": [{"label": "A", "text": "CYP2D6", "correct": true}, {"label": "B", "text": "CYP2C19", "correct": false}, {"label": "C", "text": "CYP2C9", "correct": false}, {"label": "D", "text": "UGT1A1", "correct": false}], "correct_answer": "A. CYP2D6", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/25781561700305191/25781561700305191.m3u8"}, {"text": "A hypertensive patient has been on long-term therapy with lisinopril. The drug isn’t controlling pressure as well as wanted, so the physician decides to add triamterene as the second drug. What is the most likely outcome of adding this diuretic to the ACE inhibitor regimen?", "options": [{"label": "A", "text": "Blood pressure would rise abruptly", "correct": false}, {"label": "B", "text": "Better BP control, but with a risk of hyperkalemia", "correct": true}, {"label": "C", "text": "Cardiac depression, because both drugs directly depress the heart", "correct": false}, {"label": "D", "text": "Cough that may be severe, even though there was no cough with lisinopril alone", "correct": false}], "correct_answer": "B. Better BP control, but with a risk of hyperkalemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23726781700305207/23726781700305207.m3u8"}, {"text": "A friend has very severe hypertension and asks about a drug her doctor wishes to prescribe. Her physician has explained that this drug is associated with tachycardia and fluid retention (which may be marked) and increased hair growth. Which of the following is most likely to produce the effects that your friend has described?", "options": [{"label": "A", "text": "Captopril", "correct": false}, {"label": "B", "text": "Guanethidine", "correct": false}, {"label": "C", "text": "Minoxidil", "correct": true}, {"label": "D", "text": "Prazosin", "correct": false}], "correct_answer": "C. Minoxidil", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (B) Guanethidine – Incorrect. Guanethidine is a sympatholytic agent that lowers BP by depleting norepinephrine from nerve terminals. While it can cause fluid retention, it typically causes bradycardia (not tachycardia) and has no effect on hair growth.</li><li>• (D) Prazosin – Incorrect. Prazosin is an α 1 -blocker, which also lowers blood pressure by vasodilation. However, it causes less reflex tachycardia than minoxidil. It does not cause fluid retention as severely as minoxidil, and it does not cause hair growth.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64275591700305224/64275591700305224.m3u8"}, {"text": "A 62 year old female patient who is known case of mild CKD comes to with BP of 160/96. There is no history of Diabetes mellitus and CHF. Which anti hypertensive is the best to start in this patient?", "options": [{"label": "A", "text": "Ramipril", "correct": true}, {"label": "B", "text": "Atenolol", "correct": false}, {"label": "C", "text": "Cilnidipine", "correct": false}, {"label": "D", "text": "Clonidine", "correct": false}], "correct_answer": "A. Ramipril", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (C) Cilnidipine Cilnidipine is a calcium channel blocker (CCB), which works by relaxing vascular smooth muscle to lower blood pressure. While it is effective in treating hypertension, CCBs do not provide the same level of renal protection as ACE inhibitors do. They also do not have the beneficial effects on proteinuria seen with ACE inhibitors. Cilnidipine can be an option if ACE inhibitors are contraindicated, but it is not the first choice in CKD.</li><li>• (D) Clonidine Clonidine is an α 2 -adrenergic agonist that lowers blood pressure by reducing sympathetic tone. While it can be used in hypertension, it is not a first-line agent for the management of hypertension in CKD. It can cause sedation, dry mouth, and rebound hypertension upon discontinuation. Additionally, it does not provide renal protection and is not recommended for routine use in CKD.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3769811700305236/3769811700305236.m3u8"}, {"text": "A 36-year-old unemployed dishwasher with no history of seizures presents with difficulty thinking coherently and claims he is an astronaut. Following treatment, he suddenly has a grand mal seizure. Which of the following neuroleptic agents was the most likely cause?", "options": [{"label": "A", "text": "Clozapine", "correct": true}, {"label": "B", "text": "Fluphenazine", "correct": false}, {"label": "C", "text": "Haloperidol", "correct": false}, {"label": "D", "text": "Loxapine", "correct": false}], "correct_answer": "A. Clozapine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/10011021700305251/10011021700305251.m3u8"}, {"text": "A 64-yrs-old woman has had several episodes of transient ischemic attacks (TIAs). Aspirin would be a preferred treatment, but she has a history of severe “aspirin sensitivity” manifests as intense bronchoconstriction. What would be a best suitable alternative to the aspirin?", "options": [{"label": "A", "text": "Acetaminophen", "correct": false}, {"label": "B", "text": "Aminocaproic acid", "correct": false}, {"label": "C", "text": "Clopidogrel", "correct": true}, {"label": "D", "text": "Dipyridamole", "correct": false}], "correct_answer": "C. Clopidogrel", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63921921700305265/63921921700305265.m3u8"}, {"text": "A patient develops severe thrombocytopenia after 10 days of treatment with unfractionated heparin that is started after a surgery for deep vein thrombosis.. What is best management for the complication developed in above patient", "options": [{"label": "A", "text": "Abciximab", "correct": false}, {"label": "B", "text": "Argatroban", "correct": true}, {"label": "C", "text": "Plasminogen", "correct": false}, {"label": "D", "text": "Urokinase", "correct": false}], "correct_answer": "B. Argatroban", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64984181700305279/64984181700305279.m3u8"}, {"text": "A 65-year-old man is brought to the emergency room 30 min after the onset of right-sided weakness and aphasia (difficulty speaking). Imaging studies ruled out cerebral hemorrhage as the cause of his acute symptoms of stroke. Prompt administration of which of the following drugs is most likely to improve this patient

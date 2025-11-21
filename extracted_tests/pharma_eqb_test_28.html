@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Cephalosporins, Carbapenems &amp; Monobactams</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Cephalosporins, Carbapenems &amp; Monobactams</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                22 Questions | 22 Total Marks | 32 min Duration | ~87.27 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 22 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 32 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 22</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Cephalosporins, Carbapenems &amp; Monobactams - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 22</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 22 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A patient presented with complaints of abdominal pain, vomiting and fatty stools. On further questioning, the patient told that he was taking a drug for the past few days. A diagnosis of Biliary sludge syndrome was made. Which of the fowling is the most likely drug involved?", "options": [{"label": "A", "text": "Ceftazidime", "correct": false}, {"label": "B", "text": "Ampicillin", "correct": false}, {"label": "C", "text": "Rifampicin", "correct": false}, {"label": "D", "text": "Ceftriaxone", "correct": true}], "correct_answer": "D. Ceftriaxone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ceftriaxone Ceftriaxone is an antibiotic medicine used to treat bacterial infections in your body. It is effective in infections of the brain, lungs, ear, urinary tract, skin and soft tissues, bones and joints, blood and heart. It is also used to prevent infections during surgery.</p>\n<p><strong>Highyeild:</strong></p><p>Ceftriaxone can precipitate with calcium, like what occurs with bilirubin, and so ceftriaxone-associated biliary sludge is mainly composed of calcium- ceftriaxone complex. 1  PHARMACOKINETICS: KIDNEY ELIMINATION (In CKD : Dose reduces)⟶ Exception A) LACTAM : CLOXACILLIN, ΟXΑCILLIN, NAFCILLIN, CEFOPERAZONE , CEFTRIAXONE B) TETRA CYCLING : DOXYCYCLINE , TIGECYCLINE C) FLUOROQUINOLONE : PEFLOXACIN {SPARFLOXACIN , MOXIFLOXACIN} D) 50 S RIBOSOME : SELL-C STREPTOGRAMMIN MACROLIDE LINCOSAMIDE LINE ZOLID CHLORAMPHENICOL Exception: CLARITHROMYCIN,(MACROLIDE)</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Ceftazidime is an antibiotic medicine used to treat bacterial infections in your body. It is effective in infections of the brain, lungs, ear, urinary tract, skin and soft tissues, bones and joints, blood and heart. It is also used to prevent infections during surgery. Option: B . Ampicillin is an antibiotic medicine with versatile actions. It can treat a multitude of bacterial infections including those of the ears, eyes, nose, tonsils, tooth, throat, lungs, skin, bone, heart, gastrointestinal tract, and urinary tract. It may also be prescribed to treat typhoid fever in children. Option: C . Rifampicin is an ansamycin antibiotic used to treat several types of bacterial infections, including tuberculosis (TB), Mycobacterium avium complex, leprosy, and Legionnaires’ disease.</p>\n<p><strong>Extraedge:</strong></p><p>Side-effects of drugs Ceftriaxone- cholecystitis Imipenem-seizures Vancomycin- Red man syndrome, mild nephrotoxicity Aminoglycosides- nephrotoxicity & ototoxicity Macrolides- UGI distress Clindamycin- GI distress, diarrhoea Doxycycline- phototoxicity, teeth discoloration Metronidazole- metallic taste, stomatitis,. seizures/encephalopathy with deranged LFT Co-trimoxazole- allergy, photosensitivity, raised Cr Chloramphenicol- BM suppression, Grey baby syndrome</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A microbiologist has reported a case of mixed infection with both Pseudomonas and Proteus and asked you to take care of further management of that case. Which of the following drug is effective in this case?", "options": [{"label": "A", "text": "Cloxacillin", "correct": false}, {"label": "B", "text": "Amoxicillin", "correct": false}, {"label": "C", "text": "Carbenicillin", "correct": true}, {"label": "D", "text": "Ampicillin", "correct": false}], "correct_answer": "C. Carbenicillin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Carbenicillin Carbenicillin is a bactericidal antibiotic belonging to the carboxypenicillin subgroup of the penicillins. It was discovered by scientists at Beecham and marketed as Pyopen. It has Gram-negative coverage which includes Pseudomonas aeruginosa but limited Gram-positive coverage.</p>\n<p><strong>Highyeild:</strong></p><p>Carbenicillin is effective against both proteus and pseudomonas. Cloxacillin is → Penicillinase- resistant penicillin It is mainly effective against gram-positive bacteria particularly those producing penicillinase. It is not effective against proteus or pseudomonas. Amoxicillin and ampicillin are wide-spectrum penicillins: These are effective against many gram-negative bacteria including proteus. However, these are not effective against pseudomonas. Anti- pseudomonas penicillins C: Carbenicillin T: Ticarcillin M: Mezlocillin A: Azlocillin P: Piperacillin</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A . Cloxacillin is an antibiotic useful for the treatment of a number of bacterial infections. This includes impetigo, cellulitis, pneumonia, septic arthritis, and otitis externa. It is not effective for methicillin-resistant Staphylococcus aureus (MRSA). It is used by mouth and by injection Option: B. Amoxicillin is an antibiotic medicine with versatile actions. It can treat a multitude of bacterial infections including those of the ears, eyes, nose, sinus, tonsils, tooth, throat, lungs, skin, gastrointestinal tract, and urinary tract. It may also be effective against peptic ulcer disease. Option: D . Ampicillin is an antibiotic medicine with versatile actions. It can treat a multitude of bacterial infections including those of the ears, eyes, nose, tonsils, tooth, throat, lungs, skin, bone, heart, gastrointestinal tract, and urinary tract. It may also be prescribed to treat typhoid fever in children.</p>\n<p><strong>Extraedge:</strong></p><p>CARBENICILLIN Its important advantage over ampicillin is that it is effective against all strains of Proteus and P. aeruginosa. The drug can cause CHF because of its large sodium content, and bleeding due to abnormal platelet aggregation.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "This drug has activity against many strains of P. aeruginosa. However, when it is used alone, resistance has emerged during the course of treatment. The drug should not be used in penicillin-allergic patients. Its activity against gram-negative rods is enhanced if it is given in combination with tazobactam. Which of the following drugs is being described?", "options": [{"label": "A", "text": "Amoxicillin", "correct": false}, {"label": "B", "text": "Aztreonam", "correct": false}, {"label": "C", "text": "Piperacillin", "correct": true}, {"label": "D", "text": "Vancomycin", "correct": false}], "correct_answer": "C. Piperacillin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Piperacillin</p>\n<p><strong>Highyeild:</strong></p><p>Tazobactam is combined with piperacillin for use in service infections like peritonitis, and pelvic/urinary/respiratory infections caused by B-lactamase-producing bacilli. However, the combination is not active against piperacillin-resistant pseudomonas. Tazobactam ( like clavulanic acid and sulbactam) does not inhibit inducible chromosomal B-lactamase produced by pseudomonas and other Enterobacteriaceae. It is also of no help against pseudomonas that develops resistance by losing permeability to piperacillin.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Amoxicillin is an antibiotic medicine with versatile actions. It can treat a multitude of bacterial infections including those of the ears, eyes, nose, sinus, tonsils, tooth, throat, lungs, skin, gastrointestinal tract, and urinary tract. It may also be effective against peptic ulcer disease. Option: B . Aztreonam is an antibiotic used to prevent or treat a wide variety of bacterial infections. This may include infections of the urinary tract, blood, brain, ear, skin and soft tissue, abdomen, bone, windpipe and lungs. Option: D . Vancomycin is a broad-spectrum β-lactam antibiotic of the ureidopenicillin class. The chemical structure of piperacillin and other ureidopenicillins incorporates a polar side chain that enhances penetration into Gram-negative bacteria and reduces susceptibility to cleavage by Gram-negative beta-lactamase</p>\n<p><strong>Extraedge:</strong></p><p>Piperacillin/tazobactam a combination antibiotic containing the extended-spectrum penicillin antibiotic piperacillin and the ß-lactamase inhibitor tazobactam. It is commercially available as Tazocin and Zosyn. The combination has activity against many Gram-positive and Gram-negative pathogens and Pseudomonas aeruginosa. Uses Main uses are in intensive care medicine (pneumonia, peritonitis), some diabetes- related foot infections, and empirical therapy in febrile neutropenia (e.g., after chemotherapy (first line therapy )).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A pregnant female presents you after being in contact with a family member who has been admitted for Meningococcal meningitis. Which of the following drug will you give for prophylaxis?", "options": [{"label": "A", "text": "Ciprofloxacin", "correct": false}, {"label": "B", "text": "Ceftriaxone", "correct": true}, {"label": "C", "text": "Cefalexin", "correct": false}, {"label": "D", "text": "Rifabutin", "correct": false}], "correct_answer": "B. Ceftriaxone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ceftriaxone Ciprofloxacin is currently usually used in a single oral dose, but it should not be prescribed during pregnancy or for anyone under 18 years of age. Ceftriaxone can be administered once intramuscularly or intravenously during pregnancy and/or in any age group. However, it has sometimes been reported that isolates have reduced sensitivity to ceftriaxone.</p>\n<p><strong>Highyeild:</strong></p><p>Ciprofloxacin is currently usually used in a single oral dose, but it should not be prescribed during pregnancy or for anyone under 18 years of age. Ceftriaxone can be administered once intramuscularly or intravenously during pregnancy and/or in any age group. However, it has sometimes been reported that isolates have reduced sensitivity to ceftriaxone. Ceftriaxone is used for chemoprevention of meningococcal meningitis in close contact. It is recommended that antibiotic chemoprophylaxis be taken between the patient and close contact with invasive meningococcal infection to prevent secondary cases. Due to the high risk of side effects, the emergence of drug resistance, and the need to adhere to four doses, Rifampin is now not commonly used. Important points to remember about meningococcal meningitis DOC for empirical treatment of ceftriaxone DOC for Definitive treatment penicillin G DOC for prophylaxis ciprofloxacin DOC for prophylaxis in pregnancy Ceftriaxone.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A . Ciprofloxacin is an antibiotic, used in the treatment of bacterial infections. It is also used in treating infections of the urinary tract, nose, throat, skin and soft tissues and lungs (pneumonia). It prevents the bacterial cells from dividing and repairing, thereby killing them. Option: C. Cefalexin is an antibiotic medicine used to treat bacterial infections in your body. It is effective in infections of the lungs, ear, throat, urinary tract, skin, soft tissues, bones, and joints. It kills bacteria, which helps to improve your symptoms and cure the infection. Option: D . Rifabutin is also used in the treatment of Mycobacterium avium complex disease, a bacterial infection most commonly encountered in people with late-stage AIDS. It has fewer drug interactions than rifampicin, therefore people with HIV/AIDS on HAART have typically been prescribed rifabutin instead of rifampicin for the treatment of TB</p>\n<p><strong>Extraedge:</strong></p><p>Side-effects of drugs Ceftriaxone- cholecystitis Imipenem-seizures Vancomycin- Red man syndrome, mild nephrotoxicity Aminoglycosides- nephrotoxicity & ototoxicity Macrolides- UGI distress Clindamycin- GI distress, diarrhoea Doxycycline- phototoxicity, teeth discoloration Metronidazole- metallic taste, stomatitis,. seizures/encephalopathy with deranged LFT Co-trimoxazole- allergy, photosensitivity, raised Cr Chloramphenicol- BM suppression, Grey baby syndrome</p>\n<p><strong>Table:</strong></p><p>How To Remember\n     Cephalosporin Classification In 4 Mins 1st Generation 2nd Generation 3rd Generation 4th Generation 5th Generation Cefazolin Cefalothin Cefaloridine Cefadroxil Cephalexin Cephradine Cefoxitin Cefprozil Cefotitan Cefmetazole Cefaclor Cefuroxime Cefexime Ceftazidime Cefotaxime Ceftizoxime Cefpodoxime Ceftriaxone Cefoperazone Ceftibuten Cefdinir Moxalactam Cefepime Cefpirole Ceftibiprole Ceftaroline</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "During morning rounds, your consultant asks you why have prescribed imipenem in this case. Identify the most accurate statement given below.", "options": [{"label": "A", "text": "The drug has a narrow spectrum of antibacterial action", "correct": false}, {"label": "B", "text": "It is used in fixed-dose combination with sulbactam", "correct": false}, {"label": "C", "text": "In renal dysfunction, dosage reductions are necessary to avoid seizures", "correct": true}, {"label": "D", "text": "Imipenem is active against methicillin-resistant staphylococcus", "correct": false}], "correct_answer": "C. In renal dysfunction, dosage reductions are necessary to avoid seizures", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>In renal dysfunction, dosage reductions are necessary to avoid seizures</p>\n<p><strong>Highyeild:</strong></p><p>Carbapenems are synthetic beta-lactam antibiotics. Imipenem, meropenem, doripenem and ertapenem are the drugs of this group currently available. Imipenem: Effective against: Gm+ve, Gm -ve including pseudomonas and anaerobic. Dehydropeptidase by the kidney metabolises imipenem rapidly. Cilastatin is a dehydropeptidase inhibitor, which must be given along with imipenem for the desired action. Side effect: seizure</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A . The drug has a broad spectrum of antibacterial action Option: B. dose combination with sulbactam is not fixed Option: D . Imipenem is not  active against methicillin-resistant staphylococcus</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A bedridden female patient with catheter-related UTI by beta-lactamase-producing Klebsiella pneumoniae. Which of the following drugs will you choose ?", "options": [{"label": "A", "text": "Ampicillin", "correct": false}, {"label": "B", "text": "Beta lactams and beta lactamase inhibitors", "correct": true}, {"label": "C", "text": "2nd generations cephalosporins", "correct": false}, {"label": "D", "text": "3rd generation cephalosporins", "correct": false}], "correct_answer": "B. Beta lactams and beta lactamase inhibitors", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Beta lactams and beta lactamase inhibitors</p>\n<p><strong>Highyeild:</strong></p><p>β-lactam antibiotics Penicillins Ampicillin Piperacillin Beta-lactam/beta-lactamase inhibitors Ampicillin/sulbactam Amoxicillin/clavulanate Ticarcillin/clavulanate Piperacillin/Tazobactam</p>\n<p><strong>Random:</strong></p><p>Explanation for other options: - As klebsiella is producing beta-lactamase, so beta-lactams would not be effective and also second and 3rd cephalosporins are likely not to be effective. So, we have to give beta-lactamase inhibitors along with beta-lactams. Beta-lactamase inhibitors are:- Clavulanic acid Sulbactam Tazobactam Avibactam 4. Most commonly used combination is piperacillin-tazobactam.</p>\n<p><strong>Extraedge:</strong></p><p>beta-lactamase inhibitors clavulanic acid, sulbactam, tazobactam - contain a beta lactam ring, - do not have significant antibacterial activity -bind to and inactive beta-lactamases - Not all beta-lactamases are inhibited. E.g., tazobactam (compounded with piperacillin) does not affect P. aeruginosa beta-lactamase. Therefore, this organism remains refractory to piperacillin. AUGMENTIN (amoxycillin and clavulanic acid) TIMENTIN (ticarcillin and clavulanic acid) Piperacillin + tazobactam Ampicillin + sulbactam</p>\n<p><strong>Table:</strong></p><p>Imipenem Broad Spectrum\n      Beta Lactam, Resistant\n      To Betalactamase, Not Absorbed\n      Orally Given By Parenteral Route May Precipitate\n      Seizures In High Dose Rapidly Hydrolyzed\n       By Dipeptidase I (Brush Border Of\nRenal Tubular Cells) § Cilastatin\n(Reversible Inhibitor Of Dipeptidase I) With Imipenem Meropenem Not Hydrolyzed\n      By Renal Dipeptidase, More\nPotent Against Gram Negative</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents with moderate to severe pseudomembranous colitis of by clostridium difficile. Which of the following is the drug of choice for the above condition?", "options": [{"label": "A", "text": "Vancomycin", "correct": true}, {"label": "B", "text": "Fluoroquinolones", "correct": false}, {"label": "C", "text": "Macrolides", "correct": false}, {"label": "D", "text": "Carbapenems", "correct": false}], "correct_answer": "A. Vancomycin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Vancomycin</p>\n<p><strong>Highyeild:</strong></p><p>Clostridium difficile diarrhoea is a super-infection also called pseudomembranous colitis. Vancomycin is the 2 nd drug of choice for moderate-severe pseudomembranous colitis caused by clostridium difficile. Fidaxomicin is the DOC. Oral administration of vancomycin, fidaxomicin or metronidazole is recommended for clostridium difficile infection treatment. Vancomycin and fidaxomicin are more effective than metronidazole. A stool transplant can also be done MAB against toxin of C. Difficile: Bezlotoxumab.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Fluoroquinolones A quinolone antibiotic is a member of a large group of broad-spectrum bacteriocidal that share a bicyclic core structure related to the substance 4-quinolone. They are used in human and veterinary medicine to treat bacterial infections, as well as in animal husbandry. Option: C. Macrolides are a class of natural products that consist of a large macrocyclic lactone ring to which one or more deoxy sugars, usually cladinose and desosamine, may be attached. The lactone rings are usually 14-, 15-, or 16-membered. Option: D . Carbapenems are a class of very effective antibiotic agents most commonly used for the treatment of severe bacterial infections. This class of antibiotics is usually reserved for known or suspected multidrug-resistant (MDR) bacterial infections.</p>\n<p><strong>Table:</strong></p><p>Fluoroquinolones Broad-spectrum\n     antibiotic effective against a variety of gram-positive and gram-negative\n     bacteria They block\n     bacterial DNA synthesis by inhibiting bacterial: 1. Topoisomerase II (DNA gyrase): prevents the\nrelaxation of positively supercoiled DNA that is required for normal\ntranscription and replication 2. Topoisomerase IV: interferes with separation of\nreplicated chromosomal DNA into the respective daughter cells during cell\ndivision Originally\n     developed because of their excellent activity against gram-negative\n     aerobic bacteria; they had limited activity against gram-positive\n     organisms</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Ramesh a 35 years old man had a bacterial infection. He is a chronic alcoholic. He was proscribed some antibiotics by an intern without taking proper history. After taking the drug he had nausea, vomiting, flushing, dizziness, throbbing headache, chest and abdominal discomfort, and general hangover-like symptoms. What could be the proscribed drug ?", "options": [{"label": "A", "text": "Cefoperazone", "correct": true}, {"label": "B", "text": "Ceftriaxone", "correct": false}, {"label": "C", "text": "Cefepime", "correct": false}, {"label": "D", "text": "Ceftaroline", "correct": false}], "correct_answer": "A. Cefoperazone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cefoperazone</p>\n<p><strong>Highyeild:</strong></p><p>5th Generation Cephalosporins These 5th generation cephalosporins are active against Methicillin resistant staphylococci. Agents under this class include: Ceftaroline Fosamil (IV) Ceftobiprole (IV) Cefoperazone can cause a disulfiram-like reaction disulfiram-like reaction is caused by a drug that causes an adverse reaction to alcohol leading to nausea, vomiting, flushing, dizziness, throbbing headache, chest and abdominal discomfort, and general hangover-like symptoms among others. These effects are caused by the accumulation of acetaldehyde, a major but toxic metabolite of alcohol formed by the enzyme alcohol dehydrogenase. The reaction has been variously termed a disulfiram-like reaction, alcohol intolerance, and acetaldehyde syndrome.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Ceftriaxone is an antibiotic medicine used to treat bacterial infections in your body. It is effective in infections of the brain, lungs, ear, urinary tract, skin and soft tissues, bones and joints, blood and heart. It is also used to prevent infections during surgery. Option: C . Cefepime is an antibiotic that fights bacteria. It is used to treat severe infections of the skin, lungs, stomach, urinary tract, and blood. It works by killing the bacteria that cause these problems. However, it will not treat a viral infection. Option: D . Ceftaroline is a cephalosporin antibiotic with anti-MRSA activity. Ceftaroline fosamil is a prodrug of ceftaroline. It is active against methicillin-resistant Staphylococcus aureus (MRSA) and other Gram-positive bacteria.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old man had a fever for 10 days, malaise, loss of appetite, and severe weakness. His Blood pressure is 80/60, his pulse is 123/min, and his RR is 23. Diagnosis of septic shock was made. The physician started Imipenem. It should be taken with Cilastatin because ?", "options": [{"label": "A", "text": "Imipenem Causes dyslipidemia and Cilastatin reduces LDL", "correct": false}, {"label": "B", "text": "Cilastatin Inhibits renal Dehydropeptidase", "correct": true}, {"label": "C", "text": "Imipenem is beta lactamases inhibitor", "correct": false}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "B. Cilastatin Inhibits renal Dehydropeptidase", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cilastatin Inhibits renal Dehydropeptidase</p>\n<p><strong>Highyeild:</strong></p><p>Imipenem is a broad-spectrum, semi-synthetic beta-lactam carbapenem derived from thienamycin, produced by Streptomyces cattleya. Imipenem binds to and inactivates penicillin-binding proteins (PBPs) located on the inner membrane of the bacterial cell wall. PBPs are enzymes that are involved in the last stages of assembling the bacterial cell wall and in reshaping the cell wall during growth and division. This inactivation results in the weakening of the bacterial cell wall and eventually causes cell lysis Cilastatin is a chemical compound which inhibits the human enzyme dehydropeptidase. Renal Dehydropeptidase degrades the antibiotic imipenem. Cilastatin is therefore combined intravenously with imipenem in order to protect it from dehydropeptidase and prolong its antibacterial effect</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Imipenem Causes dyslipidemia and Cilastatin reduces LDL Option: C. Imipenem is a beta-lactamases inhibitor</p>\n<p><strong>Table:</strong></p><p>Imipenem Broad\n      spectrum beta lactam, Resistant\n      to Betalactamase, Not\n      absorbed orally given by Parenteral route May\n      precipitate seizures in high dose Rapidly\n       hydrolyzed by dipeptidase I (Brush border of\nrenal tubular cells) § Cilastatin\n(reversible inhibitor of dipeptidase I) with Imipenem Meropenem Not\n      hydrolyzed by renal dipeptidase, More\n      potent against gram negative</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 23-year-old man was suffering from Klebsiella pneumonia. He was started on beta-lactams but was not showing any improvement later the klebsiella was found to be ESBL(extended-spectrum beta-lactamase) bacteria. Which of the given antibiotics is effective in this condition?", "options": [{"label": "A", "text": "Amoxicillin", "correct": false}, {"label": "B", "text": "Meropenem", "correct": true}, {"label": "C", "text": "Cefazolin", "correct": false}, {"label": "D", "text": "Benzathine penicillin", "correct": false}], "correct_answer": "B. Meropenem", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Meropenem Meropenem is an antibiotic that fights bacteria. It is used to treat severe infections of the skin, lungs, stomach, urinary tract, blood and brain (eg. meningitis). It works by killing the bacteria that cause these problems. However, it will not treat a viral infection.</p>\n<p><strong>Highyeild:</strong></p><p>Carbapenem is effective against ESBL(extended-spectrum beta-lactamase) bacteria. Most of the antibiotics are ineffective against ESBL(extended-spectrum beta-lactamase) bacteria except, carbapenem Meropenem is a carbapenem antibiotic with a broad spectrum of activity that is administered intravenously and used for severe bacterial infections due to sensitive agents. Meropenem is a common cause of mild transient aminotransferase elevations and can rarely result in clinically apparent, cholestatic liver injury.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Amoxicillin is an antibiotic medicine with versatile actions. It can treat a multitude of bacterial infections including those of the ears, eyes, nose, sinus, tonsils, tooth, throat, lungs, skin, gastrointestinal tract, and urinary tract. It may also be effective against peptic ulcer disease. Option: C . Cefazolin is an antibiotic medicine used to treat bacterial infections in your body. It is effective in infections of the lungs (eg. pneumonia), ear, urinary tract, skin and soft tissues, bones and joints, blood, and heart. It is also used to prevent infections during surgery. Option: D. Benzathine benzylpenicillin , also known as benzathine penicillin G, is an antibiotic medication useful for the treatment of a number of bacterial infections. Specifically, it is used to treat strep throat, diphtheria, syphilis, and yaws. It is also used to prevent rheumatic fever</p>\n<p><strong>Table:</strong></p><p>Beta-Lactamase\nInhibitors Clavulanic\n     Acid, Sulbactam, Tazobactam Contain A Beta Lactam Ring, Do Not\n      Have Significant Antibacterial Activity Bind To\n     And Inactive Beta-Lactamases Not All Beta-Lactamases\n      Are Inhibited. E.G., Tazobactam (Compounded With Piperacillin) Does Not\n      Affect P. Aeruginosa Beta-Lactamase. Therefore, This Organism Remains\n      Refractory To Piperacillin. Augmentin\n     (Amoxycillin And Clavulanic Acid) Timentin\n     (Ticarcillin And Clavulanic Acid) Piperacillin\n     + Tazobactam Ampicillin\n+ Sulbactam</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is an antipseudomonal antibiotic ?", "options": [{"label": "A", "text": "Ciprofloxacin", "correct": true}, {"label": "B", "text": "Vancomycin", "correct": false}, {"label": "C", "text": "Bacitracin", "correct": false}, {"label": "D", "text": "Tetracycline", "correct": false}], "correct_answer": "A. Ciprofloxacin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ciprofloxacin</p>\n<p><strong>Highyeild:</strong></p><p>Drugs against Pseudomonas: Beta lactams Carboxypenicillins Ureidopenicillins Carbapenems Monobactams Cephalosporins: I. 3rd generation –ceftazidime, cefoperazone II. 4th generation: cefipime, cefepirome Aminoglycosides Flouroquinolones (ciprofloxacin max.) Colistin, polymyxin b</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option; B . Vancomycin is an antibiotic used in the treatment of severe bacterial infections in hospitalized patients. It is effective against infections of the respiratory tract (e.g. pneumonia), urinary tract, skin and soft tissues, bones and joints, heart, blood, and others. Option: C. Bacitracin It is a mixture of related cyclic peptides produced by Bacillus licheniformis bacteria. These peptides disrupt Gram-positive bacteria by interfering with cell walls and peptidoglycan synthesis Option: D. Tetracycline is an oral antibiotic in the tetracyclines family of medications, used to treat a number of infections, including acne, cholera, brucellosis, plague, malaria, and syphilis. Common side effects include vomiting, diarrhoea, rash, and loss of appetite.</p>\n<p><strong>Extraedge:</strong></p><p>CIPROFLOXACIN (CONT.) Side effects Nausea, vomiting & diarrhea CNS effects: confusion, insomnia, headache, dizziness & anxiety.(indirectly by modifying GAPA transmitter in the CNS) May damage growing cartilage Tendinitis (rare but more serious) (irreversible) (may lead to tendon rupture) Phototoxicity avoid excessive sunlight</p>\n<p><strong>Table:</strong></p><p>· Tetracyclines · Protein Synthesis Inhibitors (Bacteriostatic) Inhibit protein synthesis\nby reversibly binding to 305 subunit of the ribosome · Doxycycline Minocycline Oxytetracycline · Tetracyclines have average half-lives between 8 and 22 hours · They have poor penetration into the CSF · Concentrated in the liver, may cause microvesicular fatty liver · Tetracyclines stain developing teeth and discolour permanent teeth · Tetracyclines are inactivated by ions of calcium, aluminium, iron and\nzinc. Avoid associated foods and remedies. · Tetracyclines may render patients photosensitive. · Broad Spectrum Antibiotics · Particularly useful in Chlamydia, Mycoplasma, Rickettsia, Lyme Disease,\nCoxiella, Leptospirosis, Syphilis, Legionella and Brucella species. Also used\nin treatment of acne.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient is being treated with sulfasalazine. The most likely purpose for giving it is for which of the following ?", "options": [{"label": "A", "text": "Antibiotic-associated pseudomembranous colitis", "correct": false}, {"label": "B", "text": "Coli - induced diarrhoea", "correct": false}, {"label": "C", "text": "Gastric h. Pylori infections", "correct": false}, {"label": "D", "text": "Inflammatory bowel disease", "correct": true}], "correct_answer": "D. Inflammatory bowel disease", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Inflammatory bowel disease</p>\n<p><strong>Highyeild:</strong></p><p>Sulfasalazine, which is a combination of sulfapyridine and 5-aminosalicylic acid (5-ASA) linked covalently (azo bond), is quite effective for managing inflammatory bowel disease (e.g., ulcerative colitis and Crohn’s disease). Some of the sulfasalazine is absorbed, and a portion of that is excreted unchanged back into the colon. Colonic bacteria split the azo linkage, releasing the two drugs.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Antibiotic-associated pseudomembranous colitis Option: B. Coli – induced diarrhoea Option: C. Gastric h. Pylori infections</p>\n<p><strong>Extraedge:</strong></p><p>Histological differences between Crohn

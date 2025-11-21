@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Cardiac Muscle</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Cardiac Muscle</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                11 Questions | 11 Total Marks | 21 min Duration | ~114.55 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 11 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 21 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 11</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Cardiac Muscle - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 11</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 11 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Concerning the excitation of a cardiac ventricular myocyte: a.Na+ influx during the action potential raises the intracellular Na+ concentration by - 1 0%. b. A very slow depolarization closes many Na+ channels. c. The plateau inward current is increased by sympathetic stimulation. d. The absolute refractory period is approximately as long as the active contraction. e. Repolarization is brought about mainly by the 3Na+-2K+ pump. All of the following statements are true except: Select the correct answer from the given below code:", "options": [{"label": "A", "text": "b, c, d", "correct": false}, {"label": "B", "text": "a, e, d", "correct": false}, {"label": "C", "text": "a and e", "correct": true}, {"label": "D", "text": "a and c", "correct": false}], "correct_answer": "C. a and e", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>a and e Statement: a. False-The number of Na+ ions entering the cell per action potential is very small relative to the number present around 0.02%, so intracellular Na+ concentration is not materially altered by a single action potential. Statement: b. True- Although rapid depolarization activates voltage-gated Na+ channels, slow Depolarization (e.g., by chronic hyperkalemia) allows time for the inactivation gates to close. Statement: c. True- Beta-adrenergic stimulation increases the inward Ca current, leading to a dome-shaped plateau and increased contractility. Statement: d. True- The absolute refractory period extends from the onset of depolarization to mid-repolarization, by which time relaxation is just beginning. Statement: e. False- Repolarization is brought about mainly by a passive outward K+ current through KV and KIR channels.</p>\n<p><strong>Highyeild:</strong></p><p>Characteristically, a pacemaker action potential has only three phases, designated phases zero, three, and four. Phase zero i s the phase of depolarization. Phases one and two are not present in pacemaker cells. As a result, phase zero is followed by phase three. Phase three is repolarization , involving the closing of Ca  channels, blocking the flow of Ca  ions. Voltage-gated K+ channels open, allowing for the efflux of K+ ions. Phase four, a phase of gradual depolarization, is unique to the pacemaker cells. The myocardiocyte action potential is different from that of pacemaker cells and has five phases, zero through four. Phase 0 is the phase of depolarization; Phase 1 through 3 is the phase during which repolarization occurs; Phase 4 is the resting phase with no spontaneous depolarization.</p>\n<p><strong>Extraedge:</strong></p><p>Characteristically, a pacemaker action potential has only three phases, designated phases zero, three, and four. Phase zero i s the phase of depolarization. Phases one and two are not present in pacemaker cells. As a result, phase zero is followed by phase three. Phase three is repolarization , involving the closing of Ca  channels, blocking the flow of Ca  ions. Voltage-gated K+ channels open, allowing for the efflux of K+ ions. Phase four, a phase of gradual depolarization, is unique to the pacemaker cells. The myocardiocyte action potential is different from that of pacemaker cells and has five phases, zero through four. Phase 0 is the phase of depolarization; Phase 1 through 3 is the phase during which repolarization occurs; Phase 4 is the resting phase with no spontaneous depolarization.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements are correct regarding the sinoatrial node?", "options": [{"label": "A", "text": "Is connected electrically to the AV Node by Purkinje fibers.", "correct": false}, {"label": "B", "text": "Has a parasympathetic innervation but the AV node does not.", "correct": false}, {"label": "C", "text": "Is the only pace-making tissue in the mammalian heart.", "correct": false}, {"label": "D", "text": "All are incorrect", "correct": true}], "correct_answer": "D. All are incorrect", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All are incorrect None of them is correct.</p>\n<p><strong>Highyeild:</strong></p><p>The Sinoatrial node (SA) sets the heart rate. It is the \"pacemaker\" because its fastest ability to auto-depolarize and repolarize makes it the first to initiate each normal heartbeat. It is believed that the initial SA node action potential propagates from a small group of cells near the center of the SA node. The SA node is supraventricular and is sensitive to parasympathetic and sympathetic influence.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option: A. FALSE- The atrial muscle conducts excitation from the pacemaker to the AV node. Purkinje fibers are found in the ventricles. Option: B. FALSE- Both nodes have a parasympathetic vagal innervation and a sympathetic innervation. Option: C. FALSE- Cells in the AV node, bundles, and Purkinje system can all pace make, but they do so at a lower rate than the SA node. The SA node is the normal cardiac pacemaker, impulses generated in the SA node pass through the atria from the pathways to the AV node, through this node to the bundle of His, and then its branches via the Purkinje system to the ventricular muscle.</p>\n<p><strong>Extraedge:</strong></p><p>Anatomic considerations: The SA node is located at the junction of the Superior Vena Cava with the right atrium. The AV node is located in the right posterior portion of the Interatrial septum. There are three bundles of atrial fibers that contain Purkinje-type fibers and connect the SA node to the AV node: the anterior, middle (tract of Wenckebach), and posterior (tract of Thorel) tracts. The AV node is continuous with the bundle of His, which gives off a left bundle branch at the top of the interventricular septum and continues as the Right bundle branch. The left bundle branch divides into an anterior fascicle and a posterior fascicle. The branches and fascicles run subendocardial down either side of the septum and come into contact with the Purkinje system, whose fibers spread to all parts of the ventricular myocardium. SA node is the normal cardiac pacemaker as it discharges at the highest rate.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is true regarding the Gap junctions present in the cardiac muscle?", "options": [{"label": "A", "text": "Are absent in cardiac muscle.", "correct": false}, {"label": "B", "text": "Are present but of little functional importance in cardiac muscle.", "correct": false}, {"label": "C", "text": "Are present and provide the pathway for the rapid spread of excitation from one cardiac muscle fiber to another.", "correct": true}, {"label": "D", "text": "Are absent in smooth muscle.", "correct": false}], "correct_answer": "C. Are present and provide the pathway for the rapid spread of excitation from one cardiac muscle fiber to another.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Are present and provide the pathway for the rapid spread of excitation from one cardiac muscle fiber to another. Gap junctions provide the pathway for the rapid spread of excitation from one cardiac muscl e fiber to another.</p>\n<p><strong>Highyeild:</strong></p><p>Striated muscle, Z lines are present. The membranes of adjacent muscle fibers form folds occurring always at the Z line called intercalated discs, which is a special property of the cardiac muscle. These maintain cell-to-cell Along the sides of the muscle fibers next to the discs, the cell membranes of the adjacent muscle fibers fuse for considerable distances forming gap junctions, which permit the cardiac muscle to function as a syncytium. The T system in cardiac muscle is located at the Z lines rather than the A-I junction in skeletal muscle.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option: A. FALSE- Myocardial fibers have a resting membrane potential of approximately −90mV.The cardiac muscle acts as a syncytium because of the presence of gap junctions. Option: B. FALSE- They permit the cardiac muscle to function as a syncytium even though no protoplasmic bridges are present between the cells. Option: D. FALSE- Are present in smooth muscle. Intercalated discs contain three different types of cell-cell junctions: Fascia adherens junctions:- Where actin filaments attach thin filaments in the muscle sarcomeres to the cell membrane. Expanded desmosomes:- Sites of strong adhesion, that help to keep the muscle cells connected when they contract. Gap junctions:- large and small, which provide direct contact between the cardiac cells, facilitating electrical communication. so that waves of depolarisation spread rapidly over the entire heart, by passing from cell to cell.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following has a slowly depolarising prepotential?", "options": [{"label": "A", "text": "SA Node", "correct": true}, {"label": "B", "text": "Atrial muscle cells", "correct": false}, {"label": "C", "text": "Bundle of his", "correct": false}, {"label": "D", "text": "Purkinje fibers", "correct": false}], "correct_answer": "A. SA Node", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>SA Node The sinoatrial node, the primary pacemaker site of the heart, has a slowly depolarizing prepotential.</p>\n<p><strong>Highyeild:</strong></p><p>Cardiac Conduction System: A healthy adult heart has a fully functioning cardiac conduction system. It is completely capable of generating an electrical impulse that is triggered by the fastest cells. The cardiac conduction system includes the following parts: the sinoatrial node, the atrioventricular bundle, the atrioventricular node, the atrioventricular bundle branches, and the Purkinje cells.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Unlike other action potentials generated in the heart, such as the (B) atrial muscle cells, (C) Bundle of His, and (D) Purkinje fibers, the d epolarizing potential carried out in the sinoatrial node is brought into the cell by slower calcium ion currents instead of the usual faster sodium ion currents. Thus, the sinoatrial node has relatively slower action potentials.</p>\n<p><strong>Extraedge:</strong></p><p>IVABRADINE: blocks the funny sodium channels; Used for treatment of Arrhythmias.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following cells/structures require calcium influx for cell membrane depolarisation at the threshold potential?", "options": [{"label": "A", "text": "AV nodal cells", "correct": true}, {"label": "B", "text": "Cardiac ventricular muscle cells", "correct": false}, {"label": "C", "text": "Nerve cell bodies", "correct": false}, {"label": "D", "text": "Presynaptic nerve terminals", "correct": false}], "correct_answer": "A. AV nodal cells", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>AV nodal cells Atrioventricular (AV) nodal cells are conduction cells in the heart that produce a slow-response action potential. This type of action potential utilizes calcium influx through voltage-dependent, primarily L-type calcium channels for depolarization (as does the sinoatrial node).</p>\n<p><strong>Highyeild:</strong></p><p>CHARACTERISTIC PROPERTY OF ACTION POTENTIAL IN SA AND AV NODES Depolarizing potentials largely due to Ca with no contribution by Na+ influx. There is no sharp, rapid depolarizing spike before the plateau. Prepotentials are prominent only in the SA and AV nodes. • Atrial and ventricular muscle fibers do not have prepotential and they discharge spontaneously only when injured or normal.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Other Options B, C, and Cardiac ventricular muscle cells, nerve cell bodies, presynaptic nerve terminals, and skeletal muscle cells, all utilize sodium influx via fast sodium channels for cell membrane depolarization.</p>\n<p><strong>Extraedge:</strong></p><p>PHASES OF VENTRICULAR ACTION POTENTIAL:- Phase 0: rapid sodium influx: rapid depolarization phase Phase 1: potassium efflux and occurs: partial or early repolarization phase Phase 2: potassium efflux and calcium influx takes place: plateau phase Phase 3: potassium efflux takes place: final repolarization phase Phase 4: the resting state is attained</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which feature does the cardiac muscle possess that is missing in the skeletal muscle?", "options": [{"label": "A", "text": "Striations", "correct": false}, {"label": "B", "text": "Multiple nuclei", "correct": false}, {"label": "C", "text": "Voluntary control", "correct": false}, {"label": "D", "text": "Intercalated discs", "correct": true}], "correct_answer": "D. Intercalated discs", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Intercalated discs Intercalated discs are the exclusive property of the myocardium which allows the whole myocardium to contract as a single unit.</p>\n<p><strong>Highyeild:</strong></p><p>Properties of cardiac muscles Striated muscle, Z lines are present. The membranes of adjacent muscle fibers form folds occurring always at the z-line called intercalated discs, which is a special property of the cardiac muscle. These maintain cell-to-cell Along the sides of the muscle fibers next to the discs, the cell membranes of the adjacent muscle fibers fuse for considerable distances forming gap junctions, which permit the cardiac muscle to function as a syncytium. The T system in cardiac muscle is located at the Z lines rather than the A-I junction in skeletal muscle.</p>\n<p><strong>Extraedge:</strong></p><p>Types of Muscles There are three main types of muscular tissue responsible for movement within the human body:- Skeletal Muscle Skeletal muscle is found attached to the skeleton and is responsible for the voluntary movement of bones Skeletal muscle fibers run in parallel tracts and are multinucleated and heavily striated Smooth Muscle Smooth muscle is found in the lining of internal organs (GI tract, uterus, blood vessels, eyes, etc.). It controls the involuntary constriction of these regions (e.g., peristalsis, vasoconstriction, pupil dilation). Smooth muscle fibers are not striated, have a spindle shape and each fiber contains a single central nucleus. Cardiac Muscle Cardiac muscle is found in the heart and is responsible for the rhythmic contraction of the heart (i.e., heartbeat) Cardiac muscle fibers are branching, intercalated, lightly striated, and have a single nucleus per fiber.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the difference between a cardiac muscle and a skeletal muscle?", "options": [{"label": "A", "text": "Cardiac muscle is not striated and skeletal muscle is striated.", "correct": false}, {"label": "B", "text": "Cardiac muscle fibers are branched and skeletal muscles are not.", "correct": true}, {"label": "C", "text": "Skeletal muscle is involuntary and uninucleate and cardiac muscle is neither.", "correct": false}, {"label": "D", "text": "Skeletal muscle has intercalated discs and cardiac muscle doesn’t.", "correct": false}], "correct_answer": "B. Cardiac muscle fibers are branched and skeletal muscles are not.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cardiac muscle fibers are branched and skeletal muscles are not. Skeletal muscles are unbranched and Cardiac muscles are branched.</p>\n<p><strong>Highyeild:</strong></p><p>Properties of cardiac muscles Striated muscle, Z lines are present. The membranes of adjacent muscle fibers form folds occurring always at the z-line called intercalated discs, which is a special property of the cardiac muscle. These maintain cell-to-cell Along the sides of the muscle fibers next to the discs, the cell membranes of the adjacent muscle fibers fuse for considerable distances forming gap junctions, which permit the cardiac muscle to function as a syncytium. The T system in cardiac muscle is located at the Z lines rather than the A-I junction in skeletal muscle.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Cardiac muscle fibers are striated, branched, and Smooth muscle is non-striated, unbranched, and spindle-shaped. Skeletal muscle is striated, unbranched, and</p>\n<p><strong>Extraedge:</strong></p><p>Types of Muscles There are three main types of muscular tissue responsible for movement within the human body:- Skeletal Muscle Skeletal muscle is found attached to the skeleton and is responsible for the voluntary movement of bones Skeletal muscle fibers run in parallel tracts and are multinucleated and heavily striated Smooth Muscle Smooth muscle is found in the lining of internal organs (GI tract, uterus, blood vessels, eyes, etc.) It controls the involuntary constriction of these regions (e.g., peristalsis, vasoconstriction, pupil dilation) Smooth muscle fibers are not striated, have a spindle shape and each fiber contains a single central nucleus Cardiac Muscle Cardiac muscle is found in the heart and is responsible for the rhythmic contraction of the heart (i.e., heartbeat) Cardiac muscle fibers are branching, intercalated, lightly striated, and have a single nucleus per fiber.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The SA node acts as the pacemaker of the heart because:", "options": [{"label": "A", "text": "Has rich sympathetic stimulation", "correct": false}, {"label": "B", "text": "Generates impulse spontaneously", "correct": false}, {"label": "C", "text": "Generates impulse at the highest rate", "correct": true}, {"label": "D", "text": "Has poor cholinergic innervation", "correct": false}], "correct_answer": "C. Generates impulse at the highest rate", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Generates impulse at the highest rate The discharge rate of the sinus node is considerably faster than the natural self-excitatory discharge rate of either the A-V node or the Purkinje fibers. Each time the sinus node discharges, its impulse is conducted into both the A-V node and the Purkinje fibers, also discharging their excitable membranes. However, the sinus node discharges again before either the A-V node or the Purkinje fibers can reach their own thresholds for self-excitation. Therefore, the new impulse from the sinus node discharges both the A-V node and the Purkinje fibers before self-excitation can occur in either of these sites. Thus, the sinus node controls the beat of the heart because its rate of rhythmical discharge is faster than that of any other part of the heart. Therefore, the sinus node is almost always the pacemaker of the normal heart. In the normal human heart, each beat originates in the SA node (normal sinus rhythm, NSR). The heart beats about 70 times a minute at rest. The rate is slowed (bradycardia) during sleep and accelerated (tachycardia) by emotion, exercise, fever, and many other stimuli.</p>\n<p><strong>Highyeild:</strong></p><p>In healthy young individuals breathing at a normal rate, the heart rate varies with the phases of respiration: It accelerates during inspiration and decelerates during expiration, especially if the depth of breathing is increased. This sinus arrhythmia is a normal phenomenon and is primarily due to fluctuations in parasympathetic output to the heart. During inspiration, impulses in the vagi from the stretch receptors in the lungs inhibit the cardio-inhibitory area in the medulla oblongata. The tonic vagal discharge keeps the heart rate slowly decreasing, and the heart rate rises. Disease processes affecting the sinus node lead to marked bradycardia accompanied by dizziness and syncope.</p>\n<p><strong>Extraedge:</strong></p><p>Sick sinus syndrome (bradycardia-tachycardia syndrome; sinus node dysfunction): is a collection of heart rhythm disorders that include sinus bradycardia (slow heart rates from the natural pacemaker of the heart), tachycardias (fast heart rates), and bradycardia-tachycardia (alternating slow and fast heart rhythms). Sick sinus syndrome is relatively uncommon and is usually found in people older than 50, in whom the cause is often a nonspecific, scar-like degeneration of the heart’s conduction system. When found in younger people, especially in children, a common cause of sick sinus syndrome is heart surgery, especially in the upper chambers. Holter monitoring is an effective tool for diagnosing sick sinus syndrome because of the episodic nature of the disorder. Extremely slow heart rate and prolonged pauses may be seen during Holter monitoring, along with episodes of atrial tachycardias. Abnormal pacemaker: A pacemaker elsewhere than the sinus node is called an “ectopic” pacemaker. An ectopic pacemaker causes an abnormal sequence of contraction of the different parts of the heart and can cause significant debility of heart pumping. The new pacemaker then occurs most frequently at the A-V node or in the penetrating portion of the A-V bundle on the way to the ventricles.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The plateau phase of the ventricular muscle is due to the opening of the:", "options": [{"label": "A", "text": "Na+ channels", "correct": false}, {"label": "B", "text": "K+ channels", "correct": false}, {"label": "C", "text": "Cl- channels", "correct": false}, {"label": "D", "text": "Ca2+ channel", "correct": true}], "correct_answer": "D. Ca2+ channel", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ca2+ channel Ventricular muscle is due to the opening of the Ca channels.</p>\n<p><strong>Highyeild:</strong></p><p>PLATEAU PHASE OF VENTRICULAR ACTION POTENTIAL In phase 2 (plateau), calcium channels open, and fast potassium channels close. Brief initial repolarization occurs and the action Potentials then plateaus as a result of: Increased calcium ion permeability Decreased potassium ion permeability The voltage-gated calcium ion channels open slowly during phases 1 and 0, and calcium enters the cell. Potassium channels then close, and the combination of decreased potassium ion efflux and increased calcium ion influx causes the action potential to plateau. The individual fibers are separated by membranes, but membrane depolarization spreads radially through them as if they were a syncytium because of the presence of gap junctions.</p>\n<p><strong>Extraedge:</strong></p><p>PHASES OF VENTRICULAR ACTION POTENTIAL Phase 0: rapid sodium influx: rapid depolarization phase Phase 1: potassium efflux and occurs: partial or early repolarization phase Phase 2: potassium efflux and calcium influx takes place: plateau phase Phase 3: potassium efflux takes place: final repolarization phase Phase 4: the resting state is attained</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What will cause the sinoatrial node to depolarise more frequently?", "options": [{"label": "A", "text": "Acetylcholine", "correct": false}, {"label": "B", "text": "Norepinephrine", "correct": true}, {"label": "C", "text": "Parasympathetic stimulation", "correct": false}, {"label": "D", "text": "Vagus nerve", "correct": false}], "correct_answer": "B. Norepinephrine", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Norepinephrine Norepinephrine released by the sympathetic nervous system acting on the SA node increases the heart rate and blood pressure. Parasympathetic stimulation along the vagus nerve decreases the heart rate.</p>\n<p><strong>Highyeild:</strong></p><p>EFFECT OF SYMPATHETIC AND CHOLINERGIC SYSTEM ON THE AP OF THE SA NODE When the cholinergic vagal fibers to nodal tissue are stimulated, the membrane becomes hyperpolarized and the slope of the prepotential is decreased because the Ach released at the nerve endings increases the K+ conductance of nodal tissue. This action is mediated by M2 muscarinic receptors, which, via the By subunit of a G protein, open a special set of K+ channels. In addition, activation of the M2 receptors decreases cyclic adenosine 3

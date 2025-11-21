@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Parathyroid - Basic Physiology &amp; Primary Hyperparathyroidism (Part 1)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Parathyroid - Basic Physiology &amp; Primary Hyperparathyroidism (Part 1)</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                17 Questions | 17 Total Marks | 27 min Duration | ~95.29 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 17 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 27 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 17</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Parathyroid - Basic Physiology &amp; Primary Hyperparathyroidism (Part 1) - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 17</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 17 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "The following statements are true about the development of thyroid and parathyroid glands except:", "options": [{"label": "A", "text": "The hyroglossal duct develops from the median bud of the pharynx", "correct": false}, {"label": "B", "text": "Parathyroid gland develops from 3rd & 4th pharyngeal pouches", "correct": false}, {"label": "C", "text": "Superior parathyroid may be found anywhere along the line of descent", "correct": true}, {"label": "D", "text": "Parafollicular cells arise from neural crest cells", "correct": false}], "correct_answer": "C. Superior parathyroid may be found anywhere along the line of descent", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Superior parathyroid may be found anywhere along the line of descent The thyroglossal duct develops from the median bud of the pharynx. The foramen caecum at the junction of the anterior 2/3rd and posterior 1/3rd of the tongue is the vestigial remnant of the duct. This initially hollow structure migrates caudally and passes in close continuity with, sometimes through, the developing hyoid cartilage. The parathyroid glands develop from the 3rd and 4th pharyngeal pouches . The thymus also develops from the 3rd pouch . As it descends, the thymus takes the associated parathyroid gland with it, which explains why the inferior parathyroid, which arises from the 3rd pharyngeal pouch, normally lies inferior to the superior gland. However, the inferior parathyroid may be found anywhere along this line of descent. The developing thyroid lobes amalgamate with the structures that arise in the fourth pharyngeal pouch , i.e., the superior parathyroid gland and the ultimobranchial body. Parafollicular cells (C cells) from the neural crest reach the thyroid via the ultimobranchial body. Pharyngeal arches</p>\n<p><strong>Highyeild:</strong></p><p>Thyroglossal Cyst It is a cystic swelling that develops in the remnant of the thyroglossal duct or tract. It can be present in any part of the thyroglossal tract , which extends from the foramen caecum to the isthmus of the thyroid. The common sites are the sub-hyoid (most common), the floor of the mouth, the region of the thyroid cartilages, beneath the foramen caecum, and the suprahyoid. Clinical Features: It is usually a midline swelling , except in the region of the thyroid cartilage, where the thyroglossal tract is pushed to one side, usually to the left. Although it is a congenital swelling, it is most commonly diagnosed between the ages of 15 and 30 years . The cyst can be moved sideways but not vertically. It has a peculiar characteristic that helps distinguish it from other neck swellings: It moves up with protrusion of the tongue because the thyroglossal tract is attached to the tongue. It moves with deglutition . Treatment involves the Sistrunk operation , which is an en-bloc cystectomy and excision of the central hyoid bone to minimize recurrence.</p>\n<p><strong>Extraedge:</strong></p><p>Thyroglossal cyst is lined by pseudostratified columnar epithelium and squamous epithelium , with heterotopic thyroid tissue present in 20% of cases. Complications of thyroglossal cysts include recurrent infections, formation of thyroglossal fistula, and carcinomatous change (papillary carcinoma).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the incorrect statement regarding the surgical anatomy of the thyroid gland:", "options": [{"label": "A", "text": "Extensive anastomoses between major thyroid arteries and tracheal, esophageal arteries", "correct": false}, {"label": "B", "text": "Right RLN has more distance to reach the Tracheo-oesophageal groove", "correct": false}, {"label": "C", "text": "RLN runs posterior to the thyroid and enters the larynx at the cricothyroid joint", "correct": true}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "C. RLN runs posterior to the thyroid and enters the larynx at the cricothyroid joint", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>RLN runs posterior to the thyroid and enters the larynx at the cricothyroid joint The arterial supply is rich, and extensive anastomoses occur between the main thyroid arteries and branches of the tracheal and esophageal arteries . There is an extensive lymphatic network within and around the gland. RLN recurs around the arch of the aorta on the left and the subclavian artery on the right. The clinical significance of this is that on the left the nerve has more distance in which to reach the tracheoesophageal groove, which runs in a medial plane. On the right, there is less distance and the nerve runs more obliquely to reach the tracheoesophageal groove. The nerve runs posterior to the thyroid and enters the larynx at the cricothyroid joint. It enters at the level of Berry’s ligament, a condensation of pre-tracheal fascia that binds the thyroid to the trachea. This is the point at which the nerve is at the most risk of injury during surgery.</p>\n<p><strong>Highyeild:</strong></p><p>The thyroid gland is located in the anterior neck and has two lobes connected by an isthmus. It is supplied by the superior and inferior thyroid arteries and the thyroid ima artery. The recurrent laryngeal nerves provide motor innervation to the vocal cords and course alongside the thyroid gland. Injury to these nerves during thyroid surgery can lead to vocal cord paralysis and hoarseness . The superior and inferior thyroid veins drain blood from the thyroid gland into the internal jugular vein. The lymphatic drainage of the thyroid gland involves lymph nodes in the anterior and lateral neck regions.</p>\n<p><strong>Extraedge:</strong></p><p>The anatomy of the thyroid gland can be affected by a variety of conditions, including goiter, thyroid nodules, and thyroid cancer, which may require different surgical approaches and techniques. The surgical anatomy of the thyroid gland is constantly evolving, with new techniques and technologies being developed to improve outcomes and reduce complications.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following points regarding Parathyroid hormone physiology are correct? Calcium binds to Calcium-Sensing Receptors (CaSRs) on the surface of the Oxyntic Cells and regulates PTH levels. Calcitonin & PTH, both increase phosphate excretion by inhibiting its reabsorption. Intermittent administration of recombinant-human-PTH has been shown to stimulate bone formation PTH increases the release of calcium and phosphate from the skeleton. Select the correct answer from the given below code:", "options": [{"label": "A", "text": "1, 2, and 4 are correct", "correct": false}, {"label": "B", "text": "2, and 4 are correct", "correct": false}, {"label": "C", "text": "2, 3, and 4 are correct", "correct": true}, {"label": "D", "text": "All are correct", "correct": false}], "correct_answer": "C. 2, 3, and 4 are correct", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>2, 3, and 4 are correct PTH is an important part of calcium homeostasis. PTH has both anabolic and catabolic effects on bones . In patients with chronically elevated PTH levels, such as primary and secondary HPT, the net effect is bone resorption leading to osteopenia and osteoporosis. Whereas, intermittent administration of recombinant human PTH stimulates bone formation more than resorption. Statement 1. Calcium-sensing receptors (CaSRs) are present on the surface of the chief cells. Calcium binding to CaSRs leads to an inhibition of PTH secretion and PTH gene expression in Chief cells. Statement 2. PTH enhances calcium reabsorption, inhibit phosphate reabsorption, and increases phosphate excretion causing phosphaturia . At the kidney, calcitonin increases phosphate excretion by inhibiting its reabsorption Statement 3. Intermittent administration of recombinant human PTH stimulates bone formation more than resorption. Statement 4. PTH increases bone remodeling and the release of calcium and phosphate from the skeleton.</p>\n<p><strong>Highyeild:</strong></p><p>PTH acts on bone, kidney, and intestine to increase blood calcium levels. In bone, PTH stimulates the activity of osteoclasts, which break down bone tissue and release calcium into the bloodstream. In the kidney, PTH promotes the reabsorption of calcium in the distal tubules and increases the excretion of phosphate in the urine, which helps to increase blood calcium levels and decrease phosphate levels. In the intestine, PTH indirectly increases calcium absorption by stimulating the production of active vitamin D (calcitriol), which in turn promotes calcium absorption from the diet.</p>\n<p><strong>Extraedge:</strong></p><p>PTH levels are regulated by a negative feedback loop involving calcium and vitamin D. Low blood calcium levels stimulate the release of PTH, which in turn increases blood calcium levels. High blood calcium levels inhibit the release of PTH. PTH levels can be affected by a variety of factors, including age, kidney function, and vitamin D status. Abnormalities in PTH levels can lead to a variety of metabolic bone disorders, including hyperparathyroidism and hypoparathyroidism.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following are true regarding Calcium Metabolism, EXCEPT:", "options": [{"label": "A", "text": "PTH can cause both bone resorption and mineralization.", "correct": false}, {"label": "B", "text": "Calcitonin is responsible for lowering blood Calcium.", "correct": false}, {"label": "C", "text": "Vitamin D can cause both bone resorption and mineralization.", "correct": false}, {"label": "D", "text": "PTH increases phosphate release from bones to blood & increases blood phosphate levels.", "correct": true}], "correct_answer": "D. PTH increases phosphate release from bones to blood & increases blood phosphate levels.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>PTH increases phosphate release from bones to blood & increases blood phosphate levels. Calcium metabolism is regulated by PTH & calcitonin . PTH also stimulates the conversion of 25-hydroxyvitamin D (25[OH]D) to the active metabolite 1,25 dihydroxyvitamin D. PTH acts on the ascending limb of the loop of Henle and the distal convoluted tubule of the kidneys to inhibit phosphate reabsorption , and increase phosphate excretion causing phosphaturia . Thereby, increasing ionized Calcium by reducing Blood.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Chronically elevated PTH levels have the net effect of bone resorption & intermittent administration of recombinant human PTH stimulates bone formation. Option: B. Calcitonin is produced by thyroid C cells and functions as an antihypercalcemic hormone by inhibiting osteoclast-mediated bone resorption. Option: C. At high calcium level s, or when given with Calcium supplementation, Vitamin D causes bone mineralization. At low calcium levels , vitamin D stimulates the absorption of calcium and phosphat e from the gut and the resorption of calcium from the bone</p>\n<p><strong>Extraedge:</strong></p><p>Abnormalities in calcium metabolism can lead to a variety of disorders, including hypercalcemia (elevated blood calcium levels) and hypocalcemia (low blood calcium levels), which can affect bone health, muscle and nerve function, and cardiovascular health. Calcium metabolism is also influenced by other factors, such as age, gender, physical activity, and medications.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Amongst the following statements, which statement is not true regarding The Parathyroid hormone?", "options": [{"label": "A", "text": "PTH is a peptide hormone whose C-terminal fragment is responsible for the biological activity of PTH in peripheral tissues.", "correct": true}, {"label": "B", "text": "PTH has a half-life of approximately 3–5 minutes.", "correct": false}, {"label": "C", "text": "The PTH-mediated skeletal effects take hours to days.", "correct": false}, {"label": "D", "text": "1,25-Dihydroxyvitamin D inhibits parathyroid cell proliferation.", "correct": false}], "correct_answer": "A. PTH is a peptide hormone whose C-terminal fragment is responsible for the biological activity of PTH in peripheral tissues.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>PTH is a peptide hormone whose C-terminal fragment is responsible for the biological activity of PTH in peripheral tissues. Parathyroid hormone is produced in the parathyroid glands by the chief cells . The stimuli for PTH production are low serum calcium or high serum magnesium levels . PTH is cleaved in the liver yielding an inactive C-terminal that is cleared by the kidneys. The N-terminal fragment is responsible for the biological activity of PTH on peripheral tissues.</p>\n<p><strong>Highyeild:</strong></p><p>PTH plays a critical role in regulating calcium and phosphate metabolism in the body. It acts on bone, kidney, and intestine to increase blood calcium levels and decrease blood phosphate levels. In bone, PTH stimulates the activity of osteoclasts , which break down bone tissue and release calcium into the bloodstream. In the kidney, PTH promotes the reabsorption of calcium in the distal tubules and increases the excretion of phosphate in the urine, which helps to increase blood calcium levels and decrease phosphate levels. In the intestine, PTH indirectly increases calcium absorption by stimulating the production of active vitamin D (calcitriol), which in turn promotes calcium absorption from the diet.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: B. The active circulating molecule of PTH has a half-life of approximately 3–5 minutes in patients with normal renal function. Option: C. The PTH-mediated renal effects to maintain calcium homeostasis are rapid, taking minutes to hours, compared to the skeletal effects, which take hours to days. Option: D. When calcium is reduced , PTH gene expression and secretion are increased . 1,25-Dihydroxyvitamin D binds to vitamin D receptors on chief cells and inhibits PTH gene expression and parathyroid cell proliferation.</p>\n<p><strong>Extraedge:</strong></p><p>PTH levels are regulated by a negative feedback loop involving calcium and vitamin D. Low blood calcium levels stimulate the release of PTH, which in turn increases blood calcium levels. High blood calcium levels inhibit the release of PTH. Abnormalities in PTH levels can lead to a variety of metabolic bone disorders, including hyperparathyroidism and hypoparathyroidism. PTH levels can be measured by a blood test to diagnose and monitor various disorders related to calcium metabolism.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old woman was brought to the emergency room by her relatives with the complaint of abdominal pain. She was found to have raised serum amylase levels. Her relatives gave a history of erratic behavior as well. On further evaluation, there was renal dysfunction and a lumbar spine fracture. All of the following can lead to her condition, except:", "options": [{"label": "A", "text": "MEN 1 Syndrome", "correct": false}, {"label": "B", "text": "History of Chemotherapy", "correct": true}, {"label": "C", "text": "Lithium use", "correct": false}, {"label": "D", "text": "History of Radiation Exposure", "correct": false}], "correct_answer": "B. History of Chemotherapy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>History of Chemotherapy The given scenario is most likely a case of hyperparathyroidism , which has presented with pancreatitis . Patients with hyperparathyroidism typically present weakness, fatigue, polydipsia, polyuria, nocturia, bone and joint pain, constipation, decreased appetite, nausea, heartburn, pruritus, depression, and memory loss. Some malignancies are linked with hyperparathyroidism , but chemotherapy is not.</p>\n<p><strong>Highyeild:</strong></p><p>Table - 1 Genetic abnormalities associated with sporadic and inherited forms of primary HPT: disorder , genes, inheritance, phenotype, and recommended surgical approach. DISORDER GENES INHERITANCE PHENOTYPE AGE SURGICAL APPROACH Sporadic Parathyroid adenoma and hyperplasia PRAD1, CCND1 (20%-40%) MEN1 (12% -35%), CDKN1B, AIPCDC73, Sporadic Isolated pHPT with single adenoma double adenoma or four-gland hyperplasia >45 Minimally invasive parathyroidectomy with IOPTH or bilateral exploration Parathyroid carcinoma RB1, CDC73, MEN1, microRNA-296 Sporadic pHPT secondary to parathyroid carcinoma >45 En bloc resection Inherited MEN1 MEN1 AD pHPT (95%) in third decade, pNETs (40%), pituitary adenomas (30%), adrenocortical and thyroid tumors, meningioma, facial angiofibromas, lipomas 25-45 Subtotal parathyroidectomy and transcervical thymectomy MENZA RET AD pHPT (15%-35%) MTC (99%) 38 pheochromocytoma (50%), lichen planus, amyloidosis, Hirschsprung disease 38 Resection of only visibly enlarged parathyroid glands. Address or rule out pheochromocytoma first Familial isolated HPT CDKNIB AD pHPT (80%), pituitary adenoma (40%), pNETs, adrenal, thyroid, gonadal and renal tumors 50 Same as MEN1 Familial isolated HPT MENI, COC73, CASH, GCM2, CDKN1B AD Isolated pHPT, parathyroid carcinoma (GCM2 mutation) 39 Bilateral neck exploration with resection of enlarged glands only versus subtotal parathyroidectomy En bloc resection for parathyroid cancer HPT-JT COC73 AD pHPT in second or third decade, parathyroid carcinoma (35%). ossifying fibromas of mandible and maxilla, renal cysts, hamartomas and Wilms tumor, and uterine tumors 32 Minimally invasive parathyroidectomy with IOPTH or bilateral exploration En bloc resection for parathyroid cancer AD, Autosomal dominant; HPT, hyperparathyroidism; HPT-JT, hyperparathyroidism-jaw tumor syndrome; IOPTH, intraoperative parathyroid hormone; MEN, multiple endocrine neoplasia; MTC, medullary thyroid cancer; pHPT, primary hyperparathyroidism; PTH; parathyroid hormone; PNET, pancreatic neuroendocrine tumors. *Age = mean age at presentation of primary HPT in years. Surgical approach to HPT associated with the disorder.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A . PHPT is the earliest and most common manifestation of MEN1 . Option: C. Lithium therapy has been known to shift the set point for PTH secretion in parathyroid cells, thereby resulting in elevated PTH levels and mild hypercalcemia. Option: D. Patients with radiation exposure tend to have higher PTH levels and a higher incidence of concomitant thyroid neoplasms.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient came for a routine check-up with his general physician. On basic workup, a decreased creatinine clearance was found. After a series of routine blood and urine investigations, he was found to have hyperparathyroidism. The patient is asymptomatic. All the following can be a ground for surgical treatment in this patient, except?", "options": [{"label": "A", "text": "Age >50years", "correct": true}, {"label": "B", "text": "Serum calcium >1 mg/dL above the upper limit of normal", "correct": false}, {"label": "C", "text": "GFR <60mL/min", "correct": false}, {"label": "D", "text": "BMD T score <-2.5", "correct": false}], "correct_answer": "A. Age >50years", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Age >50years Only a patient with Age <50 years is taken for parathyroidectomy. Indications for parathyroidectomy in patients with asymptomatic primary HPT Serum calcium >1 mg/dL above the upper limits of normal GFR < 60 mL/min ; 24-h urine for calcium >400 mg/d (>10 mmol/d) and increased stone risk by biochemical stone risk analysis; the presence of nephrolithiasis or nephrocalcinosis by X-ray, ultrasound, or CT. Substantially decreased bone mineral density at the lumbar spine, total hip, femoral neck, or distal radiu s (>2.5 SD below peak bone mass, T score <−2.5; vertebral fracture by X-ray, CT, MRI, or VFA) Age < 50 y</p>\n<p><strong>Highyeild:</strong></p><p>There are two main types of hyperparathyroidism: primary and secondary. Primary hyperparathyroidism occurs when one or more of the parathyroid glands produces too much PTH, leading to high levels of calcium in the blood (hypercalcemia). Secondary hyperparathyroidism occurs in response to another condition that causes low levels of calcium in the blood, such as chronic kidney disease or vitamin D deficiency. The most common cause of primary hyperparathyroidism is a benign tumor (adenoma) on one of the parathyroid glands. In some cases, multiple glands may be involved (hyperplasia). Symptoms of hyperparathyroidism may include fatigue, weakness, bone pain, kidney stones, and gastrointestinal symptoms . However, many patients with primary hyperparathyroidism are asymptomatic and the condition is diagnosed incidentally on routine blood tests.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: B. Serum calcium >1 mg/dL above the upper limits of normal is an indication for surgery. Option: C. GFR < 60 mL/min, the presence of nephrolithiasis or nephrocalcinosis, are indications for surgery. Option: D. Decreased bone mineral density with a score of -2.5 is taken for surgery.</p>\n<p><strong>Extraedge:</strong></p><p>Treatment for primary hyperparathyroidism typically involves surgical removal of the affected parathyroid gland(s) (parathyroidectomy). In patients with secondary hyperparathyroidism, treatment involves addressing the underlying cause (e.g. vitamin D supplementation in cases of vitamin D deficiency). Left untreated, hyperparathyroidism can lead to serious complications such as osteoporosis , kidney stones, and kidney damage.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following is an X-ray of a patient with Hyperparathyroidism. The said pathology is known as:", "options": [{"label": "A", "text": "Subperiosteal Calcification", "correct": false}, {"label": "B", "text": "Browns Tumor", "correct": false}, {"label": "C", "text": "Subperiosteal Resorption", "correct": true}, {"label": "D", "text": "Pathological Fracture", "correct": false}], "correct_answer": "C. Subperiosteal Resorption", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/questionImage-1685618506968-QTDS024008IMG1.png"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Subperiosteal Resorption Subperiosteal resorption is bone loss near the surface of bones, just beneath the periosteum. It is commonly seen in hyperparathyroidism due to excess parathyroid hormone. It appears on X-rays as thinning or erosion of the outer layer of bone, often in the fingers and toes. Treatment depends on the underlying cause, with surgical removal of affected parathyroid gland(s) being the standard for hyperparathyroidism.</p>\n<p><strong>Random:</strong></p><p>Explanation For All Options:- Option: A. Subperiosteal Calcification is seen in the case of Scurvy. Option: B. Browns Tumor, Bone cysts are commonly seen in Hyperparathyroidism. Option: C. Radiologic findings of Hyperparathyroidism, which are best seen on X-rays of the hands and are characterized by subperiosteal resorption. Option: D. Pathological Fractures are seen in PHPT. The image has no fracture lines.</p>\n<p><strong>Extraedge:</strong></p><p>In hyperparathyroidism, subperiosteal resorption is often seen in combination with other skeletal manifestations such as osteoporosis and brown tumors (benign bone tumors that form as a result of excessive bone resorption).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 42-year-old man presented with weakness, a history of renal stones, bone, and joint pain, a colicky abdomen, and depression. Which of the following blood investigations are crucial for confirmation of the diagnosis of primary hyperparathyroidism? Ionized calcium. PTH levels ALP low serum phosphate Normal creatinine and vitamin D levels USG Nuclear Scintigraphy Select the correct answer from the given below code:", "options": [{"label": "A", "text": "1, 2, 3, 4, and 5", "correct": true}, {"label": "B", "text": "1, 2, 4, 5, and 6", "correct": false}, {"label": "C", "text": "1, 2, 3, 6, and 7", "correct": false}, {"label": "D", "text": "1, 2, 3, 5, and 7", "correct": false}], "correct_answer": "A. 1, 2, 3, 4, and 5", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>1, 2, 3, 4, and 5 The case shows a typical presentation of primary hyperparathyroidism. Primary hyperparathyroidism is a biochemical diagnosis. There is no value in imaging and localization studies. Statement 1 . Elevated total, or more specifically ionized calcium . Due to increased PTH release. Statement 2 . Inappropriately elevated or unsuppressed PTH levels , due to parathyroid gland overactivity in view of adenomas Statement 3 . Alkaline phosphatase evaluation is a part of preoperative evaluation. Statement 4. Low serum phosphate, due to Phosphaturia. Statement 5 . Normal creatinine and vitamin D levels are seen in primary hyperparathyroidism. Statement 6 . USG is not crucial for diagnosis but is useful as it is not associated with any radiation exposure and can identify and facilitate the biopsy of any concomitant thyroid pathology. Statement 7 . SESTAMIBI scan is done for preoperative localization of parathyroid glands & not as a part of the diagnosis. Additionally, 24-hour urinary excretion of calcium may be done, which can be normal or elevated.</p>\n<p><strong>Highyeild:</strong></p><p>Blood tests used to diagnose primary hyperparathyroidism include serum calcium, PTH, 25-hydroxyvitamin D, creatinine, alkaline phosphatase, urinary calcium, and phosphorus. Elevated serum calcium and PTH levels are commonly seen in primary hyperparathyroidism. Low vitamin D and phosphorus levels may also be present. Alkaline phosphatase and urinary calcium levels can suggest bone loss due to excessive PTH. These tests aid in diagnosing and managing primary hyperparathyroidism.</p>\n<p><strong>Extraedge:</strong></p><p>Serum calcium levels can fluctuate throughout the day, so it is important to measure levels at the same time of day for consistency. The severity of primary hyperparathyroidism can vary widely, and some patients may be asymptomatic while others experience significant symptoms.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a patient with Primary Hyperthyroidism, Preoperative Imaging was planned. Which of the following points regarding the use of Nuclear Imaging is false?", "options": [{"label": "A", "text": "False positives in Sestamibi Scan can be reduced by using 99Tc-pertechnetate.", "correct": false}, {"label": "B", "text": "Sestamibi accumulates in the mitochondria of Chief Cells of Parathyroid Adenomas.", "correct": true}, {"label": "C", "text": "Single-photon emission CT indicates whether an adenoma is located in the anterior or posterior mediastinum.", "correct": false}, {"label": "D", "text": "Localization studies have permitted surgeons to perform “minimally invasive” procedures, some of them under local anesthesia.", "correct": false}], "correct_answer": "B. Sestamibi accumulates in the mitochondria of Chief Cells of Parathyroid Adenomas.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Sestamibi accumulates in the mitochondria of Chief Cells of Parathyroid Adenomas. Nuclear Imaging with Sestamibi Scan is now regarded as the most accurate and reliable method for imaging the parathyroid glands, with an added advantage over Ultrasound , which is better imaging of glands in ectopic positions. Parathyroid adenomas often have a high concentration of oxyphilic cells with high mitochondrial content. Sestamibi accumulates in mitochondria and washes out at differential rates depending on the number of mitochondria within these cells. There are three different protocols for SESTAMIBI scanning: Single-isotope dual-phase scan, Dual isotope subtraction imaging, and Single-photon emission computed tomography (SPECT).</p>\n<p><strong>Highyeild:</strong></p><p>Preoperative imaging is crucial in identifying the location and number of abnormal parathyroid glands in primary hyperparathyroidism to aid in surgical planning. Ultrasound is often the first-line imaging modality used to evaluate the parathyroid glands and can detect the presence of adenomas or hyperplasia. Other imaging modalities such as sestamibi scans, CT scans, and MRI scans may also be used to localize abnormal parathyroid glands in primary hyperparathyroidism.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A . False positives can be reduced by the addition of a thyroid-specific radioactive tracer, such as 99Tc-pertechnetate, and subsequent subtraction images. Option: C. Single-photon emission CT is superior to other nuclear medicine–based imaging. It can indicate whether an adenoma is located in the anterior or posterior mediastinum (aortopulmonary window), thus enabling the surgeon to modify the operative approach accordingly. Option: D. Localization studies have permitted surgeons to perform “ minimally invasive” procedures. These include unilateral and focused neck exploration, radio-guided parathyroidectomy, and several endoscopic or video-assisted approaches. The use of localization studies helps by Lowering morbidity rates (hypoparathyroidism and RLN injury), Decreased operative times , Reduced duration of hospital stay Improved cosmetic outcomes , Success rates in minimally invasive parathyroidectomy are similar to those obtained with traditional bilateral neck exploration.</p>\n<p><strong>Extraedge:</strong></p><p>Minimally invasive parathyroidectomy guided by preoperative imaging can lead to improved surgical outcomes, reduced hospital stays, and faster recovery times compared to traditional bilateral neck exploration. Preoperative imaging is also important in identifying patients with multiple gland disease or ectopic parathyroid glands, who may require more extensive surgery.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The Casanova test is useful for the diagnosis of which of the following conditions are related to the parathyroid gland?", "options": [{"label": "A", "text": "Intraoperative Assessment for Surgical Success", "correct": false}, {"label": "B", "text": "Persistent Hyperparathyroidism", "correct": false}, {"label": "C", "text": "Parathyroid Graft Hyperplasia", "correct": true}, {"label": "D", "text": "Recurrent Hyperparathyroidism", "correct": false}], "correct_answer": "C. Parathyroid Graft Hyperplasia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Parathyroid Graft Hyperplasia Persistent hyperparathyroidism is defined as hypercalcemia that fails to resolve after parathyroidectomy or raised PTH within 6 weeks. Recurrent hyperparathyroidism refers to HPT occurring after an intervening period of at least 6 months of biochemically documented normo-calcemia. Selective venous sampling for PTH in the neck and the brachial vein on the side of the graft can be useful. This is known as the Casanova test to prove that the recurrent disease is located in the grafted arm (graft hyperplasia). The ratio must be greater than 20:1 .</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Intraoperative Assessment is done by IOPTH assay , in the MIAMI PROTOCOL. Option: B. Persistent Hyperparathyroidism is diagnosed with biochemical tests & imaging. No such protocol for the Casanova test is needed. Option: D. Recurrent hyperparathyroidism is diagnosed with biochemical tests & imaging. In rare cases, when recurrent is due to autograft, the Casanova test is used. So, the most appropriate answer is Parathyroid Graft Hyperplasia.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old patient underwent Parathyroidectomy, after careful investigations and imaging, for the treatment of his Primary Hyperparathyroidism. The patient was exhibiting all the typical symptoms of hyperparathyroidism. Which of the following symptoms are not going to show improvement?", "options": [{"label": "A", "text": "Osteitis fibrosa cystica", "correct": false}, {"label": "B", "text": "Renal stones", "correct": false}, {"label": "C", "text": "Neuromuscular Symptoms", "correct": false}, {"label": "D", "text": "Cardiological Manifestations", "correct": true}], "correct_answer": "D. Cardiological Manifestations", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cardiological Manifestations Patients with PHPT are classically present with ‘bones, stones, abdominal groans and psychiatric overtones’ . The “typical” patient with PHPT is more likely to be minimally symptomatic or asymptomatic. Currently, most present with weakness, fatigue, polydipsia, polyuria, nocturia, bone and joint pain, constipation, decreased appetite, nausea, heartburn, pruritus, depression, and memory loss.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Successful parathyroidectomy results in the resolution of osteitis fibrosa cystica. Option: B. Post-surgery, there is decreased risk of recurrent kidney stones and a decrease in urinary calcium levels. While there may be no improvement in nephrocalcinosis and renal insufficiency, further decline in renal function will be prevented. Option: C. Neuromuscular symptoms are often reported by patients with primary HPT. Many of these symptoms like easy fatigability, and generalized weakness improve with surgical intervention.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient who was being worked up for Primary Hyperparathyroidism was informed that a Minimally Invasive Parathyroid approach would not be suitable for him. Following are all the reasons for deferring the Minimally Invasive approach, except:", "options": [{"label": "A", "text": "Discordant preoperative localization studies.", "correct": false}, {"label": "B", "text": "Familial Syndrome like MEN1, presenting with Hyperparathyroidism", "correct": false}, {"label": "C", "text": "Parathyroid Adenoma", "correct": true}, {"label": "D", "text": "Lithium induced Hyperparathyroidism", "correct": false}], "correct_answer": "C. Parathyroid Adenoma", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Parathyroid Adenoma Parathyroid adenomas are the most common presentations in a case of primary hyperparathyroidism . A minimally invasive approach is preferred for parathyroid adenomas, which mostly involve a single gland. Indications for a bilateral exploration of Parathyroid include: Failure of a focused exploration (PTH does not drop per expected protocol), Known or intraoperatively identified parathyroid hyperplasia , High suspicion of multi gland disease (secondary and tertiary HPT, lithium-induced HPT, familial HPT), and Discordant or negative preoperative localization studies.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Discordant preoperative localization studies are an Indication for Exploration. Option: B. Familial syndrome usually involves multiple glands . Option: D. Lithium ingestion causes hyperplasia and involvement of multiple diseases.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient underwent parathyroidectomy and was postoperatively reporting mild circumoral numbness and paraesthesia, muscle spasms in the legs. Which of the following can be helpful in predicting this in a case of Primary Hyperparathyroidism?", "options": [{"label": "A", "text": "ALP levels", "correct": false}, {"label": "B", "text": "Vitamin D levels", "correct": false}, {"label": "C", "text": "BOTH 1 & 2", "correct": true}, {"label": "D", "text": "Preoperative Calcium Levels", "correct": false}], "correct_answer": "C. BOTH 1 & 2", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>BOTH 1 & 2 The given scenario is of hypo-calcemia , in a post-op case of primary hyperparathyroidism. It is rare in primary disease and more common in secondary and tertiary. In certain cases, after thyroid or parathyroid surgeries, hypoparathyroidism leads to low calcium blood levels. Alkaline phosphatase may be elevated in patients in whom there is a concomitant bone disease that can lead to Hungry Bone Syndrome. This directly correlates to the requirement of calcium in the postoperative period to treat, this is important to recognize preoperatively, as the surgeon should anticipate significant postoperative hypocalcemia due to the development of the hungry bone syndrome. Low levels of Vitamin D are linked to Hypocalcemia.</p>\n<p><strong>Highyeild:</strong></p><p>Table - 2 Conditions causing hypocalcemia Hypoparathyroidism ● Surgical ● Neonatal ● Familial ● Heavy metal deposition ● Magnesium depletion Resistance to the action of parathyroid hormone ● Pseudohypoparathyroidism ● Renal failure ● Medications calcitonin, bisphosphonates, mithramycin Failure of normal 1,25-dihydroxy vitamin D production Resistance to the action of 1,25-dihydroxy vitamin D Acute complex formation or deposition of calcium ● Acute hyperphosphatemia ● Acute pancreatitis ● Massive blood transfusion (citrate overload) ● \"Hungry bones\"</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: C. Most appropriate answer is Vitamin D and ALP levels. Option: D. No significant correlation between calcium levels in the blood and postoperative hypocalcemia.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old man, with a known case of Primary Hyperparathyroidism, was evaluated & was operated on with a minimally invasive approach. An intraoperative PTH (IOPTH) assay, at 10 minutes mark after removal of the gland, was found to show a reduction in PTH levels from 150 pg/mL to 90 pg/mL. What should be the next Step in the procedure?", "options": [{"label": "A", "text": "Intraoperative PTH assay is considered positive, and the operation is terminated.", "correct": false}, {"label": "B", "text": "Intraoperative PTH assay is considered positive, and further dissection is advised by a minimal approach.", "correct": false}, {"label": "C", "text": "Intraoperative PTH assay is considered negative, and at 15-20 minute the test is re-done, to check PTH Levels.", "correct": true}, {"label": "D", "text": "Intraoperative PTH assay is considered negative, and the operation is Terminated.", "correct": false}], "correct_answer": "C. Intraoperative PTH assay is considered negative, and at 15-20 minute the test is re-done, to check PTH Levels.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Intraoperative PTH assay is considered negative, and at 15-20 minute the test is re-done, to check PTH Levels. IOPTH monitoring is a commonly used adjunct to parathyroid surgery, which guides the surgeon on when to stop the exploration. It helps confirm that there is no residual hyperfunctioning parathyroid tissue. The Miami criteria were developed to determine the extent of resection. Dual criteria are commonly used which includes a more than 50% PTH decrease from the pre-incision level plus a final PTH that is within the normal range. If the criteria are met, the test is considered positive, and the operation is terminated In this case, the drop is only 40%. So, the test is negative and requires further check-up at a 15-20 minutes window. If the PTH level fails to drop to normal values, Bilateral Neck Exploration is recommended. PTH assay is re-done at a 15-20 minute mark, so this is the best course to follow</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Test is negative, so needs further evaluation. The operation cannot be terminated. Option: B. Test is negative. Further Neck exploration is only carried out when both criteria fail. Option: D. Operation cannot be terminated at this stage. Further evaluation and exploration are needed.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old woman came to the OPD with complaints of colicky abdominal pain, Joint pain, & weakness. She was started on an Anti-Hypertensive. Her biochemical Investigations reveal that the patient has high PTH levels, with high S. Calcium levels. Which drug is responsible for this condition?", "options": [{"label": "A", "text": "Metoprolol", "correct": false}, {"label": "B", "text": "Chlorthalidone", "correct": true}, {"label": "C", "text": "Amlodipine", "correct": false}, {"label": "D", "text": "Telmisartan", "correct": false}], "correct_answer": "B. Chlorthalidone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Chlorthalidone Thiazide diuretics cause hypercalcemia by decreasing the renal clearance of calcium. Thiazide diuretics can exacerbate underlying PHPT and can be used to unmask PHPT in patients with borderline hypercalcemia.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Metoprolol is not known to cause any significant electrolyte imbalance. Option: C. Amlodipine is not known to cause any significant electrolyte imbalance. Option: D. Telmisartan can cause hyperkalemia .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient came was found to have multi-gland involvement in primary hyperparathyroidism. He was evaluated further to find any genetic basis for Multi Gland involvement. Which of the following genetic mutations can be considered to have this presentation?", "options": [{"label": "A", "text": "MEN 1 gene", "correct": false}, {"label": "B", "text": "HRPT2 gene", "correct": false}, {"label": "C", "text": "RET gene", "correct": false}, {"label": "D", "text": "PRAD1 gene", "correct": true}], "correct_answer": "D. PRAD1 gene", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>PRAD1 gene Familial Hyperparathyroidism can be part of a well-recognized endocrine disorder, but it may also occur in isolation in a non-syndromic form. PHPT occurs as a central facet in multiple MEN 1, MEN 2A, HPT-JT, and familial hypocalciuric hypercalcemia (FHH). PRAD1 gene is sporadic and causes Isolated Primary HPT with a single adenoma.</p>\n<p><strong>Highyeild:</strong></p><p>Table - 1 Genetic abnormalities associated with sporadic and inherited forms of primary HPT: disorder , genes, inheritance, phenotype, and recommended surgical approach. DISORDER GENES INHERITANCE PHENOTYPE AGE SURGICAL APPROACH Sporadic Parathyroid adenoma and hyperplasia PRAD1, CCND1 (20%-40%) MEN1 (12% -35%), CDKN1B, AIPCDC73, Sporadic Isolated pHPT with single adenoma double adenoma or four-gland hyperplasia >45 Minimally invasive parathyroidectomy with IOPTH or bilateral exploration Parathyroid carcinoma RB1, CDC73, MEN1, microRNA-296 Sporadic pHPT secondary to parathyroid carcinoma >45 En bloc resection Inherited MEN1 MEN1 AD pHPT (95%) in third decade, pNETs (40%), pituitary adenomas (30%), adrenocortical and thyroid tumors, meningioma, facial angiofibromas, lipomas 25-45 Subtotal parathyroidectomy and transcervical thymectomy MENZA RET AD pHPT (15%-35%) MTC (99%) 38 pheochromocytoma (50%), lichen planus, amyloidosis, Hirschsprung disease 38 Resection of only visibly enlarged parathyroid glands. Address or rule out pheochromocytoma first Familial isolated HPT CDKNIB AD pHPT (80%), pituitary adenoma (40%), pNETs, adrenal, thyroid, gonadal and renal tumors 50 Same as MEN1 Familial isolated HPT MENI, COC73, CASH, GCM2, CDKN1B AD Isolated pHPT, parathyroid carcinoma (GCM2 mutation) 39 Bilateral neck exploration with resection of enlarged glands only versus subtotal parathyroidectomy En bloc resection for parathyroid cancer HPT-JT COC73 AD pHPT in second or third decade, parathyroid carcinoma (35%). ossifying fibromas of mandible and maxilla, renal cysts, hamartomas and Wilms tumor, and uterine tumors 32 Minimally invasive parathyroidectomy with IOPTH or bilateral exploration En bloc resection for parathyroid cancer AD, Autosomal dominant; HPT, hyperparathyroidism; HPT-JT, hyperparathyroidism-jaw tumor syndrome; IOPTH, intraoperative parathyroid hormone; MEN, multiple endocrine neoplasia, MTC, medullary thyroid cancer; pHPT, primary hyperparathyroidism; PTH; parathyroid hormone; PNET, pancreatic neuroendocrine tumors. *Age mean age at presentation of primary HPT in years. \"Surgical approach to HPT associated with the disorder.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. MEN 1 gene is involved in MEN 1 Syndrome Option: B. HRPT2 gene is related to hyperparathyroid-jaw tumor syndrome. Option: C. RET proto-oncogene is linked to MEN 2A-associated hyperparathyroidism. Rule out phaeochromocytoma & medullary thyroid carcinoma.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

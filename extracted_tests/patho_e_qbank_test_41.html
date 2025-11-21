@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Hepatocellular Tumors &amp; Carcinoma</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Hepatocellular Tumors &amp; Carcinoma</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                6 Questions | 6 Total Marks | 16 min Duration | ~160.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 6 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 16 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 6</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Hepatocellular Tumors &amp; Carcinoma - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 6</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 6 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which is the most common benign tumor of the liver?", "options": [{"label": "A", "text": "leiomyoma", "correct": false}, {"label": "B", "text": "Lipoma", "correct": false}, {"label": "C", "text": "Hemangioma", "correct": true}, {"label": "D", "text": "Fibroma", "correct": false}], "correct_answer": "C. Hemangioma", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hemangioma Hepatic Hemangioma aka Cavernous hemangiomas, is the most common benign tumor of the liver.</p>\n<p><strong>Highyeild:</strong></p><p>Hepatic Hemangioma It is a venous malformation . Age: 30-50 years A biopsy is contraindicated because of the risk of hemorrhage. IOC: CECT - Three phases Non-contrast phase: Hypodense Arterial phase: Peripheral nodular enhancement Washout phase: Homogenous enhancement</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Leiomyoma: It is a benign tumor of smooth muscle cells, which is more commonly found in the uterus and gastrointestinal tract, but it can occur in the liver but is not the most common. Option: B. Lipoma: It is a benign tumor of fat cells Option: D. Fibroma: It is a benign tumor composed of fibrous tissue, which can occur in various parts of the body, including the liver. But it is uncommon in the liver.</p>\n<p><strong>Extraedge:</strong></p><p>Kasabach-Merritt syndrome It refers to consumption coagulopathy (consumes all platelets) which sometimes develops in a very large hepatic hemangioma.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following statements are true regarding hepatoblastoma except:", "options": [{"label": "A", "text": "It is a type of small round-cell tumor", "correct": false}, {"label": "B", "text": "It is the most common liver tumor in early childhood", "correct": false}, {"label": "C", "text": "FOX p3 gene mutation is most commonly seen", "correct": true}, {"label": "D", "text": "It may be associated with Beckwith-Wiedemann syndrome", "correct": false}], "correct_answer": "C. FOX p3 gene mutation is most commonly seen", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>FOX p3 gene mutation is most commonly seen The genetic mutations commonly seen in hepatoblastoma involve the Wnt signaling pathway, such as CTNNB1 and WTX mutations , not FOX p3 gene mutation .</p>\n<p><strong>Highyeild:</strong></p><p>It is a small round-cell malignant liver tumor primarily affecting infants and young children. Tumor marker: AFP , Can also secrete beta-hCG Origin: Immature liver precursor cells Genetics: Loss of heterozygosity of the Chr. Arm 11p, Associated with Beckwith-wiedemann syndrome Diagnosis: Biopsy and Imaging</p>\n<p><strong>Extraedge:</strong></p><p>Beckwith-Widemann syndrome</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following statements are true regarding hepatocellular carcinoma except:", "options": [{"label": "A", "text": "Alpha-1 antitrypsin deficiency is a risk factor", "correct": false}, {"label": "B", "text": "Intrahepatic metastasis occurs", "correct": false}, {"label": "C", "text": "Serum AFP levels are normal", "correct": true}, {"label": "D", "text": "Metastasis occurs via direct invasion, hematogenous or lymphatic route", "correct": false}], "correct_answer": "C. Serum AFP levels are normal", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Serum AFP levels are normal Serum alpha-fetoprotein (AFP) levels are often elevated in patients with HCC , and AFP can be used as a diagnostic and prognostic marker for HCC.</p>\n<p><strong>Highyeild:</strong></p><p>Hepatocellular Carcinoma -Aka Hepatoma -It is the most common primary malignant liver tumor in adults Risk factors: Hepatitis B Hepatitis C Alcoholic and Non-alcoholic fatty liver disease Autoimmune disease Hemochromatosis Wilson disease Alpha-1 antitrypsin deficiency Thorotrast exposure Aflatoxin -Features: Anorexia, jaundice, tender hepatomegaly Decompensation of previously stable cirrhosis Portal vein thrombosis Metastasis: Direct invasion, hematogenous or lymphatic route</p>\n<p><strong>Table:</strong></p><p>Serum\n     Tumor Markers Tumor Marker Associated Malignancy Alpha-fetoprotein (AFP) Hepatocellular carcinoma, Germ cell tumors Beta-human chorionic gonadotropin (beta-hCG) Germ cell tumors, Choriocarcinoma Cancer antigen 15-3 (CA 15-3) Breast cancer Cancer antigen 125 (CA 125) Epithelial ovarian cancer Cancer antigen 19-9 (CA 19-9) Pancreatic cancer, Cholangiocarcinoma Carcinoembryonic antigen (CEA) Colorectal cancer, Gastric cancer, Pancreatic cancer Prostate-specific antigen (PSA) Prostate cancer</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old patient, a chronic alcoholic presented with a history of weight loss, and jaundice. A liver biopsy is done and the image is shown below. Based on histological features, what is your diagnosis?", "options": [{"label": "A", "text": "Cirrhosis", "correct": false}, {"label": "B", "text": "Hepatocellular carcinoma", "correct": true}, {"label": "C", "text": "Cholangiocarcinoma", "correct": false}, {"label": "D", "text": "Lymphoma", "correct": false}], "correct_answer": "B. Hepatocellular carcinoma", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1689158017772-QTDP124005IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hepatocellular carcinoma The given clinical scenario and a histopathological image showing nests of hepatocytes with nuclear atypia are suggestive of Hepatocellular carcinoma.</p>\n<p><strong>Highyeild:</strong></p><p>Hepatocellular Carcinoma Aka Hepatoma It is the most common primary malignant liver tumor in adults Risk factors: Hepatitis B Hepatitis C Alcoholic and Non-alcoholic fatty liver disease Autoimmune disease Hemochromatosis Wilson disease Alpha-1 antitrypsin deficiency Thorotrast exposure Aflatoxin -Features: Anorexia, jaundice, tender hepatomegaly Decompensation of previously stable cirrhosis Portal vein thrombosis Metastasis: Direct invasion, hematogenous or lymphatic route</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. Cirrhosis: It is a chronic liver disease characterized by fibrosis and nodular regeneration, which is a risk factor for the development of HCC. Option: C. Cholangiocarcinoma: It is a malignancy of the bile ducts, and its histological features are different from HCC. Option: D. Lymphoma: It is a malignancy of lymphoid cells, and it does not typically involve the liver as a primary site.</p>\n<p><strong>Table:</strong></p><p>Histopathology of Hepatocellular carcinoma Gross appearance: Well-circumscribed mass that appears\n     tan-yellow to green Areas of hemorrhage and necrosis are\n     common Solitary or multiple discrete nodules Background liver is usually cirrhotic Microscopic findings: Polygonal cells with nuclear atypia Cytoplasm varies from clear to eosinophilic Mallory-Denk bodies ,\n     hyaline bodies, and pale bodies may be seen 4 principal growth patterns, including trabecular, pseudo\n     glandular, solid and microtrabecular</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 65-year-old patient, who is a chronic alcoholic presented with a history of weight loss, jaundice and massive ascites, and further deteriorating condition. A liver biopsy is shown below based on histological features what is your diagnosis?", "options": [{"label": "A", "text": "Cirrhosis", "correct": true}, {"label": "B", "text": "Hepatocellular carcinoma", "correct": false}, {"label": "C", "text": "Cholangiocarcinoma", "correct": false}, {"label": "D", "text": "Lymphoma", "correct": false}], "correct_answer": "A. Cirrhosis", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1689158021212-QTDP124006IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Cirrhosis The given clinical history of chronic alcoholism and histological features of fibrosis suggests the diagnosis of Cirrhosis . Cirrhosis is characterized by the development of fibrosis and the disruption of normal liver architecture. Alcoholic  hepatitis  is  often  accompanied  by  prominent activation  of  sinusoidal  stellate  cells  and portal  fibroblasts,  giving  rise  to  fibrosis.</p>\n<p><strong>Highyeild:</strong></p><p>Histopathological findings in Liver cirrhosis: Fibrosis : Deposition of collagen fibers and other extracellular matrix components in the liver, leading to the formation of fibrous tissue. It can be-portal fibrosis, perisinusoidal fibrosis, or bridging fibrosis. Nodules : The fibrosis can lead to the formation of nodules, which are groups of hepatocytes surrounded by fibrous tissue. The remaining hepatocytes may undergo proliferative changes, leading to the formation of regenerative nodules. Inflammation : Lymphocytes, plasma cells, and macrophages, can be seen in the liver tissue, particularly in the areas of active fibrosis. Distorted architecture : The liver architecture is disrupted, and the normal lobular structure is lost. Hepatocyte damage : Hepatocytes may show signs of degeneration, necrosis, or apoptosis, which can lead to the loss of liver function. Cholestasis : The bile ducts may become damaged or blocked, leading to cholestasis, which is the accumulation of bile acids and bilirubin in the liver tissue and blood. This can cause jaundice and itching.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: B . Hepatocellular carcinoma: It is a type of primary liver cancer that can develop in patients with cirrhosis. Option: C. Cholangiocarcinoma: It is a type of cancer that develops in the bile ducts, and it is not commonly associated with chronic alcoholism as the primary etiology. Option: D. Lymphoma: a group of blood and lymph tumors that develop from lymphocytes.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is true regarding the fibrolamellar variant of HCC?", "options": [{"label": "A", "text": "Occurs typically in old patients", "correct": false}, {"label": "B", "text": "AFP is the tumor marker", "correct": false}, {"label": "C", "text": "No association with cirrhosis", "correct": true}, {"label": "D", "text": "Common in males", "correct": false}], "correct_answer": "C. No association with cirrhosis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>No association with cirrhosis Fibrolamellar carcinoma is a distinctive  variant  of  HCC which do not have an association with cirrhosis, alcoholism, or hepatitis B/C infection.</p>\n<p><strong>Highyeild:</strong></p><p>Fibrolamellar HCC Young patients Males = Females In non-cirrhotic liver The alpha-fetoprotein level is normal Tumor marker: Neurotensin B HPE: The tumor cells are arranged in cords that are separated by sheet-like fibrous bands arranged in a parallel or lamellar distribution</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option: A. It often occurs in young adults Option: B. Fibrolamellar HCC often does not produce alpha-fetoprotein (AFP). Option: D. It does not show any gender predilection</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

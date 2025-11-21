@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Late Night Pyq Pyt Marathon (Medicine 6)   2024 12 17</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Late Night Pyq Pyt Marathon (Medicine 6)   2024 12 17</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                60 Questions | 240 Total Marks | 70 min Duration | ~70.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 60 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 70 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 60</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Late Night Pyq Pyt Marathon (Medicine 6)   2024 12 17 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 60</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 60 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 30 month old male child was brought with history of fever, and respiratory distress. Suspecting pneumonia , a chest xray was ordered. Which of the following is the most likely causative agent ? (AIIMS NOV 2017)", "options": [{"label": "A", "text": "Klebsiella pneumoniae", "correct": false}, {"label": "B", "text": "Streptococcus pneumoniae", "correct": false}, {"label": "C", "text": "Mycoplasma pneumoniae", "correct": false}, {"label": "D", "text": "Staphylococcus pneumoniae", "correct": true}], "correct_answer": "D. Staphylococcus pneumoniae", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Staphylococcus pneumoniae</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Staphylococcus aureus can cause severe pneumonia in children, often complicated by the formation of pneumatoceles and other serious complications such as empyema and bronchopleural fistula.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The patient presents with progressive breathlessness and chest pain for 2 days. The chest X-ray shows a radiolucent area in the left hemithorax with absent lung markings and shifted mediastinum. What will be the examination finding in the infra-scapular region? (Twisted PYQ)", "options": [{"label": "A", "text": "Hyperresonance on percussion", "correct": true}, {"label": "B", "text": "Coarse crackles", "correct": false}, {"label": "C", "text": "Dull note on percussion", "correct": false}, {"label": "D", "text": "Pleural rub", "correct": false}], "correct_answer": "A. Hyperresonance on percussion", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/Picture2_9tIeIzO.png"], "explanation_images": [], "explanation": "<p><strong>Ans. A) Hyperresonance on percussion</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Hyperresonance on percussion is a key clinical finding in pneumothorax, indicating the presence of air in the pleural space, and when combined with mediastinal shift suggests tension pneumothorax requiring immediate intervention.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 36-year-old woman presented with claudication in the forearm, transient loss of vision, and abdominal pain. Femoral pulses were weak. Fundus examination revealed retinal hemorrhages. What is the likely diagnosis? (NEET PG 2021)", "options": [{"label": "A", "text": "Polyarteritis nodosa", "correct": false}, {"label": "B", "text": "Thromboangiitis obliterans", "correct": false}, {"label": "C", "text": "Takayasu arteritis", "correct": true}, {"label": "D", "text": "Microscopic polyangiitis", "correct": false}], "correct_answer": "C. Takayasu arteritis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. Takayasu arteritis</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Takayasu arteritis should be considered in young women presenting with symptoms of large vessel occlusion, such as claudication, weak pulses, and ischemic symptoms in various organs. It is characterized by the involvement of the aorta and its major branches, and the diagnosis can be confirmed with imaging studies like CT angiogram or conventional angiography.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A young donor came to the blood bank for the first time for platelet apheresis with platelet count of 1.9L. During the course he developed paraesthesia and circumoral numbness during donation. His vitals remained stable though. ECG showed tachycardia with ST-T changes. What is the reason for his symptoms? (AIIMS NOV 2018)", "options": [{"label": "A", "text": "Hypovolemic shock", "correct": false}, {"label": "B", "text": "Hypocalcemia", "correct": true}, {"label": "C", "text": "Seizures", "correct": false}, {"label": "D", "text": "Allergic reaction", "correct": false}], "correct_answer": "B. Hypocalcemia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Hypocalcemia</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ During platelet apheresis, monitoring for symptoms of hypocalcemia is crucial due to the use of citrate. Symptoms such as tingling, numbness, and ECG changes warrant immediate evaluation and management, typically with calcium supplementation to counteract the effects of citrate.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Epsilon wave is seen in: (NEET PG 2014)", "options": [{"label": "A", "text": "Brugada syndrome", "correct": false}, {"label": "B", "text": "Hypothermia", "correct": false}, {"label": "C", "text": "WPW syndrome", "correct": false}, {"label": "D", "text": "Arrhythmogenic right ventricular dysplasia", "correct": true}], "correct_answer": "D. Arrhythmogenic right ventricular dysplasia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D. Arrhythmogenic right ventricular dysplasia</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Epsilon wave, also known as a “post-excitation wave,” is characteristic of Arrhythmogenic Right Ventricular Dysplasia (ARVD), also called Arrhythmogenic Right Ventricular Cardiomyopathy (ARVC). ARVD is an inherited cardiomyopathy characterized by fibro-fatty degeneration of the right ventricle, leading to recurrent ventricular arrhythmias originating from the right ventricle. The Epsilon wave appears as a terminal notch in the QRS complex and is due to slowed intra-ventricular conduction.</li><li>• Triangle of Dysplasia:</li><li>• ARVD typically involves three regions of the right ventricle known as the \"triangle of dysplasia\":</li><li>• Right Ventricular Outflow Tract (RVOT) Apex of the Right Ventricle Subtricuspid Region</li><li>• Right Ventricular Outflow Tract (RVOT)</li><li>• Apex of the Right Ventricle</li><li>• Subtricuspid Region</li><li>• Other Options :</li><li>• Other Options</li><li>• Option A. Brugada Syndrome: Characterized by a distinct ECG pattern (coved-type ST-segment elevation in V1-V3) and an increased risk of sudden cardiac death, but not associated with Epsilon waves.</li><li>• Option A. Brugada Syndrome:</li><li>• Option B. Hypothermia: Hypothermia may produce Osborn waves (J waves) on ECG but not Epsilon waves.</li><li>• Option B. Hypothermia:</li><li>• Option C. WPW Syndrome: Characterized by the presence of a delta wave, which is a slurred upstroke in the QRS complex, indicative of pre-excitation due to an accessory pathway.</li><li>• Option C. WPW Syndrome:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Epsilon waves are indicative of Arrhythmogenic Right Ventricular Dysplasia (ARVD) and appear as terminal notches in the QRS complex due to slowed intra-ventricular conduction.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What would be seen if the central part of the cord was involved? ( INICET MAY 2022) LMN lesion of upper limbs and trunk and UMN of lower limbs. UMN lesion of upper limbs and trunk and LMN of lower limbs. Bladder and bowel involvement. Posterior tract involvement.", "options": [{"label": "A", "text": "1 and 4", "correct": false}, {"label": "B", "text": "2 and 3", "correct": false}, {"label": "C", "text": "2 and 4", "correct": false}, {"label": "D", "text": "1 and 3", "correct": true}], "correct_answer": "D. 1 and 3", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans.</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Central cord lesions, such as syringomyelia, typically present with LMN signs in the upper limbs, UMN signs in the lower limbs, and can involve bladder and bowel dysfunction, but they do not typically affect the posterior tracts</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which hormone increases during periods of stress, starvation, and deep sleep? (FMGE JULY 2024)", "options": [{"label": "A", "text": "GH", "correct": true}, {"label": "B", "text": "Glucocorticoids", "correct": false}, {"label": "C", "text": "Cortisol", "correct": false}, {"label": "D", "text": "Prolactin", "correct": false}], "correct_answer": "A. GH", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) GH</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Growth Hormone (GH) is the hormone that increases during periods of stress, starvation, and especially deep sleep, distinguishing it from other hormones that typically decrease during deep sleep.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 12-year-old child who is known to have type 1 diabetes mellitus presents with confusion and drowsiness. Her mother says that she seems to be breathing very fast. On examination, mucous membranes are dry and blood pressure is 70/50 mm Hg. Random blood glucose is 415 mg/dL and urine ketones are 4+. What is the next best step in management? (NEET PG 2020)", "options": [{"label": "A", "text": "2-3 L of normal saline over 1-3 hours", "correct": true}, {"label": "B", "text": "Insulin infusion at 0.1 units/kg/hour", "correct": false}, {"label": "C", "text": "Arterial blood gas", "correct": false}, {"label": "D", "text": "Insulin bolus of 0.1 units/kg given IV", "correct": false}], "correct_answer": "A. 2-3 L of normal saline over 1-3 hours", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A. 2-3 L of Normal saline over 1-3 hours</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In a case of DKA presenting with signs of dehydration and shock, the initial management should focus on aggressive fluid resuscitation to stabilize the patient before initiating insulin therapy. This approach not only addresses the immediate life-threatening condition but also prepares the body for further metabolic correction.</li></ul>\n<p><strong>References:</strong></p><ul><li>↳ Reference - Harrison 21E/DKA/Chapter 404</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A diabetic elderly man presents with dyspnea and pedal edema. A chest X-ray (CXR) shows an enlarged heart with rales. Echo reveals a low ejection fraction (EF). Which of the following treatments will delay the progression of cardiac disease? (INICET MAY 2024)", "options": [{"label": "A", "text": "Hydrochlorothiazide", "correct": false}, {"label": "B", "text": "Empagliflozin", "correct": true}, {"label": "C", "text": "Furosemide", "correct": false}, {"label": "D", "text": "Digoxin", "correct": false}], "correct_answer": "B. Empagliflozin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Empagliflozin</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Empagliflozin, although primarily an anti-diabetic medication, has been shown to significantly benefit patients with heart failure with reduced ejection fraction (HFrEF) by delaying the progression of the disease through its effects on diuresis, myocardial metabolism, and cardiac remodeling.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presented with dysphagia, vertigo, and facial numbness. Imaging showed cavitation in the medulla oblongata. What is the probable diagnosis? (Twisted PYQ)", "options": [{"label": "A", "text": "Brown-Sequard syndrome", "correct": false}, {"label": "B", "text": "Tabes dorsalis", "correct": false}, {"label": "C", "text": "Syringobulbia", "correct": true}, {"label": "D", "text": "Syringomyelia", "correct": false}], "correct_answer": "C. Syringobulbia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Syringobulbia</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Syringobulbia presents with lower cranial nerve symptoms (dysphagia, vertigo, facial numbness) and is characterized by cavitation within the medulla oblongata, distinguishing it from its spinal cord counterpart, syringomyelia.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which among the following is wrong about DIC? (AIIMS MAY 2018)", "options": [{"label": "A", "text": "Increased schistocytes", "correct": false}, {"label": "B", "text": "Increased PT", "correct": false}, {"label": "C", "text": "Increased fibrinogen", "correct": true}, {"label": "D", "text": "Increased FDPs", "correct": false}], "correct_answer": "C. Increased fibrinogen", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Increased fibrinogen</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In DIC, one typically sees a constellation of laboratory findings including decreased fibrinogen, increased PT and aPTT, elevated FDPs, and the presence of schistocytes on peripheral blood smear. These changes reflect both the excessive activation of the coagulation cascade and the secondary activation of fibrinolytic pathways, leading to the consumption of clotting factors and secondary bleeding complications.</li></ul>\n<p><strong>References:</strong></p><ul><li>↳ Reference - Harrison/Hematology/Coagulation disorders</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 46-year-old male presents to the ER with the acute onset of ataxia. Neurological examination shows loss of pain and temperature sensation from the face on the left side and loss of pain and temperature sensation from the right half of the body. He also has dysarthria, dysphagia, and diminished gag reflex with ptosis, miosis, and anhidrosis on the left. What is the most likely diagnosis? (Neet pg 2022)", "options": [{"label": "A", "text": "Lateral pontine syndrome", "correct": false}, {"label": "B", "text": "Medial medullary syndrome", "correct": false}, {"label": "C", "text": "Lateral medullary syndrome", "correct": true}, {"label": "D", "text": "Locked-In Syndrome", "correct": false}], "correct_answer": "C. Lateral medullary syndrome", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans.</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Lateral medullary syndrome (Wallenberg syndrome) is characterized by ipsilateral loss of pain and temperature sensation in the face, contralateral loss of pain and temperature sensation in the body, dysarthria, dysphagia, and ipsilateral Horner

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Spinal Cord Disorder (Part 2)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Spinal Cord Disorder (Part 2)</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                10 Questions | 10 Total Marks | 20 min Duration | ~120.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 10 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 20 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 10</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Spinal Cord Disorder (Part 2) - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 10</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 10 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A patient presents with a recent onset of persistent back pain in the thoracic spine. Which of the following imaging provides excellent anatomic resolution of the extent of spinal tumors and can distinguish between malignant lesions and other masses?", "options": [{"label": "A", "text": "Plain radiographs", "correct": false}, {"label": "B", "text": "Radionuclide bone scans", "correct": false}, {"label": "C", "text": "MRI", "correct": true}, {"label": "D", "text": "CT scan", "correct": false}], "correct_answer": "C. MRI", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>MRI A recent onset of persistent back pain , particularly if in the thoracic spine (which is uncommonly involved by spondylosis ), should prompt consideration of vertebral metastasis and MRI provides excellent anatomic resolution of the extent of spinal tumors and can distinguish between malignant lesions and other masses.</p>\n<p><strong>Highyeild:</strong></p><p>Neoplastic Spinal Cord Compression Most common- Thoracic spinal column EXCEPT prostate and ovarian cancer → Batson’s plexus → sacral and lumbar vertebrae Any tumor can metastasize to vertebral column Most common Breast Lung Prostate Kidney Lymphoma Myeloma. Retroperitoneal neoplasms (especially lymphomas or sarcomas ) enter the spinal canal laterally through the intervertebral foramina and produce radicular pain with signs of weakness that correspond to the level of involved nerve roots. Pain Initial symptom of spinal metastasis Aching and localized Sharp and radiating in quality worsens with movement, coughing, or sneezing Awakens patients at night A recent onset of persistent back pain , particularly if in the thoracic spine (which is uncommonly involved by spondylosis ), should prompt consideration of vertebral metastasis. Investigations- MRI Anatomic resolution of the extent of spinal tumors distinguish between malignant lesions and another masses-epidural abscess , tuberculoma, lipoma, or epidural hemorrhage Infections of the spinal column (osteomyelitis and related disorders) are distinctive in that, unlike tumors, they often cross the disk space to involve the adjacent vertebral body. Plain radiographs of the spine and radionuclide bone scans limited role in diagnosis do not identify 15–20% of metastatic vertebral lesions fail to detect paravertebral masses that reach the epidural space through the intervertebral foramina. Biopsy unnecessary in patients with known primary cancer indicated if a history of underlying cancer is lacking. If spinal cord compression is suspected Immediate imaging Up to 40% of patients who present with cord compression at one level are found to have asymptomatic epidural metastases elsewhere ; thus, imaging of the entire length of the spine is important to define the extent of disease. If there are radicular symptoms but no evidence of myelopathy , it may be safe to defer imaging for 24–48 h. TREATMENT- multiple considerations Radiosensitivity of the primary tumor extent of compression prior therapy to the site stability of the spine. Treatment includes Glucocorticoids To reduce cord edema Glucocorticoids (typically dexamethasone, 10 mg intravenously ) can be administered before an imaging study if there is clinical suspicion of cord compression and continued at a lower dose (4 mg every 6 h orally) until definitive treatment with radiotherapy and/or surgical decompression is completed. Surgery/ local radiotherapy (initiated as early as possible) to the symptomatic lesion Stereotactic body radiotherapy high doses of focused radiation Preferred for radioresistant tumor types for patients requiring re-irradiation. Surgical treatment Decompression by Laminectomy A spinal fixation procedure Indications- signs of cord compression worsen despite radiotherapy the maximum-tolerated dose of radiotherapy has been delivered previously to the site a vertebral compression fracture spinal instability contributes to cord compression high-grade spinal cord compression from a radioresistant tumor. Outcome of treatment- A good response to therapy in Ambulatory patients prevents new weakness some recovery of motor function occurs in up to one-third of patients Motor deficits (paraplegia or quadriplegia) for >12 h :do not usually improve beyond 48:prognosis for substantial motor recovery is poor. Recurrence Seen if survival beyond 2 years recurrence can be managed with additional radiotherapy.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A & B. Plain radiographs of the spine and radionuclide bone scans have a limited role in diagnosis. Option: D.CT scan -Not preferred.</p>\n<p><strong>Extraedge:</strong></p><p>Vertebral metastases are usually hypointense relative to a normal bone marrow signal on T1-weighted MRI; Epidural spinal cord compression due to breast carcinoma. Sagittal T1-w MRI. The low-intensity bone marrow signal in A signifies replacement by tumor. After the administration of gadolinium , contrast enhancement may deceptively “normalize” the appearance of the tumor by increasing its intensity to that of normal bone marrow.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30-year diabetic female presents with midline neck pain, fever, and progressive limb weakness for 12 days. On family history, the husband had pulmonary tuberculosis 10 months ago and was treated with ATT. Vitals show elevated body temperature. The MRI done is shown below (A. Sagittal T2-weighted free spin-echo MR sequence and B. Sagittal T1-weighted Image after contrast administration). What is the most probable diagnosis?", "options": [{"label": "A", "text": "Meningioma", "correct": false}, {"label": "B", "text": "Intramedullary Astrocytoma", "correct": false}, {"label": "C", "text": "Spinal epidural abscess", "correct": true}, {"label": "D", "text": "Metastatic lesion", "correct": false}], "correct_answer": "C. Spinal epidural abscess", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1683855303801-QTDM131007IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Spinal epidural abscess Midline neck pain , progressive limb weakness, fever with a history of contact with Pulmonary TB patient in Impaired immunity patient ( Diabetes )with MRI showing Hypointense mass compressing spinal cord in T2 wMRI and enhancement with Epidural extension on T1wMRI point towards the diagnosis of Spinal epidural abscess</p>\n<p><strong>Highyeild:</strong></p><p>Spinal epidural abscess- Clinical features- Midline back or neck pain , fever , and progressive limb weakness . Aching pain over the spine or in a radicular pattern. Fever raised WBC count, ESR, CRP As the abscess expands, further spinal cord damage results from venous congestion and thrombosis. Once weakness and other signs of myelopathy appear , progression may be rapid and irreversible. A more chronic sterile granulomatous form of abscess is also known, usually after treatment of an acute epidural infection. Risk factors- Impaired immune status (HIV, diabetes mellitus, renal failure, alcoholism, malignancy) Intravenous drug abuse Infections of the skin or other tissues-(causes 2/3rd of the epidural abscess) hematogenous spread of bacteria from the skin (furunculosis), soft tissue (pharyngeal or dental abscesses; sinusitis), or deep viscera (bacterial endocarditis). direct extension of a local infection to the subdural space ; vertebral osteomyelitis, decubitus ulcers, lumbar puncture, epidural anesthesia spinal surgery. Causative organism- Staphylococcus aureus gram-negative bacilli Streptococcus Anaerobes Fungi Tuberculosis from an adjacent vertebral source (Pott’s disease) Investigations- Blood cultures - Positive in more than half of cases, but the direct aspiration of the abscess at surgery is often required for a microbiologic diagnosis. Lumbar puncture is only required if encephalopathy or other clinical signs raise the question of associated meningitis A high cervical tap is sometimes the safest approach. Cerebrospinal fluid (CSF) abnormalities in epidural and subdural abscesses - Pleocytosis Raised polymorphonuclear cells n elevated protein level a reduced glucose level but the responsible organism is not cultured unless there is associated meningitis. MRI: MRI of a spinal epidural abscess due to tuberculosis. Sagittal T2-weighted free spin-echo MR sequence. A hypointense mass replaces the posterior elements of C3 and extends epidurally to compress the spinal cord (arrows). Sagittal T1-weighted image after contrast administration reveals a diffuse enhancement of the epidural process (arrows) with extension into the epidural space. Treatment: Surgery (Treatment of choice) Decompressive laminectomy with debridement combined with long-term antibiotic treatment. Surgical evacuation prevents the development of paralysis and may improve or reverse paralysis in evolution, but it is unlikely to improve deficits of more than several days in duration. Broad-spectrum antibiotics Long-term administration of systemic and oral antibiotics If surgery is contraindicated If there is a fixed paraplegia or quadriplegia With prompt diagnosis and treatment of spinal epidural abscess , up to two-thirds of patients experience significant recovery.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Meningioma- Coronal T1-weighted post-contrast Image through the thoracic spinal cord demonstrates intense and uniform enhancement of a well-circumscribed extramedullary mass (arrows) that displaces the spinal cord to the left. Option: B. Intramedullary Astrocytoma -MRI of an intramedullary astrocytoma.<1li> Sagittal T1-weighted post-contrast Image through the cervical spine demonstrates the expansion of the upper cervical spine by a mass lesion emanating from within the spinal cord at the corticomedullary junction. Irregular peripheral enhancement occurs within the mass (arrows). Option: D. Metastatic lesion-Vertebral metastases are usually hypointense relative to a normal bone marrow signal on T1-weighted MRI; after the administration of gadolinium, contrast enhancement may deceptively “normalize” the appearance of the tumor by increasing its intensity to that of normal bone marrow .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60 yrs male known case of DM and HTN, hyperlipidemia with paraplegia with loss of pain and temperature but sparing vibration and position and loss of sphincter control. What is your diagnosis?", "options": [{"label": "A", "text": "Anterior cord syndrome", "correct": true}, {"label": "B", "text": "Posterior cord syndrome", "correct": false}, {"label": "C", "text": "Both a and b", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Anterior cord syndrome", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Anterior cord syndrome</p>\n<p><strong>Highyeild:</strong></p><p>Anterior cord syndrome- Acute infarction in the territory of the anterior spinal artery Onset: Progressive over minutes or a few hours(More typical) Sudden Clinical feature: Paraplegia or quadriplegia Dissociated sensory loss affecting pain and temperature sense sparing vibration and position sense loss of sphincter control Sharp midline or radiating back pain localized to the area of ischemia Areflexia due to spinal shock is often present initially; with time, hyperreflexia and spasticity appear.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: B. Posterior cord syndrome-Less common is infarction in the territory of the posterior spinal arteries, resulting in loss of posterior column function either on one side or bilaterally. The patient will have a loss of vibration and proprioception. Option: C & D. are incorrect.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35 yrs surfer after having long surfing training classes now complains of back pain, paraplegia, and loss of sphincter control.", "options": [{"label": "A", "text": "Anterior cord syndrome", "correct": false}, {"label": "B", "text": "Posterior cord syndrome", "correct": false}, {"label": "C", "text": "Surfer’s myelopathy", "correct": true}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "C. Surfer’s myelopathy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Surfer’s myelopathy Patient has back pain, paraplegia, loss of sphincter control after a Long surfing training point towards the diagnosis of Surfer’s myelopathy</p>\n<p><strong>Highyeild:</strong></p><p>Surfer’s myelopathy: usually in the thoracic region Associated with a prolonged back extension due to lifting the upper body off the board while waiting for waves Clinical features- Back pain followed by an anterior cord syndrome with progressive paralysis and loss of sphincter control , and is likely vascular in origin.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Anterior cord syndrome will also have a loss of pain and temperature at and below the lesion. Option: B. Posterior cord syndrome will have a loss of vibration and proprioception. Option: D.is incorrect.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28-year-old male came to the hospital complaining of low back pain, progressive weakness in the lower limb, and urinary incontinence, on examination you noticed spasticity in the lower limb with hyperreflexia. What is your diagnosis?", "options": [{"label": "A", "text": "Multiple sclerosis", "correct": false}, {"label": "B", "text": "Tropical spastic paraparesis", "correct": true}, {"label": "C", "text": "Myasthenia gravis", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "B. Tropical spastic paraparesis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Tropical spastic paraparesis Patient has low back pain , with weakness and hyperreflexia in the lower limb and urinary incontinence these all point towards a diagnosis of Tropical spastic paraparesis</p>\n<p><strong>Highyeild:</strong></p><p>The myelopathy associated with HTLV-1/ Tropical spastic paraparesis- A slowly progressive spastic syndrome with variable sensory and bladder disturbance. Clinical features: mild back or leg pain . The neurologic signs may be asymmetric, often lacking a well-defined sensory level ; the only sign in the arms may be hyperreflexia after several years of illness. The onset is usually insidious Tempo of progression of the illness a variable rate ; in one study, the median time for progression to cane-, walker-, or wheelchair-dependent state was 6, 13, and 21 years, respectively. More rapid older patients higher viral loads. Diagnosis- Demonstration of HTLV-1- specific antibody in serum by ELISA , confirmed by radioimmunoprecipitation or Western blot analysis. Especially in endemic areas, a finding of HTLV-1 seropositivity in a patient with myelopathy does not necessarily prove that HTLV-1 is causative. The CSF/serum antibody index Intrathecal synthesis of antibodies , including oligoclonal antibodies , favoring HTLV-1 myelopathy over the asymptomatic carriage. Measuring proviral DNA Polymerase chain reaction (PCR) in serum and CSF cells Pathogenesis of myelopathy- Uncertain An immune response directed against HTLV-1 antigens in the nervous system alternatively to secondary autoimmunity triggered by the viral infection. Treatment- There is no proven effective treatment . Chronic low-dose oral glucocorticoids Interferon is of uncertain value, and antiviral treatment is ineffective . Symptomatic therapy for spasticity For bladder symptoms.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A. Multiple sclerosis- do not present with Also, clinical presentations of this disease do not include urinary incontinence. Option: C. Myasthenia gravis - It presents with fluctuating weakness which improves on taking rest. Option: D. is incorrect.</p>\n<p><strong>Extraedge:</strong></p><p>Treatable Spinal Cord Disorders Compressive Epidural, intradural, or intramedullary neoplasm Epidural abscess Epidural hemorrhage Cervical spondylosis Herniated disk Posttraumatic compression by fractured or displaced vertebra or hemorrhage Vascular Arteriovenous malformation and dural fistula Antiphospholipid syndrome and other hypercoagulable states Inflammatory Multiple sclerosis Neuromyelitis optica Sarcoidosis Systemic immune-mediated disorders: SLE , Sjögren’s , Behcet’s disease, APL antibody syndrome , others vasculitis Other CNS disorders : anti-MOG, anti-GFAP, paraneoplastic ,a CLIPPERS, Erdheim-Chester Infectious Viral: VZV, HSV-1 and 2, CMV, HIV, HTLV-1 , others Bacterial and mycobacterial: Borrelia, Listeria, syphilis , others Mycoplasma pneumoniae Parasitic : schistosomiasis, toxoplasmosis, cysticercosis Developmental Syringomyelia Meningomyelocele Tethered cord syndrome Metabolic Vitamin B12 deficiency (subacute combined degeneration) Folate deficiency Copper deficiency</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 20 yrs male came to the casualty with complaints of weakness in the right and left hand with loss of pain and temperature sensation with sparing of touch and vibration. MRI film is shown below: What is your diagnosis?", "options": [{"label": "A", "text": "None of the above", "correct": false}, {"label": "B", "text": "Tropical spastic paraparesis", "correct": false}, {"label": "C", "text": "Myasthenia gravis", "correct": false}, {"label": "D", "text": "Syringomyelia", "correct": true}], "correct_answer": "D. Syringomyelia", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1683855303914-QTDM131014IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Syringomyelia Patient has dissociative anesthesia along with MRI showing syrinx suggestive of Syringomyelia.</p>\n<p><strong>Highyeild:</strong></p><p>Syringomyelia Syrinx-cavity (expanded central canal) Myelia-spinal cord Small cavity that keeps on expanding Start compressing the surrounding structures Most common location- Cervical area It can extend to brainstem called Syringobulbia Downward Asymmetrically Manifestation Dissociative anaesthesia Posterior column →thickly myelinated→resistant to compression→ spared Anterior white commissure →Compression in cervical area→ pain and temperature loss of upper limb, touch and vibration are normal → called as Dissociative anesthesia Involves nape of neck,upper part of trunk,upper limb ( cape like distribution) Hallmark finding→ Patient coming with burn Lateral horn compression→horner’s syndrome Anterior horn cell compression→ LMN manifestation in upper limb → wasting, fasciculations Corticospinal tract →Anterior horn cell→ UMN finding in lower limb Sacral sparing - As it involves the central area Cervical fibers are innermost and Sacral fibers are outermost . MRI - Identifies developmental and acquired syrinx cavities and their associated spinal cord enlargement . Images of the brain and the entire spinal cord should be obtained to delineate the full longitudinal extent of the syrinx assess posterior fossa structures for the Chiari malformation determine whether hydrocephalus is present Association- Arnold–Chiari malformation(Frequent). Abnormality at the foramen magnum →allows normal pulsatile CSF pressure waves→transmitted to fragile tissues of the cervical cord and brainstem → Secondary cavity formation →The syrinx is in continuity with the central canal of the cord →gradually destroys spinothalamic neurons, anterior horn cells, and lateral corticospinal tracts. In the medulla (syringobulbia) , lower cranial nerve nuclei are aﬀected. Clinical features: Cases associated with the Arnold–Chiari malformation usually develop symptoms around the age of 20–30 . MRI demonstrates the cavity and herniation of cerebellar tonsils. Surgical decompression of the foramen magnum often causes the syrinx to Collapse.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option: A.-is incorrect. Option: B. Tropical spastic paraparesis- The myelopathy associated with HTLV-1 formerly known as tropical spastic paraparesis is a slowly progressive spastic syndrome with variable sensory and bladder syndrome . The neurologic sign may be asymmetric , often lacking a well-defined sensory level , in one study the median time of progression to a cane, walker, or wheelchair- dependent state was 6,13,21 yrs. Option: C. Myasthenia gravis - It presents with fluctuating weakness which improves on taking rest.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the underlying pathophysiology of Subacute combined degeneration ?", "options": [{"label": "A", "text": "The myelopathy involving posterior and lateral tracts", "correct": true}, {"label": "B", "text": "The myelopathy involving anterior and lateral tracts", "correct": false}, {"label": "C", "text": "Both a and b", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. The myelopathy involving posterior and lateral tracts", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>The myelopathy involving posterior and lateral tracts Subacute combined degeneration involves posterior tracts and corticospinal (Lateral)tracts.</p>\n<p><strong>Highyeild:</strong></p><p>Subacute Combined Degeneration Posterior column + Corticospinal tract damage UMN findings Spasticity, weakness Exaggerated reflexes Extensor plantar reflexes Loss of joint position and vibration Seen in: Vitamin B12 deficiency HIV Investigations: Methyl malonate Increased→ Suggests B12 deficiency Can present with peripheral neuropathy Optic neuropathy Dementia Non -Neurological manifestation Vitiligo Glossitis Premature graying Megaloblastic anemia Anorexia Serum B12 level <200 pg/mL → suggest B12 deficiency MRI Posterior column involvement Treatment Replacement therapy beginning with 1000 μg of intramuscular vitamin B12 daily for 5 days and then continuing as a once-monthly maintenance dose High doses of Oral B12</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option B, C & D. incorrect.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28 yrs male came to the casualty with fleeting and lancinating pain in the legs with difficulty in walking straight because of loss of position sense. What is the cardinal sign of the above clinical scenario:", "options": [{"label": "A", "text": "Loss of reflexes in the leg and impaired position and vibration sense", "correct": false}, {"label": "B", "text": "Romberg’s sign", "correct": false}, {"label": "C", "text": "Bilateral argyll Robertson’s pupil", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above Lancinating( shooting pain -hallmark ) with loss of position sense( Posterior column involvement ) point towards a diagnosis of Tabes Dorsalis. And all of the above are cardinal features of Tabes dorsalis.</p>\n<p><strong>Highyeild:</strong></p><p>The classic syphilitic syndromes of tabes dorsalis and meningovascular inflammation of the spinal cord The characteristic symptoms of tabes dorsalis - D-Dorsal column Fine touch, joint position, vibration affected O-Orthopedic pain Association with Charcot’s joints R-decreased reflexes S-Shooting pain(hallmark) A-Argyll-Robertson pupil(ARP) No response to light Accommodation response persist (ARP) L-Locomotor ataxia d/t involvement of posterior column I-Impaired proprioception S-Syphilis Romberg sign positive Make the patient stand with feet together→ to maintain balance and muscle tone he will use visual input→Posterior column not working →no sensory impulse (when he closes eye) → he loses balance. visceral crisis Paresthesias, bladder disturbances, and acute abdominal pain with vomiting Treatment of tabes dorsalis and other forms of neurosyphilis - Penicillin G administered intravenously , or intramuscularly in combination with oral probenecid to enhance the half-life of penicillin.</p>\n<p><strong>Random:</strong></p><p>Explanation For All Options:- Option A, B, C & D is a better answer.</p>\n<p><strong>Extraedge:</strong></p><p>Treatable Spinal Cord Disorders Compressive Epidural, intradural, or intramedullary neoplasm Epidural abscess Epidural hemorrhage Cervical spondylosis Herniated disk Posttraumatic compression by fractured or displaced vertebra or hemorrhage Vascular Arteriovenous malformation and dural fistula Antiphospholipid syndrome and other hypercoagulable states Inflammatory Multiple sclerosis Neuromyelitis optica Sarcoidosis Systemic immune-mediated disorders: SLE , Sjögren’s , Behcet’s disease, APL antibody syndrome , others vasculitis Other CNS disorders : anti-MOG, anti-GFAP, paraneoplastic ,a CLIPPERS, Erdheim-Chester Infectious Viral: VZV, HSV-1 and 2, CMV, HIV, HTLV-1 , others Bacterial and mycobacterial: Borrelia, Listeria, syphilis , others Mycoplasma pneumoniae Parasitic : schistosomiasis, toxoplasmosis, cysticercosis Developmental Syringomyelia Meningomyelocele Tethered cord syndrome Metabolic Vitamin B12 deficiency (subacute combined degeneration) Folate deficiency Copper deficiency</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Clinically the subacute combined degeneration can be differentiated from hypocupremia myelopathy by the presence of", "options": [{"label": "A", "text": "Myelopathy", "correct": false}, {"label": "B", "text": "Neuropathy", "correct": true}, {"label": "C", "text": "Both a and b", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "B. Neuropathy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Neuropathy Neuropathy is less frequent in Hypocupremia myelopathy.</p>\n<p><strong>Highyeild:</strong></p><p>Hypocupremia myelopathy Similar to subacute combined degeneration Except: serum levels of B12 are normal Low levels of serum copper low level of serum ceruloplasmin Risk factor: Gastrointestinal procedures Bariatric surgery - Impaired copper absorption Excess zinc- health food supplement zinc-containing denture creams → induction of metallothionein, a copper-binding protein→impair copper absorption. Idiopathic. There is often coexisting anemia. Improvement or at least stabilization may be expected with the reconstitution of copper stores by oral supplementation.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Option A, C, D -Incorrect . as Myelopathy is common between subacute combined degeneration and hypocupremia myelopathy.</p>\n<p><strong>Extraedge:</strong></p><p>Treatable Spinal Cord Disorders Compressive Epidural, intradural, or intramedullary neoplasm Epidural abscess Epidural hemorrhage Cervical spondylosis Herniated disk Posttraumatic compression by fractured or displaced vertebra or hemorrhage Vascular Arteriovenous malformation and dural fistula Antiphospholipid syndrome and other hypercoagulable states Inflammatory Multiple sclerosis Neuromyelitis optica Sarcoidosis Systemic immune-mediated disorders: SLE , Sjögren’s , Behcet’s disease, APL antibody syndrome , others vasculitis Other CNS disorders : anti-MOG, anti-GFAP, paraneoplastic , a CLIPPERS, Erdheim-Chester Infectious Viral: VZV, HSV-1 and 2, CMV, HIV, HTLV-1 , others Bacterial and mycobacterial: Borrelia, Listeria, syphilis , others Mycoplasma pneumoniae Parasitic : schistosomiasis, toxoplasmosis, cysticercosis Developmental Syringomyelia Meningomyelocele Tethered cord syndrome Metabolic Vitamin B12 deficiency (subacute combined degeneration) Folate deficiency Copper deficiency</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a patient with a lesion in the spinal cord, Investigations revealed brown square syndrome. All of the following features are possible in this patient except", "options": [{"label": "A", "text": "Ipsilateral loss of vibration", "correct": false}, {"label": "B", "text": "Ipsilateral loss of crude touch sensation", "correct": true}, {"label": "C", "text": "Contralateral loss of pain and temperature", "correct": false}, {"label": "D", "text": "Flaccid paralysis", "correct": false}], "correct_answer": "B. Ipsilateral loss of crude touch sensation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Ipsilateral loss of crude touch sensation Patient has brown square syndrome - It will have a contralateral loss of crude touch sensation.</p>\n<p><strong>Highyeild:</strong></p><p>Brown squad syndrome There is hemisection of the spinal cord. Involvement of spinothalamic tract-contralateral loss of pain and temperature 1-2 segments below the lesion and Ipsilateral loss at the level of lesion Involvement of dorsal column pathway- ipsilateral loss of position and vibration sensation and fine touch at and below the level of lesion Involvement of lower motor neuron - flaccid paralysis at the level of the lesion . Involvement of Corticospinal tract-I/LSpastic paralysis below the lesion If lesion occurs above T1-damage to oculosympathetic pathway - I/L Horner syndrome.</p>\n<p><strong>Random:</strong></p><p>Explanation For Incorrect Options:- Options: A, C & D. are seen in Brown sequel syndrome .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Psm E&amp;D (Mission Neet Pg Inicet 2.0)   07 08 2024   2024 08 07</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Psm E&amp;D (Mission Neet Pg Inicet 2.0)   07 08 2024   2024 08 07</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                100 Questions | 400 Total Marks | 110 min Duration | ~66.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 100 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 110 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 100</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Psm E&amp;D (Mission Neet Pg Inicet 2.0)   07 08 2024   2024 08 07 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 100</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 100 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A pharmacological study measures the relationship between drug dosage (x, in micrograms per millilitre) and increase in heart rate (y, in beats per minute). The relationship is plotted on a graph to determine how the heart rate responds to varying dosages of the drug. Analyze the graph and select the equation that best describes the relationship between x and y:", "options": [{"label": "A", "text": "y=x+10", "correct": true}, {"label": "B", "text": "x=11+2y", "correct": false}, {"label": "C", "text": "x=10+y", "correct": false}, {"label": "D", "text": "y=11+2x", "correct": false}], "correct_answer": "A. y=x+10", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/08/06/screenshot-2024-08-06-111202_1h3Busm.png"], "explanation_images": [], "explanation": "<p><strong>Ans. A) y=x+10</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In a simple linear regression equation of the form y=a+bx, y is the dependent variable, x is the independent variable, a is the y-intercept, and b is the slope.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Researchers conducted an investigation to examine the history of MMR (measles, mumps, rubella) vaccination in a group of children diagnosed with autism compared to a group of children without autism. Which type of study design best describes this research?", "options": [{"label": "A", "text": "Cohort study", "correct": false}, {"label": "B", "text": "Case control study", "correct": true}, {"label": "C", "text": "Cross-sectional study", "correct": false}, {"label": "D", "text": "Randomized controlled trial", "correct": false}], "correct_answer": "B. Case control study", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Case control study</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Case-control study, researchers begin with an outcome (such as a disease or condition) and look retrospectively at past exposures to investigate possible associations.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Match the following national institutes with their corresponding locations: National Tuberculosis Institute (NTI) National Environmental Engineering Research Institute (NEERI) National Institute of Virology (NIV) National Institute of Nutrition (NIN) Pune Hyderabad Nagpur Bengaluru", "options": [{"label": "A", "text": "1-A, 2-B, 3-C, 4-D", "correct": false}, {"label": "B", "text": "1-D, 2-C, 3-A, 4-B", "correct": true}, {"label": "C", "text": "1-C, 2-D, 3-B, 4-A", "correct": false}, {"label": "D", "text": "1-B, 2-A, 3-D, 4-C", "correct": false}], "correct_answer": "B. 1-D, 2-C, 3-A, 4-B", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) 1-D, 2-C, 3-A, 4-B</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ NTI is in Bengaluru. NEERI is in Nagpur. NIV is in Pune. NIN is in Hyderabad.</li><li>➤ NTI is in Bengaluru.</li><li>➤ NEERI is in Nagpur.</li><li>➤ NIV is in Pune.</li><li>➤ NIN is in Hyderabad.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Louis Pasteur gave the concept of?", "options": [{"label": "A", "text": "Spontaneous generation theory", "correct": false}, {"label": "B", "text": "Germ theory of disease", "correct": true}, {"label": "C", "text": "Multifactorial causation", "correct": false}, {"label": "D", "text": "Web of causation", "correct": false}], "correct_answer": "B. Germ theory of disease", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Germ theory of disease</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Louis Pasteur is credited with the Germ Theory of Disease , which established that microorganisms are the cause of many diseases, leading to significant advances in medicine and public health.</li><li>➤ Louis Pasteur</li><li>➤ Germ Theory of Disease</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A public health researcher is evaluating different characteristics of health indicators to determine their suitability for a study. Among the following options, which characteristic is not typically considered essential for health indicators?", "options": [{"label": "A", "text": "Validity", "correct": false}, {"label": "B", "text": "Reliability", "correct": false}, {"label": "C", "text": "Affordability", "correct": true}, {"label": "D", "text": "Feasibility", "correct": false}], "correct_answer": "C. Affordability", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Affordability</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Essential characteristics of health indicators include validity, reliability, feasibility, sensitivity, specificity, and relevance, but affordability is not a core requirement.</li><li>➤ affordability</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-year-old woman visits her family physician for advice on preventing obesity. The physician discusses various dietary modifications that can help in the primary prevention of obesity. Which of the following dietary modifications is most appropriate for this purpose?", "options": [{"label": "A", "text": "Low fiber diet", "correct": false}, {"label": "B", "text": "High fiber diet", "correct": true}, {"label": "C", "text": "High cholesterol diet", "correct": false}, {"label": "D", "text": "High intake of protein", "correct": false}], "correct_answer": "B. High fiber diet", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) High fiber diet</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ For the primary prevention of obesity, a high-fiber diet is beneficial as it aids in satiety, calorie control, and digestive health. Fiber intake should be emphasized over high-protein or high-cholesterol diets, which are not as effective for weight management in general prevention strategies.</li><li>➤ high-fiber diet</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old man has been diagnosed with a chronic illness. Understanding the sequence of health events can help in planning his treatment and care. Which of the following sequences represents the most logical progression of health-related events?", "options": [{"label": "A", "text": "Impairment → Disease → Disability → Handicap", "correct": false}, {"label": "B", "text": "Disease → Impairment → Disability → Handicap", "correct": true}, {"label": "C", "text": "Disease → Impairment → Handicap → Disability", "correct": false}, {"label": "D", "text": "Disease → Handicap → Impairment → Disability", "correct": false}], "correct_answer": "B. Disease → Impairment → Disability → Handicap", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Disease → Impairment → Disability → Handicap</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The sequence of health-related events: Disease leads to Impairment , which may cause Disability , and ultimately result in a Handicap . This progression highlights the impact of a chronic illness from the onset of disease to its social consequences.</li><li>➤ Disease</li><li>➤ Impairment</li><li>➤ Disability</li><li>➤ Handicap</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Spectacles represents which level of prevention?", "options": [{"label": "A", "text": "Primary (Specific protection)", "correct": false}, {"label": "B", "text": "Secondary (Treatment)", "correct": false}, {"label": "C", "text": "Tertiary (Disability limitation)", "correct": false}, {"label": "D", "text": "Tertiary (Disability limitation & Rehabilitation)", "correct": true}], "correct_answer": "D. Tertiary (Disability limitation & Rehabilitation)", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Tertiary (Disability limitation & Rehabilitation)</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Spectacles represent tertiary prevention by providing disability limitation and rehabilitation , as they help individuals with refractive errors regain functional vision without curing the underlying issue.</li><li>➤ tertiary prevention</li><li>➤ disability limitation and rehabilitation</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An epidemiologist is investigating the characteristics of different types of epidemics. Which of the following is true about continuous common source epidemics?", "options": [{"label": "A", "text": "High secondary attack rate", "correct": false}, {"label": "B", "text": "Duration more than one incubation period", "correct": true}, {"label": "C", "text": "Rapid rise and fall of epidemic curve", "correct": false}, {"label": "D", "text": "Brief and simultaneous exposure", "correct": false}], "correct_answer": "B. Duration more than one incubation period", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Duration more than one incubation period</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Continuous common source epidemic , exposure lasts over multiple incubation periods, resulting in a prolonged duration with a gradual rise and fall of cases, sometimes with secondary waves. This differs from single-exposure epidemics that have a rapid rise and fall within a single incubation period.</li><li>➤ Continuous common source epidemic</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the incorrectly matched vaccine strain?", "options": [{"label": "A", "text": "Mumps vaccine – Jeryll Lynn", "correct": false}, {"label": "B", "text": "Mosquirix – RTS,S", "correct": false}, {"label": "C", "text": "Covishield – NIV-2020-770", "correct": true}, {"label": "D", "text": "Typhoral – Ty21a", "correct": false}], "correct_answer": "C. Covishield – NIV-2020-770", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Covishield – NIV-2020-770</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The correct vaccine strains associated with specific vaccines:</li><li>➤ Covishield does not use a viral strain like \"NIV-2020-770\"; instead, it uses a chimpanzee adenovirus vector. The \"NIV-2020-770\" strain is specific to Covaxin, an inactivated COVID-19 vaccine developed by Bharat Biotech.</li><li>➤ Covishield does not use a viral strain like \"NIV-2020-770\"; instead, it uses a chimpanzee adenovirus vector.</li><li>➤ The \"NIV-2020-770\" strain is specific to Covaxin, an inactivated COVID-19 vaccine developed by Bharat Biotech.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A study reveals that the incidence rate of a certain disease is five times greater in women than in men, yet the prevalence rates show no significant difference between the sexes. Which of the following is the most plausible explanation for this observation?", "options": [{"label": "A", "text": "The case fatality rate for this disease is lower in women", "correct": false}, {"label": "B", "text": "The case fatality rate for this disease is higher in women", "correct": true}, {"label": "C", "text": "The duration of disease is shorter in men", "correct": false}, {"label": "D", "text": "Risk factors for developing the disease are more common in women", "correct": false}], "correct_answer": "B. The case fatality rate for this disease is higher in women", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) The case fatality rate for this disease is higher in women</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ If incidence is higher in one group but prevalence remains the same across groups, a shorter disease duration (often due to higher mortality or faster recovery) in the group with higher incidence may explain the observation.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A public health researcher analyzes the relationship between alcohol consumption and liver cirrhosis and finds that the attributable risk for liver cirrhosis due to alcohol consumption is 90%. This means that a significant portion of liver cirrhosis cases is directly linked to alcohol consumption. Based on this finding, which of the following statements is true?", "options": [{"label": "A", "text": "10% of liver cirrhosis cases in drinkers are not associated with alcohol consumption", "correct": true}, {"label": "B", "text": "90% of liver cirrhosis cases in the population can be eliminated if alcohol consumption is eliminated", "correct": false}, {"label": "C", "text": "90% of liver cirrhosis cases in drinkers can be eliminated if alcohol consumption is eliminated", "correct": false}, {"label": "D", "text": "10% of liver cirrhosis cases in the population can be eliminated if alcohol consumption is eliminated", "correct": false}], "correct_answer": "A. 10% of liver cirrhosis cases in drinkers are not associated with alcohol consumption", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) 10% of liver cirrhosis cases in drinkers are not associated with alcohol consumption</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Attributable risk indicates the proportion of disease in the exposed group (drinkers) due to the exposure (alcohol), while population attributable risk represents the proportion of disease in the entire population that could be prevented by eliminating the risk factor.</li><li>➤ Attributable risk</li><li>➤ population attributable risk</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A medical researcher is analyzing data from a study investigating the link between a new dietary supplement and heart disease. To ensure accurate results, they must consider the role of confounding factors. Which of the following statements about confounding factors is true?", "options": [{"label": "A", "text": "It is found equally between the study and the control groups", "correct": false}, {"label": "B", "text": "It is itself a risk factor for the disease", "correct": true}, {"label": "C", "text": "Confounding can be eliminated by selecting a small group", "correct": false}, {"label": "D", "text": "It is associated either with the exposure or the disease", "correct": false}], "correct_answer": "B. It is itself a risk factor for the disease", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) It is itself a risk factor for the disease</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ A confounding factor is associated with both the exposure and the outcome and serves as an independent risk factor for the outcome, necessitating control measures to avoid bias in study results.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a clinical study, the patients are unaware of whether they are receiving a placebo or an active medication, while the researchers administering the treatments are aware of which drug each patient is receiving. What type of blinding is being used in this study?", "options": [{"label": "A", "text": "Single blinding", "correct": true}, {"label": "B", "text": "Double blinding", "correct": false}, {"label": "C", "text": "Triple blinding", "correct": false}, {"label": "D", "text": "Combined double/triple blinding", "correct": false}], "correct_answer": "A. Single blinding", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Single blinding</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In single-blind studies , only the subjects are unaware of their treatment group, helping to minimize subject bias but not investigator or analysis biases.</li><li>➤ single-blind studies</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A researcher is preparing a systematic review to evaluate the effectiveness of various interventions for hypertension. During this process, they follow specific guidelines and methodologies. Which of the following is not a characteristic of a systematic review?", "options": [{"label": "A", "text": "Meta-analysis always performed", "correct": true}, {"label": "B", "text": "Search for literature is compulsory using explicit search strategy", "correct": false}, {"label": "C", "text": "Critical appraisal is always criterion-based", "correct": false}, {"label": "D", "text": "Research question always focused", "correct": false}], "correct_answer": "A. Meta-analysis always performed", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Meta-analysis always performed</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Systematic reviews may or may not include a meta-analysis ; meta-analysis is conducted only when appropriate quantitative synthesis is feasible. Both systematic reviews and meta-analyses are rigorous study designs, but only meta-analyses generate a pooled quantitative result.</li><li>➤ Systematic reviews</li><li>➤ meta-analysis</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A researcher is investigating the relationship between a suspected environmental toxin and the development of a specific type of cancer. They note that exposure to the toxin occurs before the cancer is detected. This observation is an example of which of the following epidemiological criteria?", "options": [{"label": "A", "text": "Coherence", "correct": false}, {"label": "B", "text": "Temporality", "correct": true}, {"label": "C", "text": "Biological plausibility", "correct": false}, {"label": "D", "text": "Specificity", "correct": false}], "correct_answer": "B. Temporality", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Temporality</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Temporality —where the exposure precedes the outcome—is a core criterion in establishing causation in epidemiology, crucially demonstrated through cohort studies and essential to Hill’s criteria for causal inference.</li><li>➤ Temporality</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In which of the following diseases is the human host considered a dead end?", "options": [{"label": "A", "text": "Tetanus, measles", "correct": false}, {"label": "B", "text": "Measles, yellow fever", "correct": false}, {"label": "C", "text": "Tetanus, yellow fever", "correct": false}, {"label": "D", "text": "Rabies, tetanus", "correct": true}], "correct_answer": "D. Rabies, tetanus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Rabies, tetanus</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Rabies and Tetanus are examples where humans act as dead-end hosts , meaning they cannot transmit the infection further. This contrasts with diseases like measles, where human-to-human transmission is possible and humans are not dead-end hosts.</li><li>➤ Rabies and Tetanus</li><li>➤ dead-end hosts</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a study examining the relationship between two continuous variables, a correlation coefficient of 1.1 is reported. What does this indicate?", "options": [{"label": "A", "text": "Very strong correlation", "correct": false}, {"label": "B", "text": "Moderately strong correlation", "correct": false}, {"label": "C", "text": "Weak correlation", "correct": false}, {"label": "D", "text": "Computational mistake in calculating correlation", "correct": true}], "correct_answer": "D. Computational mistake in calculating correlation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Computational mistake in calculating correlation</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Correlation coefficients range only from -1 to +1 . Any reported value outside this range indicates a computational mistake in calculating the correlation.</li><li>➤ Correlation coefficients</li><li>➤ -1 to +1</li><li>➤ computational mistake</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In which of the following condition is live vaccines generally not contraindicated?", "options": [{"label": "A", "text": "Complement deficiency", "correct": true}, {"label": "B", "text": "Wiskott-Aldrich syndrome", "correct": false}, {"label": "C", "text": "Ataxia telangiectasia", "correct": false}, {"label": "D", "text": "DiGeorge syndrome", "correct": false}], "correct_answer": "A. Complement deficiency", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Complement deficiency</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Complement deficiency does not involve T-cell-mediated immunity, so live vaccines are generally safe in these individuals. Live vaccines are contraindicated in conditions involving T-cell immunodeficiencies, immunocompromised states, and pregnancy.</li><li>➤ Complement deficiency</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A public health official is reviewing the World Health Organization

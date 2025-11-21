@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Respiratory Clinical Vignettes</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Respiratory Clinical Vignettes</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                20 Questions | 80 Total Marks | 30 min Duration | ~90.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 20 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 30 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 20</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Respiratory Clinical Vignettes - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 20</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 20 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 30-year-old man comes to the emergency department with 1 day of severe shortness of breath. He has a long history of asthma, which is usually mild. He has only been hospitalized once before several years ago. He stopped using his inhalers 2 weeks ago because he ran out of medications. On examination BP: 120/70 mm Hg; Pulse: 124 beats/minute; Respiratory rate:32 breaths/minute. Chest: bilateral wheezing, Abdomen: soft, nontender, Cardiovascular: no murmurs, no gallops. Oximeter: 94% saturation, ABG: pH 7.52; PCO2- 24 mm Hg; PO2- 70 mm Hg, Chest x-ray: no infiltrates, no pneumothorax. Which of the following medication can be used in the patient", "options": [{"label": "A", "text": "Theophylline", "correct": false}, {"label": "B", "text": "Cromolyn", "correct": false}, {"label": "C", "text": "Ipratropium", "correct": true}, {"label": "D", "text": "Omalizumab", "correct": false}], "correct_answer": "C. Ipratropium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19577751705049861/19577751705049861.m3u8"}, {"text": "You are examining a patient who has presented with dyspnea for 2 years. He is a chronic smoker.He gives h/o wheezing for past 1 week.On examination he has barrel shaped chest.Respiratory rate is 18m/minute.Chest- bilateral ronchi are present.Chest x ray shows hyperinflated lung fields.You order a pulmonary function tests.What part of pulmonary function testing would wheezing correspond to?", "options": [{"label": "A", "text": "Increased total lung capacity (TLC)", "correct": false}, {"label": "B", "text": "Increased residual volume (RV)", "correct": false}, {"label": "C", "text": "Decreased forced vital capacity (FVC)", "correct": false}, {"label": "D", "text": "Decreased forced expiratory volume at 1 second (FEV1)", "correct": true}], "correct_answer": "D. Decreased forced expiratory volume at 1 second (FEV1)", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19790291705049884/19790291705049884.m3u8"}, {"text": "A 75-year-old long-term male smoker comes to OPD with increasing dyspnea when walking, especially upstairs. The patient had been a smoker of one pack/day for 50 years. He quit 2 years ago. This is the first time he has had a decrease in exercise tolerance as he could walk two to three blocks before becoming short of breath. There is No cough, no sputum, no fever No weight loss. BP: 110/70 mm Hg; Pulse: 64 beats/minute; Temperature: 98°F; R:12 breaths/minute Chest: ronchi present, no rales, no rhonchi Cardiovascular: no murmurs Extremities: no edema. PFT- FEV1/FVC < 0.7,FEV1-70% of predicted value, FVC-normal. What will be next line treatment for the patient", "options": [{"label": "A", "text": "Antibiotics", "correct": false}, {"label": "B", "text": "Home oxygen", "correct": false}, {"label": "C", "text": "Inhaled Tiotropium", "correct": true}, {"label": "D", "text": "Inhaled steroids", "correct": false}], "correct_answer": "C. Inhaled Tiotropium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5817411705127486/5817411705127486.m3u8"}, {"text": "A 60 year old smoker c/o dyspnea on exertion with cough and mucoid sputum for 2 years. He got pulmonary functions test done which shows FEV1/FVC as 0.65, FVC is 90 % of predicted value.FEV1 doesn’t improve after beta agonist inhaler. A diagnosis of COPD is made on PFT findings. On examination the shape of the chest is abnormal as shown in the figure. What is the pathophysiologic basis of this chest deformity?", "options": [{"label": "A", "text": "Increased fibrosis of lungs", "correct": false}, {"label": "B", "text": "Increased residual volume", "correct": true}, {"label": "C", "text": "Decreased compliance", "correct": false}, {"label": "D", "text": "Decreased FEV1", "correct": false}], "correct_answer": "B. Increased residual volume", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Resp-DQBCV2021.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/58134781705049914/58134781705049914.m3u8"}, {"text": "A 50-year-old man smoking 20 bidi per day for last 15 years presented to OPD. Now he c/o occasion episodes of dyspnea on exertion. On examination-pallor absent, cyanosis absent, chest wall normal shape, no added sound. Cardiovascular system-normal. A provisional diagnosis of COPD is made. You order pulmonary function tests. Which of these becomes abnormal first in COPD?", "options": [{"label": "A", "text": "TLC", "correct": false}, {"label": "B", "text": "FEV1", "correct": false}, {"label": "C", "text": "Forced expiratory flow 25% to 75% (FEF25–75%) or peak mid-maximal flow", "correct": true}, {"label": "D", "text": "Forced vital capacity (FVC)", "correct": false}], "correct_answer": "C. Forced expiratory flow 25% to 75% (FEF25–75%) or peak mid-maximal flow", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24846881705127507/24846881705127507.m3u8"}, {"text": "A 68-year-old man a diagnosed case of COPD for last 10 years presented to respiratory clinic. He is on inhaled tiotropium, inhaled steroid, inhaled salmeterol and azithromycin. He has 2 admissions due to acute exacerbation in last one year. He has dyspnea on walking 100 metres. On examination- pallor absent, pedal edema absent, chest-bilateral ronchi, cardiovascular-normal, abdomen-soft. On examination-oxygen saturation 87%.FEV1/FVC-0.6,FEV1-50% of predicted. What will be next appropriate treatment for him", "options": [{"label": "A", "text": "Augmentation with alpha trypsin", "correct": false}, {"label": "B", "text": "Home oxygen therapy", "correct": true}, {"label": "C", "text": "Oral steroids", "correct": false}, {"label": "D", "text": "Refer for lung transplantation", "correct": false}], "correct_answer": "B. Home oxygen therapy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/17697881705049945/17697881705049945.m3u8"}, {"text": "A 68-year-old man with several days of increasing cough, discolored sputum production, and chest pain arrives at the ED. The pain is sharp, right sided, and worsens when he takes a deep breath. He has had a fever of 102°F at home. The dyspnea markedly worsened today, and that is what made him come to the hospital. BP: 100/56 mm Hg; Pulse: 112 beats/minute; Temperature: 102.8°F; Respiratory rate: 26 breaths/minute. Chest: right-sided crackles in lung field. Abdomen: nontender, no organomegaly Cardiovascular: no murmurs, no gallops. Chest x-ray: right middle and right lower lobe infiltrates; effusion on right side. ABG: pH 7.46; PCO2 34 mm Hg; PO2 65 mm Hg. Which of the following is the greatest determinant of the need for hospital admission?", "options": [{"label": "A", "text": "Hypotension", "correct": true}, {"label": "B", "text": "Number of lobes involved", "correct": false}, {"label": "C", "text": "Previous antibiotic use", "correct": false}, {"label": "D", "text": "Organism type and previous intubation", "correct": false}], "correct_answer": "A. Hypotension", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12195211705049958/12195211705049958.m3u8"}, {"text": "A 50-year-old male with h/o type 2 diabetes presented with 3 days of fever, cough with sputum and sharp, needle like left sided chest pain which increases on deep breathing. On examination breath sounds are decreased on left side and dullness on percussion is noted. Chest X ray done showed left sided pleural effusion. A diagnostic tap was done and patient started on IV antibiotics. Which quality of pleural fluid is the strongest indication for chest tube drainage?", "options": [{"label": "A", "text": "Lactate dehydrogenase (LDH) >60% of serum", "correct": false}, {"label": "B", "text": "pH < 7.2", "correct": true}, {"label": "C", "text": "Glucose 100 mg/dl", "correct": false}, {"label": "D", "text": "WBC count 500/?L", "correct": false}], "correct_answer": "B. pH < 7.2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/73618781705049973/73618781705049973.m3u8"}, {"text": "A 44-year-old man with acquired immunodeficiency syndrome (AIDS) arrives at the ED with several days of increasing dyspnea and cough. The cough is dry and nonproductive. On examination BP: 108/72 mm Hg; Pulse: 88 beats/minute; Temperature: 101.4°F; Respiratory rate: 26 breaths/minute. General: thin, wasted appearance Chest: clear bilaterally Abdomen: normal Cardiovascular: normal. Reports: ABG: pH 7.49; PCO2 32 mm Hg; PO2 68 mm Hg (on room air), Chest x-ray: bilateral interstitial infiltrates CBC: WBCs 3200/μL (low); LDH: 825 units/L (elevated). What is the likely etiological agent for this pneumonia", "options": [{"label": "A", "text": "Mycoplasma", "correct": false}, {"label": "B", "text": "S. pneumonia", "correct": false}, {"label": "C", "text": "Mycobacterium TB", "correct": false}, {"label": "D", "text": "Pneumocystis Jiroveci", "correct": true}], "correct_answer": "D. Pneumocystis Jiroveci", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24106621705049987/24106621705049987.m3u8"}, {"text": "In continuation with previous clinical vignette, patient was admitted. All the following treatment will be useful except", "options": [{"label": "A", "text": "Cotrimoxazole", "correct": false}, {"label": "B", "text": "Steroids", "correct": false}, {"label": "C", "text": "High flow oxygen", "correct": false}, {"label": "D", "text": "None", "correct": true}], "correct_answer": "D. None", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60041881705050003/60041881705050003.m3u8"}, {"text": "In continuation of previous clinical case patient was started on cotrimoxazole,oxygen support and 5 days course of steroids.He improved clinically.He was discharged in a stable condition on ART and cotrimoxazole.He comes for follow up after 2 weeks.Lab reports shows-serum Creatinine 1.8 mg/dL (elevated),Blood urea nitrogen (BUN):16 mg/dl, Sodium: 136 mEq/L (normal 135–145 mEq/L).What is the cause of elevated serum creatinine", "options": [{"label": "A", "text": "Pre renal ARF", "correct": false}, {"label": "B", "text": "Trimethoprim (in cotrimoxazole)decreases the tubular secretion of creatinine", "correct": true}, {"label": "C", "text": "Pneumocystis causes renal failure", "correct": false}, {"label": "D", "text": "Steroid effect", "correct": false}], "correct_answer": "B. Trimethoprim (in cotrimoxazole)decreases the tubular secretion of creatinine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69075581705050019/69075581705050019.m3u8"}, {"text": "A 35-year-old male presented with fever, cough, and sputum with hemoptysis developing over 2-3 weeks. The patient has lost 5 kg weight. On examination-BP: 112/70 mm Hg; Temperature:101.4°F; Respiratory rate: 18 breaths/minute. Head, Ears, Eyes, Nose, Throat (HEENT): normal, no adenopathy Chest: left upper site rales present, no bronchial breath sound. Cardiovascular: no murmurs, rubs, gallops.Lab Report: Chest x-ray: apical infiltrate, Oximeter: 95% saturation on room air,sputum Acid-fast stain: positive.What will be next line of management", "options": [{"label": "A", "text": "Start levofloxacin for 1 week and see the response", "correct": false}, {"label": "B", "text": "Start ATT", "correct": true}, {"label": "C", "text": "Repeat sputum AFB and if negative wait for culture", "correct": false}, {"label": "D", "text": "Get CT chest done", "correct": false}], "correct_answer": "B. Start ATT", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/38528601705050041/38528601705050041.m3u8"}, {"text": "A 40-year-old woman coming from USA just deplaned at the airport. She started feeling short of breath one hour before landing.She was brought immediately to the ED.On examination- BP: 108/68 mm Hg; P:108 beats/minute; T: 101°F; R: 24 breaths/minute. Chest: clear to auscultation, no rales, rhonchi, or crepitations, Cardiovascular: normal. Oximeter 90% room air saturation, Chest x-ray: normal ABG: pH 7.47; PCO2 31 mm Hg; PO2 62 mm Hg.What should you do next ?", "options": [{"label": "A", "text": "Order a ventilation-perfusion (VQ) scan", "correct": false}, {"label": "B", "text": "Give the patient heparin", "correct": true}, {"label": "C", "text": "Move the patient to ICU and do a CT angiogram", "correct": false}, {"label": "D", "text": "Perform and embolectomy", "correct": false}], "correct_answer": "B. Give the patient heparin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52863971705050062/52863971705050062.m3u8"}, {"text": "In continuation with previous clinical vignette, she developed hypotension in ED and you got ECHO done in the patient which showed RV strain. How will you determine the need for thrombolytics?", "options": [{"label": "A", "text": "Lower extremity Doppler ultrasound", "correct": false}, {"label": "B", "text": "Hypotension and right-sided heart strain on echocardiogram", "correct": true}, {"label": "C", "text": "CT angiogram", "correct": false}, {"label": "D", "text": "VQ scan and d-dimer", "correct": false}], "correct_answer": "B. Hypotension and right-sided heart strain on echocardiogram", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/25524351705050082/25524351705050082.m3u8"}, {"text": "A 30-year-old woman comes to OPD complaining of intermittent episodes of shortness of breath for one year. She also has a cough that is not productive of sputum. She also gives history of skin lesions on shin area. On examination- BP: 110/70 mm Hg; Respiratory rate: 14 breaths/minute. Chest:crepts bilaterally, CVS-normal, Skin: dark lesion on face, reddish-brown tender lesions on shins. Chest x-ray: bilateral hilar adenopathy. Lab tests- serum Calcium 11 mg/dl (mild elevation),ACE: elevated.What is the most likely cause of this presenation", "options": [{"label": "A", "text": "Tuberculosis", "correct": false}, {"label": "B", "text": "Lymphoma", "correct": false}, {"label": "C", "text": "Ulcerative colitis", "correct": false}, {"label": "D", "text": "Sarcoidosis", "correct": true}], "correct_answer": "D. Sarcoidosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/50228361705050098/50228361705050098.m3u8"}, {"text": "In continuation with previous clinical case, patient underwent pulmonary function tests. Which of these is consistent with sarcoidosis?", "options": [{"label": "A", "text": "FEV1 decreased,FVC decreased,TLC decreased", "correct": true}, {"label": "B", "text": "FEV1 decreased,FVC normal,TLC high", "correct": false}, {"label": "C", "text": "FEV1 normal,FVC normal,TLC normal", "correct": false}, {"label": "D", "text": "FEV1 normal,FVC normal,TLC high", "correct": false}], "correct_answer": "A. FEV1 decreased,FVC decreased,TLC decreased", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/53177551705050114/53177551705050114.m3u8"}, {"text": "A 40 year old female presented with history of fever, ankle joint pains, dry cough with dyspnea on exertion for last 2 months. Initially symptoms of fever and joint pain improved on taking paracetamol but now there is no relief. She also have noticed nodular lesions on legs. On examination- pallor present, respiratory/CVS/CNS-normal. No peripheral lymphadenopathy. Chest x ray shows bilateral hilar lymphadenopathy. Which of the following is the most accurate test?", "options": [{"label": "A", "text": "Lymph node biopsy on bronchoscopy", "correct": true}, {"label": "B", "text": "BALwith increased CD4 cells", "correct": false}, {"label": "C", "text": "Biopsy of erythema nodosum on shins", "correct": false}, {"label": "D", "text": "ACE level", "correct": false}], "correct_answer": "A. Lymph node biopsy on bronchoscopy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/47788381705050133/47788381705050133.m3u8"}, {"text": "A 22 year old female was evaluated for dyspnea on exertion and dry cough which are present for one month.There is history of intermittent fever with joint pain.Systemic examination is normal.Blood cultures,urine culture,CBC,ANA,RA factor,HIV are negative.Chest x ray shows bilateral hilar lymphadenopathy with bilateral parenchymal infilteration.You did biopsy from hilar LN and results showed non caseating granuloma consistent with sarcoidosis.What is your next step?", "options": [{"label": "A", "text": "Supportive treatment with paracetamol", "correct": false}, {"label": "B", "text": "Treat with cyclophosphamide", "correct": false}, {"label": "C", "text": "Treat with prednisone", "correct": true}, {"label": "D", "text": "Treat with anti-tumor necrosis factor (TNF) medications", "correct": false}], "correct_answer": "C. Treat with prednisone", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/43167631705050149/43167631705050149.m3u8"}, {"text": "A 35-year-old woman with recently diagnosed CREST (calcinosis cutis, Raynaud phenomenon, esophageal motility disorder, sclerodactyly, and telangiectasia) syndrome presented with increasing dyspnea especially on exertion that has been slowly progressive over several months. She originally presented last year with triphasic color changes and pain of Raynaud phenomenon. Her skin has been tightening up, but she is still mobile. Her reflux disease is well maintained on omeprazole. She has no cough, fever, or sputum. On Examination: BP: 110/70 mm Hg; Pulse: 90 beats/minute; Pallor- absent, pedal edema is present. Respiratory rate:14 breaths/minute, Chest: no ronchi; no crepitations; no dullness to percussion, Cardiovascular: loud P2 , no murmur, Abdomen: enlarged liver Skin: immobile, sclerodactyly present; few telangiectasia.Oximeter:92% saturation on room air. Based on these clinical findings what is the likely cause of patient dyspnea", "options": [{"label": "A", "text": "Primary pulmonary hypertension", "correct": true}, {"label": "B", "text": "Pulmonary fibrosis", "correct": false}, {"label": "C", "text": "Valvular heart disease", "correct": false}, {"label": "D", "text": "Anemia", "correct": false}], "correct_answer": "A. Primary pulmonary hypertension", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69581841705050163/69581841705050163.m3u8"}, {"text": "In continuation with previous case scenario patient underwent ECHO which showed high pulmonary artery pressure. Right heart catheterization was done and results were- mPAP(mean pulmonary artery pressure) of 30 mmHg, PCWP 12 mmHg, high pulmonary vascular resistance and no response to nitric oxide in pulmonary artery pressure. What will you advice further", "options": [{"label": "A", "text": "Add epoprostenol", "correct": true}, {"label": "B", "text": "Add sildenafil", "correct": false}, {"label": "C", "text": "Add calcium channel blocker", "correct": false}, {"label": "D", "text": "Add diuretics", "correct": false}], "correct_answer": "A. Add epoprostenol", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34415561705050184/34415561705050184.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

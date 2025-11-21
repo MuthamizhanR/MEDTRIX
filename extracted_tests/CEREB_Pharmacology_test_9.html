@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Pharmacology E&amp;D   Mission 2.0, Lap 2   13 03 2025   2025 03 13</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Pharmacology E&amp;D   Mission 2.0, Lap 2   13 03 2025   2025 03 13</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                60 Questions | 240 Total Marks | 70 min Duration | ~70.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 60 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 70 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 60</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Pharmacology E&amp;D   Mission 2.0, Lap 2   13 03 2025   2025 03 13 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 60</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 60 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 58-year-old male with a history of chronic heart failure (EF = 35%) and hypertension presents to the emergency department with complaints of worsening shortness of breath and dizziness. He was recently started on a new medication for heart failure. On examination, his heart rate is 48 bpm, and his blood pressure is 95/60 mmHg. ECG shows sinus bradycardia without AV block. Which of the following medications is most likely responsible for his symptoms?", "options": [{"label": "A", "text": "Digoxin", "correct": false}, {"label": "B", "text": "Bisoprolol", "correct": true}, {"label": "C", "text": "Furosemide", "correct": false}, {"label": "D", "text": "Spironolactone", "correct": false}], "correct_answer": "B. Bisoprolol", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Bisoprolol</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old male with non-small cell lung cancer is receiving highly emetogenic chemotherapy. His oncologist prescribes a combination of ondansetron, dexamethasone, and aprepitant for nausea and vomiting prevention. A few days later, the patient, who is also on warfarin for a history of deep vein thrombosis (DVT), undergoes routine INR monitoring, which reveals a significant drop in INR levels. Which of the following best explains the interaction between aprepitant and warfarin?", "options": [{"label": "A", "text": "Aprepitant induces CYP2C9, increasing warfarin metabolism", "correct": true}, {"label": "B", "text": "Aprepitant inhibits CYP2C9, decreasing warfarin metabolism", "correct": false}, {"label": "C", "text": "Aprepitant induces CYP3A4, increasing warfarin metabolism", "correct": false}, {"label": "D", "text": "Aprepitant inhibits CYP3A4, decreasing warfarin metabolism", "correct": false}], "correct_answer": "A. Aprepitant induces CYP2C9, increasing warfarin metabolism", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Aprepitant induces CYP2C9, increasing warfarin metabolism</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28-year-old hiker is brought to the emergency department by his friends after eating wild berries during a trek. He is agitated, confused, and hallucinating, attempting to grab imaginary objects in the air. His skin is dry and flushed, pupils are bilaterally dilated, and he has urinary retention. His heart rate is 120 bpm, and his temperature is 39.5°C (103°F). Which of the following drugs is the best treatment for his condition?", "options": [{"label": "A", "text": "Flumazenil", "correct": false}, {"label": "B", "text": "Naloxone", "correct": false}, {"label": "C", "text": "Physostigmine", "correct": true}, {"label": "D", "text": "Diazepam", "correct": false}], "correct_answer": "C. Physostigmine", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Physostigmine</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A woman at 8 weeks of gestation is diagnosed with hypothyroidism. Which of the following is the most appropriate treatment option?", "options": [{"label": "A", "text": "Methimazole", "correct": false}, {"label": "B", "text": "L-thyroxine", "correct": true}, {"label": "C", "text": "Propylthiouracil", "correct": false}, {"label": "D", "text": "Radioactive iodine", "correct": false}], "correct_answer": "B. L-thyroxine", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) L-thyroxine</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28-year-old woman at 35 weeks of gestation is receiving LMWH for a history of deep vein thrombosis (DVT) earlier in pregnancy. She presents to the hospital in early labor. What is the most appropriate next step in management?", "options": [{"label": "A", "text": "Continue LMWH until delivery", "correct": false}, {"label": "B", "text": "Switch to intravenous unfractionated heparin", "correct": true}, {"label": "C", "text": "Stop LMWH and induce labor", "correct": false}, {"label": "D", "text": "Switch to warfarin immediately", "correct": false}], "correct_answer": "B. Switch to intravenous unfractionated heparin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Switch to intravenous unfractionated heparin</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old man undergoes prostate surgery (TURP). During the procedure, he develops persistent bleeding due to excessive fibrinolysis. The surgeon decides to administer a medication to inhibit fibrinolysis and control bleeding. Which of the following is the most appropriate drug for this patient?", "options": [{"label": "A", "text": "Alteplase", "correct": false}, {"label": "B", "text": "Tranexamic acid", "correct": true}, {"label": "C", "text": "Clopidogrel", "correct": false}, {"label": "D", "text": "Heparin", "correct": false}], "correct_answer": "B. Tranexamic acid", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Tranexamic acid</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old male with hypertension and chronic kidney disease (CKD) stage 3 presents with recurrent hyperkalemia on routine blood tests. He is currently on an ACE inhibitor for hypertension. Which of the following diuretics would be the most appropriate choice for managing his hypertension?", "options": [{"label": "A", "text": "Spironolactone", "correct": false}, {"label": "B", "text": "Hydrochlorothiazide", "correct": false}, {"label": "C", "text": "Furosemide", "correct": true}, {"label": "D", "text": "Acetazolamide", "correct": false}], "correct_answer": "C. Furosemide", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Furosemide</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 72-year-old male with a history of Alzheimer’s disease presents with urinary urgency, frequency, and nocturia. He has had multiple episodes of urinary incontinence over the past few months. Digital rectal examination reveals a normal-sized prostate with no nodularity. Post-void residual urine is 20 mL (within normal range). Which of the following is the most appropriate treatment for his condition?", "options": [{"label": "A", "text": "Oxybutynin", "correct": false}, {"label": "B", "text": "Mirabegron", "correct": true}, {"label": "C", "text": "Tamsulosin", "correct": false}, {"label": "D", "text": "Prazosin", "correct": false}], "correct_answer": "B. Mirabegron", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Mirabegron</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 4-year-old child is brought to the emergency department with complaints of irritability, poor appetite, and abdominal pain. On examination, the child has pallor, cognitive delay, and a bluish line on the gums (Burton’s line). Blood investigations reveal a microcytic hypochromic anemia with a blood lead level of 75 µg/dL. Which of the following is the most appropriate treatment?", "options": [{"label": "A", "text": "Calcium disodium EDTA (CaNa₂EDTA) alone", "correct": false}, {"label": "B", "text": "Dimercaprol (BAL) + Calcium disodium EDTA", "correct": true}, {"label": "C", "text": "Penicillamine", "correct": false}, {"label": "D", "text": "Deferoxamine", "correct": false}], "correct_answer": "B. Dimercaprol (BAL) + Calcium disodium EDTA", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_ez18Apk.png"], "explanation": "<p><strong>Ans. B) Dimercaprol (BAL) + Calcium disodium EDTA</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old male with a history of ischemic heart disease and a recent myocardial infarction develops ventricular tachycardia. He is given an intravenous loading dose of lignocaine followed by a maintenance infusion. Which of the following factors primarily determines the loading dose of lignocaine in this patient?", "options": [{"label": "A", "text": "Clearance", "correct": false}, {"label": "B", "text": "Volume of distribution", "correct": true}, {"label": "C", "text": "Half-life", "correct": false}, {"label": "D", "text": "Bioavailability", "correct": false}], "correct_answer": "B. Volume of distribution", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_AURUiAi.png"], "explanation": "<p><strong>Ans. B) Volume of Distribution</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old hypertensive male has been on an antihypertensive drug for several months. He reports persistent drowsiness, dry mouth, and lethargy but continued the medication. However, after forgetting to take it for 3 days, he presents to the ER with severe hypertension, tachycardia, diaphoresis, and anxiety. Which of the following best explains the mechanism of his rebound hypertension?", "options": [{"label": "A", "text": "Upregulation of α2-receptors in the CNS", "correct": false}, {"label": "B", "text": "Increased norepinephrine release due to loss of presynaptic inhibition", "correct": true}, {"label": "C", "text": "Reflex activation of the renin-angiotensin-aldosterone system (RAAS)", "correct": false}, {"label": "D", "text": "Increased sensitivity of vascular smooth muscle to circulating catecholamines", "correct": false}], "correct_answer": "B. Increased norepinephrine release due to loss of presynaptic inhibition", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Increased norepinephrine release due to loss of presynaptic inhibition</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old male with dyslipidemia was started on a lipid-lowering drug. He later developed muscle pain, weakness, and dark-colored urine. His creatine kinase (CK) levels are markedly elevated, and his renal function is worsening. On history, he reports that he was recently prescribed erythromycin for a respiratory infection. Which of the following lipid-lowering drugs is most likely responsible for his condition?", "options": [{"label": "A", "text": "Atorvastatin", "correct": true}, {"label": "B", "text": "Colesevelam", "correct": false}, {"label": "C", "text": "Ezetimibe", "correct": false}, {"label": "D", "text": "Alirocumab", "correct": false}], "correct_answer": "A. Atorvastatin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Atorvastatin</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Statins + CYP3A4 inhibitors (e.g., erythromycin, clarithromycin, azoles, cyclosporine, amiodarone, grapefruit juice) = Increased risk of rhabdomyolysis. Monitor CK levels in patients taking statins with CYP3A4 inhibitors. Switch to statins less dependent on CYP3A4 (e.g., Rosuvastatin, Pravastatin) in high-risk patients.</li><li>➤ Statins + CYP3A4 inhibitors (e.g., erythromycin, clarithromycin, azoles, cyclosporine, amiodarone, grapefruit juice) = Increased risk of rhabdomyolysis.</li><li>➤ Monitor CK levels in patients taking statins with CYP3A4 inhibitors.</li><li>➤ Switch to statins less dependent on CYP3A4 (e.g., Rosuvastatin, Pravastatin) in high-risk patients.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following drugs, when given with ketoconazole, can cause QT prolongation and Torsades’ de pointes?", "options": [{"label": "A", "text": "Cisapride", "correct": true}, {"label": "B", "text": "Cetirizine", "correct": false}, {"label": "C", "text": "Loratadine", "correct": false}, {"label": "D", "text": "Promethazine", "correct": false}], "correct_answer": "A. Cisapride", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Cisapride</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-year-old female with mild persistent asthma is prescribed an inhaled corticosteroid. She is concerned about potential side effects. Which of the following measures can help minimize the risk of local side effects from inhaled corticosteroids?", "options": [{"label": "A", "text": "Using a high-dose inhaled corticosteroid from the start", "correct": false}, {"label": "B", "text": "Rinsing the mouth with water after inhalation", "correct": true}, {"label": "C", "text": "Using a systemic corticosteroid instead of an inhaled one", "correct": false}, {"label": "D", "text": "Taking the inhaled corticosteroid on an empty stomach", "correct": false}], "correct_answer": "B. Rinsing the mouth with water after inhalation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Rinsing the mouth with water after inhalation</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Rinsing the mouth after ICS use prevents oropharyngeal candidiasis. Use the lowest effective dose to minimize side effects. A spacer device can also help reduce local side effects.</li><li>➤ Rinsing the mouth after ICS use prevents oropharyngeal candidiasis.</li><li>➤ Use the lowest effective dose to minimize side effects.</li><li>➤ A spacer device can also help reduce local side effects.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the type of inhibition from the given graph:", "options": [{"label": "A", "text": "Competitive", "correct": false}, {"label": "B", "text": "Non-competitive", "correct": false}, {"label": "C", "text": "Un-competitive", "correct": false}, {"label": "D", "text": "Mixed Inhibition", "correct": true}], "correct_answer": "D. Mixed Inhibition", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_oq1Tr8V.png"], "explanation_images": [], "explanation": "<p><strong>Ans. D) Mixed Inhibition</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In which phase of clinical trials is the maximum tolerated dose (MTD) of a drug determined?", "options": [{"label": "A", "text": "Phase 1", "correct": true}, {"label": "B", "text": "Phase 2", "correct": false}, {"label": "C", "text": "Phase 3", "correct": false}, {"label": "D", "text": "Phase 4", "correct": false}], "correct_answer": "A. Phase 1", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Phase 1</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 58-year-old male with a history of coronary artery disease and chronic stable angina is brought to the emergency department after collapsing at home. His wife reports that he took a medication for erectile dysfunction earlier that evening. His blood pressure is 70/40 mmHg, and he appears confused. Which of the following medications is most likely to have interacted with his erectile dysfunction drug, causing this severe hypotension?", "options": [{"label": "A", "text": "Clopidogrel", "correct": false}, {"label": "B", "text": "Atorvastatin", "correct": false}, {"label": "C", "text": "Isosorbide dinitrate", "correct": true}, {"label": "D", "text": "Metoprolol", "correct": false}], "correct_answer": "C. Isosorbide dinitrate", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Isosorbide dinitrate</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Sildenafil is absolutely contraindicated in patients on nitrates due to the risk of life-threatening hypotension.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old male with bacterial meningitis is admitted to the hospital. The physician decides to start empirical therapy with a bactericidal antibiotic to ensure rapid bacterial eradication. Which of the following drugs is the most appropriate choice?", "options": [{"label": "A", "text": "Clindamycin", "correct": false}, {"label": "B", "text": "Linezolid", "correct": false}, {"label": "C", "text": "Ceftriaxone", "correct": true}, {"label": "D", "text": "Doxycycline", "correct": false}], "correct_answer": "C. Ceftriaxone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Ceftriaxone</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Bactericidal drugs like β-lactams (e.g., ceftriaxone) are preferred for serious infections like meningitis to rapidly clear the infection.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 42-year-old HIV-positive male with a CD4 count of 180 cells/mm³ is started on antiretroviral therapy (ART). Two weeks later, he presents with complaints of vivid dreams, nightmares, dizziness, and difficulty concentrating, especially at night. Which of the following drugs is most likely responsible for these symptoms?", "options": [{"label": "A", "text": "Abacavir", "correct": false}, {"label": "B", "text": "Efavirenz", "correct": true}, {"label": "C", "text": "Emtricitabine", "correct": false}, {"label": "D", "text": "Ritonavir", "correct": false}], "correct_answer": "B. Efavirenz", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Efavirenz</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Efavirenz is known for its CNS side effects, which typically improve over time and are more pronounced when taken close to bedtime.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 27-year-old farmer presents with high-grade fever, headache, and myalgia for the past 7 days. On examination, he has generalized lymphadenopathy, a maculopapular rash on the trunk, and an eschar with surrounding erythema on his right thigh. His travel history reveals recent work in a forest area. Laboratory tests show thrombocytopenia and elevated liver enzymes. Which of the following is the drug of choice for his condition?", "options": [{"label": "A", "text": "Azithromycin", "correct": false}, {"label": "B", "text": "Ciprofloxacin", "correct": false}, {"label": "C", "text": "Doxycycline", "correct": true}, {"label": "D", "text": "Ceftriaxone", "correct": false}], "correct_answer": "C. Doxycycline", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Doxycycline</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Doxycycline is the first-line treatment for scrub typhus and most rickettsial infections.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 65-year-old male with a history of chronic heart failure with reduced ejection fraction (HFrEF) presents to the clinic for routine follow-up. He is currently on carvedilol, furosemide, and enalapril but continues to have dyspnea on exertion and fatigue. His physician decides to replace his ACE inhibitor with a newer drug that enhances natriuretic peptide activity and improves vasodilation and natriuresis. Which of the following drugs works through this mechanism?", "options": [{"label": "A", "text": "Losartan", "correct": false}, {"label": "B", "text": "Ramipril", "correct": false}, {"label": "C", "text": "Aliskiren", "correct": false}, {"label": "D", "text": "Sacubitril", "correct": true}], "correct_answer": "D. Sacubitril", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Sacubitril</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Sacubitril (part of ARNI therapy) improves outcomes in HFrEF by inhibiting neprilysin, increasing natriuretic peptide levels, and reducing cardiac remodeling.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old male with a history of deep vein thrombosis (DVT) is started on an anticoagulant for long-term thromboprophylaxis. His physician prefers a drug that does not require routine coagulation monitoring for dose adjustments. Which of the following anticoagulants meets this criterion?", "options": [{"label": "A", "text": "Warfarin", "correct": false}, {"label": "B", "text": "Dalteparin", "correct": true}, {"label": "C", "text": "Unfractionated heparin", "correct": false}, {"label": "D", "text": "Argatroban", "correct": false}], "correct_answer": "B. Dalteparin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Dalteparin</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ LMWHs like dalteparin and enoxaparin do not require routine monitoring, making them preferable for outpatient anticoagulation.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 32-year-old pregnant woman at 26 weeks of gestation presents with chronic hypertension and requires antihypertensive therapy. She has a history of bronchial asthma and was recently diagnosed with autoimmune hemolytic anemia. Which of the following is the most appropriate choice?", "options": [{"label": "A", "text": "Methyldopa", "correct": false}, {"label": "B", "text": "Labetalol", "correct": false}, {"label": "C", "text": "Enalapril", "correct": false}, {"label": "D", "text": "Nifedipine", "correct": true}], "correct_answer": "D. Nifedipine", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Nifedipine</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ ACE inhibitors like Enalapril are strictly contraindicated in pregnancy. Methyldopa should be avoided in hemolytic anemia, and Labetalol should be avoided in asthma. Nifedipine is the preferred choice when these contraindications exist.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 35-year-old man with treatment-resistant schizophrenia has been on multiple antipsychotic medications without significant improvement. His psychiatrist decides to start him on a drug that is known to be effective for treatment-resistant schizophrenia. Three weeks after starting the medication, he develops fever, sore throat, and malaise. Laboratory investigations reveal a WBC count of 2,000/mm³ with an absolute neutrophil count (ANC) of 800/mm³. Which of the following medications is most likely responsible for his condition?", "options": [{"label": "A", "text": "Risperidone", "correct": false}, {"label": "B", "text": "Olanzapine", "correct": false}, {"label": "C", "text": "Clozapine", "correct": true}, {"label": "D", "text": "Quetiapine", "correct": false}], "correct_answer": "C. Clozapine", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Clozapine</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Clozapine is highly effective in treatment-resistant schizophrenia but requires frequent blood monitoring due to the risk of agranulocytosis. Regular ANC checks are mandatory to detect neutropenia early and prevent life-threatening infections.</li><li>➤ Clozapine is highly effective in treatment-resistant schizophrenia but requires frequent blood monitoring due to the risk of agranulocytosis.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 28-year-old pregnant woman at 30 weeks of gestation is admitted with preterm labor. To enhance fetal lung maturation and reduce the risk of neonatal respiratory distress syndrome (RDS), the obstetrician decides to administer a corticosteroid. Which of the following regimens is the most appropriate choice?", "options": [{"label": "A", "text": "Hydrocortisone 100 mg IV every 8 hours for 48 hours", "correct": false}, {"label": "B", "text": "Methylprednisolone 16 mg IM once daily for 2 days", "correct": false}, {"label": "C", "text": "Betamethasone 12 mg IM every 24 hours for 2 doses", "correct": true}, {"label": "D", "text": "Dexamethasone 12 mg IM every 24 hours for 2 doses", "correct": false}], "correct_answer": "C. Betamethasone 12 mg IM every 24 hours for 2 doses", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Betamethasone 12 mg IM every 24 hours for 2 doses</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ For fetal lung maturation in preterm labor , the preferred corticosteroids are:</li><li>➤ fetal lung maturation in preterm labor</li><li>➤ Betamethasone 12 mg IM every 24 hours (2 doses) Dexamethasone 6 mg IM every 12 hours (4 doses)</li><li>➤ Betamethasone 12 mg IM every 24 hours (2 doses)</li><li>➤ Dexamethasone 6 mg IM every 12 hours (4 doses)</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old immunocompromised male with febrile neutropenia is diagnosed with disseminated mucormycosis. He is started on an antifungal agent that is drug of choice for this condition. What is the primary site of action of this drug?", "options": [{"label": "A", "text": "Nucleic acid", "correct": false}, {"label": "B", "text": "Ribosome", "correct": false}, {"label": "C", "text": "Cell membrane", "correct": true}, {"label": "D", "text": "Cytoplasm", "correct": false}], "correct_answer": "C. Cell membrane", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Cell membrane</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Amphotericin B acts on the fungal cell membrane by binding to ergosterol and forming pores, leading to fungal cell death. It is the drug of choice for life-threatening systemic fungal infections like mucormycosis and cryptococcal meningitis.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 65-year-old postmenopausal woman with osteoporosis and a history of multiple fractures is prescribed a medication that acts without inhibiting osteoclast function. Which of the following drugs fits this mechanism of action?", "options": [{"label": "A", "text": "Strontium ranelate", "correct": false}, {"label": "B", "text": "Ibandronate", "correct": false}, {"label": "C", "text": "Teriparatide", "correct": true}, {"label": "D", "text": "Denosumab", "correct": false}], "correct_answer": "C. Teriparatide", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans.</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Teriparatide (PTH analog) is the only option that acts without directly inhibiting osteoclasts, making it suitable for osteoporosis treatment when bone formation needs to be enhanced.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old male with a history of chronic gout presents to the emergency department with sudden onset severe pain, redness, and swelling in his first metatarsophalangeal joint. On examination, the joint is tender, swollen, and warm, and the patient rates his pain as 9/10. You decide to start acute gout treatment. Which of the following is UNLIKELY to be the mechanism of action of the drug used in this setting?", "options": [{"label": "A", "text": "Inhibits synthesis of uric acid", "correct": true}, {"label": "B", "text": "Inhibits cyclooxygenase enzyme", "correct": false}, {"label": "C", "text": "Inhibits phospholipase A2", "correct": false}, {"label": "D", "text": "Binds to tubulin and inhibits granulocyte migration", "correct": false}], "correct_answer": "A. Inhibits synthesis of uric acid", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans.</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Acute gout is treated with NSAIDs, colchicine, or corticosteroids. Drugs that lower uric acid (allopurinol, febuxostat) are NOT used during an acute attack.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 64-year-old male with a history of hypertension, type 2 diabetes, and recent myocardial infarction (MI) undergoes percutaneous coronary intervention (PCI) with stent placement. He is prescribed dual antiplatelet therapy (DAPT)consisting of aspirin and ticagrelor to prevent stent thrombosis. Which of the following statements is true about ticagrelor?", "options": [{"label": "A", "text": "It is an irreversible P2Y12 receptor inhibitor", "correct": false}, {"label": "B", "text": "It is a pro-drug requiring hepatic activation", "correct": false}, {"label": "C", "text": "It has a faster onset of action than clopidogrel", "correct": true}, {"label": "D", "text": "It is affected by CYP2C19 inhibitors like omeprazole, reducing its efficacy", "correct": false}], "correct_answer": "C. It has a faster onset of action than clopidogrel", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans.</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Ticagrelor is a reversible, direct-acting P2Y12 inhibitor with a faster onset and more consistent action than clopidogrel, making it a preferred choice in ACS patients undergoing PCI.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient is administered Drug A, and its dose-response curve is plotted. Later, the patient receives Drug B or Drug C before administering Drug A again. The changes in the dose response curve are shown in the diagram below. Which of the following best describes the type of inhibition caused by Drug B and Drug C?", "options": [{"label": "A", "text": "Drug B is a reversible competitive inhibitor, and Drug C is a non-competitive inhibitor", "correct": true}, {"label": "B", "text": "Drug B is an irreversible competitive inhibitor, and Drug C is a reversible competitive inhibitor", "correct": false}, {"label": "C", "text": "Drug B is a reversible competitive inhibitor, and Drug C is an irreversible competitive inhibitor", "correct": false}, {"label": "D", "text": "Drug B is a non-competitive inhibitor, and Drug C is an irreversible competitive inhibitor", "correct": false}], "correct_answer": "A. Drug B is a reversible competitive inhibitor, and Drug C is a non-competitive inhibitor", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/image_DqAjA1s.png"], "explanation_images": [], "explanation": "<p><strong>Ans. A) Drug B is a reversible competitive inhibitor, and Drug C is a non-competitive inhibitor</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A pediatric patient is brought to the emergency department with signs of ocular hypotension and apnea. The parents are concerned about the child

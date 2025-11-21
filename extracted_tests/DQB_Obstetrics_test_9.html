@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Ectopic Pregnancy</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Ectopic Pregnancy</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                24 Questions | 104 Total Marks | 34 min Duration | ~85.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 24 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 34 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 24</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Ectopic Pregnancy - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 24</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 24 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Causes of ectopic pregnancy includes A/E:", "options": [{"label": "A", "text": "IUCD", "correct": false}, {"label": "B", "text": "Tubal ciliary damage", "correct": false}, {"label": "C", "text": "Blighted ovum", "correct": true}, {"label": "D", "text": "Late fertilization", "correct": false}], "correct_answer": "C. Blighted ovum", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78783131697269207/78783131697269207.m3u8"}, {"text": "Ectopic pregnancy is most commonly associated with:", "options": [{"label": "A", "text": "Endometriosis", "correct": false}, {"label": "B", "text": "Congenital tubal anomalies", "correct": false}, {"label": "C", "text": "Tuberculosis", "correct": false}, {"label": "D", "text": "Tubal inflammatory diseases", "correct": true}], "correct_answer": "D. Tubal inflammatory diseases", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/57094661697269222/57094661697269222.m3u8"}, {"text": "In which part of fallopian tube ectopic pregnancy will have longest survival:", "options": [{"label": "A", "text": "Isthmus", "correct": false}, {"label": "B", "text": "Ampulla", "correct": false}, {"label": "C", "text": "Cornua", "correct": false}, {"label": "D", "text": "Interstitium", "correct": true}], "correct_answer": "D. Interstitium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/720391697269247/720391697269247.m3u8"}, {"text": "The cause of fetal death in ectopic pregnancy is postulated as:", "options": [{"label": "A", "text": "Vascular accident", "correct": true}, {"label": "B", "text": "Nutritional adequency", "correct": false}, {"label": "C", "text": "Endocrine insufficiency", "correct": false}, {"label": "D", "text": "Immune response to mother", "correct": false}], "correct_answer": "A. Vascular accident", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/40237521697269265/40237521697269265.m3u8"}, {"text": "In ectopic pregnancy deciduas is shed as:", "options": [{"label": "A", "text": "Decidua vera", "correct": true}, {"label": "B", "text": "Decidua basalis", "correct": false}, {"label": "C", "text": "Decidua capsularis", "correct": false}, {"label": "D", "text": "Decidua rubra", "correct": false}], "correct_answer": "A. Decidua vera", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19131471697269277/19131471697269277.m3u8"}, {"text": "Modern diagnostic aid to diagnose ectopic pregnancy:", "options": [{"label": "A", "text": "HCG", "correct": false}, {"label": "B", "text": "Transvaginal USG", "correct": false}, {"label": "C", "text": "Both A & B", "correct": true}, {"label": "D", "text": "Gravindex", "correct": false}], "correct_answer": "C. Both A & B", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56228341697269291/56228341697269291.m3u8"}, {"text": "Indications of medical management in ectopic pregnancy:", "options": [{"label": "A", "text": "Presence of fetal heart aactivity", "correct": false}, {"label": "B", "text": "Size > 4cms", "correct": false}, {"label": "C", "text": "Gestation < 6weeks", "correct": true}, {"label": "D", "text": "beta hcg > 5000", "correct": false}], "correct_answer": "C. Gestation < 6weeks", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/42676461697269309/42676461697269309.m3u8"}, {"text": "A twenty years old woman has been brought to casualty with BP 70/40 mm Hg. Pulse rate 120/min. and a positive urine pregnancy test. She should be managed by:", "options": [{"label": "A", "text": "Immediate laparotomy", "correct": true}, {"label": "B", "text": "Laparoscopy", "correct": false}, {"label": "C", "text": "Culdocentesis", "correct": false}, {"label": "D", "text": "Resuscitation and Medical management", "correct": false}], "correct_answer": "A. Immediate laparotomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/1470531697269324/1470531697269324.m3u8"}, {"text": "Which of the following treatment is not done in ectopic pregnancy:", "options": [{"label": "A", "text": "Salpingectomy", "correct": false}, {"label": "B", "text": "Salpingo-oophorectomy", "correct": true}, {"label": "C", "text": "Salpingostomy", "correct": false}, {"label": "D", "text": "Resection of involved segment", "correct": false}], "correct_answer": "B. Salpingo-oophorectomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/28531631697269339/28531631697269339.m3u8"}, {"text": "In a nulliparous woman, the treatment of choice in ruptured ectopic pregnancy is:", "options": [{"label": "A", "text": "Salpingectomy and end to end anastomosis", "correct": true}, {"label": "B", "text": "Salpingo-oophorectomy", "correct": false}, {"label": "C", "text": "Wait and watch", "correct": false}, {"label": "D", "text": "Linear salpingostomy", "correct": false}], "correct_answer": "A. Salpingectomy and end to end anastomosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3785041697269357/3785041697269357.m3u8"}, {"text": "Not true about ectopic pregnancy:", "options": [{"label": "A", "text": "Previous ectopic is greastest risk", "correct": false}, {"label": "B", "text": "Pregesterone only pills doesn’t increase risk", "correct": true}, {"label": "C", "text": "Increased risk with pelvic infections", "correct": false}, {"label": "D", "text": "Increased risk with IVF", "correct": false}, {"label": "E", "text": "IUCD use increased he risk", "correct": false}], "correct_answer": "B. Pregesterone only pills doesn’t increase risk", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60791291697269370/60791291697269370.m3u8"}, {"text": "A female presents with 8 weeks amenorrhea with pain left lower abdomen. On USG, there was thick endometrium with mass in lateral adnexa. Most probable diagnosis:", "options": [{"label": "A", "text": "Ectopic pregnancy", "correct": true}, {"label": "B", "text": "Torsion of dermoid cyst", "correct": false}, {"label": "C", "text": "Tubo-ovarian mass", "correct": false}, {"label": "D", "text": "Hydrosalpinx", "correct": false}], "correct_answer": "A. Ectopic pregnancy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/65590761697269385/65590761697269385.m3u8"}, {"text": "Test not useful in case of tubal pregnancy:", "options": [{"label": "A", "text": "Pelvic examination", "correct": false}, {"label": "B", "text": "USG", "correct": false}, {"label": "C", "text": "HCG", "correct": false}, {"label": "D", "text": "Hysterosalpinography", "correct": true}], "correct_answer": "D. Hysterosalpinography", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/50841951697269409/50841951697269409.m3u8"}, {"text": "Arias stella reaction is not seen in:", "options": [{"label": "A", "text": "Ovarian pregnancy", "correct": false}, {"label": "B", "text": "Molar pregnancy", "correct": false}, {"label": "C", "text": "Interstitial pregnancy", "correct": false}, {"label": "D", "text": "Salpingitis isthmica nodosa", "correct": true}], "correct_answer": "D. Salpingitis isthmica nodosa", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/73048791697269422/73048791697269422.m3u8"}, {"text": "What is the treatment of choice of unrupured tubal pregnancy with serum b-hCG titre 2000 IU/ml:", "options": [{"label": "A", "text": "Single dose of methotrexate", "correct": true}, {"label": "B", "text": "Vairable dose of methotrexate", "correct": false}, {"label": "C", "text": "Expectant management", "correct": false}, {"label": "D", "text": "Laparoscopic salpingostomy", "correct": false}], "correct_answer": "A. Single dose of methotrexate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/60429041697269434/60429041697269434.m3u8"}, {"text": "Diagnostic criteria for primary abdominal pregnancy:", "options": [{"label": "A", "text": "Spigelberg criteria", "correct": false}, {"label": "B", "text": "Rubin’s criteria", "correct": false}, {"label": "C", "text": "Studdiford criteria", "correct": true}, {"label": "D", "text": "Wrigly criteria", "correct": false}], "correct_answer": "C. Studdiford criteria", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6933591697269453/6933591697269453.m3u8"}, {"text": "Angular pregnancy refers to:", "options": [{"label": "A", "text": "Etopic pregnancy of interstitial part of FT", "correct": false}, {"label": "B", "text": "Intrauterine pregnancy", "correct": true}, {"label": "C", "text": "Heterotropic pregnancy", "correct": false}, {"label": "D", "text": "Ectopic pregnancy of brosd ligament", "correct": false}], "correct_answer": "B. Intrauterine pregnancy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34635191697269466/34635191697269466.m3u8"}, {"text": "You are called to the operating room. The general Surgeons have operated on a woman to rule out appendictis and the signs of an abdominal pregnancy with an 18 week fetus and placenta attached to the omentum.The best course of action in the case is:", "options": [{"label": "A", "text": "Removal of both fetus and placenta", "correct": false}, {"label": "B", "text": "Laparoscopic ligation of umbilical cord", "correct": false}, {"label": "C", "text": "Removal of the fetus only", "correct": true}, {"label": "D", "text": "Closely follow until viability and the delivfer by laparotomy", "correct": false}], "correct_answer": "C. Removal of the fetus only", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69025031697269975/69025031697269975.m3u8"}, {"text": "A 26-year-old woman, gravida 1, para 0 with history of one ectopic pregnancy, presents to your clinic because she missed her lasl period. According to her records, 4 years ago her unruptured ectopic was resolved by a linear salpingostomy procedure. You send o? a serum [3-hCG level, which returns elevated β-hCG = 900 IU/1). Radiologic images obtained in the emergency department are unremarkable.What is the next best step in the management of this patient?", "options": [{"label": "A", "text": "Repeat serum hcg in 2 days", "correct": true}, {"label": "B", "text": "Follow up with transabdominal ultrasund", "correct": false}, {"label": "C", "text": "Urine hCG", "correct": false}, {"label": "D", "text": "Follow up with transvaginal ultrasound", "correct": false}], "correct_answer": "A. Repeat serum hcg in 2 days", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29220771697269999/29220771697269999.m3u8"}, {"text": "A 29-year-old woman, gravida 3, para 1, with a history of two ectopic pregnancies presents for an annual physical examination. Her last menstrual period was 33 days ago. She tells you that her periods are regular, usually occur every 28 days, and last for 4 days. She has not been on any form of contraception for the last 6 months. You perform a β-hCG level today and ask her to return for a repeal β-hCG level in 3 days. The results are as follows: day 0, β-hCG = 1000 IU/1; and day 3, β-hCG = 1200 IU/L Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Ectopic pregnancy", "correct": true}, {"label": "B", "text": "Therapeutic abortion", "correct": false}, {"label": "C", "text": "Hydatidiform mole", "correct": false}, {"label": "D", "text": "Choriocarcinoma", "correct": false}], "correct_answer": "A. Ectopic pregnancy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31801671697270013/31801671697270013.m3u8"}, {"text": "A 23 yrs old female presents with “abdominal cramping,” nausea, and vaginal bleeding. A human chorionic gonadotropin (hCG) level returns 5150 mIU/mL. A vaginal probe ultrasound is performed and notes no evidence of an intrauterine pregnancy, normal appearing ovaries, a mild amount of ?uid in the cul-de-sac, and no evidence of ectopic gestation. Diagnosis is ?", "options": [{"label": "A", "text": "Spontaneous abortion", "correct": false}, {"label": "B", "text": "Ectopic pregnancy", "correct": true}, {"label": "C", "text": "Singleton intrauterine pregnancy", "correct": false}, {"label": "D", "text": "Ruptured ovarian cyst (corpus luteum)", "correct": false}], "correct_answer": "B. Ectopic pregnancy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61879171697270028/61879171697270028.m3u8"}, {"text": "A 32 year old woman presents with heavy bleeding. Her blood pressure is 80/50 mmhg and PR is 106/min. her abdomen is soft non tender and non distended. Examination reveals 200ml of clotted blood in vagina and open os with tissue protruding from os and a 10 week size nontender uterus. Which of the following is most appropriate next step", "options": [{"label": "A", "text": "Culdocentesis", "correct": false}, {"label": "B", "text": "Laparotomy", "correct": false}, {"label": "C", "text": "Dilation and evacuation", "correct": true}, {"label": "D", "text": "Laparoscopy", "correct": false}], "correct_answer": "C. Dilation and evacuation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67551191697270048/67551191697270048.m3u8"}, {"text": "A 19-year-old woman comes to the emergency department and reports that she fainted at work earlier in the day. She has mild vaginal bleeding. Her abdomen is di?usely tender and distended. In addition, she complains of shoulder and abdominal pain. Her temperature is 37.2°C, pulse rate is 120 beats per minute, and blood pressure is 80/42 mm Hg. Which of the following is the best diagnostic procedure to quickly con?rm your diagnosis?", "options": [{"label": "A", "text": "Computed tomography of the abdomen and pelvis", "correct": false}, {"label": "B", "text": "Culdocentesis", "correct": false}, {"label": "C", "text": "Dilation and curettage", "correct": true}, {"label": "D", "text": "Posterior colpotomy", "correct": false}], "correct_answer": "C. Dilation and curettage", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/33379211697270087/33379211697270087.m3u8"}, {"text": "A 27-year-old has just had an ectopic pregnancy. Which of the following events would be most likely to predispose to ectopic pregnancy?", "options": [{"label": "A", "text": "Previous cervical conization", "correct": false}, {"label": "B", "text": "Pelvic inflammatory disease (PID)", "correct": true}, {"label": "C", "text": "Use of a contraceptive uterine device (IUD)", "correct": false}, {"label": "D", "text": "Induction of ovulation", "correct": false}], "correct_answer": "B. Pelvic inflammatory disease (PID)", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

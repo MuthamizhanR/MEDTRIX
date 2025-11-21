@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Necrosis</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Necrosis</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                14 Questions | 14 Total Marks | 24 min Duration | ~102.86 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 14 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 24 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 14</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Necrosis - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 14</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 14 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "When neutrophils show a degenerative change in which the nucleus has undergone fragmentation. This process is known as;", "options": [{"label": "A", "text": "Caseous necrosis", "correct": false}, {"label": "B", "text": "Coagulative necrosis", "correct": false}, {"label": "C", "text": "Karyolysis", "correct": false}, {"label": "D", "text": "Karyorrhexis", "correct": true}], "correct_answer": "D. Karyorrhexis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Karyorrhexis Nuclear changes are seen in irreversible cell injury and appear in one of three patterns, all due to the breakdown of DNA: The basophilia of the chromatin may fade Karyolysis Pyknosis is characterized by nuclear shrinkage and increased basophilia. Karyorrhexis , the pyknotic nucleus undergoes fragmentation.</p>\n<p><strong>Highyeild:</strong></p><p>The ultrastructural changes of reversible cell injury, visible by electron microscopy, include the following: Plasma membrane alterations, such as blebbing , blunting, and loss of microvilli Mitochondrial changes, including swelling and the appearance of small amorphous densities Accumulation of “ myelin figures ” in the cytosol composed of phospholipids derived from damaged cellular membranes Dilation of the ER, with a detachment of polysomes Nuclear alterations , with disaggregation of granular and fibrillar elements Nuclear change s, appear in one of three patterns : The basophilia of the chromatin may fade Karyolysis Pyknosis is characterized by nuclear shrinkage and increased basophilia. Karyorrhexis , the pyknotic nucleus undergoes fragmentation. With the passage of time (a day or two), the nucleus in the necrotic cell totally disappears.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Caseous necrosis. Caseous necrosis is encountered most often in foci of tuberculous infection . The term caseous ( cheese-like ) is derived from the friable white appearance of the area of necrosis . Option: B. Coagulative necrosis. Form of necrosis in which the architecture of dead tissue is preserved for a span of at least some days. The affected tissue has a firm texture (vs Liquefactive necrosis which is characterized by digestion of the dead cells , resulting in the transformation of the tissue into a viscous liquid) . Option: C. The basophilia of the chromatin may fade ie karyolysis , a change that presumably reflects the loss of DNA because of enzymatic degradation by endonucleases .</p>\n<p><strong>Extraedge:</strong></p><p>Neutrophil extracellular traps (NETs) Neutrophil extracellular traps are extracellular fibrillar networks that concentrate antimicrobial substances at sites of infection and trap microbes, helping to prevent their spread. They are produced by neutrophils in response to infectious pathogens ( mainly bacteria and fungi ) and inflammatory mediators (e.g., chemokines, cytokines [mainly interferons], complement proteins, and ROS ). The extracellular traps consist of a viscous meshwork of nuclear chromatin that binds and concentrates granule proteins such as antimicrobial peptides and enzymes. In this process, the nuclei of the neutrophils are lost, leading to the death of the cells . The nuclear chromatin in the NETs , which includes histones and associated DNA, has been postulated to be a source of nuclear antigens in systemic autoimmune diseases , particularly lupus , in which individuals react against their own DNA and nucleoproteins. Neutrophil extracellular traps (NETs). (A) Healthy neutrophils with nuclei stained red and cytoplasm stained green. (B) Release of nuclear material from neutrophils (note that two have lost their nuclei), forming extracellular traps. (C) Electron micrograph of bacteria (staphylococci) trapped in NETs. (From Brinkmann V, Zychlinsky A: Beneficial suicide: why neutrophils die to make NETs, Nat Rev Microbiol 5:577, 2007, with permission.)</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 67-year-old woman with a past history of myocardial infarction has the lesion seen here grossly in the brain. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Organizing abscess", "correct": false}, {"label": "B", "text": "Acute meningitis", "correct": false}, {"label": "C", "text": "Liquefactive necrosis", "correct": true}, {"label": "D", "text": "Metastatic carcinoma", "correct": false}], "correct_answer": "C. Liquefactive necrosis", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1686812354953-QTDP007002IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Liquefactive necrosis Ischaemia in all solid organs leads to Coagulative necrosis except in CNS which leads to liquefactive necrosis . Liquefactive necrosis is also seen in superimposed bacterial infections . Liquefactive necrosis , in contrast to coagulative necrosis, is characterized by the digestion of dead cells, resulting in the transformation of the tissue into a viscous liquid . The necrotic material is frequently creamy yellow because of the presence of leukocytes and is called pus . For unknown reasons, hypoxic death of cells within the central nervous system often manifests as liquefactive necrosis . Eventually, the digested tissue is removed by phagocytes .</p>\n<p><strong>Highyeild:</strong></p><p>In chronic passive hepatic congestion, as seen in Congestive heart failure, chronic hypoxia may result in ischemic tissue injury and scarring . The centrilobular regions are grossly red-brown and slightly depressed (because of cell death) and are accentuated against the surrounding zones of the uncongested tan liver called nutmeg liver . Microscopically, there is centrilobular congestion and haemorrhage, hemosiderin-laden macrophages, and variable degrees of hepatocyte dropout and necrosis Liver with chronic passive congestion and hemorrhagic necrosis. (A) Central areas are red and slightly depressed compared with the surrounding tan viable parenchyma, forming a \"nutmeg liver\" pattern (so-called because it resembles the cut surface of a nutmeg). (B) Centrilobular necrosis with degenerating hepatocytes and hemorrhage. (Courtesy Dr. James Crawford, Department of Pathology, University of Florida, Gainesville, Fla.)</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Organizing abscess. Past history of myocardial infarction suggests a thrombo-embolic disorder , there is also no history of fever, headache , or any localising signs thus making abscess unlikely . Option: B. Acute meningitis. History is not suggestive of meningitis, there is no history of high fever, neck rigidity, altered mental status etc, thus making meningitis unlikely. Also, meningitis doesn’t cause a focal lesion in the brain parenchyma . Option: D. Metastatic carcinoma. There is no history of any cancer mentioned in the question making metastatic cancer unlikely.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Necrosis means", "options": [{"label": "A", "text": "Efflux of calcium", "correct": false}, {"label": "B", "text": "Swelling of cell", "correct": false}, {"label": "C", "text": "Enzymatic degradation", "correct": true}, {"label": "D", "text": "Fat deposition", "correct": false}], "correct_answer": "C. Enzymatic degradation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Enzymatic degradation Necrosis is the type of cell death that is associated with loss of membrane integrity and leakage of cellular contents culminating in the dissolution of cells , largely resulting from the degradative action of enzyme s on lethally injured cells. Therefore necrosis means enzyme degradation .</p>\n<p><strong>Highyeild:</strong></p><p>In Apoptosis: The plasma membrane stays intact DNA Electrophoresis shows a Step Ladder pattern In Necrosis: The plasma membrane is disrupted DNA Electrophoresis shows a Smear pattern Features of Necrosis and Apoptosis Feature Necrosis Apoptosis Cell size Enlarged (swelling) Reduced (shrinkage) Nucleus Pyknosis, karyorrhexis, karyolysis Fragmentation into nucleosome-size fragments Plasma membrane Disrupted Intact; altered structure, especially orientation of lipids Cellular contents Enzymatic digestion; may leak out of cell Intact; may be released in apoptotic bodies Adjacent inflammation Frequent No Physiologic or pathologic role Usually pathologic (culmination of irreversible cell injury) Often physiologic, means of eliminating unwanted cells; may be pathologic after some forms of cell injury, especially DNA damage</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Efflux of calcium. In necrosis there is ATP depletion which causes failure of the Na-K ATPase pump , this results in an increase in Na and Ca inside the cell , thus Ca is increased inside the cell, and effluent is not seen. Option: B. Swelling of the cell. Seen in necrosis , but is not specific to necrosis. Enzymatic degradation better describes necrosis . Option: D. Fat deposition. Seen in Fat necrosis .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Fibrinoid necrosis may be observed in all of the following except:", "options": [{"label": "A", "text": "Malignant hypertension", "correct": false}, {"label": "B", "text": "Polyarteritis nodosa", "correct": false}, {"label": "C", "text": "Diabetic glomerulosclerosis", "correct": true}, {"label": "D", "text": "Aschoff’s nodule", "correct": false}], "correct_answer": "C. Diabetic glomerulosclerosis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Diabetic glomerulosclerosis Fibrinoid necrosis is a special form of necrosis , visible by light microscopy, usually in immune reactions in which complexes of antigens and antibodies are deposited in the walls of arteries . The deposited immune complexes , together with fibrin that has leaked out of vessels , produce a bright pink and amorphous appearance on H & E preparations called fibrinoid. Fibrinoid necrosis is seen in:- Malignant hypertension Vasculitis like polyarteritis nodosa Immune complex deposition (eg: Acute rheumatic fever -Aschoff’s nodule) Fibrinoid necrosis in an artery. The wall of the artery shows a circumferential bright pink area of necrosis with inflammation (neutrophils with dark nuclei).</p>\n<p><strong>Highyeild:</strong></p><p>In Apoptosis: The plasma membrane stays intact DNA Electrophoresis shows a Step Ladder pattern In Necrosis: The plasma membrane is disrupted DNA Electrophoresis shows a Smear pattern Features of Necrosis and Apoptosis Feature Necrosis Apoptosis Cell size Enlarged (swelling) Reduced (shrinkage) Nucleus Pyknosis, karyorrhexis, karyolysis Fragmentation into nucleosome-size fragments Plasma membrane Disrupted Intact; altered structure, especially orientation of lipids Cellular contents Enzymatic digestion; may leak out of cell Intact; may be released in apoptotic bodies Adjacent inflammation Frequent No Physiologic or pathologic role Usually pathologic (culmination of irreversible cell injury) Often physiologic, means of eliminating unwanted cells; may be pathologic after some forms of cell injury, especially DNA damage</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Malignant hypertension . Example of Fibrinoid necrosis . Option: B. Polyarteritis nodosa . Example of Fibrinoid necrosis . Option: C. Diabetic glomerulosclerosis . Example of Fibrinoid necrosis .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 34 years old man comes to medicine OPD with complaints of fever, chest pain, cough, shivering, foul smelling cough, lethargy, and shortness of breath. His blood pressure is 130/80 mmHg, pulse rate is 90/min. A chest X-ray was done which is given below. What type of necrosis is seen in this pathology?", "options": [{"label": "A", "text": "Coagulative necrosis", "correct": false}, {"label": "B", "text": "Liquefactive necrosis", "correct": true}, {"label": "C", "text": "Fibrinoid necrosis", "correct": false}, {"label": "D", "text": "Fat necrosis", "correct": false}], "correct_answer": "B. Liquefactive necrosis", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1686812371858-QTDP007005IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Liquefactive necrosis From history and chest x-ray diagnosis of lung abscess is made. There is pus present in an abscess. It is a liquefactive necrosis . It is characterized by the digestion of dead cells , resulting in the transformation of the tissue into a liquid viscous mass . It is seen in focal bacterial or, occasionally, fungal infections because microbes stimulate the accumulation of leukocytes and the liberation of enzymes from these cells. The necrotic material is frequently creamy yellow because of the presence of dead leukocytes and is called pus . For unknown reasons, hypoxic death of cells within the central nervous system often manifests as liquefactive necrosis .</p>\n<p><strong>Highyeild:</strong></p><p>In Apoptosis: The plasma membrane stays intact DNA Electrophoresis shows a Step Ladder pattern In Necrosis: The plasma membrane is disrupted DNA Electrophoresis shows a Smear pattern Features of Necrosis and Apoptosis Feature Necrosis Apoptosis Cell size Enlarged (swelling) Reduced (shrinkage) Nucleus Pyknosis, karyorrhexis, karyolysis Fragmentation into nucleosome-size fragments Plasma membrane Disrupted Intact; altered structure, especially orientation of lipids Cellular contents Enzymatic digestion; may leak out of cell Intact; may be released in apoptotic bodies Adjacent inflammation Frequent No Physiologic or pathologic role Usually pathologic (culmination of irreversible cell injury) Often physiologic, means of eliminating unwanted cells; may be pathologic after some forms of cell injury, especially DNA damage</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Coagulative necrosis. Coagulative necrosis is a form of necrosis in which the architecture of dead tissues is preserved for a span of at least some days. The affected tissues exhibit a firm texture . Option: C. Fibrinoid necrosis. Fibrinoid necrosis is limited to small blood vessels . Typically, it involves small arteries, arterioles, and glomeruli affected by autoimmune diseases (e.g., systemic lupus erythematosus) or malignant hypertension. Option: D. Fat necrosis . It is seen in breast, pancreas, and buttocks injuries.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are true about given agarose gel electrophoresis except?", "options": [{"label": "A", "text": "A is the control", "correct": false}, {"label": "B", "text": "The process represented by B is important in embryogenesis and protection from cancer", "correct": false}, {"label": "C", "text": "Inflammation is absent in C", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1686812372090-QTDP007006IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above The given image shows gel electrophoresis where: A= Control B= Stepladder pattern due to Apoptosis C= smear pattern due to Necrosis</p>\n<p><strong>Highyeild:</strong></p><p>In Apoptosis: The plasma membrane stays intact DNA Electrophoresis shows a Step Ladder pattern In Necrosis: The plasma membrane is disrupted DNA Electrophoresis shows a Smear pattern Features of Necrosis and Apoptosis Feature Necrosis Apoptosis Cell size Enlarged (swelling) Reduced (shrinkage) Nucleus Pyknosis, karyorrhexis, karyolysis Fragmentation into nucleosome-size fragments Plasma membrane Disrupted Intact; altered structure, especially orientation of lipids Cellular contents Enzymatic digestion; may leak out of cell Intact; may be released in apoptotic bodies Adjacent inflammation Frequent No Physiologic or pathologic role Usually pathologic (culmination of irreversible cell injury) Often physiologic, means of eliminating unwanted cells; may be pathologic after some forms of cell injury, especially DNA damage</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. A is controlled. True Option: B. The process represented by B is important in embryogenesis and protection from cancer. True Option: C. Inflammation is absent in C. False because inflammation is present in necrosis . Option: D. All of the above are true. All of the above are not true .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Ramnath is a 62 years old village man. He is a chronic smoker, For a long time, he was suffering from hypertension and diabetes mellitus. Despite being warned many times by doctors and his family members he never took regular treatment. One night he suddenly developed severe chest pain. He somehow reached the hospital. ECG was done. In ECG there was classical ST elevation in V1-V4 of more than 3 mm with T wave inversion. Diagnosis of anterior wall MI was made. Due to the unavailability of a cath lab, thrombolysis was performed. But after the treatment, the condition of the patient had worsened. In ECG there was no arrhythmia. There was more necrosis of myocytes than it was before thrombolysis. What could be the cause?", "options": [{"label": "A", "text": "Myocardial reperfusion injury", "correct": true}, {"label": "B", "text": "Dressler syndrome", "correct": false}, {"label": "C", "text": "Anaphylaxis to the thrombolytic agent", "correct": false}, {"label": "D", "text": "Patient had Takotsubo cardiomyopathy", "correct": false}], "correct_answer": "A. Myocardial reperfusion injury", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Myocardial reperfusion injury Ischemia-Reperfusion Injury : Restoration of blood flow to ischemic tissues can promote recovery of cells if they are reversibly injured, but can also paradoxically exacerbate the injury and cause cell death . As a consequence, reperfused tissues may sustain the loss of cells in addition to the cells that are irreversibly damaged at the end of ischemia. This process, called ischemia-reperfusion injury , is clinically important because it contributes to tissue damage during myocardial and cerebral infarction and following therapies to restore blood flow .</p>\n<p><strong>Highyeild:</strong></p><p>In Apoptosis: The plasma membrane stays intact DNA Electrophoresis shows a Step Ladder pattern In Necrosis: The plasma membrane is disrupted DNA Electrophoresis shows a Smear pattern Features of Necrosis and Apoptosis Feature Necrosis Apoptosis Cell size Enlarged (swelling) Reduced (shrinkage) Nucleus Pyknosis, karyorrhexis, karyolysis Fragmentation into nucleosome-size fragments Plasma membrane Disrupted Intact; altered structure, especially orientation of lipids Cellular contents Enzymatic digestion; may leak out of cell Intact; may be released in apoptotic bodies Adjacent inflammation Frequent No Physiologic or pathologic role Usually pathologic (culmination of irreversible cell injury) Often physiologic, means of eliminating unwanted cells; may be pathologic after some forms of cell injury, especially DNA damage</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Dressler syndrome. Dressler syndrome , also known as Postmyocardial infarction syndrome , is a form of secondary pericarditis with or without a pericardial effusion , that occurs as a result of injury to the heart or pericardium it occurs after 2 -3 weeks Option: C. Anaphylaxis to thrombolytic agent. Anaphylaxis to the thrombolytic agent can happen but it is rare. Systemic anaphylaxis is characterized by vascular shock, widespread edema, and difficulty in breathing. Option: D. The patient had Takotsubo cardiomyopathy. In Takotsubo cardiomyopathy there is a history of emotional stress or sympathetic overactivity which causes sudden death in patients. Does not give any information on ECHO.</p>\n<p><strong>Extraedge:</strong></p><p>Factors which contribute to Reperfusion injury include Mitochondrial dysfunction Myocyte hyper contracture Free radical Leukocyte aggregation Platelet and complement activation Takotsubo Cardiomyopathy: An increase in catecholamines causes infundibular narrowing Mid and Apical hypokinesia is seen with Basal hyperkinesia ECG: Non-evolving, transient changes in T wave and ST segment Troponin is elevated but Angiogram is normal Treatment: Supportive therapy, Beta-blockers, ACE Inhibitors</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 52-year-old man presents with severe abdominal pain radiating to the back. The patient is a known alcoholic. He is found to have increased serum amylase. On Surgical exploration, the appearance of the resected specimen is as shown below. The most likely pathology is", "options": [{"label": "A", "text": "Coagulative necrosis", "correct": false}, {"label": "B", "text": "Caseous necrosis", "correct": false}, {"label": "C", "text": "Fibrinoid necrosis", "correct": false}, {"label": "D", "text": "Fat necrosis", "correct": true}], "correct_answer": "D. Fat necrosis", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1686812372233-QTDP007008IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Fat necrosis The most likely diagnosis is acute pancreatitis with fat necrosis . The areas of white chalky deposits represent foci of fat necrosis with calcium soap formation (saponification) at sites of lipid breakdown in the mesentery. Fat necrosis results from the release of activated pancreatic lipases into the substance of the pancreas and the peritoneal cavity. The fatty acids, so derived, combine with calcium to produce grossly visible chalky-white areas ( fat saponification ). Histologic examination reveals foci of shadowy outlines of necrotic fat cells , with basophilic calcium deposits , surrounded by an inflammatory reaction .</p>\n<p><strong>Highyeild:</strong></p><p>In Apoptosis: The plasma membrane stays intact DNA Electrophoresis shows a Step Ladder pattern In Necrosis: The plasma membrane is disrupted DNA Electrophoresis shows a Smear pattern Features of Necrosis and Apoptosis Feature Necrosis Apoptosis Cell size Enlarged (swelling) Reduced (shrinkage) Nucleus Pyknosis, karyorrhexis, karyolysis Fragmentation into nucleosome-size fragments Plasma membrane Disrupted Intact; altered structure, especially orientation of lipids Cellular contents Enzymatic digestion; may leak out of cell Intact; may be released in apoptotic bodies Adjacent inflammation Frequent No Physiologic or pathologic role Usually pathologic (culmination of irreversible cell injury) Often physiologic, means of eliminating unwanted cells; may be pathologic after some forms of cell injury, especially DNA damage</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Coagulative necrosis seen in ischemia of solid organs except for CNS . Option: B. Caseous necrosis seen in TB, Syphilis, and Histoplasma . Option: C. Fibrinoid necrosis seen in Vasculitis, Malignant hypertension, and Immune complex deposition .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old woman with ischemic heart disease develops congestive heart failure. She also complains of back pain. Urinalysis shows hematuria. Which of the following is the most likely etiology for the gross appearance of the kidney shown here?", "options": [{"label": "A", "text": "Apoptosis", "correct": false}, {"label": "B", "text": "Embolization", "correct": true}, {"label": "C", "text": "Metastasis", "correct": false}, {"label": "D", "text": "HIV infections", "correct": false}], "correct_answer": "B. Embolization", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1686812373003-QTDP007010IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Embolization The above image shows a wedge-shaped infarction in the kidney. The most common cause of infarction in the kidney is thromboembolism , which leads to the blockage of the blood supply. Past history of myocardial infarction suggests a thromboembolic disorder . The pattern of ischemic necrosis in the kidney is coagulative necrosis .</p>\n<p><strong>Highyeild:</strong></p><p>In chronic passive hepatic congestion, seen in Congestive heart failure, chronic hypoxia may result in ischemic tissue injury and scarring . The centrilobular regions are grossly red-brown and slightly depressed (because of cell death) and are accentuated against the surrounding zones of the uncongested tan liver called nutmeg liver . Microscopically, there is centrilobular congestion and haemorrhage, hemosiderin-laden macrophages, and variable degrees of hepatocyte dropout and necrosis Liver with chronic passive congestion and hemorrhagic necrosis. (A) Central areas are red and slightly depressed compared with the surrounding tan viable parenchyma, forming a \"nutmeg liver\" pattern (so-called because it resembles the cut surface of a nutmeg). (B) Centrilobular necrosis with degenerating hepatocytes and hemorrhage. (Courtesy Dr. James Crawford, Department of Pathology, University of Florida, Gainesville, Fla.)</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. The given comical history is suggestive of the thromboembolic event causing coagulative necrosis in the kidney , thus it can not be apoptosis. Option: C. There is no history of any cancer mentioned in the question making metastatic cancer unlikely. Option: D. HIV infections. There is no history of any immunocompromised status mentioned in the question making HIV infection unlikely.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 58-year-old man experienced chest pain 4 days ago. He now has increasing dyspnea and an irregular pulse. The representative gross appearance of his interventricular myocardium is shown here. Which of the following microscopic changes is most likely to be present in this condition?", "options": [{"label": "A", "text": "Liquefactive necrosis", "correct": false}, {"label": "B", "text": "Caseous necrosis", "correct": false}, {"label": "C", "text": "Wet gangrene", "correct": false}, {"label": "D", "text": "Coagulative necrosis", "correct": true}], "correct_answer": "D. Coagulative necrosis", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1686812373618-QTDP007011IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Coagulative necrosis The above image shows myocardial infarction , which is characterized by coagulative necrosis . Examples of coagulative necrosis: Ischemic injury in all organs, except the CNS, and Dry gangrene .</p>\n<p><strong>Highyeild:</strong></p><p>In chronic passive hepatic congestion, seen in Congestive heart failure, chronic hypoxia may result in ischemic tissue injury and scarring . The centrilobular regions are grossly red-brown and slightly depressed (because of cell death) and are accentuated against the surrounding zones of the uncongested tan liver called nutmeg liver . Microscopically, there is centrilobular congestion and haemorrhage, hemosiderin-laden macrophages, and variable degrees of hepatocyte dropout and necrosis Liver with chronic passive congestion and hemorrhagic necrosis. (A) Central areas are red and slightly depressed compared with the surrounding tan viable parenchyma, forming a \"nutmeg liver\" pattern (so-called because it resembles the cut surface of a nutmeg). (B) Centrilobular necrosis with degenerating hepatocytes and hemorrhage. (Courtesy Dr. James Crawford, Department of Pathology, University of Florida, Gainesville, Fla.)</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Liquefactive necrosis. Seen in Ischemia to the brain, Coagulative necrosis with superimposed bacterial infection (Wet Gangrene) . Option: B. Caseous necrosis. Seen in TB, Syphilis and Histoplasma Option: C. Wet gangrene. Refers to Coagulative necrosis with superimposed bacterial infection ie Liquefactive necrosis .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Coagulative necrosis is seen in all except?", "options": [{"label": "A", "text": "TB", "correct": false}, {"label": "B", "text": "Zenker’s degeneration", "correct": false}, {"label": "C", "text": "Sarcoidosis", "correct": true}, {"label": "D", "text": "Dry gangrene", "correct": false}], "correct_answer": "C. Sarcoidosis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Sarcoidosis IN SARCOIDOSIS- Non-caseating granulomas are the typical histological finding in sarcoidosis, in some cases granulomas can undergo caseation, which means they become necrotic and appear as cheesy or caseous material. This is more commonly associated with infections like tuberculosis Microscopically, this necrotic material appears as amorphous, structureless, eosinophilic, granular debris, with a complete loss of cellular details. The granulomas in Crohn’s disease, sarcoidosis, and foreign body reactions tend to not have necrotic centres and are said to be non-caseating.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A biopsy from the brain of a patient who died of high fever, neck rigidity and epilepsy in the last 5 days shows the following. What is your diagnosis?", "options": [{"label": "A", "text": "Gangrenous necrosis", "correct": false}, {"label": "B", "text": "Liquefactive necrosis", "correct": true}, {"label": "C", "text": "Coagulative necrosis", "correct": false}, {"label": "D", "text": "Fibrinoid necrosis", "correct": false}], "correct_answer": "B. Liquefactive necrosis", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1686812374472-QTDP007014IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Liquefactive necrosis History is suggestive of Brain abscess . Ischaemia in all solid organs leads to Coagulative necrosis except in CNS which leads to liquefactive necrosis . Liquefactive necrosis is also seen in superimposed bacterial infections . Liquefactive necrosis , in contrast to coagulative necrosis, is characterized by the digestion of dead cells, resulting in the transformation of the tissue into a viscous liquid . The necrotic material is frequently creamy yellow because of the presence of leukocytes and is called pus . For unknown reasons, hypoxic death of cells within the central nervous system often manifests as liquefactive necrosis . Eventually, the digested tissue is removed by phagocytes .</p>\n<p><strong>Highyeild:</strong></p><p>In Apoptosis: The plasma membrane stays intact DNA Electrophoresis shows a Step Ladder pattern In Necrosis: The plasma membrane is disrupted DNA Electrophoresis shows a Smear pattern Features of Necrosis and Apoptosis Feature Necrosis Apoptosis Cell size Enlarged (swelling) Reduced (shrinkage) Nucleus Pyknosis, karyorrhexis, karyolysis Fragmentation into nucleosome-size fragments Plasma membrane Disrupted Intact; altered structure, especially orientation of lipids Cellular contents Enzymatic digestion; may leak out of cell Intact; may be released in apoptotic bodies Adjacent inflammation Frequent No Physiologic or pathologic role Usually pathologic (culmination of irreversible cell injury) Often physiologic, means of eliminating unwanted cells; may be pathologic after some forms of cell injury, especially DNA damage</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Gangrenous necrosis. Dry gangrene refers to Coagulative necrosis , a clinical term used mainly for ischemia to limbs. Option: B. Coagulative necrosis. Seen in ischemia to solid organs. Option: D: Fibrinoid necrosis was seen in Vasculitis, Malignant hypertension, and Immune complex deposition .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statement is/are true regarding the condition shown below?", "options": [{"label": "A", "text": "Bright pink colour results from immune complexes, together with fibrin that has leaked out of vessel", "correct": false}, {"label": "B", "text": "It appears as bright pink and amorphous on light microscopy in the H&E stain", "correct": false}, {"label": "C", "text": "Seen in immunologically mediated vasculitis", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1686812375030-QTDP007015IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above Fibrinoid necrosis is a special form of necrosis usually seen in immune reactions involving blood vessels. This pattern of necrosis typically occurs when complexes of antigens and antibodies are deposited in the walls of arteries . Deposits of these ‘immune complexes’, together with fibrin that has leaked out of vessels, result in a bright pink and amorphous appearance on H & E stains , called ‘fibrinoid’ (fibrin-like) by pathologists. It is seen in immunologically mediated vasculitis . Fibrinoid necrosis is seen in:- Malignant hypertension Vasculitis like polyarteritis nodosa Immune complex deposition (eg: Acute rheumatic fever -Aschoff’s nodule) Fibrinoid necrosis in an artery. The wall of the artery shows a circumferential bright pink area of necrosis with inflammation (neutrophils with dark nuclei).</p>\n<p><strong>Highyeild:</strong></p><p>In Apoptosis: The plasma membrane stays intact DNA Electrophoresis shows a Step Ladder pattern In Necrosis: The plasma membrane is disrupted DNA Electrophoresis shows a Smear pattern Features of Necrosis and Apoptosis Feature Necrosis Apoptosis Cell size Enlarged (swelling) Reduced (shrinkage) Nucleus Pyknosis, karyorrhexis, karyolysis Fragmentation into nucleosome-size fragments Plasma membrane Disrupted Intact; altered structure, especially orientation of lipids Cellular contents Enzymatic digestion; may leak out of cell Intact; may be released in apoptotic bodies Adjacent inflammation Frequent No Physiologic or pathologic role Usually pathologic (culmination of irreversible cell injury) Often physiologic, means of eliminating unwanted cells; may be pathologic after some forms of cell injury, especially DNA damage</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Bright pink colour results from immune complexes, together with fibrin that has leaked out of vessels. True . Option: B. It appears as bright pink and amorphous on light microscopy in H&E stain. True . Option: C. Seen in immunologically mediated vasculitis. True .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of these shows an acute inflammatory response?", "options": [{"label": "A", "text": "Pyroptosis", "correct": false}, {"label": "B", "text": "Necroptosis", "correct": false}, {"label": "C", "text": "Necrosis", "correct": true}, {"label": "D", "text": "Apoptosis", "correct": false}], "correct_answer": "C. Necrosis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Necrosis The morphologic appearance of necrosis as well as necroptosis is the result of the denaturation of intracellular proteins and enzymatic digestion of the lethally injured cell . Necrotic cells are unable to maintain membrane integrity and their contents often leak out , a process that may elicit inflammation in the surrounding tissue .</p>\n<p><strong>Highyeild:</strong></p><p>In Apoptosis: The plasma membrane stays intact DNA Electrophoresis shows a Step Ladder pattern In Necrosis: The plasma membrane is disrupted DNA Electrophoresis shows a Smear pattern Features of Necrosis and Apoptosis Feature Necrosis Apoptosis Cell size Enlarged (swelling) Reduced (shrinkage) Nucleus Pyknosis, karyorrhexis, karyolysis Fragmentation into nucleosome-size fragments Plasma membrane Disrupted Intact; altered structure, especially orientation of lipids Cellular contents Enzymatic digestion; may leak out of cell Intact; may be released in apoptotic bodies Adjacent inflammation Frequent No Physiologic or pathologic role Usually pathologic (culmination of irreversible cell injury) Often physiologic, means of eliminating unwanted cells; may be pathologic after some forms of cell injury, especially DNA damage</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Pyrogens (fever-causing mediators like IL-1 ) cause apoptosis. A complex called Inflammasome is activated when a microorganism enters the host cell and in turn, activated caspase 1 . Option: B. Morphological death by Necrosis , Mechanical pathway of initiation by Apoptosis . Option: D. Programmed cell death , is not associated with inflammation. NOTE: Among the above options maximum inflammation is a feature of Necrosis so it is the best answer here. However, Pyroptosis, Necroptosis, and Necrosis all show inflammation .</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

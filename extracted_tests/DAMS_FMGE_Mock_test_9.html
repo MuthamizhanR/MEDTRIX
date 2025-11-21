@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Fmge Mock 3 Paper 2</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Fmge Mock 3 Paper 2</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                150 Questions | 150 Total Marks | 160 min Duration | ~64.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 150 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 160 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 150</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Fmge Mock 3 Paper 2 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 150</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 150 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Child at birth appeared short. Out of the following which child has best prognosis for growth after birth?", "options": [{"label": "A", "text": "Child born with Turner’s syndrome", "correct": false}, {"label": "B", "text": "Baby with birth length and weight is less than 10th percentile", "correct": false}, {"label": "C", "text": "Baby born to parents who are themselves below the 3rd percentile", "correct": false}, {"label": "D", "text": "Baby with birth length, weight and head circumference is less than 10th percentile", "correct": true}], "correct_answer": "D. Baby with birth length, weight and head circumference is less than 10th percentile", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Child is diagnosed as having Celiac disease. He is HLA-DQ-2 positive and antiendomysial antibodies are present. Out of the following which of the following statement is true?", "options": [{"label": "A", "text": "At birth weight is less than expected", "correct": false}, {"label": "B", "text": "Weight gain falls after 6 months", "correct": true}, {"label": "C", "text": "Linear growth velocity is not affected", "correct": false}, {"label": "D", "text": "Usually associated with megaloblastic anemia", "correct": false}], "correct_answer": "B. Weight gain falls after 6 months", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Catch down growth involves a period of slow growth that follows a phase where baby experienced rapid or extreme growth above normal range. Out of the following example of catch down growth is:", "options": [{"label": "A", "text": "Child losing weight in first 6 months of life due to bottle feeding", "correct": false}, {"label": "B", "text": "Child born as large for gestational age and now crosses to a lower centile line", "correct": true}, {"label": "C", "text": "Due to malabsorption the child is not gaining weight", "correct": false}, {"label": "D", "text": "Due to growth hormone deficiency there is decreased linear growth", "correct": false}], "correct_answer": "B. Child born as large for gestational age and now crosses to a lower centile line", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "7 year old child has history of recurrent wheeze and nocturnal cough. There is family history of allergic rhinitis. Which of the following statements is true regarding this condition in child:", "options": [{"label": "A", "text": "Inspiratory phase is prolonged", "correct": false}, {"label": "B", "text": "Decrease in peak expiratory flow rate", "correct": true}, {"label": "C", "text": "Mast cell stabiliser can be used as prophylaxis", "correct": false}, {"label": "D", "text": "All of the above", "correct": false}], "correct_answer": "B. Decrease in peak expiratory flow rate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "At birth, in neonate screening for congenital heart disease is done. Which of the following statements is correct regarding congenital heart disease?", "options": [{"label": "A", "text": "Measurement of oxygen saturation can detect all congenital heart defects", "correct": false}, {"label": "B", "text": "Normally murmur can be present at birth due to patent ductus arteriosus which disappears in 24 hours", "correct": true}, {"label": "C", "text": "Normal chest X-ray at birth excludes congenital heart disease", "correct": false}, {"label": "D", "text": "Babies having cyanotic congenital heart disease always appear blue at birth", "correct": false}], "correct_answer": "B. Normally murmur can be present at birth due to patent ductus arteriosus which disappears in 24 hours", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Child is having vomiting with no signs of dehydration. There is no fever and no history of diarrhea. Which of the following states is true regarding vomiting in children?", "options": [{"label": "A", "text": "Vomiting can be a sign of increased intracranial pressure", "correct": true}, {"label": "B", "text": "Projectile vomiting is diagnostic of pyloric stenosis", "correct": false}, {"label": "C", "text": "Antibiotics are given in viral gastroenteritis", "correct": false}, {"label": "D", "text": "Presence of green coloured vomiting in newborn is a sign of gastroesophageal reflex", "correct": false}], "correct_answer": "A. Vomiting can be a sign of increased intracranial pressure", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In child diagnosed as ventricular septal defect there is presence of pan systolic murmur at lower left sternal border. In this child there can be enlargement of all heart chambers except:", "options": [{"label": "A", "text": "Right atrium", "correct": true}, {"label": "B", "text": "Left atrium", "correct": false}, {"label": "C", "text": "Right ventricle", "correct": false}, {"label": "D", "text": "Left ventricle", "correct": false}], "correct_answer": "A. Right atrium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "While evaluating for neurological disorders in children which of the following is true?", "options": [{"label": "A", "text": "Delayed walking is always caused by muscle weakness", "correct": false}, {"label": "B", "text": "Cranial nerves can be checked only above 5 years of age", "correct": false}, {"label": "C", "text": "In spastic form of cerebral palsy, the plantar grasp persists more than normal", "correct": true}, {"label": "D", "text": "Duchene muscular dystrophy can affect both males and females", "correct": false}], "correct_answer": "C. In spastic form of cerebral palsy, the plantar grasp persists more than normal", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Child is being assessed for motor development. Out of the following which is a sign of abnormal gross motor development:", "options": [{"label": "A", "text": "Climbing up stairs and down stairs at 2 years of age", "correct": false}, {"label": "B", "text": "Changing prone to supine position at 5-6 months of age", "correct": false}, {"label": "C", "text": "Crawling at the age of 18 months", "correct": true}, {"label": "D", "text": "Pedalling a tricycle at the age of 3 years", "correct": false}], "correct_answer": "C. Crawling at the age of 18 months", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Child is having weight for height < -3 Z score and mid upper arm circumference 11.0 cm. according to WHO classification this child is called as:", "options": [{"label": "A", "text": "Wasted and stunted child", "correct": false}, {"label": "B", "text": "Severe acute malnutrition", "correct": true}, {"label": "C", "text": "Moderate acute malnutrition", "correct": false}, {"label": "D", "text": "Mild acute malnutrition", "correct": false}], "correct_answer": "B. Severe acute malnutrition", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "To prevent Down syndrome in child, screening test should be done in all pregnancy. Which of the following is true regarding screening in Down’s syndrome?", "options": [{"label": "A", "text": "Done by measurement of hormone & proteins in the maternal serum", "correct": true}, {"label": "B", "text": "Done by measurement of hormone & proteins in the amniotic fluid", "correct": false}, {"label": "C", "text": "If risk ration is 1:500, then termination of pregnancy is done", "correct": false}, {"label": "D", "text": "Couple with already child with Down’s syndrome first screening is done in next pregnancy", "correct": false}], "correct_answer": "A. Done by measurement of hormone & proteins in the maternal serum", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Regarding the inheritance of autosomal dominant disorders which of the following is true:", "options": [{"label": "A", "text": "50% of the offspring will be affected", "correct": true}, {"label": "B", "text": "Males are affected more than females", "correct": false}, {"label": "C", "text": "Disease usually skips a generation", "correct": false}, {"label": "D", "text": "More common in cousin – cousin marriages", "correct": false}], "correct_answer": "A. 50% of the offspring will be affected", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Term child was discharged 24 hours after birth. On day 3 parents notice yellowing of skin of face. Child is accepting feeds well. Next step in this child is:", "options": [{"label": "A", "text": "Sepsis screen to be done to rule out sepsis", "correct": false}, {"label": "B", "text": "Starts phototherapy in hospital", "correct": false}, {"label": "C", "text": "Place the child in sunlight at home", "correct": false}, {"label": "D", "text": "Bilirubin level should be measured", "correct": true}], "correct_answer": "D. Bilirubin level should be measured", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "6 months old male child has history of increased sweating and is salty on kissing the child. All of the following findings can be seen in this child except:", "options": [{"label": "A", "text": "Hypernatremia", "correct": true}, {"label": "B", "text": "Increased incidence of respiratory tract infection", "correct": false}, {"label": "C", "text": "Decreased growth", "correct": false}, {"label": "D", "text": "Decreased serum cholesterol", "correct": false}], "correct_answer": "A. Hypernatremia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "4 years old child has swelling all over the body, which is more in morning and decreases till evening. In this child on measurement serum complement C3 is normal. All of the following findings can be seen except:", "options": [{"label": "A", "text": "Deceased serum albumin level", "correct": false}, {"label": "B", "text": "Renal biopsy is required", "correct": true}, {"label": "C", "text": "Requires pneumococcal vaccination when in remission", "correct": false}, {"label": "D", "text": "Prednisone needs to be started", "correct": false}], "correct_answer": "B. Renal biopsy is required", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A elderly female sustained Colles’ fracture in her right hand which was properly treated. She now complains of stiffness and severe pain in the wrist with cold sensation and cyanosis in the fingers. X-ray of the hand revealed complete decalcification. She is most likely suffering from –", "options": [{"label": "A", "text": "Causalgia", "correct": false}, {"label": "B", "text": "Tubercular arthritis of wrist joint", "correct": false}, {"label": "C", "text": "Traumatic tenosynovitis", "correct": false}, {"label": "D", "text": "Sudeck’s atrophy", "correct": true}], "correct_answer": "D. Sudeck’s atrophy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 42 year old female presents with tingling and numbness in right hand that awakens her in the middle of the night for last two weeks. She also gives history of being treated for diabetes and hypothyroidism for last 3 years by an endocrinologist. Which of the following ain’t true about this condition from the following options ?", "options": [{"label": "A", "text": "Splintage is helpful only in few initial months of onset of symptoms", "correct": false}, {"label": "B", "text": "Motor Symptoms appear early in the course of the disease", "correct": true}, {"label": "C", "text": "Durakn’s Test is the most specific clinical test in the diagnosis", "correct": false}, {"label": "D", "text": "It is the most common focal compression neuropathy", "correct": false}], "correct_answer": "B. Motor Symptoms appear early in the course of the disease", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 25 year old soccer player complained of injury to right knee 6 months ago. Now he says that there is a feeling of sudden giving away of knee joint with knee in 90 degree flexion which completely disappears when the knee is taken into complete extension. Which of the following ligament needs to be checked ?", "options": [{"label": "A", "text": "Anteromedial bundle of ACL", "correct": true}, {"label": "B", "text": "Anterolateral bundle of ACL", "correct": false}, {"label": "C", "text": "Anterolateral bundle of PCL", "correct": false}, {"label": "D", "text": "Anteromedial bundle of PCL", "correct": false}], "correct_answer": "A. Anteromedial bundle of ACL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 12 year old boy has been complaining of pain and swelling in his right thigh. He has associated fever as well. He was taken to a doctor where blood markers were done which show raised TLC , ESR and CRP. He is put on IV antibiotics and NSAID. He responds to the medicines till the time he takes them but then symptoms occur again when he stops. X-ray was done which shows laminated periosteal reaction along the diaphysis of femur. Which of the following will be the most conclusive investigation to establish the diagnosis ?", "options": [{"label": "A", "text": "Bone Scan", "correct": false}, {"label": "B", "text": "MRI", "correct": false}, {"label": "C", "text": "Biopsy", "correct": true}, {"label": "D", "text": "CT scan with 3D reconstruction", "correct": false}], "correct_answer": "C. Biopsy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is seen in osteoporosis?", "options": [{"label": "A", "text": "Calcium normal and ALP increase", "correct": false}, {"label": "B", "text": "Calcium normal and ALP normal", "correct": true}, {"label": "C", "text": "Calcium decreased and ALP normal", "correct": false}, {"label": "D", "text": "Calcium increased, ALP increased", "correct": false}], "correct_answer": "B. Calcium normal and ALP normal", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are not true about suicide except?", "options": [{"label": "A", "text": "Patient who talk about suicide rarely commit suicide", "correct": false}, {"label": "B", "text": "All suicidal threats are not to be taken seriously", "correct": false}, {"label": "C", "text": "Asking about suicide will often reduce the anxiety surrounding the feeling", "correct": true}, {"label": "D", "text": "Amongst all risk factors of suicide, hopelessness is most important risk factor", "correct": false}], "correct_answer": "C. Asking about suicide will often reduce the anxiety surrounding the feeling", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/15(47).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In MMSE (Mini Mental Status examination), highest score is given to which one of the following domains tested?", "options": [{"label": "A", "text": "Language", "correct": false}, {"label": "B", "text": "Orientation", "correct": true}, {"label": "C", "text": "Attention and Calculation", "correct": false}, {"label": "D", "text": "Registration and Recall", "correct": false}], "correct_answer": "B. Orientation", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/16(49).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30-year-old man was brought to the Accident and Emergency Department. He suddenly fell down after hearing a loud sound at a party. There was no loss of consciousness. The psychopathology being described is:", "options": [{"label": "A", "text": "Catalepsy", "correct": false}, {"label": "B", "text": "Cataplexy", "correct": true}, {"label": "C", "text": "Catatonia", "correct": false}, {"label": "D", "text": "Posturing", "correct": false}], "correct_answer": "B. Cataplexy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not a REM sleep disorder?", "options": [{"label": "A", "text": "Narcolepsy", "correct": false}, {"label": "B", "text": "Nightmare", "correct": false}, {"label": "C", "text": "Night terror", "correct": true}, {"label": "D", "text": "Sleep apnoea", "correct": false}], "correct_answer": "C. Night terror", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 60-year-old woman complained of depression and was started on escitalopram. After two weeks of treatment, she complains of lethargy, muscle weakness and nausea. Which of the following is the most likely cause for her symptoms:", "options": [{"label": "A", "text": "Acute confusional state", "correct": false}, {"label": "B", "text": "Generalised anxiety disorder", "correct": false}, {"label": "C", "text": "Hyponatraemia", "correct": false}, {"label": "D", "text": "Serotonin syndrome", "correct": false}], "correct_answer": "Unknown", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the marked structure", "options": [{"label": "A", "text": "Pons", "correct": false}, {"label": "B", "text": "Medulla", "correct": true}, {"label": "C", "text": "Thalamus", "correct": false}, {"label": "D", "text": "Midbrain", "correct": false}], "correct_answer": "B. Medulla", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(201).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the marked structure Which view includes the most breast tissue?", "options": [{"label": "A", "text": "Mediolateral (ML)", "correct": false}, {"label": "B", "text": "Craniocaudal (CC)", "correct": false}, {"label": "C", "text": "Mediolateral oblique (MLO)", "correct": true}, {"label": "D", "text": "Exaggerated craniocaudal (XCCL)", "correct": false}], "correct_answer": "C. Mediolateral oblique (MLO)", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(201).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Linear accelerator for", "options": [{"label": "A", "text": "Electrons and xrays", "correct": true}, {"label": "B", "text": "Gamma and protons", "correct": false}, {"label": "C", "text": "Electrons and protons", "correct": false}, {"label": "D", "text": "Neutrons and xray", "correct": false}], "correct_answer": "A. Electrons and xrays", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which part of the bowel is dilated in the Xray shown?", "options": [{"label": "A", "text": "Ileum", "correct": false}, {"label": "B", "text": "Jejunum", "correct": true}, {"label": "C", "text": "Colon", "correct": false}, {"label": "D", "text": "Duodenum", "correct": false}], "correct_answer": "B. Jejunum", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(169).png"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the correct temporal sequence for the appearance of the stated radiation effect on peripheral blood components?", "options": [{"label": "A", "text": "Lymphocytopenia, granulocytopenia, thrombocytopenia, anemia", "correct": true}, {"label": "B", "text": "Anemia, lymphocytopenia, granulocytopenia, thrombocytopenia", "correct": false}, {"label": "C", "text": "Granulocytopenia, thromobocytopenia, anemia, lymphocytopenia", "correct": false}, {"label": "D", "text": "Lymphocytopenia, anemia, granulocytopenia, thrombocytopenia", "correct": false}], "correct_answer": "A. Lymphocytopenia, granulocytopenia, thrombocytopenia, anemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the finding seen:", "options": [{"label": "A", "text": "Ulcerative colitis", "correct": false}, {"label": "B", "text": "Diverticulosis", "correct": true}, {"label": "C", "text": "Crohn’s disease", "correct": false}, {"label": "D", "text": "Tuberculosis", "correct": false}], "correct_answer": "B. Diverticulosis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3(139).png"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4(129).png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of these structures is anechoic?", "options": [{"label": "A", "text": "Bone", "correct": false}, {"label": "B", "text": "Fat", "correct": false}, {"label": "C", "text": "Cyst", "correct": true}, {"label": "D", "text": "Air", "correct": false}], "correct_answer": "C. Cyst", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What

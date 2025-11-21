@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Inflammation Repair And Hemodynamics</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Inflammation Repair And Hemodynamics</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                55 Questions | 228 Total Marks | 65 min Duration | ~70.91 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 55 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 65 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 55</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Inflammation Repair And Hemodynamics - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 55</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 55 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Identify the arrow marked cell in the given condition below?", "options": [{"label": "A", "text": "Macrophage", "correct": false}, {"label": "B", "text": "Lymphocyte", "correct": false}, {"label": "C", "text": "Plasma cell", "correct": true}, {"label": "D", "text": "Eosinophil", "correct": false}], "correct_answer": "C. Plasma cell", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/3646169Q.1.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19217821698244746/19217821698244746.m3u8"}, {"text": "Which of the following cells will increase in case of parasite infection?", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "B", "correct": false}, {"label": "C", "text": "C", "correct": true}, {"label": "D", "text": "D", "correct": false}], "correct_answer": "C. C", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/313228300.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39973141698244760/39973141698244760.m3u8"}, {"text": "Vasodilation in acute inflammation is seen earliest in:", "options": [{"label": "A", "text": "Venules", "correct": false}, {"label": "B", "text": "Arterioles", "correct": true}, {"label": "C", "text": "Capillaries", "correct": false}, {"label": "D", "text": "Vein", "correct": false}], "correct_answer": "B. Arterioles", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9477831698244773/9477831698244773.m3u8"}, {"text": "Increased permeability in acute inflammation is due to:", "options": [{"label": "A", "text": "Histamine", "correct": true}, {"label": "B", "text": "IL-2", "correct": false}, {"label": "C", "text": "TGFβ", "correct": false}, {"label": "D", "text": "FGF", "correct": false}], "correct_answer": "A. Histamine", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/5019821Q.4.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36595811698244787/36595811698244787.m3u8"}, {"text": "Sequence of events in acute inflammation:", "options": [{"label": "A", "text": "Vasodilatation → Stasis → Transient vasoconstriction → Increased permeability", "correct": false}, {"label": "B", "text": "Transient vasoconstriction → Increased permeability → Stasis → Vasodilatation", "correct": false}, {"label": "C", "text": "Transient vasoconstriction → Vasodilatation → Stasis → Increased permeability", "correct": false}, {"label": "D", "text": "Transient vasoconstriction → Vasodilatation → Increased permeability → Stasis", "correct": true}], "correct_answer": "D. Transient vasoconstriction → Vasodilatation → Increased permeability → Stasis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6829261698244847/6829261698244847.m3u8"}, {"text": "The following is not an adhesion molecule?", "options": [{"label": "A", "text": "Spectrin", "correct": true}, {"label": "B", "text": "Integrins", "correct": false}, {"label": "C", "text": "Selectins", "correct": false}, {"label": "D", "text": "Cadherin", "correct": false}], "correct_answer": "A. Spectrin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63606331698244888/63606331698244888.m3u8"}, {"text": "The RBCs with schizonts of P. Falciparum are not visible on peripheral blood smear due to which of the following reason?", "options": [{"label": "A", "text": "Capillary adherence or sequestration of parasitized RBCs", "correct": true}, {"label": "B", "text": "ADCC mediated RBC destruction", "correct": false}, {"label": "C", "text": "Selective hemolysis of affected RBCs in spleen", "correct": false}, {"label": "D", "text": "Cellular lysis due to hemozoin produced by the parasites Erythrocyte changes in Malaria", "correct": false}], "correct_answer": "A. Capillary adherence or sequestration of parasitized RBCs", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69554701698244903/69554701698244903.m3u8"}, {"text": "Amino acid which is useful in Neutrophil extracellular traps (NETs) as to causes lysis of chromatin is?", "options": [{"label": "A", "text": "Arginine", "correct": true}, {"label": "B", "text": "Alanine", "correct": false}, {"label": "C", "text": "Phenyl alanine", "correct": false}, {"label": "D", "text": "Valine", "correct": false}], "correct_answer": "A. Arginine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/16276511698244916/16276511698244916.m3u8"}, {"text": "The following statements are true regarding neutrophil extracellular trap:", "options": [{"label": "A", "text": "Produced by neutrophils in response to infectious pathogens and inflammatory mediators", "correct": false}, {"label": "B", "text": "Provide a high concentration of antimicrobial substances at sites of infection", "correct": false}, {"label": "C", "text": "Prevent the spread of the microbes by trapping them in the fibrils", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/47495281698245687/47495281698245687.m3u8"}, {"text": "All of the following vascular changes are observed in acute inflammation, except:", "options": [{"label": "A", "text": "Vasodilation", "correct": false}, {"label": "B", "text": "Stasis of blood", "correct": false}, {"label": "C", "text": "Increased vascular permeability", "correct": false}, {"label": "D", "text": "Decreased hydrostatic pressure", "correct": true}], "correct_answer": "D. Decreased hydrostatic pressure", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26142671698245719/26142671698245719.m3u8"}, {"text": "Correct sequence in extravasation of leukocytes is:", "options": [{"label": "A", "text": "Margination – rolling – adhesion – transmigration", "correct": true}, {"label": "B", "text": "Transmigration – margination – rolling – adhesion", "correct": false}, {"label": "C", "text": "Rolling – adhesion – transmigration – margination", "correct": false}, {"label": "D", "text": "Adhesion – transmigration – margination – rolling", "correct": false}], "correct_answer": "A. Margination – rolling – adhesion – transmigration", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/14480111698245761/14480111698245761.m3u8"}, {"text": "Transmigration of WBC across the endothelium is called:", "options": [{"label": "A", "text": "Margination", "correct": false}, {"label": "B", "text": "Rolling", "correct": false}, {"label": "C", "text": "Pavementing", "correct": false}, {"label": "D", "text": "Diapedesis", "correct": true}], "correct_answer": "D. Diapedesis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/16913831698245780/16913831698245780.m3u8"}, {"text": "Which of the following is an alpha chemokine?", "options": [{"label": "A", "text": "IL-8", "correct": true}, {"label": "B", "text": "MCP-1", "correct": false}, {"label": "C", "text": "Eotaxin", "correct": false}, {"label": "D", "text": "Lymphotactin", "correct": false}], "correct_answer": "A. IL-8", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/1520071698245793/1520071698245793.m3u8"}, {"text": "Which of the following enzymes are responsible for generating ‘oxygen burst’ within neutrophils for killing intracellular bacteria?", "options": [{"label": "A", "text": "Superoxide dismutase", "correct": false}, {"label": "B", "text": "Glutathione peroxidase", "correct": false}, {"label": "C", "text": "NAPDH oxidase", "correct": true}, {"label": "D", "text": "Catalase", "correct": false}], "correct_answer": "C. NAPDH oxidase", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26808651698245806/26808651698245806.m3u8"}, {"text": "Which of the following is an Opsonin?", "options": [{"label": "A", "text": "C3a", "correct": false}, {"label": "B", "text": "C3b", "correct": true}, {"label": "C", "text": "C5a", "correct": false}, {"label": "D", "text": "LTC4", "correct": false}], "correct_answer": "B. C3b", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/17893251698245835/17893251698245835.m3u8"}, {"text": "Which Collagen is typical of basement membrane?", "options": [{"label": "A", "text": "Type I", "correct": false}, {"label": "B", "text": "Type II", "correct": false}, {"label": "C", "text": "Type III", "correct": false}, {"label": "D", "text": "Type IV", "correct": true}], "correct_answer": "D. Type IV", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/9034.png"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are Intermediate filament except?", "options": [{"label": "A", "text": "Lamin", "correct": false}, {"label": "B", "text": "Cadherin", "correct": true}, {"label": "C", "text": "Vimentin", "correct": false}, {"label": "D", "text": "Desmin", "correct": false}], "correct_answer": "B. Cadherin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78029511701262423/78029511701262423.m3u8"}, {"text": "Heritable changes in gene expression not caused by alterations in DNA sequence refers to?", "options": [{"label": "A", "text": "Genetics", "correct": false}, {"label": "B", "text": "Epigenetics", "correct": true}, {"label": "C", "text": "Mutations", "correct": false}, {"label": "D", "text": "Transposons", "correct": false}], "correct_answer": "B. Epigenetics", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/7206431701262661/7206431701262661.m3u8"}, {"text": "Epigenetic factors refers to?", "options": [{"label": "A", "text": "Histone methylation", "correct": false}, {"label": "B", "text": "Histone phosphorylation", "correct": false}, {"label": "C", "text": "DNA methylation", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13874321701262728/13874321701262728.m3u8"}, {"text": "Collagen present in cornea?", "options": [{"label": "A", "text": "Type 1", "correct": true}, {"label": "B", "text": "Type 2", "correct": false}, {"label": "C", "text": "Type 4", "correct": false}, {"label": "D", "text": "Type 7", "correct": false}], "correct_answer": "A. Type 1", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/4910679ANS%2011.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34510051701262751/34510051701262751.m3u8"}, {"text": "Gene silencing RNA-", "options": [{"label": "A", "text": "rRNA", "correct": false}, {"label": "B", "text": "tRNA", "correct": false}, {"label": "C", "text": "miRNA", "correct": true}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "C. miRNA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31737061701262809/31737061701262809.m3u8"}, {"text": "Which of the following statement is not true?", "options": [{"label": "A", "text": "Cytokeratin is the marker of muscle cells", "correct": true}, {"label": "B", "text": "Vimentin is used to stain fibroblasts", "correct": false}, {"label": "C", "text": "Neurofilaments are present in neurons", "correct": false}, {"label": "D", "text": "Desmin can be used as a marker for muscle cells", "correct": false}], "correct_answer": "A. Cytokeratin is the marker of muscle cells", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37727551701262836/37727551701262836.m3u8"}, {"text": "Which of the following is a negative acute phase reactant?", "options": [{"label": "A", "text": "Albumin", "correct": true}, {"label": "B", "text": "Haptaglobin", "correct": false}, {"label": "C", "text": "Ferritin", "correct": false}, {"label": "D", "text": "C reactive protein", "correct": false}], "correct_answer": "A. Albumin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22357141698245888/22357141698245888.m3u8"}, {"text": "Th 1 cells produce?", "options": [{"label": "A", "text": "IL-1", "correct": false}, {"label": "B", "text": "IFN gamma", "correct": true}, {"label": "C", "text": "IL-4", "correct": false}, {"label": "D", "text": "IL-5", "correct": false}], "correct_answer": "B. IFN gamma", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/443399Q.19.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/690271698245902/690271698245902.m3u8"}, {"text": "Primary granules of neutrophil have?", "options": [{"label": "A", "text": "Proteinase 3", "correct": true}, {"label": "B", "text": "Alkaline phosphatase", "correct": false}, {"label": "C", "text": "Acid protease", "correct": false}, {"label": "D", "text": "Lactoferrin", "correct": false}], "correct_answer": "A. Proteinase 3", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61682831698245916/61682831698245916.m3u8"}, {"text": "Major basic protein is found in?", "options": [{"label": "A", "text": "Macrophage", "correct": false}, {"label": "B", "text": "Eosinophils", "correct": true}, {"label": "C", "text": "Basophil", "correct": false}, {"label": "D", "text": "Neutrophil", "correct": false}], "correct_answer": "B. Eosinophils", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78244591698245943/78244591698245943.m3u8"}, {"text": "The following are labile cells except:", "options": [{"label": "A", "text": "Hepatocytes", "correct": true}, {"label": "B", "text": "Bone marrow", "correct": false}, {"label": "C", "text": "Intestinal mucosa", "correct": false}, {"label": "D", "text": "Epithelium of skin", "correct": false}], "correct_answer": "A. Hepatocytes", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39211521698245974/39211521698245974.m3u8"}, {"text": "Liver biopsy in chronic RHF shows?", "options": [{"label": "A", "text": "Shrinking", "correct": false}, {"label": "B", "text": "Greasy fatty liver", "correct": false}, {"label": "C", "text": "Hypertrophy", "correct": false}, {"label": "D", "text": "Congestion", "correct": true}], "correct_answer": "D. Congestion", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/33450481698246009/33450481698246009.m3u8"}, {"text": "Heart failure cells are:", "options": [{"label": "A", "text": "Foam cells", "correct": false}, {"label": "B", "text": "Lipid laden macrophages", "correct": false}, {"label": "C", "text": "Hemosiderin laden macrophages", "correct": true}, {"label": "D", "text": "Type 1 pneumocytes", "correct": false}], "correct_answer": "C. Hemosiderin laden macrophages", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34625941698246031/34625941698246031.m3u8"}, {"text": "Hypercoagulability due to defective factor V gene is called:", "options": [{"label": "A", "text": "Lisbon mutation", "correct": false}, {"label": "B", "text": "Leiden mutation", "correct": true}, {"label": "C", "text": "Antiphospholipid syndrome", "correct": false}, {"label": "D", "text": "Inducible thrombocytopenia syndrome", "correct": false}], "correct_answer": "B. Leiden mutation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23662401698246079/23662401698246079.m3u8"}, {"text": "Which of the following glycosaminoglycans is not produced in the golgi apparatus?", "options": [{"label": "A", "text": "Heparan sulphate", "correct": false}, {"label": "B", "text": "Dermatan sulphate", "correct": false}, {"label": "C", "text": "Keratan sulphate", "correct": false}, {"label": "D", "text": "Hyaluronan", "correct": true}], "correct_answer": "D. Hyaluronan", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78502131698246126/78502131698246126.m3u8"}, {"text": "Healing tissue has which type of collagen", "options": [{"label": "A", "text": "I", "correct": false}, {"label": "B", "text": "II", "correct": false}, {"label": "C", "text": "III", "correct": true}, {"label": "D", "text": "IV", "correct": false}], "correct_answer": "C. III", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/9863871698246178/9863871698246178.m3u8"}, {"text": "In mediating acute phase response of inflammation which of the following does not play a major role?", "options": [{"label": "A", "text": "IL-1", "correct": false}, {"label": "B", "text": "IL-6", "correct": false}, {"label": "C", "text": "IL-13", "correct": true}, {"label": "D", "text": "TNF", "correct": false}], "correct_answer": "C. IL-13", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/28250641698246194/28250641698246194.m3u8"}, {"text": "The following histopathological picture is from a patient with cough, night sweats and a cheesy white focus in left upper lobe of lung. The principle cell involved here is", "options": [{"label": "A", "text": "Lymphocyte", "correct": false}, {"label": "B", "text": "Histiocyte", "correct": true}, {"label": "C", "text": "Eosinophil", "correct": false}, {"label": "D", "text": "Multinucleated giant cell", "correct": false}], "correct_answer": "B. Histiocyte", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/349273Q.21.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/49940711698246214/49940711698246214.m3u8"}, {"text": "Eosinophillia is found in?", "options": [{"label": "A", "text": "Cryptococcus", "correct": false}, {"label": "B", "text": "HPV", "correct": false}, {"label": "C", "text": "Stronglyloides", "correct": true}, {"label": "D", "text": "Typhoid", "correct": false}], "correct_answer": "C. Stronglyloides", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64418821698246232/64418821698246232.m3u8"}, {"text": "Leukocyte migration through endothelium is induced by:", "options": [{"label": "A", "text": "Selectin", "correct": false}, {"label": "B", "text": "N CAM", "correct": false}, {"label": "C", "text": "I CAM", "correct": false}, {"label": "D", "text": "PECAM", "correct": true}], "correct_answer": "D. PECAM", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78182361698246249/78182361698246249.m3u8"}, {"text": "Which of the following is the chief mediator associated with resetting the hypothalamic temperature set point at a higher level, resulting in fever?", "options": [{"label": "A", "text": "PGF2 alpha", "correct": false}, {"label": "B", "text": "PGE1", "correct": false}, {"label": "C", "text": "PGE2", "correct": true}, {"label": "D", "text": "PGI2", "correct": false}], "correct_answer": "C. PGE2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56824301698246372/56824301698246372.m3u8"}, {"text": "Pain during inflammation is mediated by:", "options": [{"label": "A", "text": "Nitric oxide", "correct": false}, {"label": "B", "text": "Leukotriene B4", "correct": false}, {"label": "C", "text": "Bradykinin", "correct": true}, {"label": "D", "text": "Chemokines", "correct": false}], "correct_answer": "C. Bradykinin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/73058901698246391/73058901698246391.m3u8"}, {"text": "The following is not a chemoattractant in acute inflammation:", "options": [{"label": "A", "text": "IL-8", "correct": false}, {"label": "B", "text": "C5a", "correct": false}, {"label": "C", "text": "LTB4", "correct": false}, {"label": "D", "text": "Kinins", "correct": true}], "correct_answer": "D. Kinins", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63999631698246448/63999631698246448.m3u8"}, {"text": "Stellate Granuloma are seen in:", "options": [{"label": "A", "text": "Cat scratch disease", "correct": true}, {"label": "B", "text": "Sarcoidosis", "correct": false}, {"label": "C", "text": "LGV", "correct": false}, {"label": "D", "text": "Histoplasmosis", "correct": false}], "correct_answer": "A. Cat scratch disease", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Pathology-7.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37503411698246463/37503411698246463.m3u8"}, {"text": "A 9 years old boy is admitted with acute abdominal pain localized in the right illac fossa. He is pyrexia with localized peritonism in RIF. The causative cell involved here:", "options": [{"label": "A", "text": "Lymphocytes", "correct": false}, {"label": "B", "text": "Neutrophil", "correct": true}, {"label": "C", "text": "Macrophages", "correct": false}, {"label": "D", "text": "Monocytes", "correct": false}], "correct_answer": "B. Neutrophil", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56657861698246479/56657861698246479.m3u8"}, {"text": "True statement about alternative macrophage activation (PGI type)", "options": [{"label": "A", "text": "Induced by the cytokine IFN-y", "correct": false}, {"label": "B", "text": "Kill ingested organisms", "correct": false}, {"label": "C", "text": "Secrete cytokines that stimulate inflammation", "correct": false}, {"label": "D", "text": "Main function is in tissue repair", "correct": false}, {"label": "E", "text": "Anti inflammatory", "correct": false}], "correct_answer": "Unknown", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/16464571698246495/16464571698246495.m3u8"}, {"text": "The principle cell in granuloma", "options": [{"label": "A", "text": "Fibroblast", "correct": false}, {"label": "B", "text": "Epithelioid cell", "correct": true}, {"label": "C", "text": "Giant cell", "correct": false}, {"label": "D", "text": "Plasma cell", "correct": false}], "correct_answer": "B. Epithelioid cell", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/71374471698246632/71374471698246632.m3u8"}, {"text": "Durck granuloma is seen in:", "options": [{"label": "A", "text": "Congenital syphilis", "correct": false}, {"label": "B", "text": "Cat scratch disease", "correct": false}, {"label": "C", "text": "Histoplasmosis", "correct": false}, {"label": "D", "text": "Cerebral malaria", "correct": true}], "correct_answer": "D. Cerebral malaria", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Pathology-8.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/17997921698246651/17997921698246651.m3u8"}, {"text": "Hallmark of chronic inflammation:", "options": [{"label": "A", "text": "Increased vascular permeability", "correct": false}, {"label": "B", "text": "Vasodilation", "correct": false}, {"label": "C", "text": "Granulomas", "correct": false}, {"label": "D", "text": "Tissue destruction", "correct": true}], "correct_answer": "D. Tissue destruction", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/58180061698246669/58180061698246669.m3u8"}, {"text": "Granulomatous inflammation seen in A/E:", "options": [{"label": "A", "text": "Syphilis", "correct": false}, {"label": "B", "text": "Tuberculosis", "correct": false}, {"label": "C", "text": "Sarcoidosis", "correct": false}, {"label": "D", "text": "AIDS", "correct": true}], "correct_answer": "D. AIDS", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/17298991698246685/17298991698246685.m3u8"}, {"text": "Necrotizing epitheloid cell granulomas are seen in all, except:", "options": [{"label": "A", "text": "Tuberculosis", "correct": false}, {"label": "B", "text": "Wegener’s granulomatosis", "correct": false}, {"label": "C", "text": "Cat Scratch disease", "correct": false}, {"label": "D", "text": "Leprosy", "correct": true}], "correct_answer": "D. Leprosy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/52117531698246700/52117531698246700.m3u8"}, {"text": "Cell involved in the immediate phase of wound healing:", "options": [{"label": "A", "text": "Platelets", "correct": true}, {"label": "B", "text": "Fibroblasts", "correct": false}, {"label": "C", "text": "Basophils", "correct": false}, {"label": "D", "text": "Macrophages", "correct": false}], "correct_answer": "A. Platelets", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3923441698246714/3923441698246714.m3u8"}, {"text": "Scar contraction is caused by?", "options": [{"label": "A", "text": "Fibroblasts", "correct": false}, {"label": "B", "text": "Myofibroblasts", "correct": true}, {"label": "C", "text": "Epithelial cells", "correct": false}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "B. Myofibroblasts", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6906641698246729/6906641698246729.m3u8"}, {"text": "In a sutured incised wound, re-epithelialization is complete by:", "options": [{"label": "A", "text": "24 hours", "correct": false}, {"label": "B", "text": "48 hours", "correct": false}, {"label": "C", "text": "5 days", "correct": true}, {"label": "D", "text": "2 weeks", "correct": false}], "correct_answer": "C. 5 days", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/43603021698246768/43603021698246768.m3u8"}, {"text": "Endothelium activation refers to:", "options": [{"label": "A", "text": "Aberration of anatomy of vessel wall", "correct": false}, {"label": "B", "text": "Irreversible changes in functional state of vessel wall", "correct": false}, {"label": "C", "text": "Smooth muscle proliferation", "correct": false}, {"label": "D", "text": "Increased expression of adhesion molecules for leukocyte recruitment", "correct": true}], "correct_answer": "D. Increased expression of adhesion molecules for leukocyte recruitment", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/37457931698246787/37457931698246787.m3u8"}, {"text": "Weibel-palade bodies are present in:", "options": [{"label": "A", "text": "Vascular endothelial cells", "correct": true}, {"label": "B", "text": "Warthin finkeldey cells", "correct": false}, {"label": "C", "text": "Leydig cells", "correct": false}, {"label": "D", "text": "Dendritic cells", "correct": false}], "correct_answer": "A. Vascular endothelial cells", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Pathology-9.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27817851698246806/27817851698246806.m3u8"}, {"text": "Which of the following pairs of cell cycle phase and cyclin/CDK is incorrectly matched?", "options": [{"label": "A", "text": "G1S checkpoint- cyclin D/CDK 6", "correct": false}, {"label": "B", "text": "G1S checkpoint- cyclin D/CDK4", "correct": false}, {"label": "C", "text": "S phase- cyclin A/CDK 6", "correct": true}, {"label": "D", "text": "G2M checkpoint- cyclin B/CDK1", "correct": false}], "correct_answer": "C. S phase- cyclin A/CDK 6", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/44714501701262872/44714501701262872.m3u8"}, {"text": "Major cytokine involved in fibrosis", "options": [{"label": "A", "text": "Transforming growth factor-alpha", "correct": false}, {"label": "B", "text": "Transforming growth factor-beta", "correct": true}, {"label": "C", "text": "Fibroblast growth factor", "correct": false}, {"label": "D", "text": "Epidermal growth factor", "correct": false}], "correct_answer": "B. Transforming growth factor-beta", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/4518201701262890/4518201701262890.m3u8"}, {"text": "Most abundant collagen in the body?", "options": [{"label": "A", "text": "Type I", "correct": true}, {"label": "B", "text": "Type II", "correct": false}, {"label": "C", "text": "Type IIII", "correct": false}, {"label": "D", "text": "Type IV", "correct": false}], "correct_answer": "A. Type I", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/58221471701262903/58221471701262903.m3u8"}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

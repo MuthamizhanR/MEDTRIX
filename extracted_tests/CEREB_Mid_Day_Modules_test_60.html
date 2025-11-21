@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Mid Day Module (Obg 7)   2025 03 09</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Mid Day Module (Obg 7)   2025 03 09</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                50 Questions | 200 Total Marks | 60 min Duration | ~72.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 50 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 60 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 50</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Mid Day Module (Obg 7)   2025 03 09 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 50</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 50 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 32-year P3 comes to OPD with AUB. Menarche was at age 13 years, and she has had regular cycles till 1 year ago. She then began to have delayed periods every 45-60 days with heavy bleeding, clots but no cramping. She has not had her period in 4 months. She has no hot flushes, acne, or abnormal hair growth. She takes levo-thyroxine for hypothyroidism and has had a tubal ligation done. Height is 160 cm, weight is 120kg. P/S is normal. Bimanual exam is limited by body habitus. A urine pregnancy test is negative. Lab tests are as follows: TSH- 2.9, Prolactin: 16, LH: 15 What is the most likely diagnosis?", "options": [{"label": "A", "text": "Primary ovarian insufficiency", "correct": false}, {"label": "B", "text": "Anovulation", "correct": true}, {"label": "C", "text": "Leiomyoma", "correct": false}, {"label": "D", "text": "Hypothyroidism", "correct": false}], "correct_answer": "B. Anovulation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p><ul><li>• Explanation</li><li>• This patient is having anovulatory cycles. This is because She is obese and this causes insulin resistance and hyperglycemia with decreased production of SHBG causing elevated androgen levels. This androgen gets aromatized to estrone which leads to persistent elevated estrogen levels. This results in anovulation due to the imbalance in LH and FSH (High LH: FSH ratio in PCOS which is the commonest cause of anovulatory cycles)</li><li>• This patient is having anovulatory cycles. This is because She is obese and this causes insulin resistance and hyperglycemia with decreased production of SHBG causing elevated androgen levels. This androgen gets aromatized to estrone which leads to persistent elevated estrogen levels. This results in anovulation due to the imbalance in LH and FSH (High LH: FSH ratio in PCOS which is the commonest cause of anovulatory cycles)</li><li>• She is obese and this causes insulin resistance and hyperglycemia with decreased production of SHBG causing elevated androgen levels. This androgen gets aromatized to estrone which leads to persistent elevated estrogen levels. This results in anovulation due to the imbalance in LH and FSH (High LH: FSH ratio in PCOS which is the commonest cause of anovulatory cycles)</li><li>• She is obese and this causes insulin resistance and hyperglycemia with decreased production of SHBG causing elevated androgen levels.</li><li>• This androgen gets aromatized to estrone which leads to persistent elevated estrogen levels.</li><li>• This results in anovulation due to the imbalance in LH and FSH (High LH: FSH ratio in PCOS which is the commonest cause of anovulatory cycles)</li><li>• Other Options:</li><li>• Other Options:</li><li>• This is not primary ovarian insufficiency as there are no hot flushes which mean estrogen levels are normal/ high Her TSH levels are normal so this is not hypothyroidism Leiomyoma presents as heavy bleeding in regular cycles.</li><li>• This is not primary ovarian insufficiency as there are no hot flushes which mean estrogen levels are normal/ high</li><li>• Her TSH levels are normal so this is not hypothyroidism</li><li>• Leiomyoma presents as heavy bleeding in regular cycles.</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Anovular cycles are common in women with high BMI</li><li>➤ Anovular cycles are common in women with high BMI</li><li>➤ Ref: Page 376, DC Duttas’s Textbook of Gynecology 8 th edition</li><li>➤ Ref: Page 376, DC Duttas’s Textbook of Gynecology 8 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is a contraindication for the image given below?", "options": [{"label": "A", "text": "Adenomyosis", "correct": false}, {"label": "B", "text": "Large submucosal fibroid", "correct": true}, {"label": "C", "text": "Simple endometrial hyperplasia", "correct": false}, {"label": "D", "text": "Nulliparous woman", "correct": false}], "correct_answer": "B. Large submucosal fibroid", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/06/10/untitled-696.jpg"], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p><ul><li>• This is an image of an intra-uterine device Contra-indications to Intrauterine Devices include Pregnancy Puerperal Sepsis Septic Abortion Unexplained vaginal bleeding Gestational trophoblastic disease Cervical cancer Endometrial cancer Distorted uterine cavity (Pre-existing uterine fibroids that distort the uterine cavity may be incompatible with insertion and proper placement of the IUD) PID</li><li>• This is an image of an intra-uterine device</li><li>• Contra-indications to Intrauterine Devices include</li><li>• Pregnancy</li><li>• Puerperal Sepsis</li><li>• Septic Abortion</li><li>• Unexplained vaginal bleeding</li><li>• Gestational trophoblastic disease</li><li>• Cervical cancer</li><li>• Endometrial cancer</li><li>• Distorted uterine cavity (Pre-existing uterine fibroids that distort the uterine cavity may be incompatible with insertion and proper placement of the IUD)</li><li>• PID</li><li>• Let us look at each option :</li><li>• Option A. Adenomyosis : Adenomyosis, a condition where the inner lining of the uterus (endometrium) breaks through the muscle wall of the uterus, is not a contraindication for IUD use, it  helps in reducing the heavy menstrual bleeding associated with adenomyosis.</li><li>• Option A.</li><li>• Adenomyosis</li><li>• Option B . Large Submucosal Fibroid (Correct Answer): A large submucosal fibroid, which protrudes into the uterine cavity, can distort the uterine cavity and interfere with the proper placement and function of an IUD. This can increase the risk of expulsion, malposition, or even perforation, making it a contraindication for IUD use.</li><li>• Option B</li><li>• Large Submucosal Fibroid</li><li>• Option C . Simple Endometrial Hyperplasia : Simple endometrial hyperplasia without atypia is generally not a contraindication for IUD use. In fact, hormonal IUDs that release progestin can be part of the treatment plan for endometrial hyperplasia.</li><li>• Option C</li><li>• Simple Endometrial Hyperplasia</li><li>• Option D . Nulliparous Woman : While historically there was hesitation in using IUDs in nulliparous women, current evidence supports the safety and efficacy of IUDs in this population.</li><li>• Option D</li><li>• Nulliparous Woman</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Large submucosal fibroids that distort the uterine cavity are a contraindication for IUD use due to the potential for complications such as expulsion or perforation. Other conditions like adenomyosis, simple endometrial hyperplasia without atypia, or being a nulliparous woman are not contraindications for IUD use.</li><li>➤ Ref: Williams Textbook of Gynecology 3 rd edition page 109</li><li>➤ Ref: Williams Textbook of Gynecology 3 rd edition page 109</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The Anti-progesterone compound RU-486 is effective for inducing abortion if the duration of pregnancy is?", "options": [{"label": "A", "text": "63 days", "correct": true}, {"label": "B", "text": "72 days", "correct": false}, {"label": "C", "text": "84 days", "correct": false}, {"label": "D", "text": "90 days", "correct": false}], "correct_answer": "A. 63 days", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A. 63 days</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• RU-486 is Mifepristone and along with Misoprostol, it is used for medical methods of abortion.</li><li>• RU-486 is Mifepristone and along with Misoprostol, it is used for medical methods of abortion.</li><li>• A combi pack of mifepristone and misoprostol (one tablet of mifepristone 200mg and four tablets of misoprostol 200mcg each) has been approved by the Central Drugs Standard Control Organization, Directorate General of Health Services, for the medical termination of pregnancy up to n ee9ks (63 days) LMP in December 2008 However; CAC Training & Service Delivery Guidelines, 2016 by MoHFW, GoI recommends its use up to 49 days (7 weeks) in public sector sites, in line with the MTP Rules 2003. A proposed amendment to the MTP Act, 1971, to increase the gestation limit for MMA to 9 weeks in public sector sites is under process. Till the proposal is approved , MMA in public health facility would be allowed only up to 7 weeks. So if the question asks approved for use in public health facility, the answer will be 49 days, but it can be given till 9 weeks of pregnancy</li><li>• A combi pack of mifepristone and misoprostol (one tablet of mifepristone 200mg and four tablets of misoprostol 200mcg each) has been approved by the Central Drugs Standard Control Organization, Directorate General of Health Services, for the medical termination of pregnancy up to n ee9ks (63 days) LMP in December 2008</li><li>• However; CAC Training & Service Delivery Guidelines, 2016 by MoHFW, GoI recommends its use up to 49 days (7 weeks) in public sector sites, in line with the MTP Rules 2003.</li><li>• A proposed amendment to the MTP Act, 1971, to increase the gestation limit for MMA to 9 weeks in public sector sites is under process. Till the proposal is approved , MMA in public health facility would be allowed only up to 7 weeks.</li><li>• , MMA in public health facility would be allowed only up to 7 weeks.</li><li>• So if the question asks approved for use in public health facility, the answer will be 49 days, but it can be given till 9 weeks of pregnancy</li><li>• So if the question asks approved for use in public health facility, the answer will be 49 days, but it can be given till 9 weeks of pregnancy</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option B, C and D all have duration > 63 days. Betwen 9 - 12 weeks, suction evacuation is preferred. After 12 weeks, a medical abortion is again preferred (i.e. different regimes of mifepristone f/b misoprostol have been described).</li><li>• Option B, C and D all have duration > 63 days. Betwen 9 - 12 weeks, suction evacuation is preferred. After 12 weeks, a medical abortion is again preferred (i.e. different regimes of mifepristone f/b misoprostol have been described).</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ A combi pack of mifepristone and misoprostol (one tablet of mifepristone 200mg and four tablets of misoprostol 200mcg each) has been approved by the Central Drugs Standard Control Organization, Directorate General of Health Services, for the medical termination of pregnancy up to n ee9ks (63 days) LMP in December 2008 However; CAC Training & Service Delivery Guidelines, 2016 by MoHFW, GoI recommends its use up to 49 days (7 weeks) in public sector sites, in line with the MTP Rules 2003.</li><li>➤ A combi pack of mifepristone and misoprostol (one tablet of mifepristone 200mg and four tablets of misoprostol 200mcg each) has been approved by the Central Drugs Standard Control Organization, Directorate General of Health Services, for the medical termination of pregnancy up to n ee9ks (63 days) LMP in December 2008</li><li>➤ However; CAC Training & Service Delivery Guidelines, 2016 by MoHFW, GoI recommends its use up to 49 days (7 weeks) in public sector sites, in line with the MTP Rules 2003.</li><li>➤ Ref: https://nhm.gov.in/images/pdf/programmes/maternal-health/guidelines/MMA_Handbook.pdf</li><li>➤ Ref: https://nhm.gov.in/images/pdf/programmes/maternal-health/guidelines/MMA_Handbook.pdf</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "As per the 2021 amendment of the MTP act, the upper limit of gestational age for terminating a fetus with substantial anomalies is:", "options": [{"label": "A", "text": "20 weeks", "correct": false}, {"label": "B", "text": "24 weeks", "correct": false}, {"label": "C", "text": "28 weeks", "correct": false}, {"label": "D", "text": "No upper limit", "correct": true}], "correct_answer": "D. No upper limit", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Very Important</li><li>• Very Important</li><li>• As per the 2021 MTP amendment: act, a few important changes which you have to know are that the upper limit of gestational age has been increased  as per the following:</li><li>• Till 20 weeks for original indications (maternal indication, fetal indication, failure of contraception and rape); opinion of 1 RMP required Till 24 weeks for select indications like fetal maformation, rape, humanitarian grounds and maternal diability; opinion of 2 RMPS required After 24 weeks: Only for substantial fetal malformations (No upper limit but this has to be allowed by a medical board)</li><li>• Till 20 weeks for original indications (maternal indication, fetal indication, failure of contraception and rape); opinion of 1 RMP required</li><li>• Till 24 weeks for select indications like fetal maformation, rape, humanitarian grounds and maternal diability; opinion of 2 RMPS required</li><li>• After 24 weeks: Only for substantial fetal malformations (No upper limit but this has to be allowed by a medical board)</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ As per the 2021 MTP amendment: act, a few important changes which you have to know are that the upper limit of gestational age has been increased  as per the following:</li><li>➤ Till 20 weeks for original indications (maternal indication, fetal indication, failure of contraception and rape); opinion of 1 RMP required Till 24 weeks for select indications like fetal maformation, rape, humanitarian grounds and maternal diability; opinion of 2 RMPS required After 24 weeks: Only for substantial fetal malformations (No upper limit but this has to be allowed by a medical board)</li><li>➤ Till 20 weeks for original indications (maternal indication, fetal indication, failure of contraception and rape); opinion of 1 RMP required</li><li>➤ Till 24 weeks for select indications like fetal maformation, rape, humanitarian grounds and maternal diability; opinion of 2 RMPS required</li><li>➤ After 24 weeks: Only for substantial fetal malformations (No upper limit but this has to be allowed by a medical board)</li><li>➤ Ref: http://164.100.47.4/BillsTexts/LSBillTexts/Asintroduced/55_2020_LS_Eng.pdf</li><li>➤ Ref:</li><li>➤ http://164.100.47.4/BillsTexts/LSBillTexts/Asintroduced/55_2020_LS_Eng.pdf</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 50-year-old woman underwent hysterectomy with bilateral salpingooophorectomy with pelvic and para-aortic lymphadenectomy for endometrial cancer. Histopathology confirms lymph node involvement. Which of the following statements is correct:", "options": [{"label": "A", "text": "The patient has stage IIIb disease", "correct": false}, {"label": "B", "text": "No further treatment required as lymphadenectomy already done", "correct": false}, {"label": "C", "text": "Lymphadenectomy in endometrial cancer helps in staging and guiding further management", "correct": true}, {"label": "D", "text": "The patient will require adjuvant vaginal brachytherappy", "correct": false}], "correct_answer": "C. Lymphadenectomy in endometrial cancer helps in staging and guiding further management", "question_images": [], "explanation_images": ["https://pbs.twimg.com/media/FzFlF3IWAAUU5Rn?format=jpg&name=900x900"], "explanation": "<p><strong>Ans. C. Lymphadenectomy in endometrial cancer helps in staging and guiding further management</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Ref: Figo cancer report 2021</li><li>➤ Ref: Figo cancer report 2021</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following arrows depicts where the uterosacral ligament is ligated during a type II radical hysterectomy?", "options": [{"label": "A", "text": "A", "correct": false}, {"label": "B", "text": "B", "correct": true}, {"label": "C", "text": "C", "correct": false}, {"label": "D", "text": "Anywhere", "correct": false}], "correct_answer": "B. B", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/12/18/whatsapp-image-2023-12-18-at-174605.jpeg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/12/18/screenshot-2023-12-18-180615.jpg"], "explanation": "<p><strong>Explanation:</strong></p><ul><li>• Explanation</li><li>• Types of Hysterectomy</li><li>• Types of Hysterectomy</li><li>• In this image, they have shown the utero-sacral ligaments and have asked about a type 2 hysterectomy; hence midway is the best answer</li><li>• In this image, they have shown the utero-sacral ligaments and have asked about a type 2 hysterectomy; hence midway is the best answer</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ In a type 2 radical hysterectomy, the uterine vessels are ligated at the level of the ureter and the uterosacral ligaments are divided midway between the uterus and the sacrum In a type 3 hysterectomy, the uterine vessels are ligated at the origin of the internal iliac vessels and the uterosacral ligaments are ligated near the sacrum</li><li>➤ In a type 2 radical hysterectomy, the uterine vessels are ligated at the level of the ureter and the uterosacral ligaments are divided midway between the uterus and the sacrum</li><li>➤ In a type 3 hysterectomy, the uterine vessels are ligated at the origin of the internal iliac vessels and the uterosacral ligaments are ligated near the sacrum</li><li>➤ Ref: Page 171, Williams Gynecology, 3 rd edition</li><li>➤ Ref: Page 171, Williams Gynecology, 3 rd edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Persistence of endometriosis is directly dependent on which of the following hormones?", "options": [{"label": "A", "text": "Estrogen", "correct": true}, {"label": "B", "text": "Testosterone", "correct": false}, {"label": "C", "text": "Progesterone", "correct": false}, {"label": "D", "text": "Androstenedione", "correct": false}], "correct_answer": "A. Estrogen", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A. Estrogen</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation</li><li>• Endometriosis is a hyperestrogenic state</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Endometriosis is a Hyperestrogenic state. Estrogen facilitates the growth of the ectopic endometrial glands. Endometriosis is an estrogen-dependent, chronic inflammatory disease with aberrant growth of ectopic endometrial tissue. The disturbed molecular mechanisms in this disease are yet to be completely defined. However, suspected underpinnings include an environment estrogen dominance, estrogen dependence, and progesterone resistance within implants; inflammation; escape from immune clearance; local invasion and neurovascular development; and genetic predisposition.</li><li>➤ Endometriosis is a Hyperestrogenic state.</li><li>➤ Estrogen facilitates the growth of the ectopic endometrial glands.</li><li>➤ Endometriosis is an estrogen-dependent, chronic inflammatory disease with aberrant growth of ectopic endometrial tissue.</li><li>➤ The disturbed molecular mechanisms in this disease are yet to be completely defined. However, suspected underpinnings include an environment estrogen dominance, estrogen dependence, and progesterone resistance within implants; inflammation; escape from immune clearance; local invasion and neurovascular development; and genetic predisposition.</li><li>➤ Ref: Page no 233, Williams Gynecology 3 rd edition</li><li>➤ Ref: Page no 233, Williams Gynecology 3 rd edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In the pelvic inlet, which is the shortest anteroposterior diameter?", "options": [{"label": "A", "text": "True conjugate", "correct": false}, {"label": "B", "text": "Obstetric conjugate", "correct": true}, {"label": "C", "text": "Anatomical conjugate", "correct": false}, {"label": "D", "text": "Bispinous diameter", "correct": false}], "correct_answer": "B. Obstetric conjugate", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. Obstetric conjugate</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Diameters of the Pelvic Inlet</li><li>➤ Diameters of the Pelvic Inlet</li><li>➤ Anteroposterior (AP) Diameter</li><li>➤ Anteroposterior (AP) Diameter</li><li>➤ True (anatomical) conjugate (11 cm): Extends from uppermost margin of symphysis pubis to the sacral promontory. Obstetric conjugate (10 cm): It is the shortest AP diameter of the pelvic inlet and hence obstetrically most important. It is measured from the middle of sacral promontory to symphysis pubis. It cannot be measured directly on clinical examination. It is calculated by subtracting 1.5 cm from diagonal conjugate. Diagonal conjugate (12.5 cm): It is measured from tip of sacral promontory to the lower margin of pubic symphysis. It is the only diameter that can be assessed clinically.</li><li>➤ True (anatomical) conjugate (11 cm): Extends from uppermost margin of symphysis pubis to the sacral promontory.</li><li>➤ True (anatomical) conjugate (11 cm):</li><li>➤ Obstetric conjugate (10 cm): It is the shortest AP diameter of the pelvic inlet and hence obstetrically most important. It is measured from the middle of sacral promontory to symphysis pubis. It cannot be measured directly on clinical examination. It is calculated by subtracting 1.5 cm from diagonal conjugate.</li><li>➤ Obstetric conjugate (10 cm):</li><li>➤ Diagonal conjugate (12.5 cm): It is measured from tip of sacral promontory to the lower margin of pubic symphysis. It is the only diameter that can be assessed clinically.</li><li>➤ Diagonal conjugate (12.5 cm):</li><li>➤ Transverse Diameter (13 cm)</li><li>➤ Transverse Diameter (13 cm)</li><li>➤ Distance between the farthest two points on the iliopectineal line. It is the largest diameter of pelvic inlet</li><li>➤ Distance between the farthest two points on the iliopectineal line.</li><li>➤ It is the largest diameter of pelvic inlet</li><li>➤ Oblique Diameters (12 cm)</li><li>➤ Oblique Diameters (12 cm)</li><li>➤ Right oblique diameter: Passes from right sacroiliac joint to left ilio-pubiceminence Left oblique diameter: Passes from left sacroiliac joint to right ilio-pubic eminence</li><li>➤ Right oblique diameter: Passes from right sacroiliac joint to left ilio-pubiceminence</li><li>➤ Left oblique diameter: Passes from left sacroiliac joint to right ilio-pubic eminence</li><li>➤ Ref: Page no 92 Textbook of obstetrics by JB Sharma</li><li>➤ Ref: Page no 92 Textbook of obstetrics by JB Sharma</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 32-year G2 presents to the antenatal OPD. Her period of gestation is 40 weeks. She is planned for induction of labor. On a vaginal exam, the cervix is 2 cm dilated, 1 cm long, soft inconsistency and mid-position. The station of the fetal head is at -1. She asks if induction of labor will be successful? What will you tell her?", "options": [{"label": "A", "text": "She will not respond favorably to induction of labor and will require pre-induction cervical ripening", "correct": false}, {"label": "B", "text": "She will not respond favorably to induction and LSCS should be done", "correct": false}, {"label": "C", "text": "She will respond favorably to induction of labor", "correct": true}, {"label": "D", "text": "The given information is insufficient to make a conclusion", "correct": false}], "correct_answer": "C. She will respond favorably to induction of labor", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/15/screenshot-2024-01-15-162846.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/01/15/screenshot-2024-01-15-162931.jpg"], "explanation": "<p><strong>Ans. C. She will respond favorably to induction of labor</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The Bishop score is as shown in the table. Each component is scored from 0 to 3 The highest score is 13 and the lowest is 0 A favourable score is > 6. This means the patient will respond favorably to methods of induction of labor.</li><li>➤ The Bishop score is as shown in the table.</li><li>➤ Each component is scored from 0 to 3</li><li>➤ The highest score is 13 and the lowest is 0</li><li>➤ A favourable score is > 6. This means the patient will respond favorably to methods of induction of labor.</li><li>➤ Ref: Page no 247, Textbook of Obstetrics by JB Sharma, 3 rd edition</li><li>➤ Ref: Page no 247, Textbook of Obstetrics by JB Sharma, 3 rd edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Mrs. Shiny, a G2P1L1 presented to the hospital in labor pains. On examination she had 3 uterine contractions of 20 seconds in 10 minutes, Cervical dilation was 6 cm and HR 145 bpm. What is the stage of labor?", "options": [{"label": "A", "text": "Stage I", "correct": true}, {"label": "B", "text": "Stage II", "correct": false}, {"label": "C", "text": "Stage III", "correct": false}, {"label": "D", "text": "Stage IV", "correct": false}], "correct_answer": "A. Stage I", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A. Stage I</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Normal Labor</li><li>➤ Normal Labor</li><li>➤ Uterine contractions which bring about cervical effacement and dilatation.</li><li>➤ Stage 1:</li><li>➤ Stage 1:</li><li>➤ From 0 cm to 10 cm dilatation Divided into latent phase and active phase. Latent phase: The point at which mother perceives regular contractions. Active phase: Cervical dilatation of 4cm (as per the WHO modified partograph) 5 cm (As per the new WHO labor care guide) 6 cm (As per ACOG).</li><li>➤ From 0 cm to 10 cm dilatation</li><li>➤ Divided into latent phase and active phase.</li><li>➤ Latent phase: The point at which mother perceives regular contractions.</li><li>➤ Active phase: Cervical dilatation of 4cm (as per the WHO modified partograph) 5 cm (As per the new WHO labor care guide) 6 cm (As per ACOG).</li><li>➤ 4cm (as per the WHO modified partograph) 5 cm (As per the new WHO labor care guide) 6 cm (As per ACOG).</li><li>➤ 4cm (as per the WHO modified partograph)</li><li>➤ 5 cm (As per the new WHO labor care guide)</li><li>➤ 6 cm (As per ACOG).</li><li>➤ Stage 2:</li><li>➤ Stage 2:</li><li>➤ Complete cervical dilatation with active expulsive efforts by the mother</li><li>➤ Complete cervical dilatation with active expulsive efforts by the mother</li><li>➤ Stage 3:</li><li>➤ Stage 3:</li><li>➤ Delivery of placenta and membranes</li><li>➤ Delivery of placenta and membranes</li><li>➤ Stage 4:</li><li>➤ Stage 4:</li><li>➤ “The Golden hour” One hour after delivery of baby. The mother should be monitored for signs of post-partum hemorrhage.</li><li>➤ “The Golden hour”</li><li>➤ One hour after delivery of baby. The mother should be monitored for signs of post-partum hemorrhage.</li><li>➤ Ref: Page no 227, Textbook of Obstetrics by JB Sharma, 3 rd edition</li><li>➤ Ref: Page no 227, Textbook of Obstetrics by JB Sharma, 3 rd edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 32yr G2P1 is referred at her 36 weeks from the primary health center with prolonged labor. On examination, the patient is dehydrated. Abdominal examination reveals a 32 weeks uterus which is tonically contracted. The presentation is unclear. Fetal heart rate is absent. On local examination, the hand is seen outside the introitus. What is the next best step?", "options": [{"label": "A", "text": "Cesarean section", "correct": true}, {"label": "B", "text": "Decapitation", "correct": false}, {"label": "C", "text": "Reposit the hand back and external version", "correct": false}, {"label": "D", "text": "Reposit the hand back and internal version", "correct": false}], "correct_answer": "A. Cesarean section", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A. Cesarean section</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are risk factors for shoulder dystocia except?", "options": [{"label": "A", "text": "Previous shoulder dystocia", "correct": false}, {"label": "B", "text": "Macrosomia", "correct": false}, {"label": "C", "text": "Primigravida", "correct": true}, {"label": "D", "text": "Vacuum delivery", "correct": false}], "correct_answer": "C. Primigravida", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Risk factors for shoulder dystocia include</li><li>➤ Previous shoulder dystocia Macrosomia Diabetes Obesity Induced labor Prolonged labor Vacuum and forceps (more common with vacuum) Anencephaly Multiparity Post maturity</li><li>➤ Previous shoulder dystocia</li><li>➤ Macrosomia</li><li>➤ Diabetes</li><li>➤ Obesity</li><li>➤ Induced labor</li><li>➤ Prolonged labor</li><li>➤ Vacuum and forceps (more common with vacuum)</li><li>➤ Anencephaly</li><li>➤ Multiparity</li><li>➤ Post maturity</li><li>➤ ReF: Page no 469, DC Duttas textbook of Obstetrics 8 th edition</li><li>➤ ReF: Page no 469, DC Duttas textbook of Obstetrics 8 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 22-year-old woman who is otherwise healthy, has an uneventful vaginal delivery of a full-term infant. One day postpartum, she complains of visual changes and a severe headache. Two hours after this, she is found unresponsive and profoundly hypotensive. She is intubated and put on mechanical ventilation. Her BP is 68/28 mmHg. Heart rate is 140 bp. O2 saturation is 95% on FiO2 of 0.40. Physical exam is unremarkable. Lab tests are notable for glucose of 48 mg/ dl with a normal hematocrit and TLC. Which of the following will reverse her hypotension?", "options": [{"label": "A", "text": "Activated drotrecogin alfa.", "correct": false}, {"label": "B", "text": "Hydrocortisone", "correct": true}, {"label": "C", "text": "Thyroxine (T4)", "correct": false}, {"label": "D", "text": "Transfusion of packed red blood cells", "correct": false}], "correct_answer": "B. Hydrocortisone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. Hydrocortisone</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "External rotation occurs after the head is born. The head moves by 45˚and this occurs because?", "options": [{"label": "A", "text": "Rotation of the neck", "correct": false}, {"label": "B", "text": "Rotation of the shoulders", "correct": true}, {"label": "C", "text": "Untwisting of the neck", "correct": false}, {"label": "D", "text": "Untwisting of the shoulders", "correct": false}], "correct_answer": "B. Rotation of the shoulders", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. Rotation of the shoulders</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The cardinal movement of external rotation is actually internal rotation of the shoulders</li><li>➤ The cardinal movement of external rotation is actually internal rotation of the shoulders</li><li>➤ Ref: Page no 224, JB Sharma’s Textbook of Obstetrics 3 rd edition</li><li>➤ Ref: Page no 224, JB Sharma’s Textbook of Obstetrics 3 rd edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 23y woman has a suction evacuation for molar pregnancy. The HPE is reported as a partial mole. You counsel her that her risk of progression to gestational trophoblastic neoplasia is?", "options": [{"label": "A", "text": "1-5%", "correct": true}, {"label": "B", "text": "5-10%", "correct": false}, {"label": "C", "text": "10-15%", "correct": false}, {"label": "D", "text": "15-20%", "correct": false}], "correct_answer": "A. 1-5%", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A. 1-5%</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Risk of progress of complete mole to GTN: 15-20 % Risk of progress of partial mole to GTN: 1-5%</li><li>➤ Risk of progress of complete mole to GTN: 15-20 %</li><li>➤ Risk of progress of partial mole to GTN: 1-5%</li><li>➤ Ref: Page 393, William’s Obstetrics 25 th edition</li><li>➤ Ref: Page 393, William’s Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Match the following correctly:", "options": [{"label": "A", "text": "1b 2d 3c 4a", "correct": false}, {"label": "B", "text": "1a 2d 3c 4b", "correct": true}, {"label": "C", "text": "1a 2c 3d 4b", "correct": false}, {"label": "D", "text": "1b 2c 3d 4a", "correct": false}], "correct_answer": "B. 1a 2d 3c 4b", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/04/24/screenshot-2024-04-24-113312.JPG"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/04/24/screenshot-2024-04-24-113640.JPG", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/04/24/screenshot-2024-04-24-113640_kvczIXj.JPG"], "explanation": "<p><strong>Ans. B. 1a 2d 3c 4b</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Remember this very important table</li><li>• Remember this very important table</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Remember this very important table</li><li>➤ Remember this very important table</li><li>➤ Ref: DC Dutta’s Textbook of Contraception</li><li>➤ Ref: DC Dutta’s Textbook of Contraception</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the preferred schedule of immunization in pregnancy regarding tetanus as per the ministry of health and family welfare?", "options": [{"label": "A", "text": "Inj Td: 1 st dose: early in pregnancy, 2 nd dose: After 4 weeks; booster: if received 2 Td doses in a pregnancy within the last 3 years", "correct": true}, {"label": "B", "text": "Inj TT 1 st dose early in pregnancy, 2 nd dose after 4 weeks and booster if received 2 TT doses in a pregnancy within the last 3 years", "correct": false}, {"label": "C", "text": "Inj Tdap 1 st dose in the 2 nd trimester and 2 nd dose in the 3 rd trimester", "correct": false}, {"label": "D", "text": "Inj TT or Td 1 st dose in early pregnancy and 2 nd dose after 4 weeks.", "correct": false}], "correct_answer": "A. Inj Td: 1 st dose: early in pregnancy, 2 nd dose: After 4 weeks; booster: if received 2 Td doses in a pregnancy within the last 3 years", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Inj Td: 1stdose: early in pregnancy, 2nddose: After 4 weeks; booster:  if received 2 Td doses in a pregnancy within the last 3 years</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Vaccines given in pregnancy as per Ministry of Health and Family Welfare</li><li>• Vaccines given in pregnancy as per Ministry of Health and Family Welfare</li><li>• TT, Td or Tdap Td has replaced TT (as per MOHFW) 1 st dose: early in pregnancy 2 nd dose: After 4 weeks Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>• TT, Td or Tdap Td has replaced TT (as per MOHFW) 1 st dose: early in pregnancy 2 nd dose: After 4 weeks Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>• TT, Td or Tdap</li><li>• Td has replaced TT (as per MOHFW) 1 st dose: early in pregnancy 2 nd dose: After 4 weeks Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>• Td has replaced TT (as per MOHFW)</li><li>• 1 st dose: early in pregnancy</li><li>• 2 nd dose: After 4 weeks</li><li>• Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>• **As per ACOG Committee Guidelines 2017, Tdap: One dose of Td replaced with Tdap preferably given between 27-36 weeks of gestation</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Vaccines given in pregnancy as per Ministry of Health and Family Welfare</li><li>➤ Vaccines given in pregnancy as per Ministry of Health and Family Welfare</li><li>➤ TT, Td or Tdap Td has replaced TT (as per MOHFW) 1 st dose: early in pregnancy 2 nd dose: After 4 weeks Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>➤ TT, Td or Tdap Td has replaced TT (as per MOHFW) 1 st dose: early in pregnancy 2 nd dose: After 4 weeks Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>➤ TT, Td or Tdap</li><li>➤ Td has replaced TT (as per MOHFW) 1 st dose: early in pregnancy 2 nd dose: After 4 weeks Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>➤ Td has replaced TT (as per MOHFW)</li><li>➤ 1 st dose: early in pregnancy</li><li>➤ 2 nd dose: After 4 weeks</li><li>➤ Booster:  if received 2 Td doses in a pregnancy within the last 3 years</li><li>➤ **As per ACOG Committee Guidelines 2017, Tdap: One dose of Td replaced with Tdap preferably given between 27-36 weeks of gestation</li><li>➤ **As per ACOG Committee Guidelines 2017, Tdap: One dose of Td replaced with Tdap preferably given between 27-36 weeks of gestation</li><li>➤ Ref : https://www.fogsi.org/wp-content/uploads/2015/11/vaccination_women.pdf</li><li>➤ Ref :</li><li>➤ https://www.fogsi.org/wp-content/uploads/2015/11/vaccination_women.pdf</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A raised uterine pulsatility index at 11-14 weeks on uterine artery doppler is a predictor for?", "options": [{"label": "A", "text": "Down Syndrome", "correct": false}, {"label": "B", "text": "Gestational Diabetes", "correct": false}, {"label": "C", "text": "Placenta previa", "correct": false}, {"label": "D", "text": "Preeclampsia", "correct": true}], "correct_answer": "D. Preeclampsia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Preeclampsia</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Uterine artery blood flow is estimated to rise from 50ml/min early in gestation to 500-700 ml/ min by term Doppler waveform of the uterine artery shows high diastolic flow velocity and markedly turbulent flow. Greater resistance to flow (High PI) and diastolic notching on a uterine artery Doppler at 11-14 weeks are predictors of Preeclampsia Gestational HTN Fetal growth restriction</li><li>• Uterine artery blood flow is estimated to rise from 50ml/min early in gestation to 500-700 ml/ min by term</li><li>• Doppler waveform of the uterine artery shows high diastolic flow velocity and markedly turbulent flow.</li><li>• Greater resistance to flow (High PI) and diastolic notching on a uterine artery Doppler at 11-14 weeks are predictors of Preeclampsia Gestational HTN Fetal growth restriction</li><li>• Preeclampsia Gestational HTN Fetal growth restriction</li><li>• Preeclampsia</li><li>• Gestational HTN</li><li>• Fetal growth restriction</li><li>• Thus, option D) Pre-eclampsia is correct.</li><li>• Thus, option D) Pre-eclampsia is correct.</li><li>• Other Options:</li><li>• Other Options:</li><li>• A raised uterine PI is not related to gestational diabetes, Down syndrome or placenta previa</li><li>• A raised uterine PI is not related to gestational diabetes, Down syndrome or placenta previa</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Greater resistance to flow (High PI) and diastolic notching  on a uterine artery Doppler at 11-14 weeks are predictors of Preeclampsia Gestational HTN Fetal growth restriction</li><li>➤ Greater resistance to flow (High PI) and diastolic notching  on a uterine artery Doppler at 11-14 weeks are predictors of Preeclampsia Gestational HTN Fetal growth restriction</li><li>➤ Preeclampsia Gestational HTN Fetal growth restriction</li><li>➤ Preeclampsia</li><li>➤ Gestational HTN</li><li>➤ Fetal growth restriction</li><li>➤ Ref: Page no 214, William’s Obstetrics 25 th edition</li><li>➤ Ref: Page no 214, William’s Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Lithium in pregnancy is associated with an increased incidence of?", "options": [{"label": "A", "text": "Orofacial clefting", "correct": false}, {"label": "B", "text": "Ebstein anomaly", "correct": true}, {"label": "C", "text": "Neurobehavioral abnormalities", "correct": false}, {"label": "D", "text": "Cardiovascular anomalies", "correct": false}], "correct_answer": "B. Ebstein anomaly", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. Ebstein anomaly</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Lithium has been associated with Ebstein anomaly</li><li>• Lithium has been associated with Ebstein anomaly</li><li>• This is an otherwise rare anomaly but has a 3% risk in women on Lithium. Fetal ECHO is indicated in women on Lithium</li><li>• This is an otherwise rare anomaly but has a 3% risk in women on Lithium.</li><li>• Fetal ECHO is indicated in women on Lithium</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Lithium has been associated with Ebstein anomaly</li><li>➤ Lithium has been associated with Ebstein anomaly</li><li>➤ This is an otherwise rare anomaly but has a 3% risk in women on Lithium. Fetal ECHO is indicated in women on Lithium</li><li>➤ This is an otherwise rare anomaly but has a 3% risk in women on Lithium.</li><li>➤ Fetal ECHO is indicated in women on Lithium</li><li>➤ Ref: Page no 245, William’s Obstetrics 25 th edition</li><li>➤ Ref: Page no 245, William’s Obstetrics 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 36-year-old woman presents to the OPD with complaints of 3 months pregnancy with vaginal bleeding. On examination, the uterus is palpable. An ultrasound shows the following picture. What is the best management option?", "options": [{"label": "A", "text": "Mifepristone + Misoprostol", "correct": false}, {"label": "B", "text": "Conservative management", "correct": false}, {"label": "C", "text": "Suction & Evacuation", "correct": true}, {"label": "D", "text": "Hysterotomy", "correct": false}], "correct_answer": "C. Suction & Evacuation", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/27/4.jpg"], "explanation_images": [], "explanation": "<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Treatment of a molar pregnancy is suction and evacuation followed by beta hCG surveilance</li><li>➤ Ref: Page no. 391, 392 William’s Obstetrics, 25 th edition</li><li>➤ Ref: Page no. 391, 392 William’s Obstetrics, 25 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Double Decidual Sac sign is seen in:", "options": [{"label": "A", "text": "Early intra-uterine pregnancy", "correct": true}, {"label": "B", "text": "Intra-uterine pseudo gestational sac", "correct": false}, {"label": "C", "text": "Tubal ectopic pregnancy", "correct": false}, {"label": "D", "text": "Molar pregnancy", "correct": false}], "correct_answer": "A. Early intra-uterine pregnancy", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/06/08/untitled-329.jpg"], "explanation": "<p><strong>Ans. A. Early Intra – uterine pregnancy</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Double decidual sac sign is seen in an intra-uterine pregnancy.</li><li>• Other Options</li><li>• Other Options</li><li>• Option B: An intra-uterine pseudo sac is seen usually in an ectopic pregnancy, It is fluid collection in the uterus Option C: Tubal ectopic pregnancy: in this a double decidual sac sign wont be seen. USG signs of a tubal pregnancy include bagel sign, blob sign and ring of fire sign Option D: In Molar pregnancy , the characteristic sign seen is the snowstorm appearance</li><li>• Option B: An intra-uterine pseudo sac is seen usually in an ectopic pregnancy, It is fluid collection in the uterus</li><li>• Option B:</li><li>• intra-uterine pseudo sac</li><li>• Option C: Tubal ectopic pregnancy: in this a double decidual sac sign wont be seen. USG signs of a tubal pregnancy include bagel sign, blob sign and ring of fire sign</li><li>• Option C:</li><li>• Tubal ectopic pregnancy:</li><li>• Option D: In Molar pregnancy , the characteristic sign seen is the snowstorm appearance</li><li>• Option D:</li><li>• Molar pregnancy</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Double Decidual sac sign:</li><li>➤ Double Decidual sac sign:</li><li>➤ Is a useful feature on early pregnancy ultrasound to confirm an early intrauterine pregnancy (IUP) Especially useful when the yolk sac or embryo is still not visualized. It consists of the decidua parietalis (lining the uterine cavity) and decidua capsularis (lining the gestational sac) It is seen as two concentric rings surrounding an anechoic gestational sac. Where the two adhere is the decidua basalis, and is the site of future placental formation.</li><li>➤ Is a useful feature on early pregnancy ultrasound to confirm an early intrauterine pregnancy (IUP)</li><li>➤ Especially useful when the yolk sac or embryo is still not visualized.</li><li>➤ It consists of the decidua parietalis (lining the uterine cavity) and decidua capsularis (lining the gestational sac)</li><li>➤ It is seen as two concentric rings surrounding an anechoic gestational sac.</li><li>➤ Where the two adhere is the decidua basalis, and is the site of future placental formation.</li><li>➤ Another sign of an intra-uterine pregnancy is the intra-decidual sign.</li><li>➤ Ref: Page no 159, William’s Obstetrics</li><li>➤ Ref: Page no 159, William’s Obstetrics</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 16-year-old girl presents to OPD and the below examination finding is seen. Which of the following is least likely?", "options": [{"label": "A", "text": "Associated with hematometra and hamatocolpos", "correct": false}, {"label": "B", "text": "Cyclic pelvic pain is experienced", "correct": false}, {"label": "C", "text": "Breast development is absent/ delayed", "correct": true}, {"label": "D", "text": "Cruciate incision will relieve symptoms", "correct": false}], "correct_answer": "C. Breast development is absent/ delayed", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/29/whatsapp-image-2023-04-29-at-154259.jpeg"], "explanation_images": [], "explanation": "<p><strong>Ans. C. Breast development is absent/ delayed</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ Ref: Speroff’s 9 th edition chapter 10, amenorrhea</li><li>➤ Ref: Speroff’s 9 th edition chapter 10, amenorrhea</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 14-year-old girl presents to OPD with primary amenorrhea. Her height is 135 cm. She has a webbed neck and increased carrying angle. Breast development is tanner 1 with widely spaced nipple, external genitalia are infantile. The Karyotype is most likely to reveal:", "options": [{"label": "A", "text": "46 XX", "correct": false}, {"label": "B", "text": "46XY", "correct": false}, {"label": "C", "text": "45 X0", "correct": true}, {"label": "D", "text": "47 XXY", "correct": false}], "correct_answer": "C. 45 X0", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. 45 X0</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ Ref: Speroff’s 9 th edition chapter 10, amenorrhea</li><li>➤ Ref: Speroff’s 9 th edition chapter 10, amenorrhea</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30-year-old woman presents to OPD with complaint of secondary amenorrhea. On examination, there is galactorrhoea, and her prolactin levels are high. Urine pregnancy test is negative. Which of the following is treatment of choice for her:", "options": [{"label": "A", "text": "OCP", "correct": false}, {"label": "B", "text": "Cabergoline", "correct": true}, {"label": "C", "text": "Dexamethasone", "correct": false}, {"label": "D", "text": "Oxytocin", "correct": false}], "correct_answer": "B. Cabergoline", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. Cabergoline</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ Ref: Speroff’s 9 th edition chapter 10, amenorrhea</li><li>➤ Ref:</li><li>➤ Speroff’s 9 th edition chapter 10, amenorrhea</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A curious pregnant patient visits the antenatal OPD. She has missed her period by 4 days and her pregnancy test is positive. This is her 1 st pregnancy and although, sex detection is banned in India, she is very curious about how the baby forms and asks if it is possible to know the sex of the baby now. You tell her that the gonads are undifferentiated at present. The gonads are bipotent till?", "options": [{"label": "A", "text": "5 weeks", "correct": true}, {"label": "B", "text": "6 weeks", "correct": false}, {"label": "C", "text": "7 weeks", "correct": false}, {"label": "D", "text": "8 weeks", "correct": false}], "correct_answer": "A. 5 weeks", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/04/24/screenshot-2024-04-24-113705.JPG"], "explanation": "<p><strong>Ans. A. 5 weeks</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• The gonads are BIPOTENT (Undifferentiated) till 5 weeks, they then differentiate into testes or ovaries based on whether the karyotype is 46XX or 46XY</li><li>• The gonads are BIPOTENT (Undifferentiated) till 5 weeks, they then differentiate into testes or ovaries based on whether the karyotype is 46XX or 46XY</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "You are assisting the surgeon in an abdominal myomectomy. The surgeon applies this instrument. Where would this be applied?", "options": [{"label": "A", "text": "At the infundibulopelvic ligaments", "correct": false}, {"label": "B", "text": "At the level of round ligaments", "correct": false}, {"label": "C", "text": "At the level of the internal os", "correct": true}, {"label": "D", "text": "At the level of the fibroid", "correct": false}], "correct_answer": "C. At the level of the internal os", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/06/15/1.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/06/15/1.jpg"], "explanation": "<p><strong>Ans. C. At the level of the internal os</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation</li><li>• This is a Bonney’s myomectomy clamp It is applied at the level of the uterine arteries  (level of internal os) during abdominal myomectomy to reduce the intra-operative blood loss by occluding the uterine arteries temporarily</li><li>• This is a Bonney’s myomectomy clamp</li><li>• It is applied at the level of the uterine arteries  (level of internal os) during abdominal myomectomy to reduce the intra-operative blood loss by occluding the uterine arteries temporarily</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ This is a Bonney’s myomectomy clamp It is applied at the level of the uterine arteries  (level of internal os) during abdominal myomectomy to reduce the intra-operative blood loss by occluding the uterine arteries temporarily</li><li>➤ This is a Bonney’s myomectomy clamp</li><li>➤ It is applied at the level of the uterine arteries  (level of internal os) during abdominal myomectomy to reduce the intra-operative blood loss by occluding the uterine arteries temporarily</li><li>➤ Ref: Page no 527, DC Dutta’s Textbook of Gynecology 7 th edition</li><li>➤ Ref: Page no 527, DC Dutta’s Textbook of Gynecology 7 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30 y comes to OPD for evaluation of absent periods. The patient had a vaginal delivery 8 months ago and she’s not had her period since delivery. Her postpartum course was complicated by secondary PPH requiring blood transfusion and a D & E for retained products. At a visit, 2 months ago, the patient was started on combined OCPs, and she has not had vaginal bleeding. Prior to this pregnancy she had regular monthly cycles. She also has increased fatigue. She is not lactating and is bottle feeding her baby. There is no headache, galactorrhoea, or hot flushes. BMI is 31, vitals are normal. Pelvic examination shows clear vaginal discharge and well rugate vagina. The uterus is small and anteverted. UPT is negative. FSH and TSH are normal. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Asherman syndrome", "correct": true}, {"label": "B", "text": "Sheehan syndrome", "correct": false}, {"label": "C", "text": "PCOS", "correct": false}, {"label": "D", "text": "Primary ovarian insufficiency", "correct": false}], "correct_answer": "A. Asherman syndrome", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A. Asherman syndrome</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ Asherman syndrome is intra uterine adhesions, they arise due to: Surgical trauma to the uterus which may be seen following Dilatation and curettage (esp. sharp curettage) Cesarean section Myomectomy where the endometrial cavity is involved Metroplasty Trans-cervical resection of the endometrium Uterine artery embolization Endometrial ablative procedures Intra-uterine infections like tuberculosis and schistosomiasis</li><li>➤ Asherman syndrome is intra uterine adhesions, they arise due to: Surgical trauma to the uterus which may be seen following Dilatation and curettage (esp. sharp curettage) Cesarean section Myomectomy where the endometrial cavity is involved Metroplasty Trans-cervical resection of the endometrium Uterine artery embolization Endometrial ablative procedures Intra-uterine infections like tuberculosis and schistosomiasis</li><li>➤ Surgical trauma to the uterus which may be seen following Dilatation and curettage (esp. sharp curettage) Cesarean section Myomectomy where the endometrial cavity is involved Metroplasty Trans-cervical resection of the endometrium Uterine artery embolization Endometrial ablative procedures Intra-uterine infections like tuberculosis and schistosomiasis</li><li>➤ Surgical trauma to the uterus which may be seen following Dilatation and curettage (esp. sharp curettage) Cesarean section Myomectomy where the endometrial cavity is involved Metroplasty Trans-cervical resection of the endometrium</li><li>➤ Dilatation and curettage (esp. sharp curettage) Cesarean section Myomectomy where the endometrial cavity is involved Metroplasty Trans-cervical resection of the endometrium</li><li>➤ Dilatation and curettage (esp. sharp curettage)</li><li>➤ Cesarean section</li><li>➤ Myomectomy where the endometrial cavity is involved</li><li>➤ Metroplasty</li><li>➤ Trans-cervical resection of the endometrium</li><li>➤ Uterine artery embolization</li><li>➤ Endometrial ablative procedures</li><li>➤ Intra-uterine infections like tuberculosis and schistosomiasis</li><li>➤ Symptoms: Hypomenorrhea Secondary amenorrhoea Secondary infertility Diagnosis On ultrasound</li><li>➤ Symptoms: Hypomenorrhea Secondary amenorrhoea Secondary infertility</li><li>➤ Hypomenorrhea Secondary amenorrhoea Secondary infertility</li><li>➤ Hypomenorrhea</li><li>➤ Secondary amenorrhoea</li><li>➤ Secondary infertility</li><li>➤ Diagnosis On ultrasound</li><li>➤ On ultrasound</li><li>➤ On ultrasound</li><li>➤ Uterine cavity appears irregular/ i nterrupted; punctate echogenic foci in the endometrium/ indistinct endo-myometrial junction/ endometrial fluid: commonly loculated appearing as small focal cystic areas within the endometrium</li><li>➤ Uterine cavity appears irregular/ i nterrupted; punctate echogenic foci in the endometrium/ indistinct endo-myometrial junction/ endometrial fluid: commonly loculated appearing as small focal cystic areas within the endometrium</li><li>➤ On HSG Intra-uterine filling defects are seen giving a moth-eaten appearance Hysteroscopy Gold standard for diagnosis</li><li>➤ On HSG Intra-uterine filling defects are seen giving a moth-eaten appearance</li><li>➤ Intra-uterine filling defects are seen giving a moth-eaten appearance</li><li>➤ Intra-uterine filling defects are seen giving a moth-eaten appearance</li><li>➤ Hysteroscopy Gold standard for diagnosis</li><li>➤ Gold standard for diagnosis</li><li>➤ Gold standard for diagnosis</li><li>➤ Treatment: Hysteroscopic adhesiolysis Post procedure: To stimulate endometrial proliferation and prevent reformation of adhesions, oral estrogen administration has proved effective. A cooper containing intra-uterine device can also be inserted to prevent reformation of adhesions Another hysteroscopy or HSG is typically performed at 3 months following the initial resection. Top of Form</li><li>➤ Treatment: Hysteroscopic adhesiolysis Post procedure: To stimulate endometrial proliferation and prevent reformation of adhesions, oral estrogen administration has proved effective. A cooper containing intra-uterine device can also be inserted to prevent reformation of adhesions Another hysteroscopy or HSG is typically performed at 3 months following the initial resection. Top of Form</li><li>➤ Hysteroscopic adhesiolysis Post procedure: To stimulate endometrial proliferation and prevent reformation of adhesions, oral estrogen administration has proved effective. A cooper containing intra-uterine device can also be inserted to prevent reformation of adhesions Another hysteroscopy or HSG is typically performed at 3 months following the initial resection. Top of Form</li><li>➤ Hysteroscopic adhesiolysis</li><li>➤ Post procedure: To stimulate endometrial proliferation and prevent reformation of adhesions, oral estrogen administration has proved effective. A cooper containing intra-uterine device can also be inserted to prevent reformation of adhesions Another hysteroscopy or HSG is typically performed at 3 months following the initial resection. Top of Form</li><li>➤ To stimulate endometrial proliferation and prevent reformation of adhesions, oral estrogen administration has proved effective. A cooper containing intra-uterine device can also be inserted to prevent reformation of adhesions Another hysteroscopy or HSG is typically performed at 3 months following the initial resection. Top of Form</li><li>➤ To stimulate endometrial proliferation and prevent reformation of adhesions, oral estrogen administration has proved effective. A cooper containing intra-uterine device can also be inserted to prevent reformation of adhesions</li><li>➤ Another hysteroscopy or HSG is typically performed at 3 months following the initial resection. Top of Form</li><li>➤ Ref: Speroff’s 9 th edition chapter 10, amenorrhea</li><li>➤ Ref: Speroff’s 9 th edition chapter 10, amenorrhea</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Preeti, a 20-year-old girl presents with a history of rapidly developing hirsutism, severe acne and amenorrhea. Her BMI is 19. To establish the diagnosis, which would be the most appropriate blood test?", "options": [{"label": "A", "text": "17-OH progesterone", "correct": false}, {"label": "B", "text": "DHEA", "correct": false}, {"label": "C", "text": "Testosterone", "correct": true}, {"label": "D", "text": "LH: FSH ratio", "correct": false}], "correct_answer": "C. Testosterone", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. Testosterone</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective</li><li>➤ Ref: Page 449, Speroff’s clinical gynecological endocrinology and infertility 9 th edition</li><li>➤ Ref: Page 449, Speroff’s clinical gynecological endocrinology and infertility 9 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The most common degeneration seen in uterine fibroids is", "options": [{"label": "A", "text": "Calcific degeneration", "correct": false}, {"label": "B", "text": "Fatty degeneration", "correct": false}, {"label": "C", "text": "Hyaline degeneration", "correct": true}, {"label": "D", "text": "Red degeneration", "correct": false}], "correct_answer": "C. Hyaline degeneration", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. Hyaline degeneration</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation</li><li>• The most common type of degeneration in fibroids is hyaline degeneration</li><li>• The most common type of degeneration in fibroids is hyaline degeneration</li><li>• Red degeneration, calcific degeneration and fatty degeneration are other kinds of degeneration in fibroids</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The most common type of degeneration in fibroids is hyaline degeneration</li><li>➤ The most common type of degeneration in fibroids is hyaline degeneration</li><li>➤ Ref: Page no 227, DC Dutta’s Textbook of gynecology</li><li>➤ Ref: Page no 227, DC Dutta’s Textbook of gynecology</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 34-year nulliparous woman presents to the OPD. She complains of pelvic heaviness. She also mentions that her periods have been increasingly heavy in amount and she has to take a pain killer on the 1 st 2 days of her period due to excessive pain. The periods are otherwise regular. On examination, there is an irregular mass palpated abdominally which is about the size of an 18 weeks gravid uterus. On bimanual exam, the same irregular mass is felt and there is transmitted mobility. What is the possible diagnosis?", "options": [{"label": "A", "text": "Adenomyosis", "correct": false}, {"label": "B", "text": "Fibroid polyp", "correct": false}, {"label": "C", "text": "Leiomyoma", "correct": true}, {"label": "D", "text": "Ovarian mass", "correct": false}], "correct_answer": "C. Leiomyoma", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C. Leiomyoma</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation</li><li>• This patient has symptoms of heavy menstrual bleed and dysmenorrhea which are seen in adenomyosis, fibroids (leiomyoma) and polyp. On examination, this is  a fibroid (probably multiple fibroids) The uterus is significantly enlarged and irregular There is transmitted mobility i.e. the mass is arising from the uterus (transmitted mobility is absent in ovarian masses) The woman is nulliparous</li><li>• This patient has symptoms of heavy menstrual bleed and dysmenorrhea which are seen in adenomyosis, fibroids (leiomyoma) and polyp.</li><li>• On examination, this is  a fibroid (probably multiple fibroids) The uterus is significantly enlarged and irregular There is transmitted mobility i.e. the mass is arising from the uterus (transmitted mobility is absent in ovarian masses) The woman is nulliparous</li><li>• The uterus is significantly enlarged and irregular There is transmitted mobility i.e. the mass is arising from the uterus (transmitted mobility is absent in ovarian masses) The woman is nulliparous</li><li>• The uterus is significantly enlarged and irregular</li><li>• There is transmitted mobility i.e. the mass is arising from the uterus (transmitted mobility is absent in ovarian masses)</li><li>• The woman is nulliparous</li><li>• Other Options:</li><li>• Other Options:</li><li>• In adenomyosis, the uterus is regularly enlarged (max size of 12-14 weeks size) In fibroid polyp, the uterus will be normal or slightly enlarged in size and on speculum exam, a polyp may be seen extruding from the os. Fibroid polyps usually present with inter menstrual bleeding or irregular bleeding In ovarian mass, there usually won

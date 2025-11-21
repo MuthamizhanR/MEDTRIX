@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Pulmonary Embolism</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Pulmonary Embolism</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                23 Questions | 23 Total Marks | 33 min Duration | ~86.09 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 23 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 33 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 23</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Pulmonary Embolism - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 23</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 23 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Which of the following is NOT a hallmark feature of massive pulmonary embolism?", "options": [{"label": "A", "text": "Dyspnea", "correct": false}, {"label": "B", "text": "Syncope", "correct": false}, {"label": "C", "text": "Hypertension", "correct": true}, {"label": "D", "text": "Cyanosis", "correct": false}], "correct_answer": "C. Hypertension", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Hypertension</p>\n<p><strong>Highyeild:</strong></p><p>Massive PE accounts for 5–10% of cases, and is characterized by extensive thrombosis affecting at least half of the pulmonary vasculature Submassive PE accounts for 20–25% of patients, and is characterized by RV dysfunction despite normal systemic arterial pressure. The combination of right heart failure and the release of cardiac biomarkers indicates a high risk of clinical deterioration . Low-risk PE constitutes about 65–75% of cases . These patients have an excellent prognosis. Option:: A, B, D: Hallmark features.</p>\n<p><strong>Random:</strong></p><p>The explanation for incorrect Options: - Option: A: Dyspnea is one of the most characteristic features of massive pulmonary embolism Option: B: Syncope is usually seen in massive PE and it is a characteristic Option: D: Cyanosis is usually not seen in mild PE but seen in massive PE Dyspnea, syncope, hypotension, and cyanosis are hallmarks of massive PE. Patients with massive PE may present in cardiogenic shock and can die from multisystem organ failure.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the total wells point score for pulmonary embolism of a patient with signs and symptoms of DVT and a heart rate of 120/min? No history of previous surgery, cancer, haemoptysis, or prior PE/DVT but alternative diagnosis is less likely than PE?", "options": [{"label": "A", "text": "3", "correct": false}, {"label": "B", "text": "4.5", "correct": false}, {"label": "C", "text": "7.5", "correct": true}, {"label": "D", "text": "9", "correct": false}], "correct_answer": "C. 7.5", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>7.5</p>\n<p><strong>Random:</strong></p><p>The explanation for incorrect Options: - Option: A. 3 signs and symptoms of DVT itself gives a PE score of 3 so it is an incorrect Option: Option: B. 5 The actual score here is 7.5 because there are signs and symptoms of PE +tachycardia + alternative diagnosis is less likely than PE which gives a score of 7.5 Option: D. 9 It is an incorrect Option: as the total is 7.5 Option: A, C, D: Distracters. CLINICAL VARIABLE PE SCORE Signs and symptoms of DVT 3.0 Alternative diagnosis less likely than PE 3.0 Heart rate >100/min 1.5 Immobilization >3 days; surgery within 4 weeks 1.5 Prior PE or DVT 1.5 Hemoptysis 1.0 Cancer 1.0</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is the most frequently cited abnormality, in addition to sinus tachycardia, in pulmonary embolism?", "options": [{"label": "A", "text": "Q1S3T3 sign: a Q wave in lead I, an S wave in lead III, and an inverted T wave in lead III", "correct": false}, {"label": "B", "text": "Q1S3T3 sign: a Q wave in lead I, an S wave in lead III, and a tall T wave in lead III", "correct": false}, {"label": "C", "text": "S1Q3T3 sign: an S wave in lead I, a Q wave in lead III, and an inverted T wave in lead III", "correct": true}, {"label": "D", "text": "S1Q3T3 sign: an S wave in lead I, a Q wave in lead III, and a tall T wave in lead III", "correct": false}], "correct_answer": "C. S1Q3T3 sign: an S wave in lead I, a Q wave in lead III, and an inverted T wave in lead III", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>S1Q3T3 sign: an S wave in lead I, a Q wave in lead III, and an inverted T wave in lead III The most frequently cited abnormality, in addition to sinus tachycardia, is the S1Q3T3 sign: an S wave in lead I, a Q wave in lead III, and an inverted T wave in lead III. This finding is relatively specific but insensitive.</p>\n<p><strong>Random:</strong></p><p>The explanation for incorrect Options: - Option: A Q1S3T3 sign: a Q wave in lead I, an S wave in lead III, and an inverted T wave in lead III this is an incorrect interpretation as an S wave is seen in lead I Option: B. Q1S3T3 sign: a Q wave in lead I, an S wave in lead III, and a tall T wave in lead III Is an incorrect Option: as inverted T waves are seen and not tall T waves Option: D. S1Q3T3 sign: an S wave in lead I, a Q wave in lead III, and a tall T wave in lead III Is an incorrect Option: as inverted T WAVES are seen and not tall T waves</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the principal imaging test for the diagnosis of PE?", "options": [{"label": "A", "text": "Chest X-ray", "correct": false}, {"label": "B", "text": "CT chest without contrast", "correct": false}, {"label": "C", "text": "Lung scanning", "correct": false}, {"label": "D", "text": "CT chest with IV contrast", "correct": true}], "correct_answer": "D. CT chest with IV contrast", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>CT chest with IV contrast CT of the chest with intravenous contrast is the principal imaging test for the diagnosis of PE. “ Thin-cut chest CT images” can provide exquisite detail, with ≤1 mm of resolution during a short breath hold. Sixth-order branches can be visualized with a resolution superior to that of conventional invasive contrast pulmonary angiography.</p>\n<p><strong>Random:</strong></p><p>The explanation for incorrect Options: -- Option: A. A normal or nearly normal chest X-ray often occurs in PE. Option: B. With contrast is used. Option: C. Lung scanning has become a second-line diagnostic test for PE, used mostly for patients who cannot tolerate intravenous contrast.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Choose the best-known indirect sign of Pulmonary Embolism on transthoracic echocardiography.", "options": [{"label": "A", "text": "Palla’s sign", "correct": false}, {"label": "B", "text": "Westermark’s sign", "correct": false}, {"label": "C", "text": "McConnell’s sign", "correct": true}, {"label": "D", "text": "Hampton’s hump", "correct": false}], "correct_answer": "C. McConnell’s sign", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>McConnell’s sign The best-known indirect sign of PE on transthoracic echocardiography is McConnell’s sign: hypokinesis of the RV free wall with the normal or hyperkinetic motion of the RV apex.</p>\n<p><strong>Highyeild:</strong></p><p>Well-established abnormalities include focal oligemia (Westermark’s sign), a peripheral wedged-shaped density usually located at the pleural base (Hampton’s hump) , and an enlarged right descending pulmonary artery (Palla’s sign).</p>\n<p><strong>Random:</strong></p><p>The explanation for incorrect options: - Option: A: On the Chest radiograph, an enlarged right descending pulmonary artery (Palla’s sign). Option: B. On Chest radiograph, focal oligemia (Westermark’s sign). Option: D. On Chest radiograph, a peripheral wedged-shaped density is usually located at the pleural base (Hampton’s hump).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "For patients with swelling of the legs when acute DVT is diagnosed, below-knee graduated compression stockings may be prescribed. The duration after which stockings should be replaced is?", "options": [{"label": "A", "text": "Every 2 weeks", "correct": false}, {"label": "B", "text": "Every 3 months", "correct": true}, {"label": "C", "text": "Every 9 months", "correct": false}, {"label": "D", "text": "Every 12 months", "correct": false}], "correct_answer": "B. Every 3 months", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Every 3 months For patients with swelling of the legs when acute DVT is diagnosed, below-knee graduated compression stockings may be prescribed, usually 30–40 mmHg, to lessen patient discomfort. They should be replaced every 3 months because they lose their elasticity . However, the prescription of vascular compression stockings in asymptomatic newly diagnosed acute DVT patients does not prevent the development of the post-thrombotic- syndrome.</p>\n<p><strong>Random:</strong></p><p>The explanation for incorrect Options: -- Option: A. Functional till 3 months. Option: C, D. Elasticity lost and less effective after 3 months.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following drug used for anticoagulation in pulmonary embolism is a direct thrombin inhibitor?", "options": [{"label": "A", "text": "Apixaban", "correct": false}, {"label": "B", "text": "Edoxaban", "correct": false}, {"label": "C", "text": "Dabigatran", "correct": true}, {"label": "D", "text": "Rivaroxaban", "correct": false}], "correct_answer": "C. Dabigatran", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Dabigatran A novel oral anticoagulant such as dabigatran (a direct thrombin inhibitor)</p>\n<p><strong>Highyeild:</strong></p><p>Effective anticoagulation is the foundation for the successful treatment of DVT and PE . There are three major strategies: the classical but waning strategy of parenteral anticoagulation with unfractionated heparin (UFH), low-molecular-weight heparin (LMWH), or fondaparinux “bridged” to warfarin , parenteral therapy switched after 5 days to a novel oral anticoagulant such as dabigatran (a direct thrombin inhibitor) or edoxaban (an anti-Xa agent), or oral anticoagulation monotherapy with rivaroxaban or apixaban (both are anti-Xa agents) with a 3-week or 1-week loading dose, respectively, followed by a maintenance dose without parenteral anticoagulation. For patients with VTE in the setting of suspected or proven heparin-induced thrombocytopenia, one can choose between two parenteral direct thrombin inhibitors: argatroban and bivalirudin</p>\n<p><strong>Random:</strong></p><p>The explanation for incorrect Options: -- Option: A, D. Rivaroxaban or apixaban (both are anti-Xa agents). Option: B. Edoxaban (an anti-Xa agent).</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is TRUE about warfarin dosing in an average-sized adult with pulmonary embolism?", "options": [{"label": "A", "text": "5 mg to achieve target INR of 2.0-3.0", "correct": true}, {"label": "B", "text": "5 mg to achieve target INR of 4.0-5.0", "correct": false}, {"label": "C", "text": "50 mg to achieve target INR of 2.0-3.0", "correct": false}, {"label": "D", "text": "50 mg to achieve target INR of 4.0-5.0", "correct": false}], "correct_answer": "A. 5 mg to achieve target INR of 2.0-3.0", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>5 mg to achieve target INR of 2.0-3.0 In an average-sized adult, warfarin is often initiated in a dose of 5 mg . The prothrombin time is standardized by calculating the international normalized ratio (INR), which assesses the anticoagulant effect of warfarin (Chap. 61). The target INR is usually 2.5, with a range of 2.0–3.0.</p>\n<p><strong>Highyeild:</strong></p><p>The warfarin dose is usually titrated empirically to achieve the target INR. Proper dosing is difficult because hundreds of drug-drug and drug-food interactions affect warfarin metabolism. Increasing age and systemic illness reduce the required warfarin dose</p>\n<p><strong>Random:</strong></p><p>The explanation for incorrect options: - Option: B: The target INR is usually 2.5, with a range of 2.0–3.0. Option: C, D. 50 mg is a much higher dose.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following parameters is increased than normal in myasthenia gravis?", "options": [{"label": "A", "text": "TLC", "correct": false}, {"label": "B", "text": "FEV1", "correct": false}, {"label": "C", "text": "RV", "correct": true}, {"label": "D", "text": "FVC", "correct": false}], "correct_answer": "C. RV", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>RV RV becomes about 120% normal. FRC remains normal, as both lung recoil and passive chest wall recoil are normal. However, TLC is low and RV is elevated because respiratory muscle strength is insufficient to push the passive respiratory system fully toward either volume extreme. Caught between the low TLC and the elevated RV, FVC, and FEV1 are reduced as “innocent bystanders.”</p>\n<p><strong>Highyeild:</strong></p><p>Option: A: 75%. Option: B: 60%. Option: D: 60%. Restriction due to increased lung elastic recoil (pulmonary fibrosis) Restriction due to chest wall abnormality (moderate obesity Restriction due to respiratory muscle weakness gravis) (myasthenia Obstruction due to airway narrowing (acute asthma) Obstruction due to decreased elastic recoil (severe emphysema) TLC 60% 95% 75% 100% 130% FRC 60% 95% 100% 104% 220% RV 60% 65% 120% 120% 310% FVC 60% 100% 60% 90% 60% FEV 1 75% 92% 60% 35% pre-b.d. 75% post-b.d 35% pre-b.d. 38% post-b.d R aw 1.0 1.0 1.0 2.5 1.5 DL CO 60% 95% 80% 120% 40%</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "You are the attending consultant in an ICU, and on your rounds, you come across Mr Raju, who was admitted with Covid 19 with severe disease. Currently, his inflammatory markers (CRP, ferritin) have reduced from his pre-admission values. His saturation has improved, and his lung injury is resolving (as evidenced by an HRCT). He is maintaining adequate gas exchange with low PEEP (<0.8), and his hemodynamic parameters are stable. What is the next best step to be done for this patient?", "options": [{"label": "A", "text": "Consider Tracheostomy", "correct": false}, {"label": "B", "text": "Extubate", "correct": false}, {"label": "C", "text": "Consider Spontaneous Breathing Trial", "correct": true}, {"label": "D", "text": "Send for CRP values.", "correct": false}], "correct_answer": "C. Consider Spontaneous Breathing Trial", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Consider Spontaneous Breathing Trial The clinical scenario describes a patient who has been admitted with Covid-19 with severe disease and needed Ventilator support.</p>\n<p><strong>Highyeild:</strong></p><p>At present, he

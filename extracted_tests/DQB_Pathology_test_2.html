@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Cell Adaptation Injury And Death</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Cell Adaptation Injury And Death</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                66 Questions | 344 Total Marks | 76 min Duration | ~69.09 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 66 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 76 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 66</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Cell Adaptation Injury And Death - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 66</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 66 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "True about Metaplasia is?", "options": [{"label": "A", "text": "Involves only epithelial cells", "correct": false}, {"label": "B", "text": "Is irreversible", "correct": false}, {"label": "C", "text": "Can occurs at stem cells level", "correct": true}, {"label": "D", "text": "Columnar is the most common type", "correct": false}], "correct_answer": "C. Can occurs at stem cells level", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/13907071698299122/13907071698299122.m3u8"}, {"text": "All of the following true regarding hypertrophy except:", "options": [{"label": "A", "text": "Increased in cell size without increase in number", "correct": false}, {"label": "B", "text": "DNA content same as in normal cells", "correct": true}, {"label": "C", "text": "Increase in cell size is due to synthesize of more cellular proteins", "correct": false}, {"label": "D", "text": "Associated with a switch of contractile proteins from adult to fetal or neonatal forms", "correct": false}], "correct_answer": "B. DNA content same as in normal cells", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61898061698299143/61898061698299143.m3u8"}, {"text": "Find the false statement about metaplasia:", "options": [{"label": "A", "text": "Reversible", "correct": false}, {"label": "B", "text": "No loss of polarity", "correct": false}, {"label": "C", "text": "Reprogramming of stem cells", "correct": false}, {"label": "D", "text": "Pleomorphism present", "correct": true}], "correct_answer": "D. Pleomorphism present", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/44616751698299157/44616751698299157.m3u8"}, {"text": "Increase in the number of goblet cells in the non-respiratory terminal bronchiole is an example of:", "options": [{"label": "A", "text": "Anaplasia", "correct": false}, {"label": "B", "text": "Dysplasia", "correct": false}, {"label": "C", "text": "Metaplasia", "correct": true}, {"label": "D", "text": "Hyperplasia", "correct": false}], "correct_answer": "C. Metaplasia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3174381698299172/3174381698299172.m3u8"}, {"text": "In respiratory tract metaplasia occurs from:", "options": [{"label": "A", "text": "Squamous to columnar", "correct": false}, {"label": "B", "text": "Columnar to cuboidal", "correct": false}, {"label": "C", "text": "Columnar to squamous", "correct": true}, {"label": "D", "text": "Cuboidal to squamous", "correct": false}], "correct_answer": "C. Columnar to squamous", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/62222011698299188/62222011698299188.m3u8"}, {"text": "All are cellular adaptations except:", "options": [{"label": "A", "text": "Hypertrophy", "correct": false}, {"label": "B", "text": "Hyperplasia", "correct": false}, {"label": "C", "text": "Necrosis", "correct": true}, {"label": "D", "text": "Metaplasia", "correct": false}], "correct_answer": "C. Necrosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/42636721698299222/42636721698299222.m3u8"}, {"text": "In myocardium reperfusion injury is due to?", "options": [{"label": "A", "text": "Ca", "correct": true}, {"label": "B", "text": "Mg", "correct": false}, {"label": "C", "text": "K", "correct": false}, {"label": "D", "text": "Mn", "correct": false}], "correct_answer": "A. Ca", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54290351698299262/54290351698299262.m3u8"}, {"text": "Which of the following is not a sign of reversible cell injury?", "options": [{"label": "A", "text": "ATP depletion", "correct": false}, {"label": "B", "text": "Cell shrinkage", "correct": true}, {"label": "C", "text": "Fatty acid deposition", "correct": false}, {"label": "D", "text": "Reduction of phosphorylation", "correct": false}], "correct_answer": "B. Cell shrinkage", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3249231698299285/3249231698299285.m3u8"}, {"text": "Cells seen in chronic infection of pseudomonas:", "options": [{"label": "A", "text": "Neutrophils", "correct": true}, {"label": "B", "text": "Eosinophils", "correct": false}, {"label": "C", "text": "Lymphocytes", "correct": false}, {"label": "D", "text": "Macrophage", "correct": false}], "correct_answer": "A. Neutrophils", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35807111698299325/35807111698299325.m3u8"}, {"text": "For programmed cell death and autopagy, which is pro apoptotic genes?", "options": [{"label": "A", "text": "BCL2", "correct": false}, {"label": "B", "text": "BAX", "correct": true}, {"label": "C", "text": "BCL-XL", "correct": false}, {"label": "D", "text": "BIM", "correct": false}], "correct_answer": "B. BAX", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/10990691698299353/10990691698299353.m3u8"}, {"text": "The p53 gene, a tumour suppressor gene, plays a crucial role in", "options": [{"label": "A", "text": "Promoting uncontrolled cell division", "correct": false}, {"label": "B", "text": "Inducing apoptosis in damaged cells", "correct": true}, {"label": "C", "text": "Preventing DNA repair mechanisms", "correct": false}, {"label": "D", "text": "Inhibiting cell cycle arrest", "correct": false}], "correct_answer": "B. Inducing apoptosis in damaged cells", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31372521698299371/31372521698299371.m3u8"}, {"text": "True about caspases are?", "options": [{"label": "A", "text": "They are enzymes starting apoptosis", "correct": false}, {"label": "B", "text": "They inhibit apoptosis", "correct": false}, {"label": "C", "text": "They are receptors of apoptosis", "correct": false}, {"label": "D", "text": "They are proteases which cause cellular death in apoptosis", "correct": true}], "correct_answer": "D. They are proteases which cause cellular death in apoptosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/48691771698299392/48691771698299392.m3u8"}, {"text": "True about necroptosis is all except?", "options": [{"label": "A", "text": "Caspase 1 & 11 is involved", "correct": true}, {"label": "B", "text": "Caspase independent", "correct": false}, {"label": "C", "text": "Failure of activation of caspase 8", "correct": false}, {"label": "D", "text": "Lipid peroxidation is seen", "correct": false}], "correct_answer": "A. Caspase 1 & 11 is involved", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/19090641698299617/19090641698299617.m3u8"}, {"text": "SMAC/DIAMBLO is a:", "options": [{"label": "A", "text": "Anti apoptotic protein", "correct": false}, {"label": "B", "text": "Induces necrosis", "correct": false}, {"label": "C", "text": "Acts both as anti and pro apoptotic protein", "correct": false}, {"label": "D", "text": "Pro-apoptotic protein", "correct": true}], "correct_answer": "D. Pro-apoptotic protein", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/20073121698299636/20073121698299636.m3u8"}, {"text": "Which of the following is an execution caspase:", "options": [{"label": "A", "text": "Caspase 3", "correct": true}, {"label": "B", "text": "Caspase 5", "correct": false}, {"label": "C", "text": "Caspase 8", "correct": false}, {"label": "D", "text": "Caspase 9", "correct": false}], "correct_answer": "A. Caspase 3", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/71113171698299656/71113171698299656.m3u8"}, {"text": "Annexin V is a marker of-", "options": [{"label": "A", "text": "Necrosis", "correct": false}, {"label": "B", "text": "Gangrene", "correct": false}, {"label": "C", "text": "Aging", "correct": false}, {"label": "D", "text": "Apoptosis", "correct": true}], "correct_answer": "D. Apoptosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/25521131698299681/25521131698299681.m3u8"}, {"text": "The following is not a sensor of apoptosis:", "options": [{"label": "A", "text": "Puma", "correct": false}, {"label": "B", "text": "Noxa", "correct": false}, {"label": "C", "text": "BAX", "correct": true}, {"label": "D", "text": "BAD", "correct": false}], "correct_answer": "C. BAX", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5402381698299695/5402381698299695.m3u8"}, {"text": "Intrinsic pathway of apoptosis is initiated by all the following except:", "options": [{"label": "A", "text": "Growth factor withdrawal", "correct": false}, {"label": "B", "text": "DNA damage", "correct": false}, {"label": "C", "text": "Protein misfolding", "correct": false}, {"label": "D", "text": "Type 1 TNF receptor", "correct": true}], "correct_answer": "D. Type 1 TNF receptor", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39859971698299712/39859971698299712.m3u8"}, {"text": "Defective apoptosis and increased cell survival is seen in:", "options": [{"label": "A", "text": "Autoimmune disease", "correct": true}, {"label": "B", "text": "Neurodegenerative diseases", "correct": false}, {"label": "C", "text": "Viral infections", "correct": false}, {"label": "D", "text": "Ischemic injury", "correct": false}], "correct_answer": "A. Autoimmune disease", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6697321698300536/6697321698300536.m3u8"}, {"text": "Receptor associated kinases 1 (RIP1) and 3 (RIP3) are involved in:", "options": [{"label": "A", "text": "Necrosis", "correct": false}, {"label": "B", "text": "Apoptosis", "correct": false}, {"label": "C", "text": "Necroptosis", "correct": true}, {"label": "D", "text": "Pyroptosis", "correct": false}], "correct_answer": "C. Necroptosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22074421698300576/22074421698300576.m3u8"}, {"text": "Inflammasome is formed in:", "options": [{"label": "A", "text": "Necrosis", "correct": false}, {"label": "B", "text": "Apoptosis", "correct": false}, {"label": "C", "text": "Necroptosis", "correct": false}, {"label": "D", "text": "Pyroptosis", "correct": true}], "correct_answer": "D. Pyroptosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36847661698300595/36847661698300595.m3u8"}, {"text": "Fibrinoid necrosis is seen in all of the following except:", "options": [{"label": "A", "text": "Malignant hypertension", "correct": false}, {"label": "B", "text": "Aschoff’s nodule", "correct": false}, {"label": "C", "text": "Polyarteritis nodosa", "correct": false}, {"label": "D", "text": "Diabetic glomerulosclerosis", "correct": true}], "correct_answer": "D. Diabetic glomerulosclerosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/197121698300612/197121698300612.m3u8"}, {"text": "Highest telomerase activity is seen in:", "options": [{"label": "A", "text": "Stem cells", "correct": false}, {"label": "B", "text": "Somatic cells", "correct": false}, {"label": "C", "text": "Germ cells", "correct": true}, {"label": "D", "text": "Benign tumors", "correct": false}], "correct_answer": "C. Germ cells", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/12925191698300649/12925191698300649.m3u8"}, {"text": "Organelle where H 2 O 2 is produced and destroyed is:", "options": [{"label": "A", "text": "Peroxisome", "correct": true}, {"label": "B", "text": "Lysosome", "correct": false}, {"label": "C", "text": "Golgi body", "correct": false}, {"label": "D", "text": "Ribosome", "correct": false}], "correct_answer": "A. Peroxisome", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• Peroxisomes are specialized organelles involved in the production and detoxification of hydrogen peroxide (H 2 O 2 ). Peroxisomes contain enzymes such as oxidases, which generate H 2 O 2 as a byproduct of various metabolic reactions, including the breakdown of fatty acids and the oxidation of other substrates. To prevent cellular damage from the highly reactive H 2 O 2 , peroxisomes also contain the enzyme catalase, which converts H 2 O 2 into water and oxygen. This dual function of producing and detoxifying H 2 O 2 makes peroxisomes critical for cellular homeostasis and protection against oxidative stress.</li><li>• Explanation of the Incorrect Options:</li><li>• (B) Lysosome: Lysosomes are involved in intracellular digestion and the breakdown of macromolecules through hydrolytic enzymes like proteases, lipases, and nucleases. They do not produce or detoxify H 2 O 2 . Their primary role is in degrading cellular waste, not managing reactive oxygen species like H 2 O 2 , making this option incorrect.</li><li>• (C) Golgi body: The Golgi apparatus is responsible for processing, modifying, and packaging proteins and lipids for secretion or transport to other organelles. It is not involved in the production or detoxification of H 2 O 2 . Its functions are related to vesicle trafficking and glycosylation, not oxidative metabolism, so this option is incorrect.</li><li>• (D) Ribosome: Ribosomes are involved in protein synthesis by translating mRNA into polypeptide chains. They do not participate in the production or detoxification of H 2 O 2 . Ribosomes lack any metabolic or enzymatic functions related to oxidative stress management, making this option irrelevant in this context.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/47270301698300665/47270301698300665.m3u8"}, {"text": "Which of these is not responsible for removal of free radicals?", "options": [{"label": "A", "text": "Catalase", "correct": false}, {"label": "B", "text": "Superoxide Dismutase", "correct": false}, {"label": "C", "text": "NADPH oxidase", "correct": true}, {"label": "D", "text": "Glutathione peroxidase", "correct": false}], "correct_answer": "C. NADPH oxidase", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (A) Catalase: Catalase is a key enzyme in the detoxification of free radicals. It breaks down hydrogen peroxide (H 2 O 2 ), a reactive oxygen species, into water and oxygen. This reaction prevents the accumulation of H 2 O 2 , which can otherwise generate harmful hydroxyl radicals. As an enzyme involved in free radical detoxification, catalase is not the correct answer.</li><li>• (B) Superoxide Dismutase (SOD): Superoxide dismutase (SOD) is an essential antioxidant enzyme that catalyzes the conversion of superoxide radicals (O 2 - ) into hydrogen peroxide (H 2 O 2 ) and oxygen. This reaction is a critical step in the cellular defense against oxidative stress. Like catalase, SOD removes free radicals and is not the correct answer.</li><li>• (D) Glutathione Peroxidase: Glutathione peroxidase is another antioxidant enzyme that reduces hydrogen peroxide (H 2 O 2 ) and organic hydroperoxides to water and alcohols, using reduced glutathione as a cofactor. This enzyme plays a significant role in mitigating oxidative stress and removing free radicals, making it an important detoxifier.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67020811698300711/67020811698300711.m3u8"}, {"text": "Type 2 endometrial carcinoma primarily arises from", "options": [{"label": "A", "text": "Endometrial hyperplasia", "correct": false}, {"label": "B", "text": "Atrophic endometrium", "correct": true}, {"label": "C", "text": "Endometrial stem cells", "correct": false}, {"label": "D", "text": "Endometrial polyps", "correct": false}], "correct_answer": "B. Atrophic endometrium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/28798211698300724/28798211698300724.m3u8"}, {"text": "Metaplasia of respiratory tract is due to", "options": [{"label": "A", "text": "Vitamin E deficiency", "correct": false}, {"label": "B", "text": "Vitamin K deficiency", "correct": false}, {"label": "C", "text": "Vitamin A deficiency", "correct": true}, {"label": "D", "text": "Vitamin D deficiency", "correct": false}], "correct_answer": "C. Vitamin A deficiency", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6621051698300745/6621051698300745.m3u8"}, {"text": "In cell death, myelin figures are derived from-", "options": [{"label": "A", "text": "Nucleus", "correct": false}, {"label": "B", "text": "Cell membrane", "correct": true}, {"label": "C", "text": "Cytoplasm", "correct": false}, {"label": "D", "text": "Mitochondria", "correct": false}], "correct_answer": "B. Cell membrane", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63693301698300808/63693301698300808.m3u8"}, {"text": "The sign of reversible injury in a case of alcoholic liver disease-", "options": [{"label": "A", "text": "Loss of cell membrane", "correct": false}, {"label": "B", "text": "Nuclear karyolysis", "correct": false}, {"label": "C", "text": "Cytoplasmic vacuole", "correct": true}, {"label": "D", "text": "Pyknosis", "correct": false}], "correct_answer": "C. Cytoplasmic vacuole", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/1737971698300827/1737971698300827.m3u8"}, {"text": "Irreversible cell injury is indicated by-", "options": [{"label": "A", "text": "Accumulation of calcium in mitochondria", "correct": true}, {"label": "B", "text": "Myelin figures", "correct": false}, {"label": "C", "text": "ATP depletion", "correct": false}, {"label": "D", "text": "Shifting of ribosomes", "correct": false}], "correct_answer": "A. Accumulation of calcium in mitochondria", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/51667861698300841/51667861698300841.m3u8"}, {"text": "Type of necrosis occurring in brain-", "options": [{"label": "A", "text": "Coagulative", "correct": false}, {"label": "B", "text": "Liquefactive", "correct": true}, {"label": "C", "text": "Fibrinoid", "correct": false}, {"label": "D", "text": "Caseous", "correct": false}], "correct_answer": "B. Liquefactive", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/Pathology-2.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/38951491698300856/38951491698300856.m3u8"}, {"text": "Which of the following organs shows fat necrosis?", "options": [{"label": "A", "text": "Liver", "correct": false}, {"label": "B", "text": "Pancreas", "correct": true}, {"label": "C", "text": "Kidney", "correct": false}, {"label": "D", "text": "Heart", "correct": false}], "correct_answer": "B. Pancreas", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/48984911698300871/48984911698300871.m3u8"}, {"text": "Example of apoptosis is-", "options": [{"label": "A", "text": "Councilman bodies", "correct": true}, {"label": "B", "text": "Gamma gandy body", "correct": false}, {"label": "C", "text": "Russell bodies", "correct": false}, {"label": "D", "text": "Dutcher bodies", "correct": false}], "correct_answer": "A. Councilman bodies", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/17918151698300890/17918151698300890.m3u8"}, {"text": "Characteristic feature of apoptosis-", "options": [{"label": "A", "text": "Cell membrane intact", "correct": false}, {"label": "B", "text": "Cytoplasmic eosinophilia", "correct": false}, {"label": "C", "text": "chromatin condensation", "correct": true}, {"label": "D", "text": "Cell shrinkage", "correct": false}], "correct_answer": "C. chromatin condensation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/57422451698300905/57422451698300905.m3u8"}, {"text": "A 55-years-old male who has a long history of excessive drinking presents with signs of alcoholic hepatitis. Microscopic Examination of a biopsy of this patient’s liver reveals irregular eosinophilic hyaline inclusions within the cytoplasm of the hepatocytes. These eosinophilic inclusions are composed of:", "options": [{"label": "A", "text": "Immunoglobulin", "correct": false}, {"label": "B", "text": "Excess plasma proteins", "correct": false}, {"label": "C", "text": "Keratin intermediate filaments", "correct": true}, {"label": "D", "text": "Lipofuscin", "correct": false}], "correct_answer": "C. Keratin intermediate filaments", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/10949491698300919/10949491698300919.m3u8"}, {"text": "Lipofuscin granules are examples of", "options": [{"label": "A", "text": "Apoptotic bodies", "correct": false}, {"label": "B", "text": "Residual bodies", "correct": true}, {"label": "C", "text": "Psammomatous calcification", "correct": false}, {"label": "D", "text": "Hyaline change", "correct": false}], "correct_answer": "B. Residual bodies", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/66590691698300933/66590691698300933.m3u8"}, {"text": "Squamous metaplasia is seen in all of the following except", "options": [{"label": "A", "text": "Vitamin A deficiency", "correct": false}, {"label": "B", "text": "Smoking", "correct": false}, {"label": "C", "text": "Gastroesophageal reflux disease", "correct": true}, {"label": "D", "text": "Stone obstructing a duct", "correct": false}], "correct_answer": "C. Gastroesophageal reflux disease", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78548941698300952/78548941698300952.m3u8"}, {"text": "All of the following are true about apoptosis except", "options": [{"label": "A", "text": "Cell shrinkage", "correct": false}, {"label": "B", "text": "Altered orientation of lipids", "correct": false}, {"label": "C", "text": "Only pathological", "correct": true}, {"label": "D", "text": "No adjacent inflammation", "correct": false}], "correct_answer": "C. Only pathological", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/42822851698300975/42822851698300975.m3u8"}, {"text": "Which of the following is/are true about the microscopic appearance of necrotic cells?", "options": [{"label": "A", "text": "Increased eosinophilia due to loss of cytoplasmic RNA", "correct": false}, {"label": "B", "text": "Increased eosinophilia due to denaturation of cytoplasmic proteins", "correct": false}, {"label": "C", "text": "Glassy homogenous appearance due to loss of glycogen particles", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/42419071698300991/42419071698300991.m3u8"}, {"text": "Which phenomenon/phenomena characterise irreversibility of cell injury?", "options": [{"label": "A", "text": "Mitochondrial dysfunction", "correct": false}, {"label": "B", "text": "Profound membrane damage", "correct": false}, {"label": "C", "text": "Nuclear disaggregation", "correct": false}, {"label": "D", "text": "Both A and B", "correct": true}], "correct_answer": "D. Both A and B", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5001031698301015/5001031698301015.m3u8"}, {"text": "All of the following is/are true about extrinsic pathway of apoptosis except", "options": [{"label": "A", "text": "Engagement of plasma membrane death receptors", "correct": false}, {"label": "B", "text": "Type I TNF receptor is prototype", "correct": false}, {"label": "C", "text": "Caspase 9 is classically involved", "correct": true}, {"label": "D", "text": "Mechanism of apoptosis of virus infected cells", "correct": false}], "correct_answer": "C. Caspase 9 is classically involved", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22778771698301058/22778771698301058.m3u8"}, {"text": "Programmed necrosis is another name for", "options": [{"label": "A", "text": "Necroptosis", "correct": true}, {"label": "B", "text": "Pyroptosis", "correct": false}, {"label": "C", "text": "Atrophy", "correct": false}, {"label": "D", "text": "Autophagy", "correct": false}], "correct_answer": "A. Necroptosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/21469721698301075/21469721698301075.m3u8"}, {"text": "Macrophage-specific deletion of which autophagy related gene increases susceptibility to tuberculosis", "options": [{"label": "A", "text": "Atg 3", "correct": false}, {"label": "B", "text": "Atg 4", "correct": false}, {"label": "C", "text": "Atg 5", "correct": true}, {"label": "D", "text": "Atg 6", "correct": false}], "correct_answer": "C. Atg 5", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/48017291698301094/48017291698301094.m3u8"}, {"text": "Which of the following is false about lipofuscin?", "options": [{"label": "A", "text": "Injurious to cell", "correct": true}, {"label": "B", "text": "Perinuclear in location", "correct": false}, {"label": "C", "text": "Lipid peroxidation", "correct": false}, {"label": "D", "text": "Yellow brown granular pigment", "correct": false}], "correct_answer": "A. Injurious to cell", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24256921698301112/24256921698301112.m3u8"}, {"text": "Metaplasia arises from reprograming of-", "options": [{"label": "A", "text": "Stem cells", "correct": true}, {"label": "B", "text": "Stellate cells", "correct": false}, {"label": "C", "text": "Squamous cells", "correct": false}, {"label": "D", "text": "Columnar cells", "correct": false}], "correct_answer": "A. Stem cells", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26512161698301158/26512161698301158.m3u8"}, {"text": "Immune complexes mediated necrosis is of which type?", "options": [{"label": "A", "text": "Coagulative necrosis", "correct": false}, {"label": "B", "text": "Liquefactive necrosis", "correct": false}, {"label": "C", "text": "Caseous necrosis", "correct": false}, {"label": "D", "text": "Fibrinoid necrosis", "correct": true}], "correct_answer": "D. Fibrinoid necrosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3184021698301198/3184021698301198.m3u8"}, {"text": "Stain for fat all except:", "options": [{"label": "A", "text": "Oil red O", "correct": false}, {"label": "B", "text": "Sudan black", "correct": false}, {"label": "C", "text": "Sudan III", "correct": false}, {"label": "D", "text": "Congo red", "correct": true}], "correct_answer": "D. Congo red", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/41082511698301215/41082511698301215.m3u8"}, {"text": "All are reversible injury of cell, except-", "options": [{"label": "A", "text": "Vacuole", "correct": false}, {"label": "B", "text": "Karyorrhexis", "correct": true}, {"label": "C", "text": "Fat accumulation", "correct": false}, {"label": "D", "text": "Cell wall swelling", "correct": false}], "correct_answer": "B. Karyorrhexis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/6676291698301265/6676291698301265.m3u8"}, {"text": "Fibrinoid necrosis is seen in following except-", "options": [{"label": "A", "text": "Polyarteritis nodosa", "correct": false}, {"label": "B", "text": "Diabetes mellitus", "correct": true}, {"label": "C", "text": "Malignant hypertension", "correct": false}, {"label": "D", "text": "SLE", "correct": false}], "correct_answer": "B. Diabetes mellitus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/57075661698301280/57075661698301280.m3u8"}, {"text": "CD-95 is a marker of-", "options": [{"label": "A", "text": "Death receptor", "correct": true}, {"label": "B", "text": "MHC complex", "correct": false}, {"label": "C", "text": "T helper cells", "correct": false}, {"label": "D", "text": "NK cells", "correct": false}], "correct_answer": "A. Death receptor", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/489201698301296/489201698301296.m3u8"}, {"text": "True about apoptosis is-", "options": [{"label": "A", "text": "Energy dependent", "correct": true}, {"label": "B", "text": "Self-initiated", "correct": false}, {"label": "C", "text": "Swelling of cytoplasm", "correct": false}, {"label": "D", "text": "Loss of membrane integrity", "correct": false}], "correct_answer": "A. Energy dependent", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/44451551698301312/44451551698301312.m3u8"}, {"text": "Which of the following organelles plays a pivotal role in apoptosis?", "options": [{"label": "A", "text": "Mitochondria", "correct": true}, {"label": "B", "text": "Endoplasmic reticulum", "correct": false}, {"label": "C", "text": "Nucleus", "correct": false}, {"label": "D", "text": "Golgi apparatus", "correct": false}], "correct_answer": "A. Mitochondria", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/25300961698301343/25300961698301343.m3u8"}, {"text": "Cytosolic cytochrome C plays an important function in-", "options": [{"label": "A", "text": "Apoptosis", "correct": true}, {"label": "B", "text": "Cell necrosis", "correct": false}, {"label": "C", "text": "Electron transport chain", "correct": false}, {"label": "D", "text": "Cell division", "correct": false}], "correct_answer": "A. Apoptosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24422811698301357/24422811698301357.m3u8"}, {"text": "In apoptosis, cytochrome C acts through", "options": [{"label": "A", "text": "Apaf-1", "correct": true}, {"label": "B", "text": "BCL-2", "correct": false}, {"label": "C", "text": "FADD", "correct": false}, {"label": "D", "text": "TNF", "correct": false}], "correct_answer": "A. Apaf-1", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/61034831698301372/61034831698301372.m3u8"}, {"text": "Which of the following has a direct role in apoptosis-", "options": [{"label": "A", "text": "Nitric oxide", "correct": false}, {"label": "B", "text": "Adenyl cyclase", "correct": false}, {"label": "C", "text": "cAMP", "correct": false}, {"label": "D", "text": "Cytochrome C", "correct": true}], "correct_answer": "D. Cytochrome C", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24948481698301386/24948481698301386.m3u8"}, {"text": "Brown atrophy is due to accumulation of-", "options": [{"label": "A", "text": "Melanin", "correct": false}, {"label": "B", "text": "Hemosiderin", "correct": false}, {"label": "C", "text": "Hematin", "correct": false}, {"label": "D", "text": "Lipofuscin", "correct": true}], "correct_answer": "D. Lipofuscin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/35765771698301489/35765771698301489.m3u8"}, {"text": "Which of the following pigments are involved in free radical injury?", "options": [{"label": "A", "text": "Lipofuscin", "correct": true}, {"label": "B", "text": "Melanin", "correct": false}, {"label": "C", "text": "Bilirubin", "correct": false}, {"label": "D", "text": "Hematin", "correct": false}], "correct_answer": "A. Lipofuscin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15754691698301503/15754691698301503.m3u8"}, {"text": "True about psammoma bodies are all except-", "options": [{"label": "A", "text": "Seen in meningioma", "correct": false}, {"label": "B", "text": "Concentric whorled appearance", "correct": false}, {"label": "C", "text": "Contains calcium deposits", "correct": false}, {"label": "D", "text": "Seen in teratoma", "correct": true}], "correct_answer": "D. Seen in teratoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64497231698301540/64497231698301540.m3u8"}, {"text": "Calcification of soft tissues without any disturbance of calcium metabolism is called-", "options": [{"label": "A", "text": "Ionotrophic calcification", "correct": false}, {"label": "B", "text": "Monotrophic calcification", "correct": false}, {"label": "C", "text": "Dystrophic calcification", "correct": true}, {"label": "D", "text": "Calcium induced calcification", "correct": false}], "correct_answer": "C. Dystrophic calcification", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78713471698301561/78713471698301561.m3u8"}, {"text": "Hypertrophy is a type of –", "options": [{"label": "A", "text": "Cell injury", "correct": false}, {"label": "B", "text": "Cellular adaptation", "correct": true}, {"label": "C", "text": "Carcinoma", "correct": false}, {"label": "D", "text": "Cell aging", "correct": false}], "correct_answer": "B. Cellular adaptation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/25236891698302171/25236891698302171.m3u8"}, {"text": "Which finding on electron microscopy indicates irreversible cell injury -", "options": [{"label": "A", "text": "Dilatation of endoplasmic reticulum", "correct": false}, {"label": "B", "text": "Dissociation of ribosomes from rough endoplasmic reticulum", "correct": false}, {"label": "C", "text": "Flocculent amorphous densities in the mitochondria", "correct": true}, {"label": "D", "text": "Myelin figures", "correct": false}], "correct_answer": "C. Flocculent amorphous densities in the mitochondria", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31500931698302186/31500931698302186.m3u8"}, {"text": "MI is a type of-", "options": [{"label": "A", "text": "Coagulative necrosis", "correct": true}, {"label": "B", "text": "Liquefactive necrosis", "correct": false}, {"label": "C", "text": "Caseous necrosis", "correct": false}, {"label": "D", "text": "Fat necrosis", "correct": false}], "correct_answer": "A. Coagulative necrosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/69424021698302243/69424021698302243.m3u8"}, {"text": "All of the following are true about ferroptosis except", "options": [{"label": "A", "text": "Ferroptosis is characterized by the accumulation of lipid peroxides", "correct": false}, {"label": "B", "text": "Ferroptosis is a form of regulated cell death that does not involve caspase activation", "correct": false}, {"label": "C", "text": "Ferroptosis is primarily triggered by mitochondrial dysfunction", "correct": true}, {"label": "D", "text": "Ferroptosis can be inhibited by iron chelators and antioxidants targeting lipid peroxidation", "correct": false}], "correct_answer": "C. Ferroptosis is primarily triggered by mitochondrial dysfunction", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is the correct sequence of nuclear changes observed during cell injury?", "options": [{"label": "A", "text": "Karyolysis → Pyknosis → Karyorrhexis", "correct": false}, {"label": "B", "text": "Pyknosis → Karyorrhexis → Karyolysis", "correct": true}, {"label": "C", "text": "Karyorrhexis → Karyolysis → Pyknosis", "correct": false}, {"label": "D", "text": "Karyolysis → Karyorrhexis → Pyknosis", "correct": false}], "correct_answer": "B. Pyknosis → Karyorrhexis → Karyolysis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (A) Karyolysis → Pyknosis → Karyorrhexis: This sequence is incorrect because karyolysis is the final stage of nuclear degradation, not the initial step. Nuclear dissolution (karyolysis) occurs after the nucleus undergoes condensation (pyknosis) and fragmentation (karyorrhexis). Starting with karyolysis misrepresents the progression of nuclear changes.</li><li>• (C) Karyorrhexis → Karyolysis → Pyknosis: This sequence is incorrect because karyorrhexis and karyolysis occur after pyknosis, not before. Pyknosis is the first step where the nucleus condenses, followed by fragmentation (karyorrhexis) and dissolution (karyolysis). Reversing this order does not align with the typical progression.</li><li>• (D) Karyolysis → Karyorrhexis → Pyknosis: This sequence is also incorrect because karyolysis is the final step, not the starting point. Nuclear condensation (pyknosis) must occur before fragmentation (karyorrhexis) and dissolution (karyolysis). Reversing the order disrupts the logical sequence of nuclear changes.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is true about efferocytosis?", "options": [{"label": "A", "text": "It involves the engulfment of apoptotic cells by macrophages", "correct": true}, {"label": "B", "text": "Efferocytosis leads to the activation of inflammation", "correct": false}, {"label": "C", "text": "It is a process that occurs only in the nervous system", "correct": false}, {"label": "D", "text": "Efferocytosis results in the production of reactive oxygen species", "correct": false}], "correct_answer": "A. It involves the engulfment of apoptotic cells by macrophages", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following are true about necroptosis except", "options": [{"label": "A", "text": "MLKL (Mixed Lineage Kinase Domain-Like) plays a crucial role in the execution of necroptosis", "correct": false}, {"label": "B", "text": "Necroptosis is mediated by the activation of RIPK1 and RIPK3", "correct": false}, {"label": "C", "text": "Necroptosis results in the activation of caspases", "correct": true}, {"label": "D", "text": "Necroptosis leads to plasma membrane rupture and the release of cellular contents", "correct": false}], "correct_answer": "C. Necroptosis results in the activation of caspases", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

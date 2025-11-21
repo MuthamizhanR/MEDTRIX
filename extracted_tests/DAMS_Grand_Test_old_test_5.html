@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Grand Test   154</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Grand Test   154</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                300 Questions | 1200 Total Marks | 310 min Duration | ~62.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 300 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 310 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 300</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Grand Test   154 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 300</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 300 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A lesion of cranial nerves 10 and11 just lateral to the medulla might damage axons whose cell bodies are located in all of the following except:-", "options": [{"label": "A", "text": "Gray matter of cervical spinal cord", "correct": false}, {"label": "B", "text": "Nucleus ambiguous", "correct": false}, {"label": "C", "text": "Nucleus solitaries", "correct": true}, {"label": "D", "text": "The part of the medulla that develops from the basal plate", "correct": false}], "correct_answer": "C. Nucleus solitaries", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Wrong match about the bone and cartilages in pharyngeal arches", "options": [{"label": "A", "text": "Meckel’s cartilage: Mandible", "correct": false}, {"label": "B", "text": "Reichert’s cartilage: Stapes", "correct": false}, {"label": "C", "text": "Second arch cartilage: Styloid process", "correct": false}, {"label": "D", "text": "Third arch: Lesser cornu of hyoid bone", "correct": true}], "correct_answer": "D. Third arch: Lesser cornu of hyoid bone", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following structures carry highly oxygenated blood from the lungs to the heart?", "options": [{"label": "A", "text": "Pulmonary arteries", "correct": false}, {"label": "B", "text": "Pulmonary veins", "correct": true}, {"label": "C", "text": "Coronary arteries", "correct": false}, {"label": "D", "text": "Cardiac veins", "correct": false}], "correct_answer": "B. Pulmonary veins", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following structures pass through the esophageal hiatus except", "options": [{"label": "A", "text": "Posterior vagal trunk", "correct": false}, {"label": "B", "text": "Esophageal branches of the left gastric vessels", "correct": false}, {"label": "C", "text": "Anterior vagal trunk", "correct": false}, {"label": "D", "text": "Thoracic duct", "correct": true}], "correct_answer": "D. Thoracic duct", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are of adult size at birth EXCEPT:", "options": [{"label": "A", "text": "Mastoid antrum", "correct": false}, {"label": "B", "text": "Ear ossicles", "correct": false}, {"label": "C", "text": "Tympanic cavity", "correct": false}, {"label": "D", "text": "Maxillary antrum and orbit", "correct": true}], "correct_answer": "D. Maxillary antrum and orbit", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which one of the following structures contains lymphatic nodules, efferent lymphatic vessels, crypts, and stratified epithelium?", "options": [{"label": "A", "text": "Peyer’s patches", "correct": false}, {"label": "B", "text": "Appendix", "correct": false}, {"label": "C", "text": "Palatine tonsil", "correct": true}, {"label": "D", "text": "Spleen", "correct": false}], "correct_answer": "C. Palatine tonsil", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Fused, or adjacent, basal laminae are found in all of the following places of gaseous or ionic exchange except:", "options": [{"label": "A", "text": "Lung alveoli", "correct": false}, {"label": "B", "text": "Placental villi", "correct": false}, {"label": "C", "text": "Endothelial cells and podocytes of the renal glomerulus", "correct": false}, {"label": "D", "text": "Liver sinusoids", "correct": true}], "correct_answer": "D. Liver sinusoids", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Chassaignac tubercle is:", "options": [{"label": "A", "text": "Erb’s point", "correct": false}, {"label": "B", "text": "Carotid tubercle on C6 vertebra", "correct": true}, {"label": "C", "text": "Found on first rib", "correct": false}, {"label": "D", "text": "Medial condyle of humerus", "correct": false}], "correct_answer": "B. Carotid tubercle on C6 vertebra", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements correctly apply to the internal thoracic artery?", "options": [{"label": "A", "text": "It runs posterior to the transversus thoracis muscle.", "correct": false}, {"label": "B", "text": "It ends in the 6th intercostal space", "correct": true}, {"label": "C", "text": "It divides into the superior and inferior epigastric arteries.", "correct": false}, {"label": "D", "text": "It runs posterior to the superior six ribs.", "correct": false}], "correct_answer": "B. It ends in the 6th intercostal space", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "While examining a newborn baby, a physician notes that urine is draining from the umbilicus. Which of the following embryonic structures has abnormally persisted in this patient?", "options": [{"label": "A", "text": "Allantoic duct", "correct": true}, {"label": "B", "text": "Mesonephric duct", "correct": false}, {"label": "C", "text": "Mesonephric tubules", "correct": false}, {"label": "D", "text": "Ureteric bud", "correct": false}], "correct_answer": "A. Allantoic duct", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The greater and lesser splanchnic nerves pass through the diaphragm via which of the following structures?", "options": [{"label": "A", "text": "Sternocostal foramen", "correct": false}, {"label": "B", "text": "Aortic hiatus", "correct": false}, {"label": "C", "text": "Diaphragmatic crus", "correct": true}, {"label": "D", "text": "Vena caval foramen", "correct": false}], "correct_answer": "C. Diaphragmatic crus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A benign tumor in the orbit of a 49-year-old man compresses a structure that runs through both the superior orbital fissure and the common tendinous ring. Which of the following structures is most likely damaged?", "options": [{"label": "A", "text": "Frontal nerve", "correct": false}, {"label": "B", "text": "Lacrimal nerve", "correct": false}, {"label": "C", "text": "Trochlear nerve", "correct": false}, {"label": "D", "text": "Abducens nerve", "correct": true}], "correct_answer": "D. Abducens nerve", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The parasympathetic root of the celiac plexus is a branch of which of the following?", "options": [{"label": "A", "text": "Greater splanchnic", "correct": false}, {"label": "B", "text": "Pelvic splanchnic", "correct": false}, {"label": "C", "text": "Lumbar splanchnic", "correct": false}, {"label": "D", "text": "Posterior vagal trunk", "correct": true}], "correct_answer": "D. Posterior vagal trunk", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following structures is not on the external surface of an intact gross brain?", "options": [{"label": "A", "text": "Crus cerebri", "correct": false}, {"label": "B", "text": "Mammillary bodies", "correct": false}, {"label": "C", "text": "Cerebellar hemisphere", "correct": false}, {"label": "D", "text": "Facial colliculus", "correct": true}], "correct_answer": "D. Facial colliculus", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A unilateral lesion of the neocerebellum is likely to result in all of the following signs except:-", "options": [{"label": "A", "text": "Hypotonia", "correct": false}, {"label": "B", "text": "Chorea", "correct": true}, {"label": "C", "text": "Intension tremor", "correct": false}, {"label": "D", "text": "Asynergia of the limbs", "correct": false}], "correct_answer": "B. Chorea", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The following capnograph trace was obtainedfrom an intubated patient who was ventilated usinga circle system with the absorber on. The traceis most compatible with:", "options": [{"label": "A", "text": "A correctly positioned tube", "correct": false}, {"label": "B", "text": "Inspiratory valve malfunction", "correct": false}, {"label": "C", "text": "Expiratory valve malfunction", "correct": false}, {"label": "D", "text": "Right main bronchial intubation", "correct": true}], "correct_answer": "D. Right main bronchial intubation", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/189604716.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Choose the most inappropriate statement regarding Propofol", "options": [{"label": "A", "text": "Is suspended in an emulsion of soyabean oil and egg", "correct": false}, {"label": "B", "text": "Has little effect on CVS system", "correct": true}, {"label": "C", "text": "Causes decrease in IOP", "correct": false}, {"label": "D", "text": "IMPAIR ventilatory response to CO2", "correct": false}], "correct_answer": "B. Has little effect on CVS system", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Percentage of xylocaine used in spinal anesthesia:", "options": [{"label": "A", "text": "1%", "correct": false}, {"label": "B", "text": "2%", "correct": false}, {"label": "C", "text": "4%", "correct": false}, {"label": "D", "text": "5%", "correct": true}], "correct_answer": "D. 5%", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/154.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is an ultrashort acting anesthetic?", "options": [{"label": "A", "text": "Propofol", "correct": true}, {"label": "B", "text": "Thiopentone", "correct": false}, {"label": "C", "text": "Succinyl choline", "correct": false}, {"label": "D", "text": "Midazolam", "correct": false}], "correct_answer": "A. Propofol", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following diseases show resistance to Succinyl choline?", "options": [{"label": "A", "text": "Myasthenia gravis", "correct": true}, {"label": "B", "text": "Polymyositis", "correct": false}, {"label": "C", "text": "Eaton lambert myasthenia syndrome", "correct": false}, {"label": "D", "text": "Muscular dystrophy", "correct": false}], "correct_answer": "A. Myasthenia gravis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Laryngeal spasm induced during intubation can be prevented by the following drugs except :", "options": [{"label": "A", "text": "Fentanyl", "correct": false}, {"label": "B", "text": "Local anesthetic spray", "correct": false}, {"label": "C", "text": "Rofecoxib", "correct": true}, {"label": "D", "text": "Diltiazem", "correct": false}], "correct_answer": "C. Rofecoxib", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Capnography basically monitors :", "options": [{"label": "A", "text": "Central venous pressure", "correct": false}, {"label": "B", "text": "Blood pressure during anaesthesia", "correct": false}, {"label": "C", "text": "Concentration of exhaled CO2", "correct": true}, {"label": "D", "text": "Concentration of inhaled O2", "correct": false}], "correct_answer": "C. Concentration of exhaled CO2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Reversal of non-depolarising muscle relaxant’s action is done with the help of:", "options": [{"label": "A", "text": "Atropine and neostigmine", "correct": false}, {"label": "B", "text": "Atropine and glycopyrrolate", "correct": false}, {"label": "C", "text": "Atropine and vecuronium", "correct": false}, {"label": "D", "text": "Neostigmine and edrophonium", "correct": true}], "correct_answer": "D. Neostigmine and edrophonium", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the largest size endotracheal tube thatwill pass readily through the lumen of a size3 laryngeal mask airway (LMA)?", "options": [{"label": "A", "text": "6.00 mm Internal Diameter (ID).", "correct": true}, {"label": "B", "text": "6.50 mm ID.", "correct": false}, {"label": "C", "text": "7.00 mm ID.", "correct": false}, {"label": "D", "text": "7.5 mm ID.", "correct": false}], "correct_answer": "A. 6.00 mm Internal Diameter (ID).", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In anesthesia, fitting of wrong gas cylinder to the anesthesia machine can be prevented by :", "options": [{"label": "A", "text": "Pin index system", "correct": true}, {"label": "B", "text": "Yolk assembly", "correct": false}, {"label": "C", "text": "Bodock seal", "correct": false}, {"label": "D", "text": "Gas analyser", "correct": false}], "correct_answer": "A. Pin index system", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statement concerning the binding of oxygen by haemoglobin is correct ?", "options": [{"label": "A", "text": "Bohr’s effect results in a lower affinity for oxygen at higher pH value", "correct": false}, {"label": "B", "text": "Carbon dioxide increases the oxygen affinity of hemoglobin by binding to the amino terminal group of the polypeptide chain", "correct": false}, {"label": "C", "text": "The oxygen affinity of the hemoglobin increases as the percentage saturation increases", "correct": true}, {"label": "D", "text": "The haemoglobin tetramer binds four molecule of 2,3 BPG.", "correct": false}], "correct_answer": "C. The oxygen affinity of the hemoglobin increases as the percentage saturation increases", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "True statement regarding eukaryotic transcription is ?", "options": [{"label": "A", "text": "RNA polymerase does not require the template", "correct": false}, {"label": "B", "text": "ALL types of RNA are synthesized in the nucleolus", "correct": false}, {"label": "C", "text": "RNA synthesis requires a primer", "correct": false}, {"label": "D", "text": "Phosphodiester bond formation occurs due to pyrophosphate hydrolysis.", "correct": true}], "correct_answer": "D. Phosphodiester bond formation occurs due to pyrophosphate hydrolysis.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In the formation of methionine, a methyl group derived from serine is transferred to homocysteine. The coenzyme involved in this reaction is derived from the vitamin", "options": [{"label": "A", "text": "Folate", "correct": true}, {"label": "B", "text": "Biocytin", "correct": false}, {"label": "C", "text": "Pyridoxine", "correct": false}, {"label": "D", "text": "Lipoate", "correct": false}], "correct_answer": "A. Folate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following method is use for detection of protein motion from cell nuclei to cytoplasmc", "options": [{"label": "A", "text": "FISH", "correct": false}, {"label": "B", "text": "FRAP", "correct": true}, {"label": "C", "text": "Electron microscopy", "correct": false}, {"label": "D", "text": "Confocal microscopy", "correct": false}], "correct_answer": "B. FRAP", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Gene duplication leads to maximal evolution of", "options": [{"label": "A", "text": "r-Rna", "correct": false}, {"label": "B", "text": "m-Rna", "correct": true}, {"label": "C", "text": "t-Rna", "correct": false}, {"label": "D", "text": "Sn-Rna", "correct": false}], "correct_answer": "B. m-Rna", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following act on intracytoplasmic receptor then act through nuclear protein", "options": [{"label": "A", "text": "Growth hormone", "correct": false}, {"label": "B", "text": "Thyroxin", "correct": true}, {"label": "C", "text": "Epinephrine", "correct": false}, {"label": "D", "text": "ADH", "correct": false}], "correct_answer": "B. Thyroxin", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Up to one third of the amino acid residues of collagen are", "options": [{"label": "A", "text": "Serine", "correct": false}, {"label": "B", "text": "Hydroxyprolinec", "correct": false}, {"label": "C", "text": "Proline", "correct": false}, {"label": "D", "text": "Glycine", "correct": true}], "correct_answer": "D. Glycine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following compounds is an essential fatty acid?", "options": [{"label": "A", "text": "Oleic acid", "correct": false}, {"label": "B", "text": "Stearic acid", "correct": false}, {"label": "C", "text": "Linoleic acid", "correct": true}, {"label": "D", "text": "Palmitoleic acid", "correct": false}], "correct_answer": "C. Linoleic acid", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In the posttranslational modification of collagen, ascorbate (vitamin C. acts as", "options": [{"label": "A", "text": "A carrier of amino acids", "correct": false}, {"label": "B", "text": "A reducing agent", "correct": true}, {"label": "C", "text": "A carrier of hydroxyl groups", "correct": false}, {"label": "D", "text": "An enzyme", "correct": false}], "correct_answer": "B. A reducing agent", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "True about sigma subunit of prokaryotic RNA polymerase is ?", "options": [{"label": "A", "text": "It is a part of core enzyme", "correct": false}, {"label": "B", "text": "Binds to antibiotic Rifampicin", "correct": false}, {"label": "C", "text": "Is inhibited by ?–amanitin", "correct": false}, {"label": "D", "text": "Specially recognizes the promoter element", "correct": true}], "correct_answer": "D. Specially recognizes the promoter element", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "By which of the following actions Gs receptor can be stimulated to induce watery diaorrhea", "options": [{"label": "A", "text": "Phosphorylation", "correct": false}, {"label": "B", "text": "Dephosphorylation", "correct": false}, {"label": "C", "text": "ATP-ADP exchange", "correct": false}, {"label": "D", "text": "ADP ribosylation", "correct": true}], "correct_answer": "D. ADP ribosylation", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Increased blood levels of cholesterol that are seen in hypothyroidism are most likely due to :", "options": [{"label": "A", "text": "Decreased calorigenesis", "correct": false}, {"label": "B", "text": "Decreased production of LDL receptor in liver and the thus decreased clearance by liver", "correct": false}, {"label": "C", "text": "Decreased production of LDL receptor in the adipose tissue and increased release of cholesterol from adipose tissues", "correct": true}, {"label": "D", "text": "Increased breakdown of lipoproteins releasing cholesterol in circulation", "correct": false}], "correct_answer": "C. Decreased production of LDL receptor in the adipose tissue and increased release of cholesterol from adipose tissues", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Triplex DNA is formed because of", "options": [{"label": "A", "text": "Increase in palindromic sequences", "correct": false}, {"label": "B", "text": "Increase no. of guanosine repeat", "correct": false}, {"label": "C", "text": "Increase in polypyrimidine sequences", "correct": false}, {"label": "D", "text": "Hoogstein pairing", "correct": true}], "correct_answer": "D. Hoogstein pairing", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "During prolonged starvation, the rate of gluconeogenesis depends on ?", "options": [{"label": "A", "text": "Increased alanine levels in liver", "correct": true}, {"label": "B", "text": "Decreased cGMP in liver", "correct": false}, {"label": "C", "text": "ADP in liver", "correct": false}, {"label": "D", "text": "Decreased essential fatty acids in liver", "correct": false}], "correct_answer": "A. Increased alanine levels in liver", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Splicing activity is a function of ?", "options": [{"label": "A", "text": "mRNA", "correct": false}, {"label": "B", "text": "snRNA", "correct": true}, {"label": "C", "text": "rRNA", "correct": false}, {"label": "D", "text": "tRNA", "correct": false}], "correct_answer": "B. snRNA", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 15-year-old presents with inflammatory papules, pustules on the forehead and cheeks. She also has oily skin. Most appropriate diagnosis is", "options": [{"label": "A", "text": "Discoid lupus", "correct": false}, {"label": "B", "text": "Melasma", "correct": false}, {"label": "C", "text": "Acne vulgaris", "correct": true}, {"label": "D", "text": "Red man syndrome", "correct": false}], "correct_answer": "C. Acne vulgaris", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 27 year old female presents with tender subcutaneous nodules on lower legs. Which of the following is least likely to be the etiology?", "options": [{"label": "A", "text": "Use of oral contraceptives", "correct": false}, {"label": "B", "text": "Streptococcal infection", "correct": false}, {"label": "C", "text": "Sarcoidosis", "correct": false}, {"label": "D", "text": "Giant cell arteritis", "correct": true}], "correct_answer": "D. Giant cell arteritis", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/230660842.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 51-year-old woman presents with pustules and papules around the central parts of her face. She complains of facial flushing after drinking alcohol or hot fluids. Most appropriate diagnosis is", "options": [{"label": "A", "text": "Rosacea", "correct": true}, {"label": "B", "text": "Ecchymoses", "correct": false}, {"label": "C", "text": "Purpura", "correct": false}, {"label": "D", "text": "Telangiectasia", "correct": false}], "correct_answer": "A. Rosacea", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 22-year-old woman in her fifth month of pregnancy presents with well-demarcated, hyper pigmented macules on her cheek, nose, and forehead. Most appropriate diagnosis is", "options": [{"label": "A", "text": "Discoid lupus", "correct": false}, {"label": "B", "text": "Melasma", "correct": true}, {"label": "C", "text": "Acne vulgaris", "correct": false}, {"label": "D", "text": "Red man syndrome", "correct": false}], "correct_answer": "B. Melasma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 10-year-old girl presents with abdominal pain and multiple pigmented macules on the vermilion border of her lower lip. The dark brown lesions are 2–5 mm in size and are arranged in a cluster. The patient’s older brother has similar lesions. The most likely diagnosis is?", "options": [{"label": "A", "text": "Gardner syndrome", "correct": false}, {"label": "B", "text": "Herpes simplex virus infection", "correct": false}, {"label": "C", "text": "Freckles", "correct": false}, {"label": "D", "text": "Peutz-Jeghers syndrome", "correct": true}], "correct_answer": "D. Peutz-Jeghers syndrome", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A male with a history of herpetic gingivostomatitis develops a generalized and symmetric rash. The lesions are 1–2 cm in diameter and look like round patches. They consist of two concentric rings surrounding a central disk. The rash is burning and pruritic. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Erythema multiforme", "correct": true}, {"label": "B", "text": "Secondary syphilis", "correct": false}, {"label": "C", "text": "Systemic lupus erythematosus", "correct": false}, {"label": "D", "text": "Pemphigus vulgaris", "correct": false}], "correct_answer": "A. Erythema multiforme", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 6-year-old child presents complaining of patchy hair loss on the back of the scalp. Examination reveals well-demarcated areas of erythema and scaling, and although there are still some hairs in the area, they are extremely short and broken in appearance. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Androgenic hair loss", "correct": false}, {"label": "B", "text": "Psoriasis of the scalp", "correct": false}, {"label": "C", "text": "Seborrheic dermatitis", "correct": false}, {"label": "D", "text": "Tinea capitis", "correct": true}], "correct_answer": "D. Tinea capitis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 41-year-old man complains of soft, raised, flesh-colored growths or projections on his glans penis, prepuce, and penile shaft. Several excisional biopsies are done to look for malignancy. Which of the following is the most likely diagnosis?", "options": [{"label": "A", "text": "Genital herpes", "correct": false}, {"label": "B", "text": "Condyloma acuminatum", "correct": true}, {"label": "C", "text": "Molluscum contagiosum", "correct": false}, {"label": "D", "text": "Condylomata lata", "correct": false}], "correct_answer": "B. Condyloma acuminatum", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most common cause of death in pemphigus : -", "options": [{"label": "A", "text": "Septicemia", "correct": true}, {"label": "B", "text": "Electrolyte imbalance", "correct": false}, {"label": "C", "text": "Bleeding", "correct": false}, {"label": "D", "text": "Asphyxia", "correct": false}], "correct_answer": "A. Septicemia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The histopathology image shown below is most consistent with a diagnosis of ?", "options": [{"label": "A", "text": "Pemphigus vulgaris", "correct": true}, {"label": "B", "text": "Paraneoplastic pemphigus", "correct": false}, {"label": "C", "text": "Bullous pemphigoid", "correct": false}, {"label": "D", "text": "Dermatitis herpetiformis", "correct": false}], "correct_answer": "A. Pemphigus vulgaris", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/531981250.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In monoaural displacusis the lesion is in the :", "options": [{"label": "A", "text": "Cochlea", "correct": true}, {"label": "B", "text": "Auditary nerve", "correct": false}, {"label": "C", "text": "Brain stem", "correct": false}, {"label": "D", "text": "Cerebrum", "correct": false}], "correct_answer": "A. Cochlea", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "After rupture of tympanic membrane the hearing loss is :", "options": [{"label": "A", "text": "10-40 dB", "correct": true}, {"label": "B", "text": "5-15 dB", "correct": false}, {"label": "C", "text": "20 dB", "correct": false}, {"label": "D", "text": "300 dB", "correct": false}], "correct_answer": "A. 10-40 dB", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The cause for contact ulcer in vocal cords is :", "options": [{"label": "A", "text": "Voice abuse", "correct": true}, {"label": "B", "text": "Smoking", "correct": false}, {"label": "C", "text": "TB", "correct": false}, {"label": "D", "text": "Malignacny", "correct": false}], "correct_answer": "A. Voice abuse", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Virus causing acute onset sensorineural deafness :", "options": [{"label": "A", "text": "Corona virus", "correct": false}, {"label": "B", "text": "Mumps", "correct": true}, {"label": "C", "text": "Adeno virus", "correct": false}, {"label": "D", "text": "Rota virus", "correct": false}], "correct_answer": "B. Mumps", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "False positive fistula test is associated with", "options": [{"label": "A", "text": "Perilymph fistula", "correct": false}, {"label": "B", "text": "Malignant sclerosis", "correct": false}, {"label": "C", "text": "Congenital syphilis", "correct": true}, {"label": "D", "text": "Cholesteatoma", "correct": false}], "correct_answer": "C. Congenital syphilis", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/154-1.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Treatment of choice for Perforation in pars flaccid of the tympanic membrane with cholesteatoma is :", "options": [{"label": "A", "text": "Myringoplasty", "correct": false}, {"label": "B", "text": "Modified Radical Mastoidectomy", "correct": true}, {"label": "C", "text": "Antibiotics", "correct": false}, {"label": "D", "text": "Radical mastoidectomy", "correct": false}], "correct_answer": "B. Modified Radical Mastoidectomy", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/154-2.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following bones do not contribute the nasal septum :", "options": [{"label": "A", "text": "Sphenoid", "correct": false}, {"label": "B", "text": "Lacrimal", "correct": true}, {"label": "C", "text": "Palatine", "correct": false}, {"label": "D", "text": "Ethmoid", "correct": false}], "correct_answer": "B. Lacrimal", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Frontal sinuses appear radiologically at the age of ?", "options": [{"label": "A", "text": "2", "correct": false}, {"label": "B", "text": "4", "correct": false}, {"label": "C", "text": "6", "correct": true}, {"label": "D", "text": "12", "correct": false}], "correct_answer": "C. 6", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Treatment of choice of the pathology shown in the given image is :", "options": [{"label": "A", "text": "Surgical excision", "correct": true}, {"label": "B", "text": "Cauterization", "correct": false}, {"label": "C", "text": "Antibiotics", "correct": false}, {"label": "D", "text": "Radiotherapy", "correct": false}], "correct_answer": "A. Surgical excision", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/759026759.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Commonest post operative complication of tonsillectomy is", "options": [{"label": "A", "text": "Palatal Palsy", "correct": false}, {"label": "B", "text": "Hemorrhage", "correct": true}, {"label": "C", "text": "Injury to uvula", "correct": false}, {"label": "D", "text": "Infection", "correct": false}], "correct_answer": "B. Hemorrhage", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Detoxification of benzoic acid is chiefly done by?", "options": [{"label": "A", "text": "Glucoronic acid", "correct": false}, {"label": "B", "text": "Glycine", "correct": true}, {"label": "C", "text": "Glutamine", "correct": false}, {"label": "D", "text": "Arginine", "correct": false}], "correct_answer": "B. Glycine", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which poisoning causes post mortem luminescence?", "options": [{"label": "A", "text": "Dhatura", "correct": false}, {"label": "B", "text": "Mercury", "correct": false}, {"label": "C", "text": "Armillaria", "correct": true}, {"label": "D", "text": "Oleander", "correct": false}], "correct_answer": "C. Armillaria", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Psychological autopsy is?", "options": [{"label": "A", "text": "Autopsy of Brain and Spinal cord", "correct": false}, {"label": "B", "text": "To Inquire about the Psychiatric Illnesses of the deceased", "correct": false}, {"label": "C", "text": "Assessment of the mental state of deceased person before death", "correct": true}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "C. Assessment of the mental state of deceased person before death", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the poisons caused uterine contraction EXCEPT?", "options": [{"label": "A", "text": "Lead", "correct": false}, {"label": "B", "text": "Arsenic", "correct": true}, {"label": "C", "text": "Ergot", "correct": false}, {"label": "D", "text": "Quinine", "correct": false}], "correct_answer": "B. Arsenic", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/139.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Four carpal bones are present at what age ?", "options": [{"label": "A", "text": "3 years", "correct": false}, {"label": "B", "text": "4 years", "correct": true}, {"label": "C", "text": "5 years", "correct": false}, {"label": "D", "text": "6 years", "correct": false}], "correct_answer": "B. 4 years", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/154-3.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A boy of 10 years will have ..……deciduous and …… permanent teeth.", "options": [{"label": "A", "text": "16, 4", "correct": false}, {"label": "B", "text": "12, 8", "correct": false}, {"label": "C", "text": "20, 0", "correct": false}, {"label": "D", "text": "20,4", "correct": true}], "correct_answer": "D. 20,4", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Impotence Quad hoc means?", "options": [{"label": "A", "text": "Medically Impotent", "correct": false}, {"label": "B", "text": "Legally Important", "correct": false}, {"label": "C", "text": "Both medically and legally impotent", "correct": false}, {"label": "D", "text": "Important toward a particular women", "correct": true}], "correct_answer": "D. Important toward a particular women", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which is not a derivative of cannabis?", "options": [{"label": "A", "text": "Cocaine", "correct": true}, {"label": "B", "text": "Charas", "correct": false}, {"label": "C", "text": "Ganza", "correct": false}, {"label": "D", "text": "Bhang", "correct": false}], "correct_answer": "A. Cocaine", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/154-4.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Cyanide is dangerous because it acts by?", "options": [{"label": "A", "text": "Decreasing oxygen carrying capacity of bloods thus lactic academia", "correct": false}, {"label": "B", "text": "Inhibition of Oxidative phosphorylation thus causing tissue level hypoxia", "correct": true}, {"label": "C", "text": "Causing hemolysis & internal bleeding", "correct": false}, {"label": "D", "text": "Causing Respiratory paralysis thus causing asphyxia", "correct": false}], "correct_answer": "B. Inhibition of Oxidative phosphorylation thus causing tissue level hypoxia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Signs of ante mortem injury are all except?", "options": [{"label": "A", "text": "Wound gaping", "correct": false}, {"label": "B", "text": "Venous bleeding", "correct": true}, {"label": "C", "text": "Everted Edges", "correct": false}, {"label": "D", "text": "Inflammation Present", "correct": false}], "correct_answer": "B. Venous bleeding", "question_images": [], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/154-5.jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Elderly lady presents with asymmetric bradykinesia, unilateral arm rigidity and dystonia.MRI showed atrophy of perirolandic cortex. Probable diagnosis:", "options": [{"label": "A", "text": "Cortico basal degeneration", "correct": true}, {"label": "B", "text": "Progressive supranuclear palsy", "correct": false}, {"label": "C", "text": "Lewy body dementia", "correct": false}, {"label": "D", "text": "Multisystem atrophy", "correct": false}], "correct_answer": "A. Cortico basal degeneration", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Brain natriuretic peptide is decreased in:", "options": [{"label": "A", "text": "Pregnancy", "correct": false}, {"label": "B", "text": "Obesity", "correct": true}, {"label": "C", "text": "Restrictive Cardiomyopathy", "correct": false}, {"label": "D", "text": "Postpartum cardiomyopathy", "correct": false}], "correct_answer": "B. Obesity", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Organism causing myocarditis with erythema chronicum migrans:", "options": [{"label": "A", "text": "Trichinella", "correct": false}, {"label": "B", "text": "Strongyloides", "correct": false}, {"label": "C", "text": "Borrelia", "correct": true}, {"label": "D", "text": "Ancylostoma", "correct": false}], "correct_answer": "C. Borrelia", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Interpret the following ABG – pH 7.22, HCO3 19, pCO2 62:", "options": [{"label": "A", "text": "Mixed respiratory and metabolic alkalosis", "correct": false}, {"label": "B", "text": "Respiratory acidosis with metabolic compensation", "correct": false}, {"label": "C", "text": "Metabolic acidosis with renal compensation", "correct": false}, {"label": "D", "text": "Mixed respiratory and metabolic acidosis", "correct": true}], "correct_answer": "D. Mixed respiratory and metabolic acidosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 76 year old male came to emergency department with complaints of retrosternal pain for 6 hours. The following is the ECG of the same patient. The appropriate next line of management of this patient is", "options": [{"label": "A", "text": "IV abciximab", "correct": false}, {"label": "B", "text": "IV thrombolysis", "correct": false}, {"label": "C", "text": "Primary percutaneous intervention", "correct": true}, {"label": "D", "text": "Low molecular weight heparin", "correct": false}], "correct_answer": "C. Primary percutaneous intervention", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/course_file_meta/44053075.jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Select the one which is not a major criteria for diagnosis of multiple myeloma.", "options": [{"label": "A", "text": "Lytic bone lesions", "correct": true}, {"label": "B", "text": "Plasmacytoma on tissue biopsy", "correct": false}, {"label": "C", "text": "Bone marrow plasmacytosis> 30%", "correct": false}, {"label": "D", "text": "

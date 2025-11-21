@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Surgery Neetpg Pyq</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Surgery Neetpg Pyq</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                212 Questions | 848 Total Marks | 222 min Duration | ~62.83 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 212 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 222 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 212</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Surgery Neetpg Pyq - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 212</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 212 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "While doing fundoplication for GERD, the surgeon was demonstrating his assistant the maneuver shown in the figure. What is this called?", "options": [{"label": "A", "text": "Shoe shine Maneuver", "correct": true}, {"label": "B", "text": "Heaney Maneuver", "correct": false}, {"label": "C", "text": "Pringle Maneuver", "correct": false}, {"label": "D", "text": "Heimlich Maneuver", "correct": false}], "correct_answer": "A. Shoe shine Maneuver", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/1(911).jpg"], "explanation_images": [], "explanation": "<p><strong>Correct Answer (A)</strong></p>\n<p><strong>Explanation:</strong></p>\n<ul><li>• Explanation: Shoe shine maneuver is a specific step during Nissen fundoplication, a surgical procedure used to treat gastroesophageal reflux disease (GERD). During this maneuver, the fundus (upper part of the stomach) is passed behind the esophagus and manipulated back and forth — resembling the motion of shining a shoe. This movement ensures that the wrap (fundoplication) is not too tight and that there is sufficient mobility and length of the gastric fundus to create a tension-free 360° wrap around the lower esophagus. It is a critical technique to prevent postoperative complications like dysphagia due to an overly tight wrap.</li><li>• Why the other options are incorrect: B. Heaney Maneuver This maneuver is unrelated to fundoplication. It is used in hepatic surgery to control bleeding — specifically involving clamping of the suprahepatic and infrahepatic segments of the inferior vena cava and combining with a Pringle maneuver to temporarily reduce hepatic blood flow.</li><li>• Why the other options are incorrect: B. Heaney Maneuver This maneuver is unrelated to fundoplication. It is used in hepatic surgery to control bleeding — specifically involving clamping of the suprahepatic and infrahepatic segments of the inferior vena cava and combining with a Pringle maneuver to temporarily reduce hepatic blood flow.</li><li>• C. Pringle Maneuver The Pringle maneuver is used to control hepatic hemorrhage during liver surgery or trauma. It involves occluding the hepatoduodenal ligament (which contains the portal vein, hepatic artery, and bile duct) to reduce bleeding from the liver. It has no role in fundoplication.</li><li>• C. Pringle Maneuver The Pringle maneuver is used to control hepatic hemorrhage during liver surgery or trauma. It involves occluding the hepatoduodenal ligament (which contains the portal vein, hepatic artery, and bile duct) to reduce bleeding from the liver. It has no role in fundoplication.</li><li>• D. Heimlich Maneuver The Heimlich maneuver is a first-aid procedure for relieving choking by applying abdominal thrusts to expel a foreign body from the airway. It is unrelated to any surgical procedure, including fundoplication.</li><li>• D. Heimlich Maneuver The Heimlich maneuver is a first-aid procedure for relieving choking by applying abdominal thrusts to expel a foreign body from the airway. It is unrelated to any surgical procedure, including fundoplication.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23623991705127353/23623991705127353.m3u8"}, {"text": "Patient present with Halitosis and a swelling in the lateral aspect of neck, Which on pressing gives rise to a regurgitant air sound. Barium image is shown. Diagnosis is:", "options": [{"label": "A", "text": "Larygocele", "correct": false}, {"label": "B", "text": "Dysphagia Lusoria", "correct": false}, {"label": "C", "text": "Pharyngeal pouch/zenker’s diverticulum", "correct": true}, {"label": "D", "text": "schatzki ring", "correct": false}], "correct_answer": "C. Pharyngeal pouch/zenker’s diverticulum", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/2(801).jpg"], "explanation_images": [], "explanation": "<p><strong>Correct Answer (C)</strong></p>\n<p><strong>Explanation:</strong></p>\n<ul><li>• Incorrect Options: A. Laryngocele Laryngocele is an air-filled dilation of the laryngeal saccule that protrudes through the thyrohyoid membrane. It may present as a lateral neck swelling that increases with Valsalva (e.g., blowing or coughing) and is often associated with chronic straining or playing wind instruments. However, halitosis is not a feature, and it does not produce a regurgitant air sound on pressure.</li><li>• B. Dysphagia Lusoria This is caused by an aberrant right subclavian artery compressing the esophagus from behind. It presents with dysphagia, especially to solids, but does not cause halitosis or neck swelling. On barium swallow, it shows a posterior indentation of the esophagus, not a pouch.</li><li>• D. Schatzki Ring A Schatzki ring is a thin, circumferential mucosal ring at the squamocolumnar junction in the distal esophagus. It typically causes intermittent dysphagia to solids, particularly when eating quickly or large meals. It does not cause halitosis, neck swelling, or regurgitant air sounds. It appears as a thin concentric ring on barium swallow imaging.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Dohlman’s procedure is used for?", "options": [{"label": "A", "text": "Meckel’s diverticulum", "correct": false}, {"label": "B", "text": "Zenker’s diverticulum", "correct": true}, {"label": "C", "text": "Dermatomyositis", "correct": false}, {"label": "D", "text": "Menetrier’s disease", "correct": false}], "correct_answer": "B. Zenker’s diverticulum", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Correct Answer (B)</strong></p>\n<p><strong>Explanation:</strong></p>\n<ul><li>• Incorrect Options: A. Meckel’s diverticulum Meckel’s diverticulum is a congenital true diverticulum located on the antimesenteric border of the ileum. It often presents with painless lower GI bleeding in children. The treatment is surgical diverticulectomy, not Dohlman’s procedure.</li><li>• C. Dermatomyositis Dermatomyositis is an inflammatory myopathy characterized by muscle weakness and skin manifestations like heliotrope rash and Gottron’s papules. The treatment is medical, typically involving corticosteroids and immunosuppressive agents — not surgical interventions like Dohlman’s.</li><li>• D. Menetrier’s disease This is a rare hypertrophic gastropathy characterized by enlarged gastric rugal folds, protein loss, and hypoproteinemia. Treatment may involve medical therapy or gastrectomy, but it is unrelated to Zenker’s diverticulum and not treated with Dohlman’s procedure.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22545311705127426/22545311705127426.m3u8"}, {"text": "A middle aged man complains of upper abdominal pain after a heavy meal. There is tenderness in the upper abdomen and on X ray widening of the mediastinum is seen with pneumo-mediastinum. What is the diagnosis?", "options": [{"label": "A", "text": "Spontaneous perforation of the esophagus", "correct": true}, {"label": "B", "text": "Perforated peptic ulcer", "correct": false}, {"label": "C", "text": "Foreign body in esophagus", "correct": false}, {"label": "D", "text": "Rupture of emphysematous bulla", "correct": false}], "correct_answer": "A. Spontaneous perforation of the esophagus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• Incorrect Options: B. Perforated peptic ulcer While a perforated peptic ulcer can present with sudden severe abdominal pain, it usually leads to free air under the diaphragm (pneumoperitoneum) rather than pneumomediastinum. Also, mediastinal widening is not a typical feature.</li><li>• C. Foreign body in esophagus A foreign body can cause discomfort or obstruction and, if neglected, may lead to perforation. However, in this scenario, there is no history of ingestion, and the acute onset after a heavy meal along with pneumomediastinum points more towards spontaneous esophageal rupture.</li><li>• D. Rupture of emphysematous bulla This condition is typically seen in patients with chronic obstructive pulmonary disease (COPD) and may cause pneumothorax, not pneumomediastinum. Also, it usually presents with sudden chest pain and dyspnea, not abdominal pain after meals.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-years old man presented to the OPD with dysphagia to both solid and liquids. Esophageal manometry was performed – It revealed premature contraction with > 20% wet swallows and abnormally increased lower esophageal pressure of >450 mm Hg.The diagnosis is-", "options": [{"label": "A", "text": "Type 1 achalasia", "correct": false}, {"label": "B", "text": "Type 2 achalasia", "correct": false}, {"label": "C", "text": "Type 3 achalasia", "correct": true}, {"label": "D", "text": "Jackhammer esophagus", "correct": false}], "correct_answer": "C. Type 3 achalasia", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• Incorrect Options: A. Type 1 achalasia Also known as classic achalasia, this type shows minimal or absent peristalsis and normal or mildly elevated LES pressure on manometry. There are no premature or spastic contractions, so it does not fit the manometric findings in this case.</li><li>• B. Type 2 achalasia This subtype shows pan-esophageal pressurization (simultaneous contraction of the entire esophagus) with >20% wet swallows, but without the high-amplitude or premature contractions seen in Type 3. LES pressure may be elevated, but not as markedly as in this case. Hence, the pattern described better fits Type 3.</li><li>• D. Jackhammer esophagus This is a hypercontractile esophageal disorder seen on manometry as very high-amplitude contractions, but with preserved LES relaxation. It is not associated with impaired LES relaxation, which is the hallmark of achalasia. Therefore, despite the high pressures, the LES dysfunction in this case rules out jackhammer esophagus.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15368481705127463/15368481705127463.m3u8"}, {"text": "A 50 year old female presented with Dysphagia and chest pain. Barium image is given below. What is the most probable diagnosis?", "options": [{"label": "A", "text": "Carcinoma esophagus", "correct": false}, {"label": "B", "text": "DES", "correct": true}, {"label": "C", "text": "oesophageal web", "correct": false}, {"label": "D", "text": "Achalasia cardia", "correct": false}], "correct_answer": "B. DES", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/3(729).jpg"], "explanation_images": [], "explanation": "<p><strong>Correct Answer (B)</strong></p>\n<p><strong>Explanation:</strong></p>\n<ul><li>• Incorrect Options: A. Carcinoma esophagus Carcinoma of the esophagus typically presents with progressive dysphagia (first to solids, then liquids) and weight loss. On barium swallow, it shows an irregular, narrowed, or \"apple-core\" lesion, not the smooth corkscrew pattern seen in DES.</li><li>• C. Esophageal web Esophageal webs are thin mucosal membranes that typically occur in the upper esophagus and are associated with Plummer-Vinson syndrome. They cause dysphagia to solids but not liquids and appear on barium swallow as a focal constriction or shelf-like projection, not a corkscrew pattern.</li><li>• D. Achalasia cardia Achalasia cardia features impaired relaxation of the lower esophageal sphincter and absent peristalsis. On barium swallow, it presents with a “bird-beak” appearance of the distal esophagus, not the multiple simultaneous contractions seen in DES.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Azygous preserving repair of TEF is done for following reason?", "options": [{"label": "A", "text": "Decongest the anastomosis", "correct": true}, {"label": "B", "text": "For feasibility of easy surgery", "correct": false}, {"label": "C", "text": "To prevent recurrence", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Decongest the anastomosis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• Incorrect Options: B. For feasibility of easy surgery In fact, preserving the azygous vein can make the procedure slightly more challenging, as it may obstruct the operative field. Division of the vein is often done to improve exposure, so preservation is not done for ease of surgery.</li><li>• C. To prevent recurrence TEF recurrence is usually due to factors such as tension on the anastomosis, infection, or poor tissue healing. Azygous vein preservation does not directly prevent recurrence of the fistula.</li><li>• D. None of the above This option is incorrect because Option A is clearly the correct and evidence-based rationale — azygous vein preservation improves venous drainage and supports better anastomotic healing.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31412191705127502/31412191705127502.m3u8"}, {"text": "What is the diagnosis of following Barium X-ray?", "options": [{"label": "A", "text": "Achalasia Cardia", "correct": false}, {"label": "B", "text": "CA esophagus", "correct": true}, {"label": "C", "text": "Plummer Vinson Syndrome", "correct": false}, {"label": "D", "text": "GERD", "correct": false}], "correct_answer": "B. CA esophagus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/4(693).jpg"], "explanation_images": [], "explanation": "<p><strong>Correct Answer (B)</strong></p>\n<p><strong>Explanation:</strong></p>\n<ul><li>• Incorrect Options: A. Achalasia Cardia Achalasia is a motility disorder with failure of LES relaxation and absent peristalsis. On barium swallow, it classically shows a smooth, tapering “bird-beak” appearance of the distal esophagus and proximal esophageal dilation — not irregular narrowing as seen in carcinoma.</li><li>• C. Plummer-Vinson Syndrome This syndrome is associated with upper esophageal webs, iron deficiency anemia, and dysphagia. On barium swallow, it shows a thin, shelf-like web or membrane in the upper esophagus. It doesn’t present as a long segment of irregular narrowing.</li><li>• D. GERD (Gastroesophageal Reflux Disease) GERD may show a normal barium swallow or nonspecific changes like feline esophagus (transient folds) or a small sliding hiatal hernia. It does not show irregular narrowing or mass lesions characteristic of carcinoma.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 4 year old boy presented to casualty by his mother with difficulty in swallowing.He was playing with coins.Chest x-ray is suggestive of following:-", "options": [{"label": "A", "text": "Oesophagus foreign body.", "correct": true}, {"label": "B", "text": "Tracheal foreign body.", "correct": false}, {"label": "C", "text": "Soft tissue neck calcification.", "correct": false}, {"label": "D", "text": "Artifact", "correct": false}], "correct_answer": "A. Oesophagus foreign body.", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/5(644).jpg"], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• Incorrect Options: B. Tracheal foreign body If a coin or other object is in the trachea, it usually appears as a linear shadow on the AP view and a circular shadow on the lateral view, due to the orientation within the airway. Tracheal foreign bodies often present with cough, stridor, or respiratory distress, rather than primarily dysphagia.</li><li>• C. Soft tissue neck calcification These calcifications, such as from lymph nodes or cartilage, tend to be smaller, irregular, and less dense than a coin, and do not correspond with a sudden onset of symptoms after playing with coins. They are usually incidental findings.</li><li>• D. Artifact Artifacts may simulate foreign bodies on imaging but often have unclear borders or variable positions on different views. In contrast, a true foreign body remains fixed in position and has a distinct, well-defined radio-opacity, as in this case.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/32301271705127549/32301271705127549.m3u8"}, {"text": "True about barett’s esophagus are all of the following except?", "options": [{"label": "A", "text": "Hyperplastic change in the lining of oesophagus", "correct": true}, {"label": "B", "text": "Patient is usually asymptomatic", "correct": false}, {"label": "C", "text": "Histology of the lesion shows mucus secreting goblet cells", "correct": false}, {"label": "D", "text": "Chronic GERD is a predisposing factor", "correct": false}], "correct_answer": "A. Hyperplastic change in the lining of oesophagus", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• Incorrect Options: B. Patient is usually asymptomatic This is true. Barrett’s esophagus is often detected incidentally during endoscopy for GERD symptoms. Many patients do not have any specific symptoms beyond those already attributed to reflux.</li><li>• C. Histology of the lesion shows mucus secreting goblet cells This is true and a key diagnostic criterion. The presence of intestinal-type goblet cells in biopsies from the esophagus confirms the diagnosis of Barrett’s esophagus.</li><li>• D. Chronic GERD is a predisposing factor This is also true. Chronic acid reflux is the most important risk factor for Barrett’s esophagus. Longstanding GERD leads to repetitive injury and repair in the esophageal lining, which promotes metaplastic transformation.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/71455831705127568/71455831705127568.m3u8"}, {"text": "Serpiginous ulcer in distal esophagus is caused by", "options": [{"label": "A", "text": "CMV", "correct": true}, {"label": "B", "text": "Herpes", "correct": false}, {"label": "C", "text": "Pills", "correct": false}, {"label": "D", "text": "Corrosive", "correct": false}], "correct_answer": "A. CMV", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/36223661705127992/36223661705127992.m3u8"}, {"text": "7 week old male child with projectile non- Bilious vomiting. Which electrolyte imbalance can be seen?", "options": [{"label": "A", "text": "Hypochloremic Hypokalemic alkalosis", "correct": true}, {"label": "B", "text": "Hypercholremic Hyperkalemic alkalosis", "correct": false}, {"label": "C", "text": "Hyperchloremic Hypokalemic alkalosis", "correct": false}, {"label": "D", "text": "Hypochloremic Hyperkalemic alkalosis", "correct": false}], "correct_answer": "A. Hypochloremic Hypokalemic alkalosis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77322311705128024/77322311705128024.m3u8"}, {"text": "Which is fluid of choice for CHPS?", "options": [{"label": "A", "text": "5% Dextrose + 0.9 % NACL + 20 mg of KCL", "correct": false}, {"label": "B", "text": "5% Dextrose + 0.45% NACL +20 mg of KCL", "correct": true}, {"label": "C", "text": "5% Dextrose + 0.9 % NACL + 5 mg of KCL", "correct": false}, {"label": "D", "text": "10% Dextrose + 0.9 % NACL + 20 mg of KCL", "correct": false}], "correct_answer": "B. 5% Dextrose + 0.45% NACL +20 mg of KCL", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/30454411705128063/30454411705128063.m3u8"}, {"text": "The abdominal mass in pyloric stenosis in a new born child can be best palpated at?", "options": [{"label": "A", "text": "During feeding", "correct": false}, {"label": "B", "text": "In the umbilical area", "correct": false}, {"label": "C", "text": "In the epigastric area", "correct": true}, {"label": "D", "text": "In the right hypochondriac quadrant", "correct": false}], "correct_answer": "C. In the epigastric area", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/67166791705128448/67166791705128448.m3u8"}, {"text": "Most common site of gastric ulcer?", "options": [{"label": "A", "text": "Lesser curvature at incisura angularis", "correct": true}, {"label": "B", "text": "Greater curvature", "correct": false}, {"label": "C", "text": "Pyloric antrum", "correct": false}, {"label": "D", "text": "Fundus", "correct": false}], "correct_answer": "A. Lesser curvature at incisura angularis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/26912661705128483/26912661705128483.m3u8"}, {"text": "Which of the following is an indication of endoscopic treatment in bleeding peptic ulcer?", "options": [{"label": "A", "text": "Clot at base", "correct": false}, {"label": "B", "text": "Clots in stomach", "correct": false}, {"label": "C", "text": "Visible vessel at base", "correct": true}, {"label": "D", "text": "Non bleeding ulcer bed", "correct": false}], "correct_answer": "C. Visible vessel at base", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/3078821705128675/3078821705128675.m3u8"}, {"text": "An adult male presented with symptoms of duodenal ulcer. Maximum chances of recurrence with minimal morbidity would be seen after?", "options": [{"label": "A", "text": "Truncal vagotomy", "correct": false}, {"label": "B", "text": "Highly selective vagotomy", "correct": false}, {"label": "C", "text": "Gastrectomy", "correct": false}, {"label": "D", "text": "Gastrojejunostomy", "correct": true}], "correct_answer": "D. Gastrojejunostomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/27440201705128694/27440201705128694.m3u8"}, {"text": "In a patient with Carcinoma stomach with GOO, invading in Head of pancreas with metastasis in Right lobe of Liver. Next best treatment is?", "options": [{"label": "A", "text": "Palliative Gastrojejunostomy with chemotherapy.", "correct": true}, {"label": "B", "text": "Whipple’s operation with chemotherapy.", "correct": false}, {"label": "C", "text": "Radical gastrectomy + right hepatectomy.", "correct": false}, {"label": "D", "text": "Follow up.", "correct": false}], "correct_answer": "A. Palliative Gastrojejunostomy with chemotherapy.", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/18037841705128712/18037841705128712.m3u8"}, {"text": "In a patient complaining dyspepsia, upper GI endoscopy and biopsy revealed low grade MALToma. What is the best treatment for this patient?", "options": [{"label": "A", "text": "Antibiotics", "correct": true}, {"label": "B", "text": "Surgery", "correct": false}, {"label": "C", "text": "Chemotherapy", "correct": false}, {"label": "D", "text": "Surgery with Chemotherapy", "correct": false}], "correct_answer": "A. Antibiotics", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presented to casualty with complaints of pain abdomen since 4 days, fever and obstruction. X-ray abdomen erect was done as depicted below .What is the possible pathology.", "options": [{"label": "A", "text": "Hollow viscus perforation.", "correct": true}, {"label": "B", "text": "Liver abscess.", "correct": false}, {"label": "C", "text": "Subphrenic abscess.", "correct": false}, {"label": "D", "text": "Empyema thorax.", "correct": false}], "correct_answer": "A. Hollow viscus perforation.", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/6(528).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/18572491705128929/18572491705128929.m3u8"}, {"text": "A patient came to emergency room with severe abdominal pain. Pulse 112 beats/ min and SBP is 80 mmHg. Chest X-ray shown below. What will be the next step of management", "options": [{"label": "A", "text": "Exploratory Laparotomy", "correct": false}, {"label": "B", "text": "Resuscitation then exploratory laparotomy", "correct": true}, {"label": "C", "text": "CT scan", "correct": false}, {"label": "D", "text": "Laparoscopy", "correct": false}], "correct_answer": "B. Resuscitation then exploratory laparotomy", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/7(482).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29483341705129024/29483341705129024.m3u8"}, {"text": "False statement regarding duodenal atresia is?", "options": [{"label": "A", "text": "Plain X ray shows double bubble sign.", "correct": false}, {"label": "B", "text": "Commonest presenting symptom is bilious vomiting few hours after birth.", "correct": false}, {"label": "C", "text": "Obstetrical Ultrasound shows oligohydroamnios (In 50%).", "correct": true}, {"label": "D", "text": "Treatment of choice is Doudeno-duodenostomy.", "correct": false}], "correct_answer": "C. Obstetrical Ultrasound shows oligohydroamnios (In 50%).", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/50422781705129045/50422781705129045.m3u8"}, {"text": "Most common type of gallstone is", "options": [{"label": "A", "text": "Mixed stones", "correct": true}, {"label": "B", "text": "Pure cholesterol stones", "correct": false}, {"label": "C", "text": "Pigment stones", "correct": false}, {"label": "D", "text": "Calcium bilirubinate stones", "correct": false}], "correct_answer": "A. Mixed stones", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/78057831705129373/78057831705129373.m3u8"}, {"text": "Type of cholesterol present in gall stones is?", "options": [{"label": "A", "text": "Amorphous cholesterol monohydrate", "correct": false}, {"label": "B", "text": "Amorphous cholesterol dihydrate", "correct": false}, {"label": "C", "text": "Crystalline cholesterol dihydrate", "correct": false}, {"label": "D", "text": "Crystalline cholesterol monohydrate", "correct": true}], "correct_answer": "D. Crystalline cholesterol monohydrate", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/63502251705129386/63502251705129386.m3u8"}, {"text": "A 40 years old patient came in emergency department with abdominal colic and features of obstructive jaundice. Her counts and liver enzymes were elevated. A USG was done and gallbladder was scleroatrophic and CBD was impacted with stones along with IHBR dilation. Which is the next step in the management of this patient?", "options": [{"label": "A", "text": "Cholecystectomy", "correct": false}, {"label": "B", "text": "CT Scan", "correct": false}, {"label": "C", "text": "ERCP-MRCP", "correct": true}, {"label": "D", "text": "Wait & watch", "correct": false}], "correct_answer": "C. ERCP-MRCP", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/11660721705129409/11660721705129409.m3u8"}, {"text": "Patient presented with pain in right upper abdomen. MRCP image given below. Next step in the management?", "options": [{"label": "A", "text": "Cholecystectomy", "correct": false}, {"label": "B", "text": "ERCP", "correct": true}, {"label": "C", "text": "CECT", "correct": false}, {"label": "D", "text": "PTC", "correct": false}], "correct_answer": "B. ERCP", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/8(478).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/21557721705129423/21557721705129423.m3u8"}, {"text": "60 year old female with multiple episodes of bilious vomiting and abdominal distention with increased bowel sounds. (X ray abdomen is s/o air fluid levels, Pneumobilia and Features of small bowel obstruction)", "options": [{"label": "A", "text": "Gall stone ileus", "correct": true}, {"label": "B", "text": "Ischemic enterocolitis", "correct": false}, {"label": "C", "text": "GI TB", "correct": false}, {"label": "D", "text": "Adynamic obstruction", "correct": false}], "correct_answer": "A. Gall stone ileus", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/9(442).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/56691171705129523/56691171705129523.m3u8"}, {"text": "False statement about Gall stone ileus is?", "options": [{"label": "A", "text": "Usual site of obstruction is Distal ileum.", "correct": false}, {"label": "B", "text": "Rigler’s triad is seen in 10-15%", "correct": true}, {"label": "C", "text": "Gall stone causes intermittent obstruction", "correct": false}, {"label": "D", "text": "Pneumobilia is an ubiquitous sign", "correct": false}], "correct_answer": "B. Rigler’s triad is seen in 10-15%", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/15941851705129540/15941851705129540.m3u8"}, {"text": "Mascagni node is encountered in which surgery?", "options": [{"label": "A", "text": "Laparoscopic Splenectomy", "correct": false}, {"label": "B", "text": "Laparoscopic appendicectomy", "correct": false}, {"label": "C", "text": "Laparoscopic Adrenalectomy", "correct": false}, {"label": "D", "text": "Laparoscopic Cholecystectomy", "correct": true}], "correct_answer": "D. Laparoscopic Cholecystectomy", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/24138051705129562/24138051705129562.m3u8"}, {"text": "In laparoscopic surgery what should be good manipulation angle for good ergonomics?", "options": [{"label": "A", "text": "15 degrees", "correct": false}, {"label": "B", "text": "30 degrees", "correct": false}, {"label": "C", "text": "60 degrees", "correct": true}, {"label": "D", "text": "90 degrees", "correct": false}], "correct_answer": "C. 60 degrees", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/74047231705129603/74047231705129603.m3u8"}, {"text": "Which of the following investigation can not be done after Mini-gastric bypass?", "options": [{"label": "A", "text": "ERCP", "correct": true}, {"label": "B", "text": "MRCP", "correct": false}, {"label": "C", "text": "PTBD", "correct": false}, {"label": "D", "text": "EUS", "correct": false}], "correct_answer": "A. ERCP", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "2 years Post cholecystectomy patients comes with CBD stone. Diagnosis is?", "options": [{"label": "A", "text": "Primary CBD stone", "correct": true}, {"label": "B", "text": "Secondary CBD stone", "correct": false}, {"label": "C", "text": "Retained stone", "correct": false}, {"label": "D", "text": "Missed stone", "correct": false}], "correct_answer": "A. Primary CBD stone", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/62434581705129720/62434581705129720.m3u8"}, {"text": "Gall bladder cancer at Fundus, infiltrating up to serosa, not going beyond serosa and not involving liver.stage is?", "options": [{"label": "A", "text": "T1B", "correct": false}, {"label": "B", "text": "T2", "correct": true}, {"label": "C", "text": "T3", "correct": false}, {"label": "D", "text": "T4", "correct": false}], "correct_answer": "B. T2", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/62940661705129752/62940661705129752.m3u8"}, {"text": "Which of the following is an example of selective shunt?", "options": [{"label": "A", "text": "Sarfeh shunt", "correct": true}, {"label": "B", "text": "Mesocaval shunt", "correct": false}, {"label": "C", "text": "Portocaval shunt", "correct": false}, {"label": "D", "text": "Rex shunt", "correct": false}], "correct_answer": "A. Sarfeh shunt", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/29929541705129779/29929541705129779.m3u8"}, {"text": "Most common site for intra abdominal abscess in relation to liver?", "options": [{"label": "A", "text": "Right Subphrenic space", "correct": false}, {"label": "B", "text": "Left Subphrenic abscess", "correct": false}, {"label": "C", "text": "Right subhepatic space", "correct": true}, {"label": "D", "text": "Left subhepatic space", "correct": false}], "correct_answer": "C. Right subhepatic space", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/64825961705129798/64825961705129798.m3u8"}, {"text": "Adult male while eating in a restaurant develops sudden choking.What should be done next?", "options": [{"label": "A", "text": "Heimlich manoeuvre", "correct": true}, {"label": "B", "text": "Chest thumping", "correct": false}, {"label": "C", "text": "Blind finger extraction", "correct": false}, {"label": "D", "text": "Large sip of water of fizzy drink to push the food bolus down", "correct": false}], "correct_answer": "A. Heimlich manoeuvre", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/43426751705129908/43426751705129908.m3u8"}, {"text": "Gas-less abdomen is seen in?", "options": [{"label": "A", "text": "Ulcerative colitis", "correct": false}, {"label": "B", "text": "Acute pancreatitis", "correct": true}, {"label": "C", "text": "Intussusception", "correct": false}, {"label": "D", "text": "Necrotising enterocolitis", "correct": false}], "correct_answer": "B. Acute pancreatitis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/73924811705129930/73924811705129930.m3u8"}, {"text": "A 40 female presented to surgery casualty with mild Pain abdomen, abdominal distention since 4 days.USG is s/o Peripancreatic fluid collection.whic of the following will be raised ?", "options": [{"label": "A", "text": "Serum lipase.", "correct": true}, {"label": "B", "text": "GGT", "correct": false}, {"label": "C", "text": "BILIRUBIN", "correct": false}, {"label": "D", "text": "CEA", "correct": false}], "correct_answer": "A. Serum lipase.", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/10(462).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/1713621705129945/1713621705129945.m3u8"}, {"text": "Acute pancreatitis with worsening clinical features.CT scan showing infected necrosis, and peri-pancreatic fluid collection.This is best managed by?", "options": [{"label": "A", "text": "Conservative Treatment", "correct": false}, {"label": "B", "text": "Laparoscopic lavage of peritoneum", "correct": false}, {"label": "C", "text": "Internal drainage", "correct": false}, {"label": "D", "text": "Percutaneous drainage", "correct": true}], "correct_answer": "D. Percutaneous drainage", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/5258151705129962/5258151705129962.m3u8"}, {"text": "A 8 year old child is brought with well defined mass in epigastrium. He met with an accident 6 weeks back when he fell accidentally and sustained injury in his upper abdomen. What is the most probable cause for this swelling?", "options": [{"label": "A", "text": "Gastric duplication cyst", "correct": false}, {"label": "B", "text": "Hemangioma liver", "correct": false}, {"label": "C", "text": "Pseudocyst of pancreas", "correct": true}, {"label": "D", "text": "Periumbilical inclusion cyst", "correct": false}], "correct_answer": "C. Pseudocyst of pancreas", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/45187311705129997/45187311705129997.m3u8"}, {"text": "Most common cause of chronic pancreatitis?", "options": [{"label": "A", "text": "Alcohol", "correct": true}, {"label": "B", "text": "Autoimmune", "correct": false}, {"label": "C", "text": "Stone", "correct": false}, {"label": "D", "text": "Hereditary Pancreatitis", "correct": false}], "correct_answer": "A. Alcohol", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/77617391705130025/77617391705130025.m3u8"}, {"text": "First investigation for a suspected case of cancer head of pancreas is?", "options": [{"label": "A", "text": "Transperitoneal CT guided biopsy", "correct": false}, {"label": "B", "text": "Endoscopic USG guided FNAC", "correct": true}, {"label": "C", "text": "Laparotomy", "correct": false}, {"label": "D", "text": "MRI guided biopsy", "correct": false}], "correct_answer": "B. Endoscopic USG guided FNAC", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/55602251705130071/55602251705130071.m3u8"}, {"text": "Tumor of the uncinate process of pancreas affects which of the following vessel?", "options": [{"label": "A", "text": "Superior mesenteric artery", "correct": true}, {"label": "B", "text": "Portal vein", "correct": false}, {"label": "C", "text": "Common hepatic artery", "correct": false}, {"label": "D", "text": "Inferior Mesenteric artery", "correct": false}], "correct_answer": "A. Superior mesenteric artery", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/43706721705130092/43706721705130092.m3u8"}, {"text": "Which is the most common pancreatic endocrine neoplasm?", "options": [{"label": "A", "text": "Insulinoma", "correct": true}, {"label": "B", "text": "Gastrinoma", "correct": false}, {"label": "C", "text": "VIPoma", "correct": false}, {"label": "D", "text": "Glucagonoma", "correct": false}], "correct_answer": "A. Insulinoma", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/70253561705130116/70253561705130116.m3u8"}, {"text": "What is the most common site of gastrinoma in MEN1 syndrome?", "options": [{"label": "A", "text": "Jejunum", "correct": false}, {"label": "B", "text": "Ileum", "correct": false}, {"label": "C", "text": "Duodenum", "correct": true}, {"label": "D", "text": "Stomach", "correct": false}], "correct_answer": "C. Duodenum", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/50981081705130139/50981081705130139.m3u8"}, {"text": "Identify the triangle in the image given below", "options": [{"label": "A", "text": "Koch’s triangle", "correct": false}, {"label": "B", "text": "Gastrinoma triangle", "correct": true}, {"label": "C", "text": "Hesselbach’s triangle", "correct": false}, {"label": "D", "text": "Sherrens’s triangle", "correct": false}], "correct_answer": "B. Gastrinoma triangle", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/11(374).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/23772281705130224/23772281705130224.m3u8"}, {"text": "Patient presents with peritonitis and during surgery diverticular perforation is seen with purulent contamination. What is Hinchey’s stage?", "options": [{"label": "A", "text": "1", "correct": false}, {"label": "B", "text": "2", "correct": false}, {"label": "C", "text": "3", "correct": true}, {"label": "D", "text": "4", "correct": false}], "correct_answer": "C. 3", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/22708841705130261/22708841705130261.m3u8"}, {"text": "Which type of Manoeuvre is shown in the picture?", "options": [{"label": "A", "text": "Kocher’s maneuver", "correct": false}, {"label": "B", "text": "Extended Kocher’s maneuver", "correct": false}, {"label": "C", "text": "Mattox Maneuver", "correct": false}, {"label": "D", "text": "Cattell Braasch maneuver", "correct": true}], "correct_answer": "D. Cattell Braasch maneuver", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/12(387).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A child presented with evisceration of bowel loops coming out of a defect in abdominal wall right to the umbilicus. The possible diagnosis is:", "options": [{"label": "A", "text": "Omphalocele", "correct": false}, {"label": "B", "text": "Umbilical hernia", "correct": false}, {"label": "C", "text": "Gastroschisis", "correct": true}, {"label": "D", "text": "Patent urachus", "correct": false}], "correct_answer": "C. Gastroschisis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/31606231705130308/31606231705130308.m3u8"}, {"text": "A new born was brought with abdominal distention for 3 days. He has not passed meconium since birth. O/E there is absent anal orifice. What should be the next step in the management of this patient?", "options": [{"label": "A", "text": "High sigmoid colostomy", "correct": false}, {"label": "B", "text": "Laparoscopic Anorectoplasty", "correct": false}, {"label": "C", "text": "Anoplasty", "correct": false}, {"label": "D", "text": "Cross table X ray", "correct": true}], "correct_answer": "D. Cross table X ray", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/11233831705130340/11233831705130340.m3u8"}, {"text": "X ray image. Site of obstruction?", "options": [{"label": "A", "text": "Obstruction at the level of Jejunum", "correct": false}, {"label": "B", "text": "Ileum", "correct": true}, {"label": "C", "text": "Colon", "correct": false}, {"label": "D", "text": "Caecum", "correct": false}], "correct_answer": "B. Ileum", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/13(348).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/72283771705130519/72283771705130519.m3u8"}, {"text": "Old frail patient with rectal prolapse and a photo of encircling suture around anus?", "options": [{"label": "A", "text": "Thiersch operation", "correct": true}, {"label": "B", "text": "Delorme operation", "correct": false}, {"label": "C", "text": "Altemier", "correct": false}, {"label": "D", "text": "Ripstein op", "correct": false}], "correct_answer": "A. Thiersch operation", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/14(331).jpg"], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/39125301705130971/39125301705130971.m3u8"}, {"text": "A 55 year old male presented with a small peri-anal opening with occasional mild pus discharge. What is the diagnosis?", "options": [{"label": "A", "text": "Fissure in Ano", "correct": false}, {"label": "B", "text": "Fistula in Ano", "correct": true}, {"label": "C", "text": "Pilonidal sinus", "correct": false}, {"label": "D", "text": "Anal canal cancer", "correct": false}], "correct_answer": "B. Fistula in Ano", "question_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/15(320).jpg"], "explanation_images": ["https://d2enu63wt1sf3u.cloudfront.net/ckfinder/files/34_1(35).jpg"], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Most commonly used radio-isotope in PET scan is", "options": [{"label": "A", "text": "18 F", "correct": true}, {"label": "B", "text": "13 C", "correct": false}, {"label": "C", "text": "14 C", "correct": false}, {"label": "D", "text": "Any of the above", "correct": false}], "correct_answer": "A. 18 F", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/887011705131084/887011705131084.m3u8"}, {"text": "Positron Emission Tomography (PET) used in Preoperative staging of Gastro Oesophageal tumours is to detect", "options": [{"label": "A", "text": "Distant metastatic disease", "correct": true}, {"label": "B", "text": "Extension into stomach", "correct": false}, {"label": "C", "text": "Local spread", "correct": false}, {"label": "D", "text": "Lymph node status", "correct": false}], "correct_answer": "A. Distant metastatic disease", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Ureteric bud develops from ?", "options": [{"label": "A", "text": "Pronephros", "correct": false}, {"label": "B", "text": "Mesonephric duct", "correct": true}, {"label": "C", "text": "Paramesonephric duct", "correct": false}, {"label": "D", "text": "Metanephric blastema", "correct": false}], "correct_answer": "B. Mesonephric duct", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/54020741705131102/54020741705131102.m3u8"}, {"text": "5 years old girl presented with continuous dribbling, but she is having normal voiding also. What is the most probable diagnosis?", "options": [{"label": "A", "text": "Posterior urethral valve", "correct": false}, {"label": "B", "text": "UTI", "correct": false}, {"label": "C", "text": "VUR", "correct": false}, {"label": "D", "text": "Ectopic ureter", "correct": true}], "correct_answer": "D. Ectopic ureter", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/21916861705131124/21916861705131124.m3u8"}, {"text": "Artery that bleeds during PCNL when the tract is made through column of Bertin is?", "options": [{"label": "A", "text": "Interlobar", "correct": true}, {"label": "B", "text": "Interlobular", "correct": false}, {"label": "C", "text": "Arcuate", "correct": false}, {"label": "D", "text": "Segmental", "correct": false}], "correct_answer": "A. Interlobar", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/34523921705131153/34523921705131153.m3u8"}, {"text": "Which of the following is not a feature of Potter syndrome?", "options": [{"label": "A", "text": "Hypospadias", "correct": true}, {"label": "B", "text": "Pulmonary hypoplasia", "correct": false}, {"label": "C", "text": "Broad flat nose and micrognathia", "correct": false}, {"label": "D", "text": "Limb deformity", "correct": false}], "correct_answer": "A. Hypospadias", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/28487531705131172/28487531705131172.m3u8"}, {"text": "Oligohydramnios is found in?", "options": [{"label": "A", "text": "Renal agenesis", "correct": true}, {"label": "B", "text": "Duodenal atresia", "correct": false}, {"label": "C", "text": "DM", "correct": false}, {"label": "D", "text": "Omphalocele", "correct": false}], "correct_answer": "A. Renal agenesis", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/17885491705131185/17885491705131185.m3u8"}, {"text": "In a case of impalpable testis during laparoscopy the testicular artery was found ending blindly without supplying any tissue. What should be next step in surgery?", "options": [{"label": "A", "text": "Explore inguinal canal from outside and do orchidopexy", "correct": false}, {"label": "B", "text": "Do inguinal exploration through laparoscopy", "correct": false}, {"label": "C", "text": "No further intervention needed", "correct": true}, {"label": "D", "text": "Stop the procedure and give a course of GnRH", "correct": false}], "correct_answer": "C. No further intervention needed", "question_images": [], "explanation_images": [], "explanation": "<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": "https://d2enu63wt1sf3u.cloudfront.net/dqb_vod/70370071705131200/70370071705131200.m3u8"}, {"text": "All the following statement regarding testicular torsion is true, except?", "options": [{"label": "A", "text": "Most common between 10-25 years", "correct": false}, {"label": "B", "text": "Prompt exploration and fixation is only way to save the testis", "correct": false}, {"label": "C", "text": "U/L fixation should be done immediately", "correct": true}, {"label": "D", "text": "Clapper bell deformity is most common cause", "correct": false}], "correct_answer": "C. U/L fixation should be done immediately", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (A) Most common between 10-25 years – Correct:</li><li>• Testicular torsion most commonly occurs in adolescents and young adults, typically between the ages of 10 to 25 years. This is due to the increased mobility of the testes and the lack of fixation in the tunica vaginalis at this age. The condition is less common outside this age range but can still occur in neonates and older individuals.</li><li>• (B) Prompt exploration and fixation is only way to save the testis – Correct:</li><li>• Once testicular torsion is suspected, prompt exploration is necessary to determine whether the testis can be salvaged. If detorsion restores blood flow to the testis and there is no irreversible damage, fixation of both testes is performed to prevent future torsion episodes. Delaying surgery increases the risk of testicular necrosis, leading to the loss of the testis. Thus, prompt intervention is indeed the only way to potentially save the testis.</li><li>• (D) Clapper bell deformity is most common cause – Correct:</li><li>• The clapper bell deformity refers to an abnormal anatomical condition of the testicle, where the testis is not properly anchored to the scrotum, making it more susceptible to torsion. This deformity is commonly found in testicular torsion and is often associated with anomalous attachment of the testis to the scrotum. This abnormal fixation allows the testis to rotate freely on the spermatic cord, leading to torsion.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Patient with suspected PUJ obstruction, best diagnose by?", "options": [{"label": "A", "text": "CT urography", "correct": false}, {"label": "B", "text": "MAG 3 scan", "correct": true}, {"label": "C", "text": "DMSA scan", "correct": false}, {"label": "D", "text": "DTPA scan", "correct": false}], "correct_answer": "B. MAG 3 scan", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Explanation:</strong></p>\n<ul><li>• (A) CT urography – Incorrect:</li><li>• CT urography is a useful imaging technique for evaluating the kidneys, ureters, and bladder, especially for detecting renal stones, tumors, or structural abnormalities. While it can identify hydronephrosis, a common finding in PUJ obstruction, it does not provide functional information regarding the severity of obstruction or renal function. Therefore, while CT urography is valuable for anatomical evaluation, it is not the best choice for diagnosing PUJ obstruction specifically. The MAG 3 scan is preferred for functional assessment.</li><li>• (C) DMSA scan – Incorrect:</li><li>• DMSA (Dimercaptosuccinic Acid) scan is a renal scintigraphy test that provides information on renal cortical function and scarring. While it can assess kidney function and is useful for evaluating renal parenchymal damage (such as in chronic pyelonephritis or scarring), it is not the best option for diagnosing obstructions like PUJ obstruction. It doesn

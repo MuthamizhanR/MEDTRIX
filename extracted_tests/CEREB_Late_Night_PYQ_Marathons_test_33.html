@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Late Night Pyq Pyt Marathon (Medicine 7)   2024 12 18</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Late Night Pyq Pyt Marathon (Medicine 7)   2024 12 18</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                60 Questions | 240 Total Marks | 70 min Duration | ~70.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 60 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 70 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 60</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Late Night Pyq Pyt Marathon (Medicine 7)   2024 12 18 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 60</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 60 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 20-year-old male came to the emergency after sustaining an injury and was given 0.25% bupivacaine for regional anesthesia. A few minutes later, he became unresponsive and pulseless. What would be the ideal management? (NEET PG 2021)", "options": [{"label": "A", "text": "CPR & Calcium gluconate", "correct": false}, {"label": "B", "text": "CPR & 20% IV Intralipid", "correct": true}, {"label": "C", "text": "CPR & Start Dobutamine infusion", "correct": false}, {"label": "D", "text": "CPR & Start NaHCO3 infusion", "correct": false}], "correct_answer": "B. CPR & 20% IV Intralipid", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. CPR & 20% IV Intralipid</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ For local anesthetic systemic toxicity (LAST), immediate management includes starting CPR and administering 20% intravenous lipid emulsion (Intralipid) therapy. This approach helps to rapidly reduce the toxic effects of the local anesthetic on the cardiovascular and central nervous systems.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the Child-Turcotte-Pugh (CTP) class for the patient who has a serum bilirubin 2.5 mg/dl, serum albumin 3 g/dL, prothrombin time 5 seconds (INR = 2), no encephalopathy, and mild ascites? (NEET PG 2020)", "options": [{"label": "A", "text": "Class A", "correct": false}, {"label": "B", "text": "Class B", "correct": true}, {"label": "C", "text": "Class C", "correct": false}, {"label": "D", "text": "Class D", "correct": false}], "correct_answer": "B. Class B", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/23/screenshot-2024-07-23-185922.jpg"], "explanation": "<p><strong>Ans. B. Class B</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Child-Turcotte-Pugh scoring system</li><li>➤ Child-Turcotte-Pugh scoring system</li><li>➤ Inference:</li><li>➤ Inference:</li><li>➤ CTP A: 5-6 CTP B: 7-9 CTP C: 10-15</li><li>➤ CTP A: 5-6</li><li>➤ CTP A:</li><li>➤ CTP B: 7-9</li><li>➤ CTP B:</li><li>➤ CTP C: 10-15</li><li>➤ CTP C:</li></ul>\n<p><strong>References:</strong></p><ul><li>↳ Reference - Harrison/Cirrhosis/Chapter 344</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 40-year-old smoker who is a known case of hypertension was on enalapril and hydrochlorothiazide. He had an episode of hemoptysis and on evaluation, he was found to have bronchogenic carcinoma with brain metastasis. His lab values were Na-124mg/dL, creatinine - 2.8mg%, blood sugar 112mg/dL, blood urea - 24mg/dL, serum osmolality 255mosm, urine osmolality - 110 mosm, 24-hour urinary sodium - 110 and BP - 150/90 mmHg. Which of the following is the most probable diagnosis of the low sodium values in him? (AIIMS MAY 2018)", "options": [{"label": "A", "text": "SIADH", "correct": true}, {"label": "B", "text": "Diuretic induced hyponatremia", "correct": false}, {"label": "C", "text": "Cerebral salt wasting syndrome", "correct": false}, {"label": "D", "text": "Pseudohyponatremia", "correct": false}], "correct_answer": "A. SIADH", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/10/20/picture31.jpg"], "explanation": "<p><strong>Ans. A) SIADH</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ SIADH can be associated with malignancies like lung cancer, presenting with hyponatremia, low serum osmolality, and inappropriately concentrated urine despite the presence of low plasma osmolality. This clinical scenario should prompt consideration of SIADH, particularly in patients with known malignancies and typical lab findings.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the sign? (INICET MAY 2023)", "options": [{"label": "A", "text": "Babinski sign", "correct": true}, {"label": "B", "text": "Ankle jerk", "correct": false}, {"label": "C", "text": "Jendrassik", "correct": false}, {"label": "D", "text": "Normal plantar response", "correct": false}], "correct_answer": "A. Babinski sign", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/09/13/screenshot-2024-09-13-134049.png"], "explanation_images": [], "explanation": "<p><strong>Ans. A) Babinski sign</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ A positive Babinski sign indicates an upper motor neuron lesion.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A tall 10-year-old boy presents with Sexual Maturity Rating 5 and hyperpigmentation. His BP is 150/100 mm Hg. What is the likely diagnosis? (INICET MAY 2024)", "options": [{"label": "A", "text": "11β-Hydroxylase deficiency", "correct": true}, {"label": "B", "text": "21β-Hydroxylase deficiency", "correct": false}, {"label": "C", "text": "17β-Hydroxylase deficiency", "correct": false}, {"label": "D", "text": "SCC deficiency", "correct": false}], "correct_answer": "A. 11β-Hydroxylase deficiency", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) 11β-Hydroxylase deficiency</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ 11β-Hydroxylase deficiency in congenital adrenal hyperplasia causes hypertension due to salt retention and precocious puberty due to excess androgen production.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 45-year-old male patient presented with a history of bilateral lower limb weakness which progressed to his upper limbs in a year. On examination, he had weakness in both lower limbs and wasting in the left upper limb. Babinski sign was positive and the deep tendon reflexes were absent. He has no sensory loss or any autonomic dysfunction. What is the likely diagnosis? (INICET MAY 2021)", "options": [{"label": "A", "text": "MS", "correct": false}, {"label": "B", "text": "ALS", "correct": true}, {"label": "C", "text": "GBS", "correct": false}, {"label": "D", "text": "Tropical spastic paraparesis", "correct": false}], "correct_answer": "B. ALS", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) ALS</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ ALS presents with both upper and lower motor neuron signs, progressive weakness, and no sensory or autonomic dysfunction.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 25-year-old software engineer presented with fatigue and lethargy. He worked for 12-14 hours a day, and his diet pattern consisted predominantly of fast food with very little veggies and greens. Labs: Hb - 9, MCV 106. What is the likely diagnosis? (NEET PG 2021)", "options": [{"label": "A", "text": "B12 deficiency", "correct": false}, {"label": "B", "text": "Folate deficiency", "correct": true}, {"label": "C", "text": "Iron deficiency", "correct": false}, {"label": "D", "text": "Hemolytic anemia", "correct": false}], "correct_answer": "B. Folate deficiency", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. Folate deficiency</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Folate deficiency should be considered in patients with macrocytic anemia and poor dietary intake of vegetables and greens. This deficiency can cause fatigue and lethargy and is confirmed by a high MCV and dietary history.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following anti-diabetic drugs can increase glucose excretion in urine? (FMGE JANUARY 2024)", "options": [{"label": "A", "text": "Glimepiride", "correct": false}, {"label": "B", "text": "Liraglutide", "correct": false}, {"label": "C", "text": "Acarbose", "correct": false}, {"label": "D", "text": "Empagliflozin", "correct": true}], "correct_answer": "D. Empagliflozin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Empagliflozin</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Empagliflozin is an SGLT2 inhibitor .</li><li>• an SGLT2 inhibitor</li><li>• Drugs in this class (such as empagliflozin, canagliflozin, and dapagliflozin) inhibit the sodium-glucose co-transporter 2 (SGLT2) in the kidneys, leading to increased glucose excretion in the urine (glycosuria). This helps lower blood glucose levels.</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option A. Glimepiride: A sulfonylurea that stimulates insulin release from the pancreas.</li><li>• Option A. Glimepiride:</li><li>• Option B. Liraglutide: A GLP-1 receptor agonist that increases insulin secretion, slows gastric emptying, and promotes satiety.</li><li>• Option B. Liraglutide:</li><li>• Option C. Acarbose: An alpha-glucosidase inhibitor that delays carbohydrate absorption in the intestines, leading to increased excretion of undigested carbohydrates in the stools.</li><li>• Option C. Acarbose:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Empagliflozin, an SGLT2 inhibitor, increases glucose excretion in the urine by inhibiting the sodium-glucose co-transporter 2 in the kidneys.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Decreased sexual maturity and hypogonadism seen with deficiency of: (INICET MAY 2024)", "options": [{"label": "A", "text": "Copper", "correct": false}, {"label": "B", "text": "Zinc", "correct": true}, {"label": "C", "text": "Selenium", "correct": false}, {"label": "D", "text": "Iron", "correct": false}], "correct_answer": "B. Zinc", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Zinc</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Zinc deficiency is associated with decreased sexual maturity and hypogonadism, particularly in male children, and is a common nutritional deficiency in developing countries. It is also linked to impaired growth, immune dysfunction, and delayed wound healing.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Low renin hypertension is seen in all of the following, except:(NEET PG 2014)", "options": [{"label": "A", "text": "Essential hypertension", "correct": false}, {"label": "B", "text": "Conn’s syndrome", "correct": false}, {"label": "C", "text": "Renovascular hypertension", "correct": true}, {"label": "D", "text": "Liddle’s syndrome", "correct": false}], "correct_answer": "C. Renovascular hypertension", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/06/01/screenshot-2024-06-01-180738.JPG"], "explanation": "<p><strong>Ans. C) Renovascular hypertension</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Renovascular Hypertension is associated with high renin levels (high renin hypertension). This condition involves renal artery stenosis leading to decreased renal blood flow, which stimulates the juxtaglomerular cells to release renin. Increased renin levels then lead to elevated angiotensin II, causing vasoconstriction and increased aldosterone, which results in hypertension.</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option A. Essential hypertension : Low renin levels and normal aldosterone levels.</li><li>• Option A. Essential hypertension</li><li>• Option B. Conn’s syndrome : Low renin levels and high aldosterone levels.</li><li>• Option B. Conn’s syndrome</li><li>• Option D. Liddle’s syndrome : Low renin levels and low aldosterone levels due to constitutive activation of the epithelial sodium channel.</li><li>• Option D. Liddle’s syndrome</li><li>• Hypertension Comparison Table</li><li>• Hypertension Comparison Table</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Renovascular hypertension is characterized by high renin and high aldosterone levels, while essential hypertension, Conn’s syndrome, and Liddle’s syndrome are associated with low renin hypertension.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Calcitonin levels are increased in: (NEET PG 2019)", "options": [{"label": "A", "text": "Hyperthyroidism", "correct": false}, {"label": "B", "text": "Hypoparathyroidism", "correct": false}, {"label": "C", "text": "Hyperparathyroidism", "correct": true}, {"label": "D", "text": "Cushing

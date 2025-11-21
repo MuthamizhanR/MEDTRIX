@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Structure, Channels, Myelination &amp; Conduction</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Structure, Channels, Myelination &amp; Conduction</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                26 Questions | 26 Total Marks | 36 min Duration | ~83.08 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 26 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 36 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 26</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Structure, Channels, Myelination &amp; Conduction - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 26</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 26 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "A 19-year-old woman with a history of diplopia and paresthesia is diagnosed with multiple sclerosis (MS). MS is a demyelinating disease characterized by a failure of nerve conduction. Immersion of an affected limb in a cold bath restores nerve conduction in many of these patients. The explanation often cited for this effect is that cold increases the duration of the action potential. Which of the following best explains why increasing the duration of the action potential can restore nerve conduction in patients with MS?", "options": [{"label": "A", "text": "The capacitance of the nerve fiber membrane is increased.", "correct": false}, {"label": "B", "text": "The duration of the refractory period is increased.", "correct": false}, {"label": "C", "text": "The potassium conductance of the membrane is increased.", "correct": false}, {"label": "D", "text": "The amount of sodium entering the nerve with each action potential increases.", "correct": true}], "correct_answer": "D. The amount of sodium entering the nerve with each action potential increases.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>The amount of sodium entering the nerve with each action potential increases. In order for the propagation of an action potential to occur, the depolarization produced by one action potential must depolarize the adjacent patch of the excitable membrane to the threshold level.</p>\n<p><strong>Highyeild:</strong></p><p>In demyelinating diseases, such as multiple sclerosis, too much charge leaks from the membrane, and as a result, not enough charge is available to bring the next patch or membrane to the Increasing the duration of the action potential increases the amount of charge entering the cell and therefore increases the probability that the next patch of the excitable membrane will be depolarized to the threshold.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options:- Option A: Increasing the duration of the refractory period will not affect the amount of charge entering the Option B: Depolarizing the membrane and increasing potassium conductance will make it more difficult to produce an action potential. Option C: If membrane capacitance is increased, the amount of charge required to excite the next patch of the membrane will be increased.</p>\n<p><strong>Extraedge:</strong></p><p>In multiple sclerosis, the selective permeability of neurons is lost due to autoimmune destruction of the Myelin sheath. Loss of myelin leads to leakage of through voltage-gated channels, hyperpolarization, and failure to conduct action potentials. Initial presentation commonly includes reports of paraparesis (weakness in lower extremities); paraesthesia; numbness; urinary incontinence; and heat intolerance (as already explained heat will prevent the propagation of action potential by reducing the Action Potential Duration). Clinical assessment often reports optic neuritis, characterized by blurred vision, a change in color perception, visual field defect (central scotoma), pain with eye movements; dysarthria; and dysphagia. Symptoms are often exacerbated by increased body temperature or increased ambient temper. Diagnosing MS is very difficult and generally is delayed until multiple episodes occur with deficits separated in time and space. Nerve conduction tests can detect slowed conduction in motor and sensory pathways. Cerebral spinal fluid analysis can detect the presence of oligoclonal bands indicative of an abnormal immune reaction against myelin. The most definitive assessment is magnetic resonance imaging (MRI) to visualize multiple scarred (sclerotic) areas or plaques in the brain. These plaques often appear in the periventricular regions of the cerebral hemispheres.</p>\n<p><strong>Table:</strong></p><p>Multiple sclerosis Autoimmune inflammation and demyelination of CNS (brain and spinal\n  cord) with subsequent axonal damage. Can present with Optic neuritis (acute\n  painful monocular visual loss, associated with relative afferent pupillary defect) ■ Brainstem/cerebellar syndromes (eg, diplopia, ataxia, scanning\n  speech, intention tremor, nystagmus/INO [bilateral > unilateral]) Pyramidal tract\n  demyelination (eg, weakness, spasticity) ■ Spinal cord syndromes (eg, electric shock-like sensation along\n  cervical spine on neck flexion, neurogenic bladder, paraparesis, sensory\n  manifestations affecting the trunk or one or more extremity) Symptoms may exacerbate with increased body temperature (eg, hot bath,\n  exercise). Relapsing and remitting is most common clinical course. Most often\n  affects females in their 20s and 30s; more common in individuals who grew up\n  farther from equator and with low serum vitamin D levels. FINDINGS ↑ IgG level and myelin basic protein in CSF. Oligoclonal bands aid in\n  diagnosis. MRI is gold standard. Periventricular plaques A (areas of\n  oligodendrocyte loss and reactive gliosis). Multiple white matter lesions\n  disseminated in space and time. TREATMENT Stop relapses and halt/slow progression with disease-modifying\n  therapies (eg, B-interferon, glatiramer, natalizumab). Treat acute flares\n  with IV steroids. Symptomatic treatment for neurogenic bladder\n  (catheterization, muscarinic antagonists, botulinum toxin injection),\n  spasticity (baclofen, GABA receptor agonists), pain (TCAs, anticonvulsants</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 52-year-old male was given a shot of procaine prior to oral surgery to extract an abscessed tooth. Preventing the inactivation of sodium channels by local anesthetics will decrease which of the following?", "options": [{"label": "A", "text": "The relative refractory period of nerve cells.", "correct": false}, {"label": "B", "text": "The upstroke velocity of nerve cell action potentials.", "correct": true}, {"label": "C", "text": "The downstroke velocity of nerve cell action potentials.", "correct": false}, {"label": "D", "text": "The magnitude of the overshoot in nerve cell action potentials.", "correct": false}], "correct_answer": "B. The upstroke velocity of nerve cell action potentials.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>The upstroke velocity of nerve cell action potentials. Preventing the inactivation of sodium channels by local anesthetics will decrease the upstroke velocity of nerve cell action potentials. Procaine reversibly and preferentially binds to active sites on neuronal voltage-gated sodium channels. This binding occurs preferentially during activated states and causes selective inhibition of the open configuration of the sodium channel, thereby preventing sodium influx. The interruption of this influx prevents depolarization needed to initiate and propagate action potentials along the nerve.</p>\n<p><strong>Highyeild:</strong></p><p>Local or regional anesthesia is used to block the conduction of action potentials in sensory and motor nerve fibers. This usually occurs as a result of the blockade of voltage-gated Na+ channels on the nerve cell membrane. This causes a gradual increase in the threshold for electrical excitability of the nerve, a reduction in the rate of rise of the action potential, and a slowing of axonal conduction velocity.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options: Option A. The relative refractory period is the interval of time during which a second action potential can be initiated, but initiation will require a greater stimulus than before. Refractory periods are caused by the inactivation gate of the Na+ channel. Option D. The overshoot is the peak of the action potential where the membrane potential is positive. The falling phase repolarizes the membrane potential, and the undershoot takes the membrane potential more negatively than the resting membrane potential . After the undershoot, the membrane potential returns to rest.</p>\n<p><strong>Extraedge:</strong></p><p>Nociceptive fibers (unmyelinated C fibers) are the most sensitive to the blocking effect of local anesthetics. This is followed by sequential loss of sensitivity to temperature, touch, and deep pressure. Motor nerve fibers are the most resistant to the actions of local anesthetics. That is susceptibility to Local anesthetics: C>B>A nerve fibers Susceptibility to hypoxia: B>A>C Susceptibility to pressure: A>B>C Susceptibility To: Most Susceptible Intermediate Least Susceptible Hypoxia B A C Pressure A B C Local anesthetics C B A</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The current caused by the opening of which of the following channels contributes to the repolarization phase of the action potential of the ventricular fibers?", "options": [{"label": "A", "text": "Na+ channels", "correct": false}, {"label": "B", "text": "CI- channels", "correct": false}, {"label": "C", "text": "Ca2+ channels", "correct": false}, {"label": "D", "text": "K+ channels", "correct": true}], "correct_answer": "D. K+ channels", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>K+ channels Phase 3: K+ efflux takes place in the Repolarization phase.</p>\n<p><strong>Highyeild:</strong></p><p>PHASES OF VENTRICULAR ACTION POTENTIAL Phase 0: rapid sodium influx: rapid depolarization phase Phase 1: potassium efflux and occurs: partial or early repolarization phase Phase 2: potassium efflux and calcium influx take place: plateau phase Phase 3: potassium efflux takes place: final repolarization phase Phase 4: the resting state is attained Shown below is an image summarizing the phases of the ventricular action potential. The ventricular action potential is composed of four phases: phase 0 is depolarization, phase 1 is early repolarization, phase 2 is a plateau, phase 3 is rapid repolarization and phase 4 is the resting potential. The different phases depend on the opening and/or closure of specific ion channels.</p>\n<p><strong>Random:</strong></p><p>Explanation for Incorrect Options: Option A. At the beginning of the a ction potential, phase 1, specialized membrane proteins (voltage-gated sodium channels) in the cell membrane selectively allow sodium ions to enter the cell. Option B. Chloride flows through activated GABAA receptors into the neurons causing hyperpolarization or shunting inhibition, and in turn, inhibits action potential (AP) generation. Option C. In Phase 2, the delayed opening of more Ca2+-activated K+ channels, which are activated by a build-up of Ca2+ in the sarcoplasm, while the Ca2+ channels close, ends the plateau. This leads to repolarisation. In phase 3, Voltage-gated Ca2+ channels closed.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "There is a mutation of the gene coding for the ryanodine receptors in malignant hyperthermia. Which of the following statements best explains the increased heat production in malignant hyperthermia?", "options": [{"label": "A", "text": "Increased muscle metabolism by an excess of calcium", "correct": true}, {"label": "B", "text": "Thermic effect of blood", "correct": false}, {"label": "C", "text": "Increased sympathetic discharge", "correct": false}, {"label": "D", "text": "Mitochondria thermogenesis", "correct": false}], "correct_answer": "A. Increased muscle metabolism by an excess of calcium", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Increased muscle metabolism by an excess of calcium Malignant Hyperthermia is associated with a genetic defect in the RyR1Q calcium channel of the skeletal muscle sarcoplasmic reticulum that permits uncontrolled calcium release from the sarcoplasmic reticulum when precipitating drugs are given. The ryanodine receptor or calcium release channel on the sarcoplasmic reticulum (SR) is normally opened when skeletal muscle is activated.</p>\n<p><strong>Highyeild:</strong></p><p>The flow of calcium through the open ryanodine receptor binds to troponin and initiates muscle contraction. The metabolic activity accompanying muscle contraction can warm the body. If a mutation in the ryanodine receptor causes the uncontrolled release of calcium from the SR, the body temperature can rise to levels that cause brain damage.</p>\n<p><strong>Extraedge:</strong></p><p>Abnormalities in the ryanodine receptor 1 gene are commonly detected in people who have experienced an episode of malignant hyperthermia. The typical signs of malignant hyperthermia are due to a hypercatabolic state, which presents as a very high temperature, an increased heart rate and abnormally rapid breathing, increased carbon dioxide production, increased oxygen consumption, mixed acidosis, rigid muscles, and rhabdomyolysis. Malignant hyperthermia caused by Volatile anesthetic agents or succinylcholine in those who are susceptible. Susceptibility can occur due to at least six genetic mutations, with the most common one being of the RYR1 gene. These genetic variations are often inherited in an autosomal dominant Treatment is with dantrolene and rapid cooling along with other supportive measures. The avoidance of potential triggers is recommended in susceptible people.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 55-year-old female visited her doctor with complaints of pain in her lower back for the last 3 months. While giving her history, she says that she feels excessive fatigue and tiredness and she got a fracture in her left radius 2 months back. Her blood investigations were done and reports showed significant vitamin D deficiency. The doctor prescribed him a vitamin D tablet which will absorb with the help of which component of the cell membrane?", "options": [{"label": "A", "text": "Lipid", "correct": true}, {"label": "B", "text": "Aquaporins", "correct": false}, {"label": "C", "text": "Protein pump", "correct": false}, {"label": "D", "text": "Ion channels", "correct": false}], "correct_answer": "A. Lipid", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Lipid Vitamin D is a fat-soluble vitamin and it is a function of the lipid component of the cell membrane to absorb these fat-soluble vitamins along with fatty acids and cholesterol . Therefore, option A is true.</p>\n<p><strong>Highyeild:</strong></p><p>Fat-soluble vitamins include vitamins A, D, E, and K. Fat-soluble vitamins play integral roles in a multitude of physiological processes such as vision, bone health, immune function, and coagulation.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect Options:- Option B: Aquaporins are channels made by protein components of cell membranes and they help water move inside a cell. Option C: Protein pumps are made up of protein in the cell membrane and not fat. They use ATP for ion movement in a cell. Option D: Ion channels are also tunnel proteins they help in ion movement in cells.</p>\n<p><strong>Table:</strong></p><p>Essential fatty acids Polyunsaturated fatty acids that cannot be\n  synthesized in the body and must be provided in the diet (eg, nuts/seeds,\n  plant oils, seafood). Linoleic acid (omega-6) is metabolized to arachidonic\n  acid, which serves as the precursor to leukotrienes and prostaglandins.\n  Linolenic acid (omega-3) and its metabolites have cardioprotective and\n  antihyperlipidemic effects. In contrast, consumption of trans-unsaturated\n  fatty acids (found in fast food) promotes cardiovascular disease by ↑ LDL and\n  HDL Vitamins: fat soluble A, D, E, K. Absorption dependent on bile\n  emulsification, pancreatic secretions, and intact ileum. Toxicity more common\n  than for water-soluble vitamins because fat-soluble vitamins accumulate in\n  fat. Malabsorption syndromes with steatorrhea (eg,\n  cystic fibrosis and celiac disease) or mineral oil intake can cause\n  fat-soluble vitamin deficiencies. Vitamins: water soluble B ₁ (thiamine: TPP) B2 (riboflavin: FAD, FMN) B3 (niacin: NAD) B (pantothenic acid: CoA) B6 (pyridoxine: PLP) B. (biotin) Bo (folate) B12 (cobalamin) C (ascorbic acid) Wash out easily from body except B12 and By. B ₁₂ stored in liver for 3-4 years. By stored in\n  liver for 3-4 months. B-complex deficiencies often result in dermatitis,\n  glossitis, and diarrhea. Can be coenzymes (eg, ascorbic acid) or precursors\n  to coenzymes (eg, FAD, NAD\"</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A neurologist studied the brain functioning of experimental rats with Parkinson’s disease. He reported the presence of alterations in brain sites of electric impulse transmission responsible for neurodegenerative diseases. The image depicts brain sites of electric impulse transmission. Select the incorrect:", "options": [{"label": "A", "text": "Synapse", "correct": false}, {"label": "B", "text": "Neuromuscular junction", "correct": false}, {"label": "C", "text": "Dendrodendritic", "correct": true}, {"label": "D", "text": "None", "correct": false}], "correct_answer": "C. Dendrodendritic", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1683534306209-QTDY046006IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Dendrodendritic Dendrodendritic synapses are connections between the dendrites of two different neurons . This is in contrast to the more common axodendritic synapse (chemical synapse) where the axon sends signals and the dendrite receives them. Dendrodendritic synapses are activated in a similar fashion to axodendritic synapses with respect to using a chemical synapse.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect Options: Option A. Synapse, also called neuronal junction, is the site of transmission of electric nerve impulses between two nerve cells (neurons) or between a neuron and a gland or muscle cell (effector). Option B . neuromuscular junction A synaptic connection between a neuron and a muscle cell is called on the types and properties of synapses in the experimental rats. He reported a specific type of synapse that was related to various degenerative diseases such as muscular junction</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "New autism spectrum disorders (ASD), Down syndrome, startle disease, and epilepsy. The image gives features of the synapse. Select the correct synapse in the image:", "options": [{"label": "A", "text": "Chemical synapse", "correct": true}, {"label": "B", "text": "Axodendritic synapse", "correct": false}, {"label": "C", "text": "Axo axonic synapse", "correct": false}, {"label": "D", "text": "All incorrect", "correct": false}], "correct_answer": "A. Chemical synapse", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Chemical synapse Chemical synapses are biological junctions through which neurons

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Damage Control Surgery</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Damage Control Surgery</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                12 Questions | 12 Total Marks | 22 min Duration | ~110.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 12 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 22 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 12</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Damage Control Surgery - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 12</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 12 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "Damage Control Surgery (DCS) should be done when the venous lactate level is", "options": [{"label": "A", "text": "< 2 mmol/L", "correct": false}, {"label": "B", "text": "2-3 mmol/L", "correct": false}, {"label": "C", "text": "> 3 mmol/L", "correct": false}, {"label": "D", "text": "> 5 mmol/L", "correct": true}], "correct_answer": "D. > 5 mmol/L", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>> 5 mmol/L Venous lactate level is an essential marker of Resuscitation. < 2 mmol/L- Early total care 2-3 mmol/L- Look at the trend (increasing or decreasing) > 3 mmol/L- May be under-resuscitated, and should either have further resuscitation or damage control surgery if surgery is urgent. > 5 mmol/L- DCS</p>\n<p><strong>Highyeild:</strong></p><p>DCS – Damage Control Surgery  : Simultaneous resuscitation with early rapid life and limb-saving surgery. Time-consuming definitive surgery is deferred until the patient’s physiological status allows Indications : Indications for damage control surgery. Anatomical •  Inability to achieve haemostasis • Complex abdominal injury, e.g. liver and pancreas • Combined vascular, solid and hollow organ injury, e.g. aortic or caval injury • Inaccessible major venous injury, e.g. retrohepatic vena cava • Demand for non-operative control of other injuries, e.g. fractured pelvis • Anticipated need for a time-consuming procedure Physiological (decline of Physiological reserve • Temperature <34°C • pH <7.2 • Serum lactate >5 mmol/L (normal: <2.5 mmol/L) • Prothrombin time >16 s • Partial thromboplastin time >60 s • >10 units blood transfused • Systolic blood pressure <90 mmHg for >60 min Environmental • Operating time >60 min (core temperature loss is usually 2°C/h) • Inability to approximate the abdominal incision • Desire to reassess the intra-abdominal contents (directed relook) Stages: The stages of damage control surgery. Stage Intervention I Patient selection II Control of haemorrhage and control of contamination III Resuscitation continued in the intensive care unit IV Definitive surgery V Abdominal closure</p>\n<p><strong>Extraedge:</strong></p><p>DCS in the abdomen is limited to packing and control of haemorrhage, debridement and resection of devitalised tissue and removal of contamination by foreign bodies or faeces . Damage control orthopaedic (DCO) surgery is limited to debridement of severe open fractures, rapid temporary splintage or stabilisation of long bone fractures and decompression of limb compartment syndrome where required. Venous lactate: Useful marker of resuscitation and physiological state</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is NOT a concept of ‘damage-control surgery`?", "options": [{"label": "A", "text": "Arrest haemorrhage", "correct": false}, {"label": "B", "text": "Control sepsis", "correct": false}, {"label": "C", "text": "Protect from further injury", "correct": false}, {"label": "D", "text": "Definitive repair of injury", "correct": true}], "correct_answer": "D. Definitive repair of injury", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Definitive repair of injury The goal of damage control surgery (DCS) is to control surgical bleeding and limit gastrointestinal (GI) spillage. The operative techniques used are temporary measures, with the definitive repair of injuries delayed until the patient is physiologically replete. Anatomical repair of injuries is to be done in DCS phase III.</p>\n<p><strong>Highyeild:</strong></p><p>DCS – Damage Control Surgery: Simultaneous resuscitation with early rapid life and limb-saving surgery. Time-consuming definitive surgery is deferred until the patient’s physiological status allows Indications : Indications for damage control surgery. Anatomical •  Inability to achieve haemostasis • Complex abdominal injury, e.g. liver and pancreas • Combined vascular, solid and hollow organ injury, e.g. aortic or caval injury • Inaccessible major venous injury, e.g. retrohepatic vena cava • Demand for non-operative control of other injuries, e.g. fractured pelvis • Anticipated need for a time-consuming procedure Physiological (decline of Physiological reserve • Temperature <34°C • pH <7.2 • Serum lactate >5 mmol/L (normal: <2.5 mmol/L) • Prothrombin time >16 s • Partial thromboplastin time >60 s • >10 units blood transfused • Systolic blood pressure <90 mmHg for >60 min Environmental • Operating time >60 min (core temperature loss is usually 2°C/h) • Inability to approximate the abdominal incision • Desire to reassess the intra-abdominal contents (directed relook) Stages: The stages of damage control surgery. Stage Intervention I Patient selection II Control of haemorrhage and control of contamination III Resuscitation continued in the intensive care unit IV Definitive surgery V Abdominal closure</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. The goal of damage control surgery (DCS) is to control surgical bleeding and limit gastrointestinal (GI) spillage and arrest haemorrhage. Option: B. The goal of damage control surgery (DCS) is to control surgical bleeding and limit gastrointestinal (GI) spillage and control sepsis. Option: C. The goal of damage control surgery (DCS) is to control surgical bleeding and limit gastrointestinal (GI) spillage and protect from further injury.</p>\n<p><strong>Extraedge:</strong></p><p>DCS in the abdomen is limited to packing and control of haemorrhage, debridement and resection of devitalised tissue and removal of contamination by foreign bodies or faeces . Damage control orthopaedic (DCO) surgery is limited to debridement of severe open fractures, rapid temporary splintage or stabilisation of long bone fractures and decompression of limb compartment syndrome where required.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is a part of the “deadly triad” requiring to institute Damage control surgery?", "options": [{"label": "A", "text": "Alkalosis", "correct": false}, {"label": "B", "text": "Hyperthermia", "correct": false}, {"label": "C", "text": "Coagulopathy", "correct": true}, {"label": "D", "text": "Hypotension", "correct": false}], "correct_answer": "C. Coagulopathy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Coagulopathy Following major injury, protracted surgery in the physiologically unstable patient can in itself prove fatal. Patients with the ‘deadly triad’ (hypothermia, acidosis and coagulopathy) are those at the highest risk. The goal of damage control surgery (DCS) is to control surgical bleeding and limit gastrointestinal (GI) spillage. The operative techniques used are temporary measures, with the definitive repair of injuries delayed until the patient is physiologically replete. The technique has been adopted following major trauma and includes initial care and resuscitation (damage control resuscitation) and the surgical correction of the injury (damage control surgery).</p>\n<p><strong>Highyeild:</strong></p><p>Acidosis: Bleeding causes a host of responses. During the resuscitative phase, the lethal triad (acidosis, hypothermia, and coagulopathy) is frequent in severely bleeding patients, most likely because of two major factors. First, decreased perfusion causes lactic acidosis and consumptive coagulopathy. Second, room temperature and large volume fluids lead to worsening hypothermia and dilutional coagulopathy, creating a resuscitation injury The acidotic state is not necessarily undesirable because the body tolerates acidosis better than alkalosis Hypothermia : Hypothermia can be both beneficial and detrimental. Fundamental knowledge of hypothermia is of vital importance in the care of surgical patients. The beneficial aspects of hypothermia are mainly a result of decreased metabolism. Injury sites are often iced, creating vasoconstriction and decreasing inflammation through decreased metabolism. This concept of cooling to slow metabolism is also the rationale behind using hypothermia to decrease ischemia during cardiac, transplant, pediatric, and neurologic surgery Coagulopathy: Always Multifactorial Causes: Acidosis Hypothermia Decreased clotting factors Consumption (from the innate attempt to stop bleeding) Dilution (from infused fluids devoid of clotting factors) Genetic (haemophilia) Tests available: Prothrombin time Partial thromboplastin time International normalized ratio Thromboelastography (TEG) Rotational Thromboelastometry</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Patients with the ‘deadly triad’ (hypothermia, acidosis and coagulopathy) are those at the highest risk. Alkalosis is not a part of the deadly triad. Option: B. Patients with the ‘deadly triad’ (hypothermia, acidosis and coagulopathy) are those at the highest risk. Hyperthermia is not a part of the deadly triad. Option: D. Patients with the ‘deadly triad’ (hypothermia, acidosis and coagulopathy) are those at the highest risk. Hypotension is not a part of the deadly triad.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A male patient with penetrating trauma to the abdomen is hemodynamically unstable. What is the next line of management?", "options": [{"label": "A", "text": "Observation", "correct": false}, {"label": "B", "text": "Further imaging of the abdomen", "correct": false}, {"label": "C", "text": "Exploratory laparotomy", "correct": true}, {"label": "D", "text": "Laparoscopy", "correct": false}], "correct_answer": "C. Exploratory laparotomy", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Exploratory laparotomy Repair is required but great care must be taken to examine the stomach fully, as an injury to the front of the stomach can be expected to have an ‘exit’ wound elsewhere on the organ. Since the patient is hemodynamically unstable, the other options are not considered. If the source of the bleeding is in doubt or FAST/CT results are positive, showing a significant amount of blood in the peritoneal cavity, concurrent intra-abdominal injury cannot be excluded and it is wise to perform an exploratory laparotomy to treat or rule out intra-abdominal bleeding</p>\n<p><strong>Highyeild:</strong></p><p>Patients who have suffered abdominal trauma can generally be classified into the following categories based on their physiological condition after initial resuscitation: Physiologically ‘normal ’ – investigation can be completed before treatment is planned; Physiologically ‘non-compromised’ – investigation is more limited; it is aimed at establishing whether the patient can be managed nonoperatively, whether angioembolization can be used or whether surgery is required; Physiologically ‘compromised’ – investigations need to be suspended as immediate surgical correction of the bleeding is required. Patient Assessment : The patient’s physiology must be assessed constantly; if there is an indication that the patient is still actively bleeding, the source must be identified unless the patient is unstable and requires immediate surgery. Blood loss into the abdomen can be subtle and there may be no clear clinical signs. Blood is not an irritant and does not initially cause any abdominal pain. Distension is subjective, and a drop in blood pressure may be a very late sign in a young fit patient. Examination of compromised patients should take place either in the emergency department or in the operating theatre if the patient is deteriorating rapidly. Laparotomy : Laparotomy is the final step in the pathway to delineate intra-abdominal injury. Occasionally it is difficult to determine the source of bleeding in shocked, multiple-injured patients. If doubt still exists, especially in the presence of other injuries, a laparotomy may still be the safest option. The key is to make a decision, as indecision leads to a delay in definitive control.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. In hemodynamically unstable patients, there is no wait-and-watch policy. Option:B. In hemodynamically unstable patients, Imaging can be done once the patient is stabilized. Option: D . In hemodynamically unstable patients, laparoscopy is not advised.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following statements regarding emergency care in the field hospital is false?", "options": [{"label": "A", "text": "Definitive surgery should be performed in the field when necessary.", "correct": true}, {"label": "B", "text": "Measures to control haemorrhage should be undertaken in the field.", "correct": false}, {"label": "C", "text": "Amputation of devitalised limbs and gas gangrene should be undertaken in the field.", "correct": false}, {"label": "D", "text": "Open fractures should be cleaned in the field.", "correct": false}], "correct_answer": "A. Definitive surgery should be performed in the field when necessary.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Definitive surgery should be performed in the field when necessary. Damage control surgery describes simultaneous resuscitation with early rapid life- and limb-saving surgery. Time-consuming definitive surgery is deferred until the patient’s physiological status allows it.</p>\n<p><strong>Highyeild:</strong></p><p>DCS – Damage Control Surgery  : Simultaneous resuscitation with early rapid life and limb-saving surgery. Time-consuming definitive surgery is deferred until the patient’s physiological status allows Principles of DCS Do the minimum needed to allow safe transfer to a definitive facility Take actions that prevent deterioration of that patient during transfer Secure the airway – may require tracheostomy Control bleeding – may require craniotomy, laparotomy, thoracotomy, repair of major limb vessels Prevent pressure build-up – may require burr holes, chest drain, laparotomy, fasciotomy Prevent infection by extensile exposure and removing dead and contaminated tissue</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B .In case of haemorrhage, all measures to control haemorrhage should be undertaken in the field. Option: C. Amputation of devitalised limbs and gas gangrene should be undertaken in the field. Option: D .Open fractures should be cleaned in the field.</p>\n<p><strong>Extraedge:</strong></p><p>DCS in the abdomen is limited to packing and control of haemorrhage, debridement and resection of devitalised tissue and removal of contamination by foreign bodies or faeces . Damage control orthopaedic (DCO) surgery is limited to debridement of severe open fractures, rapid temporary splintage or stabilisation of long bone fractures and decompression of limb compartment syndrome where required.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30-year-old male is brought to the emergency room following a gunshot wound to the left lower quadrant. He undergoes an exploratory laparotomy at which time a colonic injury is identified, requiring resection of the injured segment and a diverting colostomy. During the further assessment, a left ureteral transection is noted in the mid-ureter. The patient is acidotic, hypothermic, and hemodynamically unstable. He has no other apparent injuries. The treatment of choice in this setting is which of the following?", "options": [{"label": "A", "text": "Transureteroureterostomy", "correct": false}, {"label": "B", "text": "Ureteroureterostomy", "correct": false}, {"label": "C", "text": "Damage control and delayed ureteral repair.", "correct": true}, {"label": "D", "text": "Ureteral reimplantation", "correct": false}], "correct_answer": "C. Damage control and delayed ureteral repair.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Damage control and delayed ureteral repair. In occasions when the patient is unstable, the ureter can be ligated with sutures, a nephrostomy tube is placed, and reconstruction can occur within the next 48 to 72 hours. If the patient is hemodynamically unstable, then damage control is recommended and delayed ureteral repair can be performed.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A . If recognized at the time of surgery, surgical division of the ureter and/or partial ureteral excision should be managed based on the location and length of injury. Options of repair include ipsilateral ureteroureterostomy, ureteral reimplantation with or without a psoas hitch, and trans ureteroureterostomy. Option: B. If recognized at the time of surgery, surgical division of the ureter and/or partial ureteral excision should be managed based on the location and length of injury. Options of repair include ipsilateral ureteroureterostomy, ureteral reimplantation with or without a psoas hitch, and trans ureteroureterostomy. Option: D .If recognized at the time of surgery, surgical division of the ureter and/or partial ureteral excision should be managed based on the location and length of injury. Options of repair include ipsilateral ureteroureterostomy, ureteral reimplantation with or without a psoas hitch, and trans ureteroureterostomy.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are phases of Damage control surgery except", "options": [{"label": "A", "text": "Recognition of injury severity and need for damage control principles, both surgical and resuscitative.", "correct": false}, {"label": "B", "text": "Immediate laparotomy with rapid control of bleeding and contamination, abdominal packing and temporary wound closure.", "correct": false}, {"label": "C", "text": "Movement to the intensive care unit (ICU) for ongoing resuscitation with normalisation of biochemical and physiological parameters.", "correct": false}, {"label": "D", "text": "Re-exploration in theatre to perform the definitive repair of all injuries immediately.", "correct": true}], "correct_answer": "D. Re-exploration in theatre to perform the definitive repair of all injuries immediately.", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Re-exploration in theatre to perform the definitive repair of all injuries immediately. Re-exploration in theatre to perform the definitive repair of all injuries. Multiple procedures on multiple occasions may be required. Even at this stage, nonessential procedures may be truncated or delayed if physiology deteriorates.</p>\n<p><strong>Highyeild:</strong></p><p>DCS – Damage Control Surgery  : Simultaneous resuscitation with early rapid life and limb-saving surgery. Time-consuming definitive surgery is deferred until the patient’s physiological status allows Indications : Indications for damage control surgery. Anatomical •  Inability to achieve haemostasis • Complex abdominal injury, e.g. liver and pancreas • Combined vascular, solid and hollow organ injury, e.g. aortic or caval injury • Inaccessible major venous injury, e.g. retrohepatic vena cava • Demand for non-operative control of other injuries, e.g. fractured pelvis • Anticipated need for a time-consuming procedure Physiological (decline of Physiological reserve • Temperature <34°C • pH <7.2 • Serum lactate >5 mmol/L (normal: <2.5 mmol/L) • Prothrombin time >16 s • Partial thromboplastin time >60 s • >10 units blood transfused • Systolic blood pressure <90 mmHg for >60 min Environmental • Operating time >60 min (core temperature loss is usually 2°C/h) • Inability to approximate the abdominal incision • Desire to reassess the intra-abdominal contents (directed relook) Stages : The stages of damage control surgery. Stage Intervention I Patient selection II Control of haemorrhage and control of contamination III Resuscitation continued in the intensive care unit IV Definitive surgery V Abdominal closure</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A. Recognition of injury severity and the need for damage control principles, both surgical and resuscitative is a phase of Damage control surgery. Option: B . Immediate laparotomy with rapid control of bleeding and contamination, abdominal packing and temporary wound closure is a phase of Damage control surgery: DCS phase I Option: C . Movement to the intensive care unit (ICU) for ongoing resuscitation with normalisation of biochemical and physiological parameters is a phase of Damage control surgery: DCS phase II</p>\n<p><strong>Extraedge:</strong></p><p>DCS in the abdomen is limited to packing and control of haemorrhage, debridement and resection of devitalised tissue and removal of contamination by foreign bodies or faeces . Damage control orthopaedic (DCO) surgery is limited to debridement of severe open fractures, rapid temporary splintage or stabilisation of long bone fractures and decompression of limb compartment syndrome where required.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30 years old young male met with a road traffic accident and came to the trauma centre. On examination his BP is 90/56 mm Hg, pulse rate is 150/min, SpO2, 86% and a Glasgow coma score of 8. On examination, the patient had multiple injuries and FAST reveals a haemorrhage in all quadrants. You decide to go for damage control surgery on this patient. Damage control surgery is", "options": [{"label": "A", "text": "Done during the triage procedure", "correct": false}, {"label": "B", "text": "Maximum possible surgical intervention is done immediately", "correct": false}, {"label": "C", "text": "Done to control damage during surgery", "correct": false}, {"label": "D", "text": "Minimal intervention is done to stabilise the patient and do definitive surgery later", "correct": true}], "correct_answer": "D. Minimal intervention is done to stabilise the patient and do definitive surgery later", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Minimal intervention is done to stabilise the patient and do definitive surgery later Damage control surgery describes simultaneous resuscitation with early rapid life and limb-saving surgery. Time-consuming definitive surgery such as liver repair is deferred until the patient’s physiological status allows it.</p>\n<p><strong>Highyeild:</strong></p><p>DCS – Damage Control Surgery  : Simultaneous resuscitation with early rapid life and limb-saving surgery. Time-consuming definitive surgery is deferred until the patient’s physiological status allows Indications : Indications for damage control surgery. Anatomical •  Inability to achieve haemostasis • Complex abdominal injury, e.g. liver and pancreas • Combined vascular, solid and hollow organ injury, e.g. aortic or caval injury • Inaccessible major venous injury, e.g. retrohepatic vena cava • Demand for non-operative control of other injuries, e.g. fractured pelvis • Anticipated need for a time-consuming procedure Physiological (decline of Physiological reserve • Temperature <34°C • pH <7.2 • Serum lactate >5 mmol/L (normal: <2.5 mmol/L) • Prothrombin time >16 s • Partial thromboplastin time >60 s • >10 units blood transfused • Systolic blood pressure <90 mmHg for >60 min Environmental • Operating time >60 min (core temperature loss is usually 2°C/h) • Inability to approximate the abdominal incision • Desire to reassess the intra-abdominal contents (directed relook) Stages : The stages of damage control surgery. Stage Intervention I Patient selection II Control of haemorrhage and control of contamination III Resuscitation continued in the intensive care unit IV Definitive surgery V Abdominal closure</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A . Damage control surgery is done after triage and not during triage. Option: B . Maximum possible surgical intervention done early is not preferred in hemodynamically unstable patients and extremely sick patients. Option: C . Damage control surgery is not done to control damage during surgery.</p>\n<p><strong>Extraedge:</strong></p><p>DCS in the abdomen is limited to packing and control of haemorrhage, debridement and resection of devitalised tissue and removal of contamination by foreign bodies or faeces . Damage control orthopaedic (DCO) surgery is limited to debridement of severe open fractures, rapid temporary splintage or stabilisation of long bone fractures and decompression of limb compartment syndrome where required.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Where is the second step of damage control resuscitation carried out?", "options": [{"label": "A", "text": "In emergency", "correct": false}, {"label": "B", "text": "Prehospital resuscitation", "correct": false}, {"label": "C", "text": "In ICU", "correct": true}, {"label": "D", "text": "In OT", "correct": false}], "correct_answer": "C. In ICU", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>In ICU Phase 2 of damage control surgery is ICU resuscitation and is done in the ICU</p>\n<p><strong>Highyeild:</strong></p><p>DCS – Damage Control Surgery  : Simultaneous resuscitation with early rapid life and limb-saving surgery. Time-consuming definitive surgery is deferred until the patient’s physiological status allows Indications : Indications for damage control surgery. Anatomical •  Inability to achieve haemostasis • Complex abdominal injury, e.g. liver and pancreas • Combined vascular, solid and hollow organ injury, e.g. aortic or caval injury • Inaccessible major venous injury, e.g. retrohepatic vena cava • Demand for non-operative control of other injuries, e.g. fractured pelvis • Anticipated need for a time-consuming procedure Physiological (decline of Physiological reserve • Temperature <34°C • pH <7.2 • Serum lactate >5 mmol/L (normal: <2.5 mmol/L) • Prothrombin time >16 s • Partial thromboplastin time >60 s • >10 units blood transfused • Systolic blood pressure <90 mmHg for >60 min Environmental • Operating time >60 min (core temperature loss is usually 2°C/h) • Inability to approximate the abdominal incision • Desire to reassess the intra-abdominal contents (directed relook) Stages : The stages of damage control surgery. Stage Intervention I Patient selection II Control of haemorrhage and control of contamination III Resuscitation continued in the intensive care unit IV Definitive surgery V Abdominal closure</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A, B . The first phase of damage control surgery is controlling the bleeding in the minimum possible time. It is done in the emergency and also during pre-hospital resuscitation Option: D . Phase 3 of damage control surgery is definitive treatment and is done in the OT</p>\n<p><strong>Extraedge:</strong></p><p>DCS in the abdomen is limited to packing and control of haemorrhage, debridement and resection of devitalised tissue and removal of contamination by foreign bodies or faeces . Damage control orthopaedic (DCO) surgery is limited to debridement of severe open fractures, rapid temporary splintage or stabilisation of long bone fractures and decompression of limb compartment syndrome where required.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following is not a correct indication of damage control surgery?", "options": [{"label": "A", "text": "S. Lactate > 5 mmol/L", "correct": false}, {"label": "B", "text": "Temperature > 38 degrees Celsius", "correct": true}, {"label": "C", "text": "pH < 7.2", "correct": false}, {"label": "D", "text": "PT > 16 s", "correct": false}], "correct_answer": "B. Temperature > 38 degrees Celsius", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Temperature > 38 degrees Celsius Temperature < 35 degrees Celsius is another indication for damage control surgery. Hypothermia (and not fever) is a component of the deadly triad.</p>\n<p><strong>Highyeild:</strong></p><p>DCS – Damage Control Surgery  : Simultaneous resuscitation with early rapid life and limb-saving surgery. Time-consuming definitive surgery is deferred until the patient’s physiological status allows Indications : Indications for damage control surgery. Anatomical •  Inability to achieve haemostasis • Complex abdominal injury, e.g. liver and pancreas • Combined vascular, solid and hollow organ injury, e.g. aortic or caval injury • Inaccessible major venous injury, e.g. retrohepatic vena cava • Demand for non-operative control of other injuries, e.g. fractured pelvis • Anticipated need for a time-consuming procedure Physiological (decline of Physiological reserve • Temperature <34°C • pH <7.2 • Serum lactate >5 mmol/L (normal: <2.5 mmol/L) • Prothrombin time >16 s • Partial thromboplastin time >60 s • >10 units blood transfused • Systolic blood pressure <90 mmHg for >60 min Environmental • Operating time >60 min (core temperature loss is usually 2°C/h) • Inability to approximate the abdominal incision • Desire to reassess the intra-abdominal contents (directed relook) Stages : The stages of damage control surgery. Stage Intervention I Patient selection II Control of haemorrhage and control of contamination III Resuscitation continued in the intensive care unit IV Definitive surgery V Abdominal closure</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A . S. lactate > 5 mmol/L is an indication for Damage Control Surgery Option: C. pH < 7.2 / acidosis is a part of the deadly triad and is an indication of damage control surgery. Option: D . PT > 16 s and aPTT > 60 s indicate coagulopathy and is an indication of damage control surgery</p>\n<p><strong>Extraedge:</strong></p><p>DCS in the abdomen is limited to packing and control of haemorrhage, debridement and resection of devitalised tissue and removal of contamination by foreign bodies or faeces . Damage control orthopaedic (DCO) surgery is limited to debridement of severe open fractures, rapid temporary splintage or stabilisation of long bone fractures and decompression of limb compartment syndrome where required.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient of a road traffic accident comes to you. You want to examine the back of the patient for injuries. How many minimum people are needed to log rolling the patient?", "options": [{"label": "A", "text": "3", "correct": false}, {"label": "B", "text": "4", "correct": true}, {"label": "C", "text": "5", "correct": false}, {"label": "D", "text": "2", "correct": false}], "correct_answer": "B. 4", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>4 Minimum 4 people are needed for turning the patient in for back injury The head end of the patient: Hold the shoulder, neck and head end of the patient Hold shoulder and pelvis Along with 2nd person cross the hands and one on the shoulder and the other on the pelvis See the back of the person</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: A . 3 persons are not enough for log rolling the patient Option: C. In a long bone fracture, one more person is needed, i.e. 5 people are needed. Option: D . 2 persons are fewer for logrolling a patient.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A trauma patient was brought to an emergency. On evaluation, he was found to have metabolic acidosis and coagulopathy with liver and duodenal injury. What is the next step in management?", "options": [{"label": "A", "text": "Damage control surgery", "correct": true}, {"label": "B", "text": "Liver repair", "correct": false}, {"label": "C", "text": "Whipple’s procedure", "correct": false}, {"label": "D", "text": "None of the above", "correct": false}], "correct_answer": "A. Damage control surgery", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Damage control surgery Acidosis, hypothermia and coagulopathy constitute the triad of death. In such cases, we must prefer damage control surgery. Damage control surgery describes simultaneous resuscitation with early rapid life and limb-saving surgery.</p>\n<p><strong>Highyeild:</strong></p><p>DCS – Damage Control Surgery  : Simultaneous resuscitation with early rapid life and limb-saving surgery. Time-consuming definitive surgery is deferred until the patient’s physiological status allows Indications : Indications for damage control surgery. Anatomical •  Inability to achieve haemostasis • Complex abdominal injury, e.g. liver and pancreas • Combined vascular, solid and hollow organ injury, e.g. aortic or caval injury • Inaccessible major venous injury, e.g. retrohepatic vena cava • Demand for non-operative control of other injuries, e.g. fractured pelvis • Anticipated need for a time-consuming procedure Physiological (decline of Physiological reserve • Temperature <34°C • pH <7.2 • Serum lactate >5 mmol/L (normal: <2.5 mmol/L) • Prothrombin time >16 s • Partial thromboplastin time >60 s • >10 units blood transfused • Systolic blood pressure <90 mmHg for >60 min Environmental • Operating time >60 min (core temperature loss is usually 2°C/h) • Inability to approximate the abdominal incision • Desire to reassess the intra-abdominal contents (directed relook) Stages : The stages of damage control surgery. Stage Intervention I Patient selection II Control of haemorrhage and control of contamination III Resuscitation continued in the intensive care unit IV Definitive surgery V Abdominal closure</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options: - Option: B. Time - consuming definitive surgery such as liver repair is deferred until the patient’s physiological status allows Option: C . Whipple’s procedure is done for carcinoma head of the pancreas and other periampullary tumours Option: D . None of the above is not the correct answer</p>\n<p><strong>Extraedge:</strong></p><p>DCS in the abdomen is limited to packing and control of haemorrhage, debridement and resection of devitalised tissue and removal of contamination by foreign bodies or faeces . Damage control orthopaedic (DCO) surgery is limited to debridement of severe open fractures, rapid temporary splintage or stabilisation of long bone fractures and decompression of limb compartment syndrome where required.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

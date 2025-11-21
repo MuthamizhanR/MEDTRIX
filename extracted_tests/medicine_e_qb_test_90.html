@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Ischemic Heart Disease - Stemi</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Ischemic Heart Disease - Stemi</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                8 Questions | 8 Total Marks | 18 min Duration | ~135.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 8 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 18 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 8</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Ischemic Heart Disease - Stemi - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 8</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 8 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "You are caring for a 65-year-old. He reports that he started having chest pain that sounds like classic angina. After 2 minutes, the angina subsides. This exertional limitation has been stable over the last year and he does not experience chest pain at other times. He is on no medications. You refer him for coronary angiography, which demonstrates a 70% stenosis in his mid-left anterior descending coronary artery. Left ventriculography shows normal ventricular systolic function. What is the next most reasonable course of action from those listed below?", "options": [{"label": "A", "text": "Advise him to stop playing tennis", "correct": false}, {"label": "B", "text": "Coronary artery bypass grafting", "correct": false}, {"label": "C", "text": "Initiate anti-anginal medical therapy with a beta blocker, statin, and aspirin", "correct": true}, {"label": "D", "text": "Percutaneous coronary intervention with a drug-eluting stent", "correct": false}], "correct_answer": "C. Initiate anti-anginal medical therapy with a beta blocker, statin, and aspirin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Initiate anti-anginal medical therapy with a beta blocker, statin, and aspirin. This patient has classic stable angina. Clinical trials have confirmed that with the initial diagnosis of stable ischemic heart disease, it is first appropriate to initiate a medical regimen as described.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A .- Revascularization should be employed in conjunction with, but not replace, the continuing need to modify risk factors and assess medical therapy. Option B, D .- Revascularization should be considered in the presence of unstable phases of the disease, intractable symptoms, severe ischemia or high-risk coronary anatomy, diabetes, and impaired left ventricular function.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 67-year-old fry chef presents to the emergency department with the sudden onset of crushing substernal chest pain. He has a history of hypertension, hyperlipidemia, and erectile dysfunction for which he takes daily amlodipine, simvastatin, and tadalafil. On your evaluation, his blood pressure is 145/85 and his heart rate is 90 beats/min. His lungs are clear and his jugular venous pulse is not elevated. There are no murmurs or gallops on cardiac auscultation. He continues to complain of chest discomfort, rating it an 8/10. Initial troponin I return elevated at 0.52 ng/dL (normal < 0.06 ng/dL) and electrocardiogram reveals 1-mm ST depression in II, III, aVF, V5, and V6. All of the following pharmacologic therapies are reasonable to administer EXCEPT -", "options": [{"label": "A", "text": "Aspirin orally", "correct": false}, {"label": "B", "text": "Clopidogrel orally", "correct": false}, {"label": "C", "text": "Heparin IV", "correct": false}, {"label": "D", "text": "Nitroglycerin sublingually", "correct": true}], "correct_answer": "D. Nitroglycerin sublingually", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Nitroglycerin sublingually This patient is suffering from a non–ST-elevation myocardial infarction (NSTEMI). The two cornerstones of pharmacologic therapy in NSTEMI management are the reduction of myocardial oxygen demand and antithrombotic therapy targeted at a presumed partially occluding thrombus forming on disrupted atherothrombotic coronary plaque.</p>\n<p><strong>Highyeild:</strong></p><p>unfractionated heparin (UFH) , long the mainstay of therapy; the low-molecular-weight heparin (LMWH), enoxaparin, which has been shown to be superior to UFH in reducing recurrent cardiac events, especially in patients managed by a conservative strategy but with some increase in bleeding; bivalirudin , a direct thrombin inhibitor that is similar in efficacy to either UFH or LMWH but causes less bleeding and is used just prior to and/or during percutaneous coronary intervention; and the indirect factor Xa inhibitor, fondaparinux, which is equivalent in efficacy to enoxaparin but appears to have a lower risk of major bleeding.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A,B -.Aspirin in combination with a P2Y12 receptor blocker (e.g., clopidogrel, ticagrelor, or prasugrel) are appropriate antiplatelet options. Option C .- Options for anticoagulants include</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "You are seeing a 42-year-old woman with repeated presentations to the emergency department with chest pain. The pain usually has classic anginal qualities. On this presentation, she has transient ST elevations in leads V1–V4 as well as I and aVL that occurred with the pain. Troponin biomarkers are mildly elevated. On coronary angiography, she has no atherosclerosis. However, during the procedure when asked to hyperventilate, there is distinct vasospasm in the left anterior descending artery. All of the following are reasonable treatments for her EXCEPT:", "options": [{"label": "A", "text": "Amlodipine", "correct": false}, {"label": "B", "text": "Aspirin", "correct": true}, {"label": "C", "text": "Atorvastatin", "correct": false}, {"label": "D", "text": "Diltiazem", "correct": false}], "correct_answer": "B. Aspirin", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Aspirin This patient has Prinzmetal variant angina. Aspirin may actually increase the severity of ischemic episodes, possibly as a result of the sensitivity of coronary tone to modest changes in the synthesis of prostacyclin.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A, D -Nitrates and calcium channel blockers are the main therapeutic agents. Option C . Statin therapy has been shown to reduce the risk of major adverse events, although the precise mechanism is not established. The response to beta-blockers is variable.</p>\n<p><strong>Extraedge:</strong></p><p>Coronary revascularization may be helpful in patients who also have discrete, flow-limiting, proximal fixed obstructive lesions. Patients who have had ischemia-associated ventricular fibrillation despite maximal medical therapy should receive an implantable cardioverter-defibrillator.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All of the following medications used in the acute management of ST-elevation myocardial infarction are appropriately matched to their mechanism of effect EXCEPT:", "options": [{"label": "A", "text": "Aspirin—reduction in thromboxane A2", "correct": false}, {"label": "B", "text": "Abciximab—inhibition of the glycoprotein IIb/IIIa receptor", "correct": false}, {"label": "C", "text": "β-Adrenergic antagonists—reduced myocardial oxygen consumption", "correct": false}, {"label": "D", "text": "Nitroglycerin—reduced cardiac afterload", "correct": true}], "correct_answer": "D. Nitroglycerin—reduced cardiac afterload", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Nitroglycerin—reduced cardiac afterload All of these choices are appropriate therapy for patients with an ST-elevation myocardial infarction (STEMI) in certain situations. While nitroglycerin is effective for anti-anginal effects in the setting of STEMI, it enacts those effects through decreasing preload and perhaps through some direct nitric oxide–induced coronary vasodilation. Nitroglycerin has minimal effect on systemic afterload.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A.- Aspirin is an irreversible cyclooxygenase inhibitor and thus inhibits the production of thromboxane A2. Option B.- Abciximab and eptifibatide are glycoprotein IIb/IIIa inhibitors that also inhibit platelet aggregation. Option C.- Beta blockers reduce myocardial oxygen demand by reducing cardiac chronotropic and inotropy. They should be used with caution in patients with MI and any signs of delayed conduction (prolonged PR interval), heart failure, or risk for cardiogenic shock.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Mr. Rahul underwent tissue plasminogen activator administration for acute ST-elevation myocardial infarction 1 hour previously. He had an excellent response with the resolution of his ST-segment elevation and chest pain; however, the nurse pages you to evaluate a change in his rhythm. You note a wide complex ventricular rhythm with a rate of 75 beats/min. Mr. Rahul continues to feel well without new symptoms and his blood pressure is 120/80. The next most appropriate therapeutic maneuver is which of the following?", "options": [{"label": "A", "text": "Administer amiodarone 150 mg IV over 10 minutes", "correct": false}, {"label": "B", "text": "Administer flecainide 400 mg orally", "correct": false}, {"label": "C", "text": "Administer metoprolol 5 mg IV every 5 minutes × 3", "correct": false}, {"label": "D", "text": "Continue observation", "correct": true}], "correct_answer": "D. Continue observation", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>Continue observation This patient has an accelerated idioventricular rhythm, a common finding in patients with successful reperfusion after thrombolytic therapy . This rhythm is benign and requires no further therapy. It invariably resolves on its own .</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option B- Flecainide (a class I antiarrhythmic) is contraindicated in post–myocardial infarction patients as it was found to increase mortality in the CAST trial. Option A, C- Amiodarone or metoprolol would be appropriate therapy if this was ventricular tachycardia or perhaps supraventricular tachycardia. Carotid sinus massage would be appropriate in the setting of supraventricular tachycardia.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Ms. Sunita is a 48-year-old woman with a history of atrial fibrillation and peptic ulcer disease who is brought to your emergency department after 30 minutes of crushing substernal chest pain. Her blood pressure is 110/65 with an irregular heart rate of 85 beats/min and a resting room air oxygen saturation of 91%. Her electrocardiogram shows 3–4 mm ST-segment elevations in leads V2–V4. Your hospital is 4 hours from the nearest catheterization laboratory and the weather precludes air transport. Her medications include warfarin, metoprolol, atorvastatin, and losartan. Which of the following is a clear contraindication to administering an IV thrombolytic agent?", "options": [{"label": "A", "text": "Blood pressure of 110/65", "correct": false}, {"label": "B", "text": "History of a cerebrovascular hemorrhage 2 years ago", "correct": true}, {"label": "C", "text": "History of hypertension", "correct": false}, {"label": "D", "text": "History of peptic ulcer disease", "correct": false}], "correct_answer": "B. History of a cerebrovascular hemorrhage 2 years ago", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>History of a cerebrovascular hemorrhage 2 years ago Clear contraindications to the use of fibrinolytic agents include a history of cerebrovascular hemorrhage at any time, a non-hemorrhagic stroke, or other cerebrovascular events within the past year.</p>\n<p><strong>Highyeild:</strong></p><p>Absolute Contraindications for Thrombolytic Treatment Recent intracranial hemorrhage (ICH) Structural cerebral vascular lesion Intracranial neoplasm Ischemic stroke within three months Possible aortic dissection Active bleeding or bleeding diathesis (excluding menses) Significant head injury or facial trauma within three months Recent Intracranial or spinal surgery Severe uncontrolled hypertension For streptokinase, previous treatment within six months</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Options A, C - marked hypertension (a reliably determined systolic arterial pressure >180 mmHg and/or a diastolic pressure >110 mmHg) at any time during the acute presentation, suspicion of aortic dissection, and active internal bleeding (excluding menses) . While advanced age is associated with an increase in hemorrhagic complications, the benefit of fibrinolytic therapy in the elderly appears to justify its use if no other contraindications are present and the amount of myocardium in jeopardy appears to be substantial. Option D- Relative contraindications to fibrinolytic therapy, which require assessment of the risk-to-benefit ratio, include current use of anticoagulants (international normalized ratio ≥2), a recent (< 2 weeks) invasive or surgical procedure or prolonged (>10 minutes) cardiopulmonary resuscitation, known bleeding diathesis, pregnancy, a hemorrhagic ophthalmic condition (e.g., hemorrhagic diabetic retinopathy), active peptic ulcer disease, and a history of severe hypertension that is currently adequately controlled. Because of the risk of an allergic reaction, patients should not receive streptokinase if that agent had been received within the preceding 5 days to 2 years.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An 80 yrs male with a known case of diabetes and hypertension came to the hospital with chest pain and profuse sweating. He was diagnosed with anterior wall myocardial infarction. Which of the following can be associated with the diagnosis in this patient?", "options": [{"label": "A", "text": "It causes sympathetic overactivity", "correct": false}, {"label": "B", "text": "Presence of tachycardia", "correct": false}, {"label": "C", "text": "Presence of hypertension", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above</p>\n<p><strong>Highyeild:</strong></p><p>Sign of ventricular failure: Dyskinetic and bulging apex S4 and S3 heard. Decrease the intensity of S1. Pericardial friction rub.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A. It causes sympathetic overactivity: In anterior wall myocardial infarction, there is stimulation of the sympathetic system. Option B. Presence of tachycardia: it results from stimulation of the sympathetic system in case of anterior wall myocardial infarction. Option C . Presence of hypertension: it results from stimulation of the sympathetic system in case of anterior wall myocardial infarction.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 70 yrs male came to the casualty with sudden onset crushing type of chest pain radiating to the left shoulder. His ECG is shown below: Which of the following can be associated with the possible diagnosis in this case?", "options": [{"label": "A", "text": "It causes parasympathetic overactivity", "correct": false}, {"label": "B", "text": "Presence of bradycardia", "correct": false}, {"label": "C", "text": "Presence of hypotension", "correct": false}, {"label": "D", "text": "All of the above", "correct": true}], "correct_answer": "D. All of the above", "question_images": ["https://dbmi-data.s3.ap-south-1.amazonaws.com/photos-1684540533038-QTDM029014IMG1.JPG"], "explanation_images": [], "explanation": "<p><strong>Solution:</strong></p><p>All of the above</p>\n<p><strong>Highyeild:</strong></p><p>Sign of ventricular failure: Dyskinetic and bulging apex S4 and S3 heard. Decrease the intensity of S1. Pericardial friction rub.</p>\n<p><strong>Random:</strong></p><p>Explanation for incorrect options:- Option A.- It causes parasympathetic overactivity: the above case is of inferior wall myocardial infarction, hence there is parasympathetic stimulation. Option B .- Presence of bradycardia : it results from parasympathetic system stimulation in inferior wall myocardial infarction. Option C .- Presence of hypotension : it results from parasympathetic system stimulation in inferior wall myocardial infarction.</p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}];
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Questions data is empty or invalid");
+            }
+            debugLog(`Successfully parsed ${questions.length} questions`);
+        } catch (e) {
+            console.error("Failed to parse questions_json:", e);
+            document.getElementById(

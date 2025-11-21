@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" nameag="viewport"/>
+<title>Aiims May 2017   2017 05 07</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+        /* Custom styles for enhanced aesthetics and responsiveness */
+        .option-btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn:hover, .option-btn:active {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .marked {
+            background-color: #fef08a;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        .question-nav-btn, .result-nav-btn-grid {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        .question-nav-btn:hover, .question-nav-btn:active, .result-nav-btn-grid:hover, .result-nav-btn-grid:active {
+            transform: scale(1.05);
+        }
+        .answered {
+            background-color: #22c55e;
+            color: white;
+        }
+        .unanswered {
+            background-color: #e5e7eb;
+        }
+        .marked-nav {
+            border: 2px solid #fef08a;
+        }
+        .video-container, .audio-container {
+            display: none;
+            position: relative;
+        }
+        .video-container.active, .audio-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section-transition {
+            transition: opacity 0.3s ease;
+        }
+        .section-transition.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .result-nav-btn {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .result-nav-btn:hover, .result-nav-btn:active {
+            background-color: #374151;
+            transform: scale(1.05);
+        }
+        .result-nav-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .question-nav-btn, .result-nav-btn-grid {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .nav-panel, .results-nav-panel {
+                width: 100%;
+                max-width: 100%;
+                overscroll-behavior: contain;
+            }
+            .option-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .header-text {
+                font-size: 1.5rem;
+            }
+            .subheader-text {
+                font-size: 0.875rem;
+            }
+            .button-group, .result-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .result-nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        /* Dark mode styles */
+        .dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        .dark .bg-white {
+            background-color: #374151;
+        }
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+        .dark .border {
+            border-color: #4b5563;
+        }
+        .dark .bg-blue-500 {
+            background-color: #2563eb;
+        }
+        .dark .hover\:bg-blue-600:hover {
+            background-color: #1d4ed8;
+        }
+        .dark .bg-yellow-300 {
+            background-color: #b45309;
+            color: white;
+        }
+        .dark .hover\:bg-yellow-400:hover {
+            background-color: #92400e;
+        }
+        .dark .bg-green-500 {
+            background-color: #15803d;
+        }
+        .dark .hover\:bg-green-600:hover {
+            background-color: #166534;
+        }
+        .dark .bg-gray-500 {
+            background-color: #4b5563;
+        }
+        .dark .hover\:bg-gray-600:hover {
+            background-color: #374151;
+        }
+        .dark .result-nav-btn, .dark .result-nav-btn-grid {
+            background-color: #2563eb;
+        }
+        .dark .result-nav-btn:hover, .dark .result-nav-btn:active, .dark .result-nav-btn-grid:hover, .dark .result-nav-btn-grid:active {
+            background-color: #1d4ed8;
+        }
+        .dark .result-nav-btn:disabled, .dark .result-nav-btn-grid:disabled {
+            background-color: #4b5563;
+        }
+        .video-placeholder {
+            width: 400px;
+            height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .play-icon {
+            font-size: 40px;
+            color: #007bff;
+        }
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+
+<script>
+    // --- GEMINI AUTO-CAPTURE LISTENER ---
+    // This function runs immediately after the quiz determines an answer is INCORRECT.
+    function captureMistake(questionIndex, questionsData) {
+        try {
+            const item = questionsData[questionIndex];
+            // Use the question text as a unique, stable identifier
+            const uniqueId = 'srs_quiz_' + btoa(item.text.substring(0, 50)).replace(/=/g, ''); 
+
+            // 1. Clean and simplify the explanation for storage
+            let explanationText = item.explanation || item.correct_answer || "No explanation provided.";
+            
+            // Strip complex HTML (images, lists) and boilerplate text
+            explanationText = explanationText.replace(/<img[^>]*>/g, "[IMAGE]").trim(); // Replace images with placeholder
+            explanationText = explanationText.replace(/<p><strong>Ans\. [A-Z]\).*/i, "").trim(); // Remove the repeated Answer line
+            explanationText = explanationText.replace(/<p><strong>Educational Objective:<\/strong>.*?<\/p>/gs, "").trim(); // Remove EO block
+            explanationText = explanationText.replace(/@dams_new_robot/g, "");
+            explanationText = explanationText.replace(/<\/?[^>]+(>|$)/g, " ").trim(); // Final strip of remaining tags
+
+            // 2. Prepare card data
+            const cardData = {
+                text: item.text,
+                answer: item.correct_answer,
+                explanation: explanationText.substring(0, 500), // Keep explanations short
+                nextReview: 0, // Due immediately
+                reviews: 0,
+                source: document.title.split('-')[0].trim() || 'Quiz'
+            };
+
+            // 3. Save to Local Storage (SRS Bank)
+            localStorage.setItem(uniqueId, JSON.stringify(cardData));
+            
+            console.log(`🧠 Captured Mistake #${questionIndex + 1} from ${document.title}`);
+
+        } catch (e) {
+            console.error("SRS Capture Failed:", e);
+        }
+    }
+    // --- END GEMINI AUTO-CAPTURE LISTENER ---
+</script>
+
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300 min-h-screen overflow-y-auto">
+<!-- Header Section -->
+<header class="bg-blue-600 text-white p-4 shadow-lg">
+<div class="container mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold header-text">Aiims May 2017   2017 05 07</h1>
+<p class="mt-2 text-sm md:text-base subheader-text">
+                200 Questions | 800 Total Marks | 210 min Duration | ~63.0 sec/question
+            </p>
+<button class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-300 transition dark:bg-gray-600 dark:text-white" id="theme-toggle">
+                Toggle Dark Mode
+            </button>
+</div>
+</header>
+<!-- Instructions Section -->
+<section class="container mx-auto p-4 md:p-6 section-transition" id="instructions">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-xl font-semibold mb-4">Instructions</h2>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+<li>This test contains 200 multiple choice questions.</li>
+<li>Each question has only one correct answer.</li>
+<li>You will have 210 minutes to complete the test.</li>
+<li>Click or tap on an option to select your answer.</li>
+<li>Use the "Mark for Review" button to revisit questions.</li>
+<li>Navigate using Previous/Next buttons or the Questions Navigation panel.</li>
+<li>Click "Submit" to finish and view results.</li>
+<li>The test will auto-submit when time runs out.</li>
+</ul>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="start-test">Start Test</button>
+
+
+</div>
+<div class="error-message hidden" id="error-message"></div>
+</div>
+</section>
+<!-- Quiz Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="quiz">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+<div class="progress-bar h-3 rounded-full" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Question Header -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4">
+<h2 class="text-lg font-semibold" id="question-number">Question <span>1</span> of 200</h2>
+<p class="text-lg font-semibold mt-2 md:mt-0" id="timer">Time Remaining: <span>00:00</span></p>
+</div>
+<!-- Question Content -->
+<div class="mb-6" id="question-content">
+<p class="text-gray-800 mb-4" id="question-text"></p>
+<div class="flex flex-wrap gap-4 mb-4" id="question-images"></div>
+<div class="space-y-3" id="options"></div>
+</div>
+<!-- Navigation Buttons -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition w-full md:w-auto" disabled="" id="previous-btn">Previous</button>
+<button class="bg-yellow-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-yellow-400 transition w-full md:w-auto" id="mark-review">Mark for Review</button>
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="next-btn">Next</button>
+<button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full md:w-auto" id="nav-toggle">Questions Navigation</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto" id="submit-test">Submit Test</button>
+</div>
+</div>
+</section>
+<!-- Results Section -->
+<section class="container mx-auto p-4 md:p-6 hidden section-transition" id="results">
+<div class="bg-white rounded-lg shadow-md p-5 md:p-8 md:p-5 md:p-8 min-h-screen md:min-h-0 md:rounded-lg md:shadow-md rounded-none shadow-none flex flex-col justify-between">
+<h2 class="text-2xl font-semibold mb-4">Aiims May 2017   2017 05 07 - Results</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<p><strong>Correct:</strong> <span id="correct-count">0</span></p>
+<p><strong>Wrong:</strong> <span id="wrong-count">0</span></p>
+<p><strong>Unanswered:</strong> <span id="unanswered-count">0</span></p>
+<p><strong>Marked for Review:</strong> <span id="marked-count">0</span></p>
+</div>
+<h3 class="text-lg font-semibold mb-4" id="result-question-number">Question <span>1</span> of 200</h3>
+<div class="space-y-6" id="results-content"></div>
+<div class="result-nav">
+<button aria-label="Previous question result" class="result-nav-btn" disabled="" id="prev-result">Previous</button>
+<button aria-label="Toggle results navigation panel" class="result-nav-btn" id="results-nav-toggle">Results Navigation</button>
+<button aria-label="Next question result" class="result-nav-btn" id="next-result">Next</button>
+</div>
+<div class="mt-6 flex space-x-4 button-group md:flex-row flex-col">
+<button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" id="take-again">Take Again</button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition" id="review-test">Review Test</button>
+</div>
+</div>
+</section>
+<!-- Exit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="exit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Leave Test?</h2>
+<p class="text-gray-700 mb-4">Your progress will be lost if you leave this page. Are you sure you want to exit?</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="continue-test">No, Continue</button>
+<button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" id="exit-test">Yes, Exit</button>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="submit-modal">
+<div class="bg-white rounded-lg p-6 max-w-sm w-full">
+<h2 class="text-xl font-semibold mb-4">Confirm Submission</h2>
+<p class="text-gray-700 mb-2">You have attempted <span id="attempted-count">0</span> of 200 questions.</p>
+<p class="text-gray-700 mb-4"><span id="unattempted-count">0</span> questions are unattempted.</p>
+<div class="flex justify-end space-x-4">
+<button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition" id="cancel-submit">Cancel</button>
+<button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" id="confirm-submit">Submit Test</button>
+</div>
+</div>
+</div>
+<!-- Quiz Navigation Panel -->
+<div class="fixed inset-y-0 right-0 nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="nav-panel">
+<h2 class="text-lg font-semibold mb-4">Questions Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-nav">Close</button>
+</div>
+<!-- Results Navigation Panel -->
+<div class="fixed inset-y-0 right-0 results-nav-panel bg-white shadow-lg p-4 hidden overflow-y-auto" id="results-nav-panel">
+<h2 class="text-lg font-semibold mb-4">Results Navigation</h2>
+<div class="mb-4">
+<select class="w-full p-2 border rounded-lg text-gray-700" id="results-nav-filter">
+<option value="all">All Questions</option>
+<option value="answered">Answered</option>
+<option value="unanswered">Unanswered</option>
+<option value="marked">Marked for Review</option>
+</select>
+</div>
+<div class="grid grid-cols-5 gap-2 md:gap-3" id="results-nav-grid"></div>
+<button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition w-full" id="close-results-nav">Close</button>
+</div>
+<!-- JavaScript Logic -->
+<script>
+        // Enable debug mode for detailed logging
+        const DEBUG_MODE = true;
+
+        // Log debug messages
+        function debugLog(message) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`);
+            }
+        }
+
+        // Initialize questions with error handling
+        let questions = [];
+        let currentResultQuestion = 0; // State for current question in results
+        try {
+            debugLog("Attempting to parse questions_json");
+            questions = [{"text": "The structure passing through the central tendon of the diaphragm is: ( AIIMS May 2017)", "options": [{"label": "A", "text": "Oesophagus", "correct": false}, {"label": "B", "text": "Aorta", "correct": false}, {"label": "C", "text": "Inferior vena cava", "correct": true}, {"label": "D", "text": "Sympathetic Chain", "correct": false}], "correct_answer": "C. Inferior vena cava", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/03/25/inicet-anat-2017-11.jpg"], "explanation": "<p><strong>Ans. C. Inferior vena cava</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• The inferior vena cava is a major vein that returns deoxygenated blood from the lower half of the body to the right atrium of the heart. The IVC passes through the diaphragm via the caval opening, which is situated to the right of the central tendon. This opening allows the IVC to move between the thoracic and abdominal cavities.</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option A. Oesophagus: The esophagus passes through an opening in the diaphragm called the esophageal hiatus, which is located just to the left of the central tendon. This allows the esophagus to traverse from the thoracic cavity to the abdominal cavity.</li><li>• Option A. Oesophagus:</li><li>• Option B . Aorta : The descending (thoracic) aorta carries oxygenated blood from the heart to the lower parts of the body. It passes through the diaphragm via the aortic hiatus, which is posterior to the central tendon. The aorta then continues its descent into the abdominal cavity.</li><li>• Option B</li><li>• Aorta</li><li>• Option D . Sympathetic Chain : The sympathetic chain, also known as the sympathetic trunk or sympathetic ganglia, consists of a series of ganglia connected by nerve fibers. It runs vertically along each side of the vertebral column and is not directly associated with the diaphragm or its central tendon.</li><li>• Option D</li><li>• Sympathetic Chain</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The diaphragm has three anatomic openings: the aortic hiatus (T12), the esophageal hiatus (T10), and the caval foramen (T8)</li><li>➤ The diaphragm has three anatomic openings:</li><li>➤ The inferior vena cava passes through the central tendon of the diaphragm from the caval foramen. Esophagus passes through the esophageal hiatus. Aorta passes through the aortic hiatus.</li><li>➤ The inferior vena cava passes through the central tendon of the diaphragm from the caval foramen.</li><li>➤ Esophagus passes through the esophageal hiatus.</li><li>➤ Aorta passes through the aortic hiatus.</li><li>➤ Sympathetic chain passes through the minor apertures crossing the crura of the diaphragm.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The physician noticed the following finding in a patient that came to the OPD for an eye exam. What is the most likely diagnosis?", "options": [{"label": "A", "text": "Entropion of right eye", "correct": false}, {"label": "B", "text": "﻿﻿﻿Lagophthalmos of right eye", "correct": false}, {"label": "C", "text": "﻿﻿﻿Ptosis of right eye", "correct": true}, {"label": "D", "text": "﻿﻿﻿Exophthalmos of left eye", "correct": false}], "correct_answer": "C. ﻿﻿﻿Ptosis of right eye", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/29/picture1_ZFZHZMG.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/07/04/screenshot-2024-07-04-131205.png"], "explanation": "<p><strong>Ans. C)</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Ptosis, particularly of the type seen in this patient, is typically caused by a dysfunction or disconnection of the levator muscle or its aponeurosis, either congenital or acquired.</li><li>➤ Types:</li><li>➤ Types:</li><li>➤ Note: Pseudoptosis is apparent but not true drooping of the eyelid. Causes include lack of support of the lids by the globe (orbital volume deficit like an artificial eye, microphthalmos, or enophthalmos), contralateral lid retraction, ipsilateral hypotropia, brow ptosis, or dermatochalasis.</li><li>➤ Note:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Under which of the following, Rhinosporidium seeberi is classified?", "options": [{"label": "A", "text": "Fungus", "correct": false}, {"label": "B", "text": "Virus", "correct": false}, {"label": "C", "text": "Aquatic Protistan protozoa", "correct": true}, {"label": "D", "text": "Bacteria", "correct": false}], "correct_answer": "C. Aquatic Protistan protozoa", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. C) Aquatic Protistan protozoa</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Rhinosporidium seeberi, responsible for rhinosporidiosis, is classified as an aquatic Protistan protozoa, not a fungus, highlighting the importance of accurate organism classification in understanding transmission and management of infections.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Black foot is seen in which poisoning: ( AIIMS Nov 2017)", "options": [{"label": "A", "text": "Arsenic", "correct": true}, {"label": "B", "text": "Lead", "correct": false}, {"label": "C", "text": "Mercury", "correct": false}, {"label": "D", "text": "Phosphorus", "correct": false}], "correct_answer": "A. Arsenic", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/11/18/picture133334.jpg"], "explanation": "<p><strong>Ans. A. Arsenic</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Arsenic, cadmium, lead and mercury are the heavy metals which can cause peripheral vascular disease due to chronic poisoning. This leads to general clinical features of peripheral vascular disease (numbness in feet, rest pain etc.). Blackfoot disease is a unique term given to peripheral vascular disease produced by chronic Arsenic poisoning. The name \"Blackfoot\" refers to the characteristic darkening and gangrene of the feet and lower legs. This ultimately leads to amputation. In peripheral vascular disease caused by other heavy metals, gangrene is not a common manifestation</li><li>➤ Arsenic, cadmium, lead and mercury are the heavy metals which can cause peripheral vascular disease due to chronic poisoning. This leads to general clinical features of peripheral vascular disease (numbness in feet, rest pain etc.).</li><li>➤ Blackfoot disease is a unique term given to peripheral vascular disease produced by chronic Arsenic poisoning. The name \"Blackfoot\" refers to the characteristic darkening and gangrene of the feet and lower legs. This ultimately leads to amputation.</li><li>➤ In peripheral vascular disease caused by other heavy metals, gangrene is not a common manifestation</li><li>➤ Above picture shows Blackfoot disease:</li><li>➤ Above picture shows Blackfoot disease:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Dr. Mehta, Public health expert who works extensively with the National Leprosy Eradication Programme (NLEP) in India. In a meeting with local health workers in 2017, he has shared the data and progress made in controlling leprosy. He mentions the crucial statistic of the Annual New Case Detection Rate (ANCDR) as of March 31, 2016, to give a snapshot of the magnitude of new leprosy cases detected. This rate helps in understanding the effectiveness of ongoing programs and strategies. What value did Dr. Mehta share as the ANCDR for leprosy for that specific year? (AIIMS MAY 2017)", "options": [{"label": "A", "text": "0.66/10,000 population", "correct": false}, {"label": "B", "text": "0.66/1 lakh population", "correct": false}, {"label": "C", "text": "9.7/10,000 population", "correct": false}, {"label": "D", "text": "9.7/1 lakh population", "correct": true}], "correct_answer": "D. 9.7/1 lakh population", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) 9.7/1 lakh population</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ The ANCDR is a pivotal indicator in disease surveillance and control programs, helping public health officials and stakeholders understand the scale of new cases and the impact of interventions. For leprosy in India, maintaining a keen understanding of this rate is essential for achieving the goals of the National Leprosy Eradication Programme.</li><li>➤ The ANCDR is a pivotal indicator in disease surveillance and control programs, helping public health officials and stakeholders understand the scale of new cases and the impact of interventions.</li><li>➤ For leprosy in India, maintaining a keen understanding of this rate is essential for achieving the goals of the National Leprosy Eradication Programme.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "All are components of CURB65 except? (AIIMS MAY 2017)", "options": [{"label": "A", "text": "Confused state", "correct": false}, {"label": "B", "text": "Respiratory rate >30/min", "correct": false}, {"label": "C", "text": "Blood urea nitrogen greater than 7mmol/L", "correct": false}, {"label": "D", "text": "Systolic blood pressure less than 100 mm Hg", "correct": true}], "correct_answer": "D. Systolic blood pressure less than 100 mm Hg", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/10/20/picture29.jpg"], "explanation": "<p><strong>Ans. D) Systolic blood pressure less than 10mm Hg</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ CURB-65 scoring system is used to evaluate pneumonia severity, which does not include systolic blood pressure less than 100 mm Hg but instead sets the threshold at ≤90 mm Hg systolic or ≤60 mm Hg diastolic.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A patient presents with unilateral ptosis with hypotropia in the same eye. He was given an IV injection, following which the symptoms go away. Which of the following is the most likely diagnosis? ( AIIMS May 2017)", "options": [{"label": "A", "text": "Myasthenia gravis", "correct": true}, {"label": "B", "text": "6th nerve palsy", "correct": false}, {"label": "C", "text": "3rd nerve palsy", "correct": false}, {"label": "D", "text": "Horner syndrome", "correct": false}], "correct_answer": "A. Myasthenia gravis", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. A) Myasthenia gravis</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Myasthenia gravis</li><li>➤ Myasthenia gravis</li><li>➤ A disease characterized by generalized muscle weakness and rapidly developing fatigue of the muscles due to autoimmune damage of the acetylcholine receptors that take place at the post-synaptic membrane. The symptoms fluctuate and, after a short rest, recovery follows rapidly in the early stages. Ptosis and failure of convergence are early and prominent features. A remarkable temporary improvement in the action of the muscles is obtained by injections of Prostigmine or edrophonium intravenously which lead to acetylcholine accumulation. The resultant increase in acetylcholine available at the receptor sites leads to an improvement in the muscular function, confirming the diagnosis.</li><li>➤ A disease characterized by generalized muscle weakness and rapidly developing fatigue of the muscles due to autoimmune damage of the acetylcholine receptors that take place at the post-synaptic membrane.</li><li>➤ The symptoms fluctuate and, after a short rest, recovery follows rapidly in the early stages.</li><li>➤ Ptosis and failure of convergence are early and prominent features.</li><li>➤ A remarkable temporary improvement in the action of the muscles is obtained by injections of Prostigmine or edrophonium intravenously which lead to acetylcholine accumulation.</li><li>➤ The resultant increase in acetylcholine available at the receptor sites leads to an improvement in the muscular function, confirming the diagnosis.</li><li>➤ Note:</li><li>➤ Note:</li><li>➤ The single most sensitive test for Myasthenia Gravis - Single fiber Electromyography</li><li>➤ The single most specific test for Myasthenia Gravis - AChR antibodies</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "What is the most likely diagnosis according to the given image? (AIIMS MAY 2017)", "options": [{"label": "A", "text": "Carotid-cavernous fistula", "correct": false}, {"label": "B", "text": "Pseudoaneurysm of internal carotid artery", "correct": true}, {"label": "C", "text": "Tumor blush of angiofibroma", "correct": false}, {"label": "D", "text": "Extensive head and neck hemangioma", "correct": false}], "correct_answer": "B. Pseudoaneurysm of internal carotid artery", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/03/26/untitled-122.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/03/26/untitled-123.jpg"], "explanation": "<p><strong>Ans. B. Pseudoaneurysm of internal carotid artery</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• The given image shows a digital subtraction angiography of ICA and it shows an outpouching of the contrast suggestive of a pseudoaneurysm of the internal carotid artery as marked by the arrow.</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option A . C arotid-cavernous fistula (CCF) is the result of an abnormal vascular connection between the internal carotid artery (ICA) and the cavernous sinus . Pulsatile proptosis of eye would be the pathognomic clinical finding. DSA would reveal enlarged draining superior ophthalmic vein.</li><li>• Option A</li><li>• C</li><li>• arotid-cavernous fistula (CCF)</li><li>• Option C. Tumor blush of angiofibroma would show feeder vessels from internal maxillary artery of ECA.</li><li>• Option</li><li>• C. Tumor blush of angiofibroma</li><li>• Option D. Extensive head and neck hemangioma would show multiple tortuous vessels supplying a mass which is not seen here.</li><li>• Option D. Extensive head and neck hemangioma</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ A pseudoaneurysm of the internal carotid artery is characterized by an outpouching of contrast material in angiographic studies, as seen in the provided DSA image. This finding is distinct from other vascular abnormalities such as carotid-cavernous fistulas, angiofibromas, or hemangiomas.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A couple with 2 children who are not able to conceive for over an year now present to the OPD. The male partner is diagnosed to be having hypogonadotrophic hypogonadism. Which of the following is not true? (INICET MAY 2017)", "options": [{"label": "A", "text": "Low LH and FSH", "correct": false}, {"label": "B", "text": "Low testosterone", "correct": false}, {"label": "C", "text": "Oligospermia", "correct": false}, {"label": "D", "text": "Low prolactin levels", "correct": true}], "correct_answer": "D. Low prolactin levels", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. D) Low prolactin levels</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Hypogonadotropic hypogonadism in males is characterized by a deficiency of gonadotropins (LH and FSH), which leads to low testosterone levels and impaired spermatogenesis. This condition often results in oligospermia or azoospermia, contributing to infertility. Additionally, hypogonadotropic hypogonadism is frequently associated with hyperprolactinemia rather than low prolactin levels.</li><li>• Low LH and FSH: Hypogonadotropic hypogonadism is marked by low levels of luteinizing hormone (LH) and follicle-stimulating hormone (FSH) due to inadequate secretion from the pituitary gland. Low testosterone: The low levels of LH lead to reduced stimulation of Leydig cells in the testes, resulting in low testosterone levels. Oligospermia: The low levels of FSH result in impaired spermatogenesis, often leading to oligospermia or azoospermia. Low prolactin levels (Incorrect): Hypogonadotropic hypogonadism is associated with hyperprolactinemia, not low prolactin levels. Elevated prolactin can inhibit the secretion of gonadotropins, further exacerbating the condition.</li><li>• Low LH and FSH: Hypogonadotropic hypogonadism is marked by low levels of luteinizing hormone (LH) and follicle-stimulating hormone (FSH) due to inadequate secretion from the pituitary gland.</li><li>• Low LH and FSH:</li><li>• Low testosterone: The low levels of LH lead to reduced stimulation of Leydig cells in the testes, resulting in low testosterone levels.</li><li>• Low testosterone:</li><li>• Oligospermia: The low levels of FSH result in impaired spermatogenesis, often leading to oligospermia or azoospermia.</li><li>• Oligospermia:</li><li>• Low prolactin levels (Incorrect): Hypogonadotropic hypogonadism is associated with hyperprolactinemia, not low prolactin levels. Elevated prolactin can inhibit the secretion of gonadotropins, further exacerbating the condition.</li><li>• Low prolactin levels (Incorrect):</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option A. Low LH and FSH: True. Gonadotropin deficiency is a hallmark of hypogonadotropic hypogonadism.</li><li>• Option A. Low LH and FSH:</li><li>• Option B. Low testosterone: True. The deficiency in LH leads to low testosterone production.</li><li>• Option B. Low testosterone:</li><li>• Option C. Oligospermia: True. The deficiency in FSH leads to impaired spermatogenesis, causing oligospermia or azoospermia.</li><li>• Option C. Oligospermia:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ A male with hypogonadotropic hypogonadism will have high prolactin levels, low gonadotropins (LH and FSH), low testosterone, and often oligospermia or azoospermia.</li><li>➤ Ref: Page no 199, DC Dutta’s Textbook of Gynecology 8 th edition</li><li>➤ Ref: Page no 199, DC Dutta’s Textbook of Gynecology 8 th edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 40-year-old smoker who is a known case of hypertension was on enalapril and hydrochlorothiazide. He had an episode of hemoptysis and on evaluation, he was found to have bronchogenic carcinoma with brain metastasis. His lab values were Na-124mg/dL, creatinine - 2.8mg%, blood sugar 112mg/dL, blood urea - 24mg/dL, serum osmolality 255mosm, urine osmolality - 110 mosm, 24-hour urinary sodium - 110 and BP - 150/90 mmHg. Which of the following is the most probable diagnosis of the low sodium values in him? (AIIMS MAY 2018)", "options": [{"label": "A", "text": "SIADH", "correct": true}, {"label": "B", "text": "Diuretic induced hyponatremia", "correct": false}, {"label": "C", "text": "Cerebral salt wasting syndrome", "correct": false}, {"label": "D", "text": "Pseudohyponatremia", "correct": false}], "correct_answer": "A. SIADH", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/10/20/picture31.jpg"], "explanation": "<p><strong>Ans. A) SIADH</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ SIADH can be associated with malignancies like lung cancer, presenting with hyponatremia, low serum osmolality, and inappropriately concentrated urine despite the presence of low plasma osmolality. This clinical scenario should prompt consideration of SIADH, particularly in patients with known malignancies and typical lab findings.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 30-year-old woman presented with painful blisters on the skin and oral mucosa. Direct immunofluorescence is given below. Which of the following is false regarding the same? (AIIMS MAY 2017)", "options": [{"label": "A", "text": "Antibodies against desmoglein 3", "correct": false}, {"label": "B", "text": "Antibodies against desmoglein 1", "correct": false}, {"label": "C", "text": "Suprabasal acantholytic blister is a characteristic feature", "correct": false}, {"label": "D", "text": "Antibodies against hemidesmosomes", "correct": true}], "correct_answer": "D. Antibodies against hemidesmosomes", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/13/30.jpg"], "explanation_images": [], "explanation": "<p><strong>Ans. D) Antibiotics against hemidesmosomes</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Pemphigus vulgaris is characterized by autoantibodies against desmosomal proteins (desmoglein 1 and 3), leading to a suprabasal acantholytic blister and a diagnostic fish-net appearance on direct immunofluorescence.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 14-year-old patient presents with bilateral proptosis. The biopsy from the region shows this pattern. What is the likely diagnosis? (AIIMS MAY 2017)", "options": [{"label": "A", "text": "Leiomyoma", "correct": false}, {"label": "B", "text": "Schwannoma", "correct": true}, {"label": "C", "text": "Rhabdomyosarcoma", "correct": false}, {"label": "D", "text": "Fibromatosis", "correct": false}], "correct_answer": "B. Schwannoma", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/13/33.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/13/34.jpg", "https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/04/13/35.jpg"], "explanation": "<p><strong>Ans. B) Schwannoma</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Schwannomas are benign nerve sheath tumors with distinct Antoni A and B growth patterns, including Verocay bodies. These features, along with the clinical presentation, are key to the diagnosis.</li><li>➤ Ref: Robbins and Cotran Pathologic basis of disease, 8th edition, Page no - 2595</li><li>➤ Ref: Robbins and Cotran Pathologic basis of disease, 8th edition, Page no - 2595</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the organism given in the image below? (INICET MAY 2017)", "options": [{"label": "A", "text": "Balantidium coli", "correct": true}, {"label": "B", "text": "Entamoeba dispar", "correct": false}, {"label": "C", "text": "Cryptosporidium", "correct": false}, {"label": "D", "text": "Giardia", "correct": false}], "correct_answer": "A. Balantidium coli", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/03/30/untitled-283.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/09/22/untitled-177.jpg"], "explanation": "<p><strong>Ans. A) Balantidium coli</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Balantidium coli is characterized by its oval shape, presence of cilia, and distinct anterior and posterior ends in the trophozoite form. The trophozoite stage contains two nuclei and is motile, while the cyst stage is smaller and round, aiding in transmission and infection.</li><li>➤ Balantidium coli is characterized by its oval shape, presence of cilia, and distinct anterior and posterior ends in the trophozoite form. The trophozoite stage contains two nuclei and is motile, while the cyst stage is smaller and round, aiding in transmission and infection.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "A 62-year-old female with history of ovarian carcinoma in the mother achieved menopause with smooth transition. She is on hormone replacement therapy. She developed abdominal pain. On examination, a right adnexal mass was palpable and non-tender. On ultrasound, a 3 X 3 cm smooth cyst in her ovary was noted. What is the next best step? (INICET MAY 2017)", "options": [{"label": "A", "text": "Reassure and advice regular follow up once in 6 months", "correct": false}, {"label": "B", "text": "Confirm USG findings by ordering CT scan", "correct": false}, {"label": "C", "text": "Do an exploratory laparoscopy to visualize the nature of cyst", "correct": false}, {"label": "D", "text": "Do CA-125 levels, if normal advise regular check up", "correct": true}], "correct_answer": "D. Do CA-125 levels, if normal advise regular check up", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/11/18/screenshot-2023-11-18-104932.jpg"], "explanation": "<p><strong>Ans. D) Do CA-125 levels, if normal advise regular check up</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• The next best step in managing a postmenopausal woman with a small (3 x 3 cm) smooth ovarian cyst is to measure CA-125 levels. CA-125 is a tumor marker used to assess the risk of ovarian cancer, especially in postmenopausal women. Given the benign characteristics of the cyst on ultrasound and the small size, the initial step is to evaluate CA-125 levels:</li><li>• CA-125 Levels: If the CA-125 levels are normal (less than 35), the patient can be advised to have regular follow-ups. Regular Follow-ups: If CA-125 levels are normal, a transvaginal ultrasound (TVS) should be repeated in 6-12 weeks to monitor the cyst. If the cyst persists but remains benign, yearly TVS is recommended.</li><li>• CA-125 Levels: If the CA-125 levels are normal (less than 35), the patient can be advised to have regular follow-ups.</li><li>• CA-125 Levels:</li><li>• Regular Follow-ups: If CA-125 levels are normal, a transvaginal ultrasound (TVS) should be repeated in 6-12 weeks to monitor the cyst. If the cyst persists but remains benign, yearly TVS is recommended.</li><li>• Regular Follow-ups:</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option A. Reassure and advise regular follow-up once in 6 months: While reassurance is part of the management, initial evaluation with CA-125 is necessary to rule out malignancy before deciding on the follow-up schedule.</li><li>• Option A. Reassure and advise regular follow-up once in 6 months:</li><li>• Option B. Confirm USG findings by ordering a CT scan: A CT scan is not the first-line investigation for a simple cyst with benign features. Initial evaluation with CA-125 is more appropriate.</li><li>• Option B. Confirm USG findings by ordering a CT scan:</li><li>• Option C. Do an exploratory laparoscopy to visualize the nature of the cyst: This is invasive and not indicated for a small, benign-appearing cyst without other concerning features.</li><li>• Option C. Do an exploratory laparoscopy to visualize the nature of the cyst:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Simple cysts in the post-menopausal age grp:</li><li>➤ ≤ 1cm: Considered normal ≤ 5 cm: Ca125; if normal, repeat in 6-12 weeks > 6 cm: Surgical evaluation</li><li>➤ ≤ 1cm: Considered normal</li><li>➤ ≤ 5 cm: Ca125; if normal, repeat in 6-12 weeks</li><li>➤ > 6 cm: Surgical evaluation</li><li>➤ Ref: Page no 217, Williams Gynecology 3 rd edition</li><li>➤ Ref: Page no 217, Williams Gynecology 3 rd edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Nucleus pulposus is derived from? (AIIMS 2017)", "options": [{"label": "A", "text": "Mark b", "correct": true}, {"label": "B", "text": "Mark d", "correct": false}, {"label": "C", "text": "Mark a", "correct": false}, {"label": "D", "text": "Mark c", "correct": false}], "correct_answer": "A. Mark b", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/03/25/inicet-anat-2017-1.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/05/14/screenshot-2024-05-14-114543.png"], "explanation": "<p><strong>Ans. A. Mark b</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• The notochord is a rod-like structure that forms during embryonic development and serves as the foundation for the future vertebral column. The nucleus pulposus, the central gel-like core of the intervertebral disc, is derived from the notochord. The notochord initially provides structural support to the developing embryo and later contributes to the formation of the intervertebral discs.</li><li>• The notochord is a rod-like structure that forms during embryonic development and serves as the foundation for the future vertebral column.</li><li>• The nucleus pulposus, the central gel-like core of the intervertebral disc, is derived from the notochord. The notochord initially provides structural support to the developing embryo and later contributes to the formation of the intervertebral discs.</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option B. Mark d. Ectoderm:</li><li>• Option B. Mark d. Ectoderm:</li><li>• The ectoderm is another primary germ layer of the developing embryo and gives rise to structures such as the nervous system, skin, and epidermal tissues. The ectoderm does not contribute to the formation of the nucleus pulposus.</li><li>• The ectoderm is another primary germ layer of the developing embryo and gives rise to structures such as the nervous system, skin, and epidermal tissues.</li><li>• The ectoderm does not contribute to the formation of the nucleus pulposus.</li><li>• Option C. Mark a. Intraembryonic Mesoderm:</li><li>• Option C. Mark a. Intraembryonic Mesoderm:</li><li>• The intraembryonic mesoderm is a layer of embryonic tissue that gives rise to various structures in the developing embryo, including muscles, bones, and connective tissues. While mesoderm does play a role in the development of the vertebral column and its associated structures, the nucleus pulposus specifically derives from the notochord.</li><li>• The intraembryonic mesoderm is a layer of embryonic tissue that gives rise to various structures in the developing embryo, including muscles, bones, and connective tissues.</li><li>• While mesoderm does play a role in the development of the vertebral column and its associated structures, the nucleus pulposus specifically derives from the notochord.</li><li>• Option D. Mark c. Endoderm:</li><li>• Option D. Mark c. Endoderm:</li><li>• The endoderm is one of the three primary germ layers of the developing embryo and gives rise to the epithelial linings of various organs, including the gastrointestinal tract, respiratory tract, and other internal organs. The endoderm is not directly involved in the formation of the nucleus pulposus.</li><li>• The endoderm is one of the three primary germ layers of the developing embryo and gives rise to the epithelial linings of various organs, including the gastrointestinal tract, respiratory tract, and other internal organs.</li><li>• The endoderm is not directly involved in the formation of the nucleus pulposus.</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Gastrulation (Embryonic development of the germ layers):</li><li>➤ Gastrulation (Embryonic development of the germ layers):</li><li>➤ Gastrulation is the early embryological process by which an embryo changes from a one-dimensional layer of epithelial cells (blastula) to a multilayered structure known as a gastrula. The notochord is a rod-like embryological structure that is derived during gastrulation and plays an important role in vertebrate development. The nucleus pulposus is the gelatinous centre of the intervertebral disc formed by the expansion of the notochord (by its remnants). As a result, it is derived from the notochord.</li><li>➤ Gastrulation is the early embryological process by which an embryo changes from a one-dimensional layer of epithelial cells (blastula) to a multilayered structure known as a gastrula.</li><li>➤ The notochord is a rod-like embryological structure that is derived during gastrulation and plays an important role in vertebrate development.</li><li>➤ The nucleus pulposus is the gelatinous centre of the intervertebral disc formed by the expansion of the notochord (by its remnants). As a result, it is derived from the notochord.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "The deepest part of perineal body injury, which causes cystocele, enterocoele and urethral descent is? (INICET MAY 2017)", "options": [{"label": "A", "text": "Pubococcygeus", "correct": true}, {"label": "B", "text": "Bulbospongiosus", "correct": false}, {"label": "C", "text": "ischiocavernosus", "correct": false}, {"label": "D", "text": "Superficial transverse perineal", "correct": false}], "correct_answer": "A. Pubococcygeus", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/11/18/screenshot-2023-11-18-174103.jpg"], "explanation": "<p><strong>Ans. A) Pubococcygeus</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation:</li><li>• Pubococcygeus is the deepest part of the levator ani muscle. Injury to it can cause enterocele, cystocele, and urethral descent. The levator ani muscles are the most important muscles in the pelvic floor and maintain a constant state of contraction. Weakening of this muscle decreases support for the vagina, bladder, uterus, or rectum or alter the position of the neck of the bladder and urethra.</li><li>• Pubococcygeus is the deepest part of the levator ani muscle.</li><li>• Injury to it can cause enterocele, cystocele, and urethral descent.</li><li>• The levator ani muscles are the most important muscles in the pelvic floor and maintain a constant state of contraction.</li><li>• Weakening of this muscle decreases support for the vagina, bladder, uterus, or rectum or alter the position of the neck of the bladder and urethra.</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option B. Bulbospongiosus, Option C. ischiocavernosus and Option D. superficial transverse perineal are all superficial muscles and their damage does not result in uterovaginal descent</li><li>• Option B. Bulbospongiosus, Option C. ischiocavernosus</li><li>• Option D. superficial transverse perineal</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Supports of the vagal have been described by Delancey as shown below and defects in these lead to different levels of uterovaginal prolapse Defect in Level 1 support: Vaginal apical prolapse and uterine prolapse Defect in level 2 support: Cystocele and Rectocele Defect in level 3 support: urethrocele and deficient perineal body</li><li>➤ Supports of the vagal have been described by Delancey as shown below and defects in these lead to different levels of uterovaginal prolapse Defect in Level 1 support: Vaginal apical prolapse and uterine prolapse Defect in level 2 support: Cystocele and Rectocele Defect in level 3 support: urethrocele and deficient perineal body</li><li>➤ Defect in Level 1 support: Vaginal apical prolapse and uterine prolapse Defect in level 2 support: Cystocele and Rectocele Defect in level 3 support: urethrocele and deficient perineal body</li><li>➤ Defect in Level 1 support: Vaginal apical prolapse and uterine prolapse</li><li>➤ Defect in level 2 support: Cystocele and Rectocele</li><li>➤ Defect in level 3 support: urethrocele and deficient perineal body</li><li>➤ Ref: Page no 544, Williams Gynecology 3 rd edition</li><li>➤ Ref: Page no 544, Williams Gynecology 3 rd edition</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "In a surgery, the orthopedic surgeon asks you for bone holding forceps. Correctly identify bone holding forceps among the instruments in the tray as shown below.(AIIMS MAY 2017)", "options": [{"label": "A", "text": "1", "correct": false}, {"label": "B", "text": "2", "correct": false}, {"label": "C", "text": "3", "correct": false}, {"label": "D", "text": "4", "correct": true}], "correct_answer": "D. 4", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/05/15/screenshot-2024-05-15-112808.JPG"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/08/17/whatsapp-image-2023-06-12-at-190121011010201026_page_68_page_83_AJMegAp.jpg"], "explanation": "<p><strong>Ans. D) 4</strong></p>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "During a medical ethics seminar, Dr. Sharma discussed a series of international declarations that guide medical professionals in upholding ethical principles in various scenarios. These declarations were born out of historical events and societal needs to ensure the welfare of patients and respect human rights. Can you match these declarations with their respective significance? (AIIMS MAY 2017)", "options": [{"label": "A", "text": "I - A, II - B, III - C, IV - D", "correct": false}, {"label": "B", "text": "I - C, II - D, III - A, IV - B", "correct": true}, {"label": "C", "text": "I - D, II - C, III - A, IV - B", "correct": false}, {"label": "D", "text": "I - B, II - A, III - D, IV - C", "correct": false}], "correct_answer": "B. I - C, II - D, III - A, IV - B", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/09/20/screenshot-2024-09-20-115842.png"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/09/20/screenshot-2024-09-20-120210.png"], "explanation": "<p><strong>Ans. B) I - C, II - D, III - A, IV - B</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following amino acids is not formed after post-translational modification? ( AIIMS May 2017)", "options": [{"label": "A", "text": "Selenocysteine", "correct": true}, {"label": "B", "text": "Triiodothyronine", "correct": false}, {"label": "C", "text": "Hydroxy proline", "correct": false}, {"label": "D", "text": "Hydroxylysine", "correct": false}], "correct_answer": "A. Selenocysteine", "question_images": [], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2024/06/05/screenshot-2024-06-05-180619.jpg"], "explanation": "<p><strong>Ans. A) Selenocysteine</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the following milestones would you generally expect a 3-year-old child to display? (AIIMS MAY 2017)", "options": [{"label": "A", "text": "Hopping on one foot", "correct": false}, {"label": "B", "text": "Spoon handling", "correct": true}, {"label": "C", "text": "Copying a triangle", "correct": false}, {"label": "D", "text": "Repeats sentence of 10 syllables", "correct": false}], "correct_answer": "B. Spoon handling", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B) Spoon handling</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ By the age of 3 years, a child is typically expected to handle a spoon and feed themselves, while more complex motor and language skills develop later.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Which of the marked foramen does the mandibular division of the trigeminal nerve pass through? ( AIIMS May 2017)", "options": [{"label": "A", "text": "10", "correct": false}, {"label": "B", "text": "5", "correct": false}, {"label": "C", "text": "6", "correct": false}, {"label": "D", "text": "4", "correct": true}], "correct_answer": "D. 4", "question_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/11/08/picture4.jpg"], "explanation_images": ["https://cerebellum-web-static.s3.amazonaws.com/media/public/images/2023/11/08/picture5.jpg"], "explanation": "<p><strong>Ans. D. 4</strong></p>\n<p><strong>Explanation:</strong></p><ul><li>• Explanation</li><li>• The mandibular division of the trigeminal nerve passes through the foramen ovale which is marked as 4 in the above image.</li><li>• The foramen ovale is also located in the greater wing of the sphenoid bone.</li><li>• The structure that passes through the foramen ovale is the mandibular nerve (the third division of the trigeminal nerve, Cranial Nerve V3). It carries sensory information from the face and provides motor innervation to the muscles of mastication.</li><li>• Other Options:</li><li>• Other Options:</li><li>• Option A. Foramen Spinosum:</li><li>• Option A. Foramen Spinosum:</li><li>• The foramen spinosum is a small foramen located in the greater wing of the sphenoid bone, near the foramen ovale. The structure that passes through the foramen spinosum is the middle meningeal artery. This artery supplies blood to the meninges, the protective layers surrounding the brain and spinal cord.</li><li>• The foramen spinosum is a small foramen located in the greater wing of the sphenoid bone, near the foramen ovale.</li><li>• The structure that passes through the foramen spinosum is the middle meningeal artery. This artery supplies blood to the meninges, the protective layers surrounding the brain and spinal cord.</li><li>• Option B. Internal Acoustic Meatus:</li><li>• Option B. Internal Acoustic Meatus:</li><li>• The internal acoustic meatus is located in the petrous part of the temporal bone. Several important structures pass through this foramen: Facial nerve (Cranial Nerve VII): It carries motor and sensory fibers related to the muscles of facial expression and taste sensations from the anterior two-thirds of the tongue. V estibulocochlear nerve (Cranial Nerve VIII) : It carries sensory information related to hearing and balance.</li><li>• The internal acoustic meatus is located in the petrous part of the temporal bone.</li><li>• Several important structures pass through this foramen: Facial nerve (Cranial Nerve VII): It carries motor and sensory fibers related to the muscles of facial expression and taste sensations from the anterior two-thirds of the tongue. V estibulocochlear nerve (Cranial Nerve VIII) : It carries sensory information related to hearing and balance.</li><li>• Facial nerve (Cranial Nerve VII): It carries motor and sensory fibers related to the muscles of facial expression and taste sensations from the anterior two-thirds of the tongue. V estibulocochlear nerve (Cranial Nerve VIII) : It carries sensory information related to hearing and balance.</li><li>• Facial nerve (Cranial Nerve VII): It carries motor and sensory fibers related to the muscles of facial expression and taste sensations from the anterior two-thirds of the tongue.</li><li>• Facial nerve (Cranial Nerve VII):</li><li>• V estibulocochlear nerve (Cranial Nerve VIII) : It carries sensory information related to hearing and balance.</li><li>• estibulocochlear nerve (Cranial Nerve VIII)</li><li>• Option C. Jugular Foramen:</li><li>• Option C. Jugular Foramen:</li><li>• The jugular foramen is located at the junction of the temporal and occipital bones, near the base of the skull. Several structures pass through the jugular foramen: Glossopharyngeal nerve (Cranial Nerve IX) : It carries motor and sensory fibers to the pharynx and taste sensations from the posterior one-third of the tongue. Vagus nerve (Cranial Nerve X): It carries motor and sensory fibers to various organs in the thorax and abdomen and plays a crucial role in autonomic functions. Accessory nerve (Cranial Nerve XI) : It supplies motor fibers to the sternocleidomastoid and trapezius muscles. Internal jugular vein: It is a major vein that drains blood from the brain and parts of the face.</li><li>• The jugular foramen is located at the junction of the temporal and occipital bones, near the base of the skull.</li><li>• Several structures pass through the jugular foramen: Glossopharyngeal nerve (Cranial Nerve IX) : It carries motor and sensory fibers to the pharynx and taste sensations from the posterior one-third of the tongue. Vagus nerve (Cranial Nerve X): It carries motor and sensory fibers to various organs in the thorax and abdomen and plays a crucial role in autonomic functions. Accessory nerve (Cranial Nerve XI) : It supplies motor fibers to the sternocleidomastoid and trapezius muscles. Internal jugular vein: It is a major vein that drains blood from the brain and parts of the face.</li><li>• Glossopharyngeal nerve (Cranial Nerve IX) : It carries motor and sensory fibers to the pharynx and taste sensations from the posterior one-third of the tongue. Vagus nerve (Cranial Nerve X): It carries motor and sensory fibers to various organs in the thorax and abdomen and plays a crucial role in autonomic functions. Accessory nerve (Cranial Nerve XI) : It supplies motor fibers to the sternocleidomastoid and trapezius muscles. Internal jugular vein: It is a major vein that drains blood from the brain and parts of the face.</li><li>• Glossopharyngeal nerve (Cranial Nerve IX) : It carries motor and sensory fibers to the pharynx and taste sensations from the posterior one-third of the tongue.</li><li>• Glossopharyngeal nerve (Cranial Nerve IX)</li><li>• Vagus nerve (Cranial Nerve X): It carries motor and sensory fibers to various organs in the thorax and abdomen and plays a crucial role in autonomic functions.</li><li>• Vagus nerve (Cranial Nerve X):</li><li>• Accessory nerve (Cranial Nerve XI) : It supplies motor fibers to the sternocleidomastoid and trapezius muscles.</li><li>• Accessory nerve (Cranial Nerve XI)</li><li>• Internal jugular vein: It is a major vein that drains blood from the brain and parts of the face.</li><li>• Internal jugular vein:</li></ul>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "An autopsy was performed to find the cause of death of a person brought dead to the casualty. It showed abrasions on the neck, fracture of the thyroid cartilage and contused tissues in the neck. The cause of death is? ( AIIMS May 2017)", "options": [{"label": "A", "text": "Hanging", "correct": false}, {"label": "B", "text": "Throttling", "correct": true}, {"label": "C", "text": "Strangulation", "correct": false}, {"label": "D", "text": "Mugging", "correct": false}], "correct_answer": "B. Throttling", "question_images": [], "explanation_images": [], "explanation": "<p><strong>Ans. B. Throttling</strong></p>\n<p><strong>Educational Objective:</strong></p><ul><li>➤ Educational Objective:</li><li>➤ Throttling involves manual strangulation by applying pressure to the neck, causing abrasions, contusions, and fractures in the neck structures.</li></ul>\n<p>@dams_new_robot</p>", "bot": "@dams_new_robot", "video": ""}, {"text": "Identify the blue line shown in the below picture:( AIIMS May 2017)", "options": [{"label": "A", "text": "Frankfurt line", "correct": false}, {"label": "B", "text": "Donaldson line", "correct": false}, {"label": "C", "text": "Line of Sebileau", "correct": false}, {"label": "D", "text": "Ohngren
