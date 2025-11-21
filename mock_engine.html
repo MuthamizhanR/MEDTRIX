@@ -109,7 +109,7 @@
         </div>
     </div>
 
-    <script>
+   <script>
         const WEIGHTAGE = {
             "Pathology": 0.13, "Obstetrics": 0.11, "Medicine": 0.10, "Surgery": 0.10,
             "Community": 0.09, "Pharmacology": 0.08, "Microbiology": 0.07, "Anatomy": 0.06,
@@ -123,7 +123,7 @@
         let userAnswers = {};
         let timerInterval;
 
-        // Helper to update loading text
+        // Helper to log loading status
         function log(msg) { document.getElementById('loading-log').innerText = msg; }
 
         async function initializeMock() {
@@ -131,25 +131,20 @@
             document.getElementById('loader').style.display = 'block';
 
             try {
-                // 1. GET LIST OF FILES
-                log("Fetching File Manifest...");
+                // 1. FETCH MANIFEST
+                log("Loading file index...");
                 const manifestRes = await fetch('quiz_manifest.json');
                 if(!manifestRes.ok) throw new Error("Run 'python3 generate_index.py' first!");
                 const fileList = await manifestRes.json();
 
-                // 2. SORT FILES INTO BUCKETS
-                log("Indexing 5000+ files...");
+                // 2. BUCKET FILES BY SUBJECT
                 let fileBuckets = {};
                 for(let key in WEIGHTAGE) fileBuckets[key] = [];
 
                 fileList.forEach(filename => {
-                    // Simple keyword matching in filename
                     for(let subject in WEIGHTAGE) {
-                        // Check if filename contains subject (case insensitive)
-                        // e.g. "272_Pathology..." contains "Pathology"
-                        // Mapping Logic: handle simple variations
                         let searchKey = subject;
-                        if(subject === "Obstetrics") searchKey = "Gynaec"; // Handle OBGYN
+                        if(subject === "Obstetrics") searchKey = "Gynaec";
                         if(subject === "Community") searchKey = "PSM";
                         
                         if(filename.toLowerCase().includes(searchKey.toLowerCase()) || 
@@ -160,7 +155,7 @@
                     }
                 });
 
-                // 3. FETCH QUESTIONS PER SUBJECT
+                // 3. FETCH QUESTIONS
                 let compiledQuestions = [];
                 const TotalQs = 200;
 
@@ -168,45 +163,35 @@
                     const countNeeded = Math.round(TotalQs * percent);
                     const availableFiles = fileBuckets[subject];
 
-                    log(`Fetching ${countNeeded} Qs for ${subject}...`);
+                    log(`Loading ${subject}...`);
 
-                    if (!availableFiles || availableFiles.length === 0) {
-                        console.warn(`No files found for ${subject}`);
-                        continue;
-                    }
+                    if (!availableFiles || availableFiles.length === 0) continue;
 
-                    // Shuffle files to get random sources
                     availableFiles.sort(() => 0.5 - Math.random());
-
+                    
                     let questionsForSubject = [];
                     let fileIndex = 0;
 
-                    // Keep fetching files until we have enough questions for this subject
                     while(questionsForSubject.length < countNeeded && fileIndex < availableFiles.length) {
                         try {
                             let fName = availableFiles[fileIndex];
                             let res = await fetch(`quiz_data/${fName}`);
                             let json = await res.json();
                             
-                            // Handle different JSON structures (Array vs Object)
-                            let qs = Array.isArray(json) ? json : (json.questions || []);
+                            // Handle nested structures
+                            let qs = Array.isArray(json) ? json : (json.questions || json.data || []);
                             
-                            // Tag them with subject
                             qs.forEach(q => q.subjectTag = subject);
-                            
                             questionsForSubject = questionsForSubject.concat(qs);
-                        } catch (e) { console.error("Error loading file", e); }
+                        } catch (e) { console.error("Error reading file:", e); }
                         fileIndex++;
                     }
-
-                    // Trim to exact needed amount and add to exam
                     compiledQuestions = compiledQuestions.concat(questionsForSubject.slice(0, countNeeded));
                 }
 
-                // 4. FINAL SHUFFLE
+                // 4. START
                 examQuestions = compiledQuestions.sort(() => 0.5 - Math.random()).slice(0, 200);
-                
-                if(examQuestions.length === 0) throw new Error("No questions loaded. Check quiz_data folder.");
+                if(examQuestions.length === 0) throw new Error("No questions found.");
 
                 startQuiz();
 
@@ -221,7 +206,6 @@
             document.getElementById('loader').style.display = 'none';
             document.getElementById('quiz-interface').style.display = 'block';
             
-            // Timer Logic (210 mins)
             let time = 210 * 60;
             timerInterval = setInterval(() => {
                 let h = Math.floor(time/3600);
@@ -235,30 +219,44 @@
             renderQuestion();
         }
 
+        // --- THE IMPORTANT FIXES ARE HERE ---
         function renderQuestion() {
             const q = examQuestions[currentQIndex];
+            console.log("Current Question Data:", q); // Check Console (F12) to see structure
+
+            // UI Updates
             document.getElementById('q-progress').innerText = `Q ${currentQIndex+1}/${examQuestions.length}`;
             document.getElementById('subject-badge').innerText = q.subjectTag || "General";
             
-            // Check data structure (some JSONs use 'question_text' or 'question')
-            const qText = q.question || q.question_text || "Question text missing";
-            document.getElementById('question-text').innerText = qText;
+            // FIX 1: Try all possible keys for Question Text
+            const qText = q.question || q.question_text || q.text || q.stem || q.statement || "Question text missing";
+            document.getElementById('question-text').innerHTML = qText; 
 
             const optsDiv = document.getElementById('options-container');
             optsDiv.innerHTML = '';
 
-            // Detect options structure (Array vs Object)
-            let options = q.options || [];
-            if(!Array.isArray(options)) {
-                // If options are object {"a": "...", "b": "..."}
-                options = Object.values(options);
+            // FIX 2: Handle various Options formats
+            let rawOptions = q.options || q.answers || [];
+            
+            // Convert Object {a: "...", b: "..."} to Array
+            if(!Array.isArray(rawOptions) && typeof rawOptions === 'object') {
+                rawOptions = Object.values(rawOptions);
             }
 
-            options.forEach((opt, idx) => {
+            rawOptions.forEach((opt, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
                 if(userAnswers[currentQIndex] === idx) btn.classList.add('selected');
-                btn.innerText = opt;
+                
+                // FIX 3: If option is [object Object], extract the text
+                let optText = opt;
+                if (typeof opt === 'object' && opt !== null) {
+                    // Try common keys for option text
+                    optText = opt.text || opt.value || opt.label || opt.option || opt.answer || JSON.stringify(opt);
+                }
+
+                btn.innerHTML = optText; // Use innerHTML to handle special chars
+                
                 btn.onclick = () => {
                     userAnswers[currentQIndex] = idx;
                     renderQuestion();
