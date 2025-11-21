@@ -1,26 +1,32 @@
-# THIS SCRIPT BUILDS THE "CINEMA MODE" PDF VIEWER
-# FEATURES: Full Width, Floating Zoom, Reliable Mobile Sidebar
+import os
+
+# THIS SCRIPT BUILDS THE OPTIMIZED "CINEMA MODE" PDF VIEWER
+# FEATURES: Retina Display Support, Mobile Bottom Bar, Auto-Resize, Dark Mode
 
 HTML_CONTENT = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MEDTRIX Reader</title>
+    <title>MEDTRIX Reader</title> 
     
+    <!-- PDF.js Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
     <style>
         /* --- VARIABLES --- */
         :root {
-            --bg-dark: #1a1a1a;
-            --bg-panel: #252525;
+            --bg-dark: #121212;
+            --bg-panel: #1e1e1e;
             --primary: #3b82f6;
             --text-light: #e5e5e5;
             --text-dim: #a3a3a3;
-            --border: #404040;
+            --border: #333333;
+            --shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
@@ -29,205 +35,267 @@ HTML_CONTENT = """<!DOCTYPE html>
             background-color: var(--bg-dark); 
             font-family: 'Inter', sans-serif; 
             height: 100vh; width: 100vw; 
-            overflow: hidden; /* Prevent body scroll, handle in container */
+            overflow: hidden; 
             display: flex; flex-direction: column;
         }
 
-        /* --- TOP BAR (Slim & Dark) --- */
+        /* --- TOP BAR --- */
         #toolbar {
-            height: 50px; 
+            height: 56px; 
             background: var(--bg-panel); 
             border-bottom: 1px solid var(--border);
             display: flex; align-items: center; justify-content: space-between; 
-            padding: 0 15px;
+            padding: 0 16px;
             flex-shrink: 0; z-index: 50;
         }
 
-        .title-group { display: flex; align-items: center; gap: 15px; overflow: hidden; }
+        .title-group { display: flex; align-items: center; gap: 12px; overflow: hidden; }
         
         #doc-title { 
-            color: var(--text-light); font-size: 0.9rem; font-weight: 600; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;
+            color: var(--text-light); font-size: 1rem; font-weight: 600; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60vw;
         }
 
         .btn {
             background: none; border: none; color: var(--text-light); 
-            font-size: 1.1rem; padding: 8px; cursor: pointer;
-            border-radius: 8px; transition: background 0.2s;
+            font-size: 1.2rem; padding: 8px; cursor: pointer;
+            border-radius: 8px; transition: background 0.2s; display: flex;
         }
         .btn:hover { background: rgba(255,255,255,0.1); }
 
         .exit-btn {
-            background: #ef4444; color: white; font-size: 0.8rem; 
-            padding: 6px 12px; text-decoration: none; border-radius: 4px; font-weight: 600;
+            background: #ef4444; color: white; font-size: 0.85rem; 
+            padding: 8px 16px; text-decoration: none; border-radius: 6px; font-weight: 600;
+            transition: opacity 0.2s;
         }
+        .exit-btn:hover { opacity: 0.9; }
 
-        /* --- SIDEBAR OVERLAY --- */
+        /* --- SIDEBAR --- */
         #sidebar {
-            position: absolute; top: 50px; left: 0; bottom: 0;
-            width: 280px; background: var(--bg-panel);
+            position: absolute; top: 56px; left: 0; bottom: 0;
+            width: 300px; background: var(--bg-panel);
             border-right: 1px solid var(--border);
             transform: translateX(-100%);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 1000; /* Always on top */
+            z-index: 1000; 
             display: flex; flex-direction: column;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+            box-shadow: var(--shadow);
         }
         
         #sidebar.open { transform: translateX(0); }
 
-        /* Overlay backdrop for mobile */
         #sidebar-overlay {
-            position: absolute; top: 50px; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 900;
-            display: none; backdrop-filter: blur(2px);
+            position: absolute; top: 56px; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 900;
+            display: none; backdrop-filter: blur(3px);
         }
         #sidebar-overlay.active { display: block; }
 
-        .sidebar-header { padding: 15px; font-weight: bold; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+        .sidebar-header { 
+            padding: 16px; font-weight: bold; color: var(--text-dim); 
+            border-bottom: 1px solid var(--border); letter-spacing: 0.5px;
+        }
         #toc-list { flex-grow: 1; overflow-y: auto; }
         
         .toc-item {
-            padding: 12px 15px; color: var(--text-light); border-bottom: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.9rem; cursor: pointer; display: flex; justify-content: space-between;
+            padding: 14px 16px; color: var(--text-light); 
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            font-size: 0.95rem; cursor: pointer; display: flex; justify-content: space-between;
         }
         .toc-item:hover { background: rgba(255,255,255,0.05); }
-        .toc-item.active { border-left: 4px solid var(--primary); background: rgba(59, 130, 246, 0.1); }
-        .page-num { opacity: 0.5; font-size: 0.8rem; }
+        .toc-item.active { border-left: 4px solid var(--primary); background: rgba(59, 130, 246, 0.15); }
+        .page-num { opacity: 0.6; font-size: 0.85rem; font-family: monospace; }
 
         /* --- PDF CONTAINER --- */
         #viewer-container {
             flex-grow: 1;
-            overflow: auto; /* This allows scrolling */
-            background: #121212; /* Dark background for contrast */
+            overflow: auto; 
+            background: #000; /* True black for cinema feel */
             display: flex; 
-            justify-content: center; /* Center Horizontally */
-            padding: 0; /* REMOVED PADDING to fix useless space */
+            justify-content: center;
+            align-items: flex-start; /* Align top to allow scrolling down */
+            padding: 20px;
             position: relative;
         }
 
         canvas {
             display: block;
-            margin: 0 auto; /* Center */
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            /* CRITICAL: Allow canvas to scale naturally */
-            max-width: none; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            max-width: none; /* Allow scaling */
         }
 
-        /* --- FLOATING CONTROLS (Bottom Right) --- */
-        .floating-controls {
-            position: absolute; bottom: 20px; right: 20px;
-            display: flex; flex-direction: column; gap: 10px;
+        /* --- CONTROLS --- */
+        /* Default (Desktop) Floating */
+        .controls-container {
+            position: absolute; bottom: 30px; right: 30px;
+            display: flex; flex-direction: column; gap: 12px;
             z-index: 800;
         }
-        
+
         .fab {
-            width: 50px; height: 50px; border-radius: 50%;
-            background: var(--primary); color: white;
-            border: none; font-size: 1.2rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            width: 48px; height: 48px; border-radius: 50%;
+            background: #333; color: white;
+            border: 1px solid #555; font-size: 1rem;
+            box-shadow: var(--shadow);
             cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: transform 0.1s, background 0.2s;
         }
+        .fab:hover { background: #444; border-color: #777; }
         .fab:active { transform: scale(0.95); }
-        
-        .page-indicator {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.7); color: white;
-            padding: 6px 16px; border-radius: 20px; font-size: 0.85rem;
-            z-index: 800; pointer-events: none;
+        .fab.primary { background: var(--primary); border: none; }
+        .fab.primary:hover { background: #2563eb; }
+
+        .page-pill {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(30,30,30,0.9); color: white; border: 1px solid #444;
+            padding: 8px 20px; border-radius: 99px; font-size: 0.9rem; font-weight: 600;
+            z-index: 800; box-shadow: var(--shadow); pointer-events: none;
         }
 
-        /* --- CUTE CAT LOADER --- */
+        /* --- MOBILE OPTIMIZATIONS --- */
+        @media (max-width: 768px) {
+            #viewer-container { padding: 10px 0; align-items: center; }
+            
+            /* Move controls to a bottom bar on mobile */
+            .controls-container {
+                position: fixed; bottom: 0; left: 0; right: 0;
+                background: var(--bg-panel);
+                flex-direction: row; justify-content: space-evenly; align-items: center;
+                padding: 10px; border-top: 1px solid var(--border);
+                gap: 0;
+            }
+
+            .fab {
+                width: 40px; height: 40px; 
+                background: transparent; border: none; box-shadow: none;
+                font-size: 1.2rem;
+            }
+            .fab.primary { background: transparent; color: var(--primary); }
+            
+            /* Move page indicator up slightly on mobile so it doesn't overlap toolbar */
+            .page-pill { bottom: 70px; font-size: 0.8rem; padding: 6px 12px; }
+        }
+
+        /* --- LOADING ANIMATION --- */
         #loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white; }
-        .cat-icon { font-size: 3rem; color: var(--primary); animation: bounce 0.6s infinite alternate; }
-        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-20px); } }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--primary); border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 0 auto 15px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
     </style>
 </head>
 <body>
 
+<!-- Top Toolbar -->
 <div id="toolbar">
     <div class="title-group">
-        <button class="btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <button class="btn" onclick="toggleSidebar()" title="Table of Contents"><i class="fas fa-bars"></i></button>
         <span id="doc-title">Loading...</span>
     </div>
     <a href="resources.html" class="exit-btn">Exit</a>
 </div>
 
+<!-- Sidebar -->
 <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 <div id="sidebar">
     <div class="sidebar-header">Table of Contents</div>
     <div id="toc-list"></div>
 </div>
 
+<!-- Main PDF Area -->
 <div id="viewer-container">
     <div id="loader">
-        <div class="cat-icon"><i class="fas fa-cat"></i></div>
-        <div style="margin-top:10px; font-size:0.8rem; opacity:0.7">Fetching...</div>
+        <div class="spinner"></div>
+        <div style="font-size:0.9rem; opacity:0.8">Loading PDF...</div>
     </div>
     <canvas id="the-canvas"></canvas>
 </div>
 
-<div class="page-indicator" id="page-pill">Loading</div>
+<!-- Page Number -->
+<div class="page-pill" id="page-pill">0 / 0</div>
 
-<div class="floating-controls">
-    <button class="fab" onclick="changeZoom(0.2)"><i class="fas fa-plus"></i></button>
-    <button class="fab" onclick="changeZoom(-0.2)"><i class="fas fa-minus"></i></button>
-    <button class="fab" style="background:#444" onclick="changePage(-1)"><i class="fas fa-arrow-up"></i></button>
-    <button class="fab" style="background:#444" onclick="changePage(1)"><i class="fas fa-arrow-down"></i></button>
+<!-- Controls (Floating on Desktop, Bottom Bar on Mobile) -->
+<div class="controls-container">
+    <button class="fab" onclick="changePage(-1)" title="Previous Page"><i class="fas fa-arrow-up fa-rotate-270-mobile"></i></button>
+    <button class="fab" onclick="fitWidth()" title="Fit Width"><i class="fas fa-expand"></i></button>
+    <button class="fab" onclick="changeZoom(0.1)" title="Zoom In"><i class="fas fa-plus"></i></button>
+    <button class="fab" onclick="changeZoom(-0.1)" title="Zoom Out"><i class="fas fa-minus"></i></button>
+    <button class="fab primary" onclick="changePage(1)" title="Next Page"><i class="fas fa-arrow-down fa-rotate-270-mobile"></i></button>
 </div>
 
 <script>
+    // Define Worker
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     let pdfDoc = null;
     let pageNum = 1;
     let pageRendering = false;
     let pageNumPending = null;
-    let scale = 1.0; 
-    let canvas = document.getElementById('the-canvas');
-    let ctx = canvas.getContext('2d');
-    
-    // URL Params
+    let scale = 1.5; 
+    const canvas = document.getElementById('the-canvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('viewer-container');
+
+    // Get Filename from URL
     const params = new URLSearchParams(window.location.search);
-    const filename = decodeURIComponent(params.get('file'));
-    document.getElementById('doc-title').innerText = filename.replace('.pdf', '').replace(/_/g, ' ');
-
-    // Load PDF
-    const url = `materials/${filename}`;
+    const filename = decodeURIComponent(params.get('file') || '');
     
-    pdfjsLib.getDocument(url).promise.then(doc => {
-        pdfDoc = doc;
-        document.getElementById('loader').style.display = 'none';
-        
-        // RESTORE LAST PAGE
-        const savedPage = localStorage.getItem('pos_' + filename);
-        if(savedPage) pageNum = parseInt(savedPage);
+    if (!filename) {
+        document.getElementById('doc-title').innerText = "Error: No file specified";
+        document.getElementById('loader').innerHTML = "No file found";
+    } else {
+        document.getElementById('doc-title').innerText = filename.replace('.pdf', '').replace(/_/g, ' ');
+        loadPDF(`materials/${filename}`);
+    }
 
-        // INITIAL "FIT WIDTH" CALCULATION
-        pdfDoc.getPage(pageNum).then(page => {
-            const viewportRaw = page.getViewport({scale: 1.0});
-            const containerWidth = document.getElementById('viewer-container').clientWidth;
+    function loadPDF(url) {
+        pdfjsLib.getDocument(url).promise.then(doc => {
+            pdfDoc = doc;
+            document.getElementById('loader').style.display = 'none';
             
-            // Calculate scale to fit width perfectly (subtracting tiny buffer)
-            scale = containerWidth / viewportRaw.width;
+            // Load saved page or default to 1
+            const savedPage = localStorage.getItem('pos_' + filename);
+            pageNum = savedPage ? parseInt(savedPage) : 1;
             
-            renderPage(pageNum);
+            fitWidth(); // Initial fit
+            loadTOC();
+        }).catch(err => {
+            console.error(err);
+            document.getElementById('loader').innerHTML = `<div style='color:#ef4444'>Error loading PDF<br>${err.message}</div>`;
         });
-        
-        loadTOC();
-        updateUI();
-    });
+    }
 
+    /**
+     * Renders the PDF page. 
+     * USES DEVICE PIXEL RATIO FOR SHARP TEXT ON MOBILE
+     */
     function renderPage(num) {
         pageRendering = true;
         
         pdfDoc.getPage(num).then(page => {
             const viewport = page.getViewport({scale: scale});
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+            
+            // Retina / High DPI support
+            const outputScale = window.devicePixelRatio || 1;
 
-            const renderContext = { canvasContext: ctx, viewport: viewport };
+            canvas.width = Math.floor(viewport.width * outputScale);
+            canvas.height = Math.floor(viewport.height * outputScale);
+            canvas.style.width = Math.floor(viewport.width) + "px";
+            canvas.style.height = Math.floor(viewport.height) + "px";
+
+            const transform = outputScale !== 1 
+              ? [outputScale, 0, 0, outputScale, 0, 0] 
+              : null;
+
+            const renderContext = {
+                canvasContext: ctx,
+                transform: transform,
+                viewport: viewport
+            };
+            
             const renderTask = page.render(renderContext);
 
             renderTask.promise.then(() => {
@@ -239,9 +307,17 @@ HTML_CONTENT = """<!DOCTYPE html>
             });
         });
 
-        // Save Position
-        localStorage.setItem('pos_' + filename, num);
-        updateUI();
+        // Update UI elements
+        document.getElementById('page-pill').innerText = `${pageNum} / ${pdfDoc.numPages}`;
+        localStorage.setItem('pos_' + filename, pageNum);
+        
+        // Update Sidebar active state
+        document.querySelectorAll('.toc-item').forEach(item => {
+            item.classList.toggle('active', parseInt(item.dataset.page) === pageNum);
+        });
+
+        // Scroll to top of container
+        container.scrollTop = 0;
     }
 
     function queueRenderPage(num) {
@@ -258,32 +334,49 @@ HTML_CONTENT = """<!DOCTYPE html>
 
     function changeZoom(delta) {
         scale += delta;
-        if (scale < 0.2) scale = 0.2; // Prevent disappearing
+        if (scale < 0.4) scale = 0.4; // Min zoom
+        if (scale > 4.0) scale = 4.0; // Max zoom
         renderPage(pageNum);
     }
 
-    function updateUI() {
-        if(pdfDoc) {
-            document.getElementById('page-pill').innerText = `${pageNum} / ${pdfDoc.numPages}`;
-            // Highlight TOC
-            document.querySelectorAll('.toc-item').forEach(item => {
-                item.classList.remove('active');
-                if(parseInt(item.dataset.page) === pageNum) item.classList.add('active');
-            });
-        }
+    function fitWidth() {
+        if (!pdfDoc) return;
+        pdfDoc.getPage(pageNum).then(page => {
+            const viewport = page.getViewport({scale: 1.0});
+            // Subtract padding from container width
+            const availableWidth = container.clientWidth - 40; 
+            scale = availableWidth / viewport.width;
+            renderPage(pageNum);
+        });
     }
 
-    // SIDEBAR LOGIC
+    // Handle Window Resize
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(fitWidth, 200);
+    });
+
+    // Sidebar Toggle
     function toggleSidebar() {
         document.getElementById('sidebar').classList.toggle('open');
         document.getElementById('sidebar-overlay').classList.toggle('active');
     }
 
+    // Load TOC
     function loadTOC() {
-        fetch('pdf_data.json').then(r => r.json()).then(data => {
+        fetch('pdf_data.json')
+        .then(r => r.json())
+        .then(data => {
             const list = document.getElementById('toc-list');
             const items = data[filename] || [];
-            if(items.length === 0) { list.innerHTML = "<div style='padding:20px; opacity:0.5'>No Index</div>"; return; }
+            
+            list.innerHTML = ''; // Clear existing
+
+            if(items.length === 0) { 
+                list.innerHTML = "<div style='padding:20px; opacity:0.5; text-align:center'>No Index Available</div>"; 
+                return; 
+            }
             
             items.forEach(item => {
                 const div = document.createElement('div');
@@ -293,13 +386,24 @@ HTML_CONTENT = """<!DOCTYPE html>
                 div.onclick = () => { 
                     pageNum = item.page; 
                     queueRenderPage(pageNum); 
-                    toggleSidebar(); // Close on click
+                    toggleSidebar(); 
                 };
                 list.appendChild(div);
             });
-        });
+        })
+        .catch(e => console.log("No TOC found"));
     }
 </script>
+
+<style>
+    /* Mobile Icon Rotation Helper for Arrows */
+    @media (max-width: 768px) {
+        .fa-rotate-270-mobile { transform: rotate(0deg); } /* On mobile, arrows are Left/Right conceptually, but here we keep up/down logic */
+        .fa-arrow-up:before { content: "\\f060"; } /* Left Arrow */
+        .fa-arrow-down:before { content: "\\f061"; } /* Right Arrow */
+    }
+</style>
+
 </body>
 </html>
 """
@@ -307,4 +411,4 @@ HTML_CONTENT = """<!DOCTYPE html>
 with open("viewer.html", "w", encoding="utf-8") as f:
     f.write(HTML_CONTENT)
 
-print("✅ CINEMA MODE VIEWER BUILT")
+print("✅ OPTIMIZED VIEWER BUILT successfully.")
