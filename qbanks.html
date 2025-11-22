@@ -3,151 +3,489 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MEDTRIX | Q-Bank</title>
+    <title>MEDTRIX | Q-Bank Pro</title>
+    
+    <!-- CORE ENGINE (Required) -->
     <script src="medtrix_core.js"></script>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Fonts & Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
     <style>
-        :root { --bg: #f0f4f8; --card: rgba(255,255,255,0.95); --text: #1a202c; --accent: #007bff; --success: #10b981; --danger: #ef4444; }
-        [data-theme="dark"] { --bg: #0f1115; --card: rgba(20,22,27,0.9); --text: #f7fafc; --accent: #00e5ff; }
-        body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; margin:0; height:100vh; overflow:hidden; }
-        
-        header { height: 60px; background: var(--card); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(128,128,128,0.1); }
-        .brand { font-family: 'Orbitron'; font-weight: 700; font-size: 1.2rem; color: var(--accent); text-decoration: none; }
+        /* --- PREMIUM THEME VARIABLES --- */
+        :root {
+            --bg-body: #f0f4f8;
+            --bg-gradient: radial-gradient(circle at top left, #e0f7fa, #f0f4f8);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.8);
+            --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.08);
+            --text-main: #1a202c;
+            --text-sub: #4a5568;
+            --accent: #007bff;
+            --success: #10b981; --danger: #ef4444;
+        }
 
-        #dashboard { padding: 20px; height: calc(100vh - 60px); overflow-y: auto; max-width: 900px; margin: 0 auto; }
-        .search { width: 100%; padding: 12px 20px; border-radius: 12px; border: 1px solid rgba(128,128,128,0.2); background: var(--card); color: var(--text); margin-bottom: 20px; }
-        
-        .cat-group { margin-bottom: 10px; border-radius: 12px; background: var(--card); overflow: hidden; border: 1px solid rgba(128,128,128,0.1); }
-        .cat-head { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; font-weight: 600; }
-        .test-list { display: none; border-top: 1px solid rgba(128,128,128,0.1); }
-        .cat-group.open .test-list { display: block; }
-        .item { padding: 12px 15px; border-bottom: 1px solid rgba(128,128,128,0.1); cursor: pointer; display: flex; justify-content: space-between; font-size: 0.9rem; }
-        .item:hover { background: rgba(0,123,255,0.1); }
+        [data-theme="dark"] {
+            --bg-body: #0f1115;
+            --bg-gradient: radial-gradient(circle at top center, #1a202c, #0f1115);
+            --glass-bg: rgba(20, 22, 27, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --text-main: #f7fafc;
+            --text-sub: #a0aec0;
+            --accent: #00e5ff;
+        }
 
-        #quiz { position: fixed; inset: 0; background: var(--bg); transform: translateX(100%); transition: 0.3s; z-index: 100; display: flex; flex-direction: column; }
-        #quiz.active { transform: translateX(0); }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; transition: background 0.3s ease, color 0.3s ease; }
         
-        .q-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
-        .q-card { max-width: 800px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .opt { width: 100%; text-align: left; padding: 15px; margin-bottom: 10px; border: 2px solid rgba(128,128,128,0.1); border-radius: 10px; background: transparent; color: var(--text); cursor: pointer; }
-        .opt.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
-        .opt.wrong { border-color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+        body { 
+            background: var(--bg-body); background-image: var(--bg-gradient);
+            background-attachment: fixed; color: var(--text-main);
+            min-height: 100vh; overflow: hidden; 
+        }
+
+        /* --- HEADER --- */
+        header { 
+            height: 60px; background: var(--glass-bg); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 20px; z-index: 50; position: fixed; top: 0; width: 100%;
+        }
+        .brand { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 1.2rem; color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .brand span { font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 0.8rem; opacity: 0.7; }
+
+        /* --- DASHBOARD VIEW --- */
+        #view-dashboard { 
+            padding: 80px 20px 20px; height: 100vh; overflow-y: auto; 
+            max-width: 1000px; margin: 0 auto;
+        }
+
+        .search-wrapper { position: relative; margin-bottom: 20px; }
+        .search-bar { 
+            width: 100%; padding: 14px 20px 14px 45px; border-radius: 12px; 
+            border: 1px solid var(--glass-border); background: var(--glass-bg); 
+            color: var(--text-main); font-size: 1rem; outline: none; 
+            box-shadow: var(--glass-shadow); transition: 0.2s;
+        }
+        .search-bar:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(0, 123, 255, 0.2); }
+        .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-sub); }
+
+        /* Accordion Groups */
+        .category-group { 
+            margin-bottom: 15px; background: var(--glass-bg); 
+            border: 1px solid var(--glass-border); border-radius: 16px; 
+            overflow: hidden; box-shadow: var(--glass-shadow); transition: 0.2s;
+        }
+        .group-header { 
+            padding: 18px 20px; cursor: pointer; font-weight: 600; font-size: 1rem; 
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.02);
+        }
+        .group-header:hover { background: rgba(0, 229, 255, 0.05); }
         
-        .exp { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(128,128,128,0.1); }
-        .exp.show { display: block; }
+        .group-count { background: var(--accent); color: white; padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; }
         
-        .footer { position: fixed; bottom: 0; width: 100%; height: 70px; background: var(--card); display: flex; justify-content: center; align-items: center; gap: 20px; border-top: 1px solid rgba(128,128,128,0.1); }
-        .btn { padding: 10px 30px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
-        .btn-next { background: var(--accent); color: white; }
+        .test-list { display: none; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.02); }
+        .category-group.open .test-list { display: block; }
+        
+        .test-item { 
+            padding: 15px 20px; border-bottom: 1px solid var(--glass-border); 
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center; 
+            font-size: 0.9rem; transition: 0.2s;
+        }
+        .test-item:last-child { border-bottom: none; }
+        .test-item:hover { padding-left: 25px; color: var(--accent); background: rgba(0, 229, 255, 0.05); }
+
+        /* --- QUIZ VIEW (Overlay) --- */
+        #view-quiz { 
+            position: fixed; inset: 0; background: var(--bg-body); 
+            z-index: 100; display: flex; flex-direction: column; 
+            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overscroll-behavior: none; /* Prevents swipe-to-back on mobile browsers */
+        }
+        #view-quiz.active { transform: translateX(0); }
+
+        .quiz-header { 
+            height: 60px; background: var(--glass-bg); border-bottom: 1px solid var(--glass-border); 
+            display: flex; align-items: center; padding: 0 15px; gap: 15px; backdrop-filter: blur(15px);
+        }
+        .back-btn { 
+            background: rgba(0,0,0,0.05); border: none; font-weight: 600; cursor: pointer; 
+            color: var(--text-main); display: flex; align-items: center; gap: 8px; 
+            padding: 8px 15px; border-radius: 20px; transition: 0.2s;
+        }
+        .back-btn:hover { background: var(--accent); color: white; }
+        .quiz-title { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; text-align: center; font-size: 0.9rem; opacity: 0.8; }
+
+        /* Quiz Content */
+        .quiz-content { 
+            flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; 
+            overscroll-behavior-y: contain; /* Smart Scroll */
+        }
+        .q-card { 
+            max-width: 800px; margin: 0 auto; background: var(--glass-bg); 
+            padding: 30px; border-radius: 20px; border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow); backdrop-filter: blur(10px);
+        }
+        
+        .q-meta-row { display: flex; justify-content: space-between; margin-bottom: 25px; align-items: center; }
+        .q-badge { 
+            background: var(--accent); color: white; padding: 5px 15px; 
+            border-radius: 15px; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px;
+        }
+        .id-display { 
+            font-family: 'Orbitron', sans-serif; color: var(--text-sub); font-size: 0.75rem; opacity: 0.7; 
+        }
+
+        .q-text { font-size: 1.1rem; font-weight: 600; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; }
+        
+        /* Media */
+        .q-img { display: block; max-width: 100%; border-radius: 10px; margin: 15px auto; border: 1px solid var(--glass-border); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .q-video { width: 100%; border-radius: 10px; margin-top: 10px; background: black; max-height: 400px; }
+
+        /* Options */
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .opt-btn { 
+            text-align: left; padding: 18px 20px; background: rgba(0,0,0,0.02); 
+            border: 2px solid var(--glass-border); border-radius: 12px; 
+            font-size: 1rem; color: var(--text-main); cursor: pointer; 
+            display: flex; gap: 15px; align-items: flex-start; transition: all 0.2s; 
+        }
+        .opt-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(0, 229, 255, 0.05); }
+        .opt-char { flex-shrink: 0; font-weight: bold; width: 25px; color: var(--accent); }
+
+        .opt-btn.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .opt-btn.wrong { border-color: var(--danger); background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+
+        /* Explanation */
+        .exp-section { margin-top: 30px; border-top: 1px solid var(--glass-border); padding-top: 25px; display: none; animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .exp-section.show { display: block; }
+        
+        .exp-title { 
+            font-weight: 800; color: var(--accent); margin-bottom: 15px; font-family: 'Orbitron', sans-serif;
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .exp-content { font-size: 0.95rem; line-height: 1.7; color: var(--text-main); opacity: 0.9; white-space: pre-wrap; }
+        
+        /* AI Button */
+        .ai-btn { 
+            background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; 
+            padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; 
+            cursor: pointer; display: flex; align-items: center; gap: 8px; 
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); transition: transform 0.2s;
+        }
+        .ai-btn:hover { transform: scale(1.05); }
+        .ai-response { margin-top: 20px; padding: 20px; background: rgba(0,0,0,0.03); border-radius: 15px; border: 1px solid var(--accent); font-size: 0.9rem; display: none; line-height: 1.6; }
+
+        /* Footer Controls */
+        .quiz-footer { 
+            position: fixed; bottom: 0; left: 0; right: 0; height: 80px; 
+            background: var(--glass-bg); border-top: 1px solid var(--glass-border); 
+            backdrop-filter: blur(15px);
+            display: flex; padding: 10px 20px; gap: 15px; z-index: 101; 
+            justify-content: center; align-items: center;
+        }
+        .nav-btn { 
+            flex: 1; max-width: 200px; height: 50px; border-radius: 15px; 
+            font-weight: 600; border: none; cursor: pointer; font-size: 1rem; transition: transform 0.1s;
+        }
+        .nav-btn:active { transform: scale(0.95); }
+        .btn-prev { background: transparent; color: var(--text-main); border: 2px solid var(--glass-border); }
+        .btn-next { background: var(--accent); color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Mobile Tweaks */
+        @media (max-width: 600px) {
+            .quiz-title { font-size: 0.8rem; }
+            .q-card { padding: 20px; }
+            .opt-btn { padding: 15px; font-size: 0.95rem; }
+        }
     </style>
 </head>
 <body>
-    <header><a href="index.html" class="brand"><i class="fas fa-dna"></i> MEDTRIX</a></header>
-    
-    <div id="dashboard">
-        <input type="text" id="search" class="search" placeholder="Search 5000+ tests..." onkeyup="filter()">
-        <div id="list">Loading...</div>
-    </div>
 
-    <div id="quiz">
-        <div style="padding:15px; display:flex; align-items:center; background:var(--card);">
-            <button onclick="closeQuiz()" style="background:none; border:none; color:var(--text); font-size:1.2rem;">&larr;</button>
-            <span id="q-title" style="flex:1; text-align:center; font-weight:600; white-space:nowrap; overflow:hidden;"></span>
-        </div>
-        <div class="q-content">
-            <div class="q-card">
-                <div style="margin-bottom:15px; opacity:0.6; font-size:0.8rem;"><span id="q-num"></span></div>
-                <div id="q-text" style="font-weight:600; font-size:1.1rem; margin-bottom:20px;"></div>
-                <div id="q-opts"></div>
-                <div id="q-exp" class="exp">
-                    <div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">EXPLANATION <button onclick="askAI()" style="float:right; background:none; border:1px solid var(--accent); color:var(--accent); border-radius:10px; padding:2px 8px;">Ask AI</button></div>
-                    <div id="exp-text" style="opacity:0.9; line-height:1.6;"></div>
-                    <div id="ai-box" style="margin-top:10px; padding:10px; border:1px solid var(--accent); border-radius:10px; display:none;"></div>
+<header>
+    <a href="index.html" class="brand">
+        <i class="fas fa-dna"></i> MEDTRIX <span>Archive</span>
+    </a>
+</header>
+
+<!-- DASHBOARD -->
+<div id="view-dashboard">
+    <div class="search-wrapper">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="search" class="search-bar" placeholder="Search topics (e.g. Neuro, Cardio, DAMS)..." onkeyup="filterIndex()">
+    </div>
+    <div id="index-container"></div>
+</div>
+
+<!-- QUIZ OVERLAY -->
+<div id="view-quiz">
+    <div class="quiz-header">
+        <button class="back-btn" onclick="closeQuiz()"><i class="fas fa-arrow-left"></i> Back</button>
+        <div class="quiz-title" id="q-title">Loading...</div>
+        <div style="width: 60px;"></div>
+    </div>
+    
+    <div class="quiz-content" id="quiz-scroll-area">
+        <div class="q-card">
+            <div class="q-meta-row">
+                <span class="q-badge" id="q-num">1 / 10</span>
+                <div>
+                    <span id="q-id-disp" class="id-display"></span>
+                    <i class="fas fa-link" onclick="copyLink()" style="cursor:pointer; margin-left:10px; opacity:0.6;"></i>
                 </div>
             </div>
-        </div>
-        <div class="footer">
-            <button class="btn" onclick="move(-1)">Prev</button>
-            <button class="btn btn-next" onclick="move(1)">Next</button>
+
+            <div class="q-text" id="q-text"></div>
+            <div id="q-media-question"></div>
+            <div class="options" id="q-options"></div>
+
+            <div class="exp-section" id="q-exp">
+                <div class="exp-title">
+                    EXPLANATION
+                    <button class="ai-btn" onclick="askAI()"><i class="fas fa-robot"></i> Ask AI</button>
+                </div>
+                <div class="exp-content" id="exp-text"></div>
+                <div id="exp-media-container"></div>
+                <div class="ai-response" id="ai-result"></div>
+            </div>
         </div>
     </div>
 
-<script>
-    let manifest = [], currentTest = null, curIdx = 0, filename = "";
+    <div class="quiz-footer">
+        <button class="nav-btn btn-prev" id="btn-prev" onclick="move(-1)">Previous</button>
+        <button class="nav-btn btn-next" id="btn-next" onclick="move(1)">Next</button>
+    </div>
+    
+</div>
 
+<script>
+    // --- THEME INIT ---
+    if(localStorage.getItem('medtrix-theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    // --- STATE ---
+    let manifest = [];
+    let currentTest = null;
+    let curIdx = 0;
+    let currentFilename = "";
+    
+    // --- GESTURE STATE ---
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    // --- LOAD DATA ---
     document.addEventListener('DOMContentLoaded', async () => {
+        // Fetch from Core (Fast & Pre-Categorized)
         manifest = await MEDTRIX.data.getManifest();
-        render(manifest);
+        
+        if (!manifest || manifest.length === 0) {
+            document.getElementById('index-container').innerHTML = '<div style="text-align:center; opacity:0.6; padding:40px;">No Q-Banks found.<br>Run python script.</div>';
+            return;
+        }
+        renderIndex(manifest);
     });
 
-    function render(list) {
-        const el = document.getElementById('list');
-        el.innerHTML = "";
-        const groups = list.reduce((acc, i) => {
-            const c = i.category || "Uncategorized";
-            if(!acc[c]) acc[c] = []; acc[c].push(i); return acc;
+    // --- GESTURES (With Scroll Lock) ---
+    const quizArea = document.getElementById('view-quiz');
+    quizArea.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; });
+    quizArea.addEventListener('touchend', e => {
+        const diffX = e.changedTouches[0].screenX - touchStartX;
+        const diffY = e.changedTouches[0].screenY - touchStartY;
+        // Only swipe if horizontal movement > vertical (user isn't reading down)
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+            if (diffX < 0) move(1); else move(-1);
+        }
+    });
+
+    // --- RENDER DASHBOARD ---
+    function renderIndex(list) {
+        const container = document.getElementById('index-container');
+        container.innerHTML = "";
+        
+        // Group by Category (from Python)
+        const groups = list.reduce((acc, item) => {
+            const cat = item.category || "Uncategorized";
+            if(!acc[cat]) acc[cat] = [];
+            acc[cat].push(item);
+            return acc;
         }, {});
 
-        Object.keys(groups).sort().forEach(cat => {
-            const items = groups[cat].map(t => `<div class="item" onclick="openTest('${t.file}')"><span>${t.title}</span><span style="opacity:0.5; font-size:0.8rem">${t.questions} Qs</span></div>`).join('');
-            el.innerHTML += `<div class="cat-group"><div class="cat-head" onclick="this.parentElement.classList.toggle('open')">${cat} <span>${groups[cat].length}</span></div><div class="test-list">${items}</div></div>`;
+        Object.keys(groups).sort().forEach((cat) => {
+            const itemsHtml = groups[cat].map(t => `
+                <div class="test-item" onclick="openTest('${t.file}')">
+                    <span>${t.title}</span>
+                    <span style="font-size:0.75rem; opacity:0.6; font-family:'Orbitron'">${t.count || '?'} Qs</span>
+                </div>
+            `).join('');
+
+            container.innerHTML += `
+                <div class="category-group">
+                    <div class="group-header" onclick="this.parentElement.classList.toggle('open')">
+                        <div><i class="fas fa-folder" style="margin-right:10px; color:var(--accent);"></i> ${cat}</div>
+                        <span class="group-count">${groups[cat].length}</span>
+                    </div>
+                    <div class="test-list">${itemsHtml}</div>
+                </div>
+            `;
         });
     }
 
-    function filter() {
-        const v = document.getElementById('search').value.toLowerCase();
-        render(manifest.filter(t => t.title.toLowerCase().includes(v)));
-        document.querySelectorAll('.cat-group').forEach(g => g.classList.add('open'));
+    function filterIndex() {
+        const term = document.getElementById('search').value.toLowerCase();
+        if(!term) { renderIndex(manifest); return; }
+        const filtered = manifest.filter(t => t.title.toLowerCase().includes(term));
+        renderIndex(filtered);
+        document.querySelectorAll('.category-group').forEach(g => g.classList.add('open'));
     }
 
-    async function openTest(f) {
-        currentTest = await MEDTRIX.data.getQuiz(f);
-        if(!currentTest) return alert("Error loading");
-        filename = f;
-        curIdx = parseInt(localStorage.getItem('pos_'+f) || 0);
-        document.getElementById('q-title').innerText = MEDTRIX.data.formatTitle(f);
-        document.getElementById('quiz').classList.add('active');
-        showQ();
-    }
-
-    function closeQuiz() { document.getElementById('quiz').classList.remove('active'); }
-
-    function showQ() {
-        const q = currentTest.questions[curIdx];
-        localStorage.setItem('pos_'+filename, curIdx);
-        document.getElementById('q-num').innerText = `${curIdx+1} / ${currentTest.questions.length}`;
-        document.getElementById('q-text').innerHTML = q.text;
-        document.getElementById('q-opts').innerHTML = q.options.map((o,i) => `<button class="opt" onclick="check(this, ${o.correct})"><b>${String.fromCharCode(65+i)}.</b> ${o.text}</button>`).join('');
-        document.getElementById('q-exp').classList.remove('show');
-        document.getElementById('exp-text').innerHTML = q.explanation || "No explanation.";
-        document.getElementById('ai-box').style.display = 'none';
-    }
-
-    function check(btn, correct) {
-        document.querySelectorAll('.opt').forEach(b => b.disabled = true);
-        btn.classList.add(correct ? 'correct' : 'wrong');
-        if(!correct) {
-            const cIdx = currentTest.questions[curIdx].options.findIndex(o => o.correct);
-            if(cIdx > -1) document.querySelectorAll('.opt')[cIdx].classList.add('correct');
+    // --- QUIZ ENGINE ---
+    async function openTest(filename, qId = null) {
+        currentTest = await MEDTRIX.data.getQuiz(filename);
+        if(!currentTest) return alert("Could not load this Q-Bank.");
+        
+        currentFilename = filename;
+        curIdx = 0;
+        
+        // Restore position
+        if (!qId) {
+            const savedPos = localStorage.getItem('pos_' + filename);
+            if (savedPos) curIdx = parseInt(savedPos);
+        } else {
+            const found = currentTest.questions.findIndex(q => q.uid === qId);
+            if(found !== -1) curIdx = found;
         }
-        document.getElementById('q-exp').classList.add('show');
-        MEDTRIX.db.saveResult(currentTest.questions[curIdx], correct, filename);
+
+        // Use Pre-Calculated Title
+        const itemMeta = manifest.find(m => m.file === filename);
+        document.getElementById('q-title').textContent = itemMeta ? itemMeta.title : filename;
+        
+        document.getElementById('view-quiz').classList.add('active');
+        renderQuestion();
     }
 
-    function move(d) {
-        const n = curIdx + d;
-        if(n >= 0 && n < currentTest.questions.length) { curIdx = n; showQ(); }
+    function closeQuiz() {
+        document.getElementById('view-quiz').classList.remove('active');
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    function renderQuestion() {
+        const q = currentTest.questions[curIdx];
+        localStorage.setItem('pos_' + currentFilename, curIdx);
+
+        document.getElementById('q-num').textContent = `${curIdx + 1} / ${currentTest.questions.length}`;
+        document.getElementById('q-id-disp').textContent = `#${q.uid || 'ID'}`;
+        document.getElementById('q-text').innerHTML = q.text;
+
+        // Media
+        const qMediaDiv = document.getElementById('q-media-question');
+        qMediaDiv.innerHTML = '';
+        if(q.question_images) {
+            q.question_images.forEach(src => {
+                qMediaDiv.innerHTML += `<img src="${src}" class="q-img">`;
+            });
+        }
+
+        // Options
+        const optsDiv = document.getElementById('q-options');
+        optsDiv.innerHTML = q.options.map((opt, i) => `
+            <button class="opt-btn" onclick="checkAns(this, ${opt.correct})">
+                <div class="opt-char">${String.fromCharCode(65+i)}</div>
+                <div style="flex:1">${opt.text}</div>
+            </button>
+        `).join('');
+
+        // Reset State
+        document.getElementById('q-exp').classList.remove('show');
+        document.getElementById('ai-result').style.display = 'none';
+        
+        // Parse Explanation
+        const expMediaDiv = document.getElementById('exp-media-container');
+        expMediaDiv.innerHTML = '';
+
+        let expText = q.explanation || "No explanation provided.";
+        expText = expText.replace(/(https?:\/\/\S+\.(?:mp4|m3u8|mp3))/gi, (match) => {
+            const id = 'media-' + Math.random().toString(36).substr(2, 9);
+            setTimeout(() => initVideo(id, match), 100);
+            return `<div style="margin-top:15px"><video id="${id}" controls class="q-video"></video></div>`;
+        });
+        document.getElementById('exp-text').innerHTML = expText;
+
+        if(q.explanation_images) q.explanation_images.forEach(src => expMediaDiv.innerHTML += `<img src="${src}" class="q-img">`);
+
+        // Nav State
+        document.getElementById('btn-prev').disabled = curIdx === 0;
+        document.getElementById('btn-next').textContent = curIdx === currentTest.questions.length - 1 ? "Finish" : "Next";
+        document.getElementById('quiz-scroll-area').scrollTop = 0;
+    }
+
+    function checkAns(btn, isCorrect) {
+        const all = document.querySelectorAll('.opt-btn');
+        all.forEach(b => b.disabled = true);
+
+        if(isCorrect) btn.classList.add('correct');
+        else {
+            btn.classList.add('wrong');
+            const q = currentTest.questions[curIdx];
+            const correctIndex = q.options.findIndex(o => o.correct);
+            if(correctIndex !== -1) all[correctIndex].classList.add('correct');
+        }
+        
+        document.getElementById('q-exp').classList.add('show');
+        MEDTRIX.db.saveResult(currentTest.questions[curIdx], isCorrect, currentFilename);
+        
+        // Auto Scroll on Mobile
+        if(window.innerWidth < 768) setTimeout(() => document.getElementById('q-exp').scrollIntoView({behavior:'smooth'}), 200);
+    }
+
+    function move(dir) {
+        const next = curIdx + dir;
+        if(next >= 0 && next < currentTest.questions.length) {
+            curIdx = next;
+            renderQuestion();
+        } else if (next >= currentTest.questions.length) closeQuiz();
+    }
+
+    function initVideo(id, src) {
+        const vid = document.getElementById(id);
+        if(!vid) return;
+        if(src.includes('.m3u8') && Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(src);
+            hls.attachMedia(vid);
+        } else { vid.src = src; }
     }
 
     async function askAI() {
         const q = currentTest.questions[curIdx];
-        document.getElementById('ai-box').style.display = 'block';
-        document.getElementById('ai-box').innerText = "Thinking...";
-        const ans = await MEDTRIX.ai.ask("Explain this", `Q: ${q.text}\nExp: ${q.explanation}`);
-        document.getElementById('ai-box').innerHTML = marked.parse(ans);
+        const box = document.getElementById('ai-result');
+        box.style.display = 'block';
+        box.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Thinking...';
+        
+        const correctOpt = q.options.find(o => o.correct)?.text || "N/A";
+        const ans = await MEDTRIX.ai.ask(
+            "Explain this medical question concisely.", 
+            `Question: ${q.text}\nCorrect Answer: ${correctOpt}\nContext: ${q.explanation}`
+        );
+        
+        box.innerHTML = marked.parse(ans);
+    }
+
+    function copyLink() {
+        const url = new URL(window.location.href);
+        url.searchParams.set('test', currentFilename);
+        url.searchParams.set('q', currentTest.questions[curIdx].uid);
+        navigator.clipboard.writeText(url.toString());
+        MEDTRIX.ui.toast("Link Copied!");
     }
 </script>
+
 </body>
 </html>
