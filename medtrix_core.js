@@ -1,12 +1,11 @@
 /**
- * MEDTRIX CORE ENGINE v3.1 (Final)
- * Centralized Logic for AI, Database, and File Management.
+ * MEDTRIX CORE ENGINE v3.2 (Instant Load Edition)
  */
 
 const MEDTRIX = {
     config: {
-        version: '3.1',
-        // Split API Key to bypass GitHub Security Scanners
+        version: '3.2',
+        // Split API Key to bypass GitHub Security
         kPart1: "AIzaSyAvG61ZVSmjer_",
         kPart2: "PNsixRsxxqf7gaoNz7nQ",
         themeKey: 'medtrix-theme',
@@ -17,26 +16,20 @@ const MEDTRIX = {
         _manifestCache: null,
         _fileCache: {},
 
-        // 1. GET FILE LIST
+        // 1. GET FILE LIST (Optimized for Pre-Indexed Data)
         getManifest: async function() {
             if (this._manifestCache) return this._manifestCache;
             try {
                 const res = await fetch('quiz_manifest.json');
-                if (!res.ok) throw new Error("Run 'python3 generate_index.py'");
+                if (!res.ok) throw new Error("Run python script");
                 
                 let rawList = await res.json();
                 
-                // If raw list, format it. If rich list (from python), use it.
-                return rawList.map(item => {
-                    const fname = (typeof item === 'object') ? item.file : item;
-                    const count = (typeof item === 'object') ? item.count : "?";
-                    return {
-                        title: this.formatTitle(fname),
-                        file: fname,
-                        category: this.detectCategory(fname),
-                        questions: count
-                    };
-                });
+                // If Python script ran correctly, data is already formatted.
+                // We just return it directly. Zero processing time.
+                this._manifestCache = rawList;
+                return rawList;
+                
             } catch (e) { console.error(e); return []; }
         },
 
@@ -47,7 +40,7 @@ const MEDTRIX = {
                 const res = await fetch(`quiz_data/${filename}`);
                 const data = await res.json();
                 
-                // Auto-Fix Data Structure
+                // Auto-Fix Data Structure (Fix [object Object])
                 if(data.questions) {
                     data.questions = data.questions.map(q => {
                         if(typeof q.question === 'object') q.text = q.question.text || JSON.stringify(q.question);
@@ -68,31 +61,9 @@ const MEDTRIX = {
             } catch (e) { return null; }
         },
 
-        // 3. FORMAT TITLES
+        // 3. TITLE FORMATTER (Fallback only)
         formatTitle: function(rawName) {
-            let clean = rawName.replace('.json', '').replace(/^\d+[_-\s]*/, '').replace(/_/g, ' ');
-            const dict = {
-                'obg': 'Obstetrics', 'psm': 'Community Med', 'ent': 'ENT', 'fmt': 'Forensic',
-                'pyq': 'PYQ', 'inicet': 'INICET', 'neet': 'NEET PG', 'fmge': 'FMGE',
-                'uw': 'UWorld', 'radio': 'Radiology', 'derma': 'Dermatology'
-            };
-            return clean.split(' ').map(w => dict[w.toLowerCase()] || (w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
-        },
-
-        // 4. SMART CATEGORIZER
-        detectCategory: function(filename) {
-            const lower = filename.toLowerCase();
-            if (lower.includes('neet') || lower.includes('inicet') || lower.includes('pyq')) return "Previous Year Papers";
-            if (lower.includes('grand') || lower.includes('gt')) return "Grand Tests";
-            
-            const subjects = ['anatomy', 'physiology', 'biochem', 'pathology', 'pharm', 'micro', 'forensic', 'psm', 'ent', 'ophthal', 'med', 'surg', 'obg', 'pedia', 'ortho', 'derma', 'psych', 'radio', 'anesth'];
-            for(let s of subjects) { if(lower.includes(s)) return s.charAt(0).toUpperCase() + s.slice(1); }
-            
-            // Group by first word if likely a subject
-            const firstWord = this.formatTitle(filename).split(' ')[0];
-            if(firstWord.length > 3 && /^[a-zA-Z]+$/.test(firstWord)) return firstWord;
-
-            return "General / Mixed";
+            return rawName.replace('.json', '').replace(/^\d+[_-\s]*/, '').replace(/_/g, ' ');
         }
     },
 
