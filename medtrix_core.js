@@ -1,13 +1,12 @@
 /**
- * MEDTRIX CORE ENGINE v3.2 (Instant Load Edition)
+ * MEDTRIX CORE ENGINE v3.3 (Secure Edition)
+ * Exact logic preservation. Only API Key handling modified.
  */
 
 const MEDTRIX = {
     config: {
-        version: '3.2',
-        // Split API Key to bypass GitHub Security
-        kPart1: "AIzaSyAvG61ZVSmjer_",
-        kPart2: "PNsixRsxxqf7gaoNz7nQ",
+        version: '3.3',
+        // Security Fix: Hardcoded keys removed to prevent GitHub revocation.
         themeKey: 'medtrix-theme',
         dbKey: 'medtrix_analytics'
     },
@@ -16,7 +15,7 @@ const MEDTRIX = {
         _manifestCache: null,
         _fileCache: {},
 
-        // 1. GET FILE LIST (Optimized for Pre-Indexed Data)
+        // 1. GET FILE LIST (EXACT COPY)
         getManifest: async function() {
             if (this._manifestCache) return this._manifestCache;
             try {
@@ -26,14 +25,13 @@ const MEDTRIX = {
                 let rawList = await res.json();
                 
                 // If Python script ran correctly, data is already formatted.
-                // We just return it directly. Zero processing time.
                 this._manifestCache = rawList;
                 return rawList;
                 
             } catch (e) { console.error(e); return []; }
         },
 
-        // 2. GET SINGLE QUIZ
+        // 2. GET SINGLE QUIZ (EXACT COPY)
         getQuiz: async function(filename) {
             if (this._fileCache[filename]) return this._fileCache[filename];
             try {
@@ -61,13 +59,13 @@ const MEDTRIX = {
             } catch (e) { return null; }
         },
 
-        // 3. TITLE FORMATTER (Fallback only)
+        // 3. TITLE FORMATTER (EXACT COPY)
         formatTitle: function(rawName) {
             return rawName.replace('.json', '').replace(/^\d+[_-\s]*/, '').replace(/_/g, ' ');
         }
     },
 
-    // --- 3. DATABASE ---
+    // --- 3. DATABASE (EXACT COPY) ---
     db: {
         saveResult: function(qData, isCorrect, filename) {
             let history = JSON.parse(localStorage.getItem(MEDTRIX.config.dbKey) || '[]');
@@ -80,12 +78,22 @@ const MEDTRIX = {
         }
     },
 
-    // --- 4. AI ENGINE ---
+    // --- 4. AI ENGINE (SECURITY UPDATE) ---
     ai: {
-        getKey: function() { return MEDTRIX.config.kPart1 + MEDTRIX.config.kPart2; },
+        // OLD: getKey: function() { return MEDTRIX.config.kPart1 + MEDTRIX.config.kPart2; },
+        // NEW: Checks for the variable loaded from config.js
+        getKey: function() { 
+            if (typeof MEDTRIX_SECRETS !== 'undefined' && MEDTRIX_SECRETS.API_KEY) {
+                return MEDTRIX_SECRETS.API_KEY;
+            }
+            console.error("API Key missing! Check config.js"); 
+            return ""; 
+        },
+
         ask: async function(prompt, context) {
             const key = this.getKey();
             try {
+                // Exact same fetch structure
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt + "\n\nContext: " + context.substring(0,1000) }] }] })
@@ -97,7 +105,7 @@ const MEDTRIX = {
         }
     },
 
-    // --- 5. UI ---
+    // --- 5. UI (EXACT COPY) ---
     ui: {
         initTheme: function() {
             const theme = localStorage.getItem(MEDTRIX.config.themeKey) || 'light';

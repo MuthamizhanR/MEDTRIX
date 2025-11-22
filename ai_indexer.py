@@ -2,14 +2,21 @@ import os
 import json
 import time
 import requests
+import re
 
 # --- CONFIGURATION ---
 FOLDER_PATH = 'quiz_data'
 OUTPUT_FILE = 'quiz_manifest.json'
-API_KEY = "AIzaSyAvG61ZVSmjer_PNsixRsxxqf7gaoNz7nQ"  # Your Key
-BATCH_SIZE = 30  # How many files to ask AI about at once
+BATCH_SIZE = 30 
 
-# Standard MBBS Subjects for AI to choose from
+# Ask for Key (SECURE WAY - No hardcoding)
+print("------------------------------------------------")
+print("🔑 ENTER YOUR GOOGLE API KEY TO START SORTING")
+print("(The key will not be saved in this file)")
+print("------------------------------------------------")
+API_KEY = input("API KEY: ").strip()
+
+# Standard MBBS Subjects
 SUBJECTS = [
     "Anatomy", "Physiology", "Biochemistry", "Pathology", "Pharmacology", 
     "Microbiology", "Forensic Medicine", "Community Medicine", "ENT", 
@@ -19,83 +26,79 @@ SUBJECTS = [
 ]
 
 def format_title(filename):
-    # Clean up filename for display
     name = filename.replace('.json', '')
-    # Remove leading numbers/underscores
-    import re
-    name = re.sub(r'^\d+[_-\s]*', '', name)
+    # FIX: Hyphen moved to the end of the class [_\s-] to prevent Regex Error
+    name = re.sub(r'^\d+[_\s-]*', '', name)
     name = name.replace('_', ' ').replace('-', ' ')
     return name.title()
 
 def get_ai_classification(filenames):
-    """Sends a batch of filenames to Gemini to categorize."""
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+    # KEPT gemini-2.0-flash as requested
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={API_KEY}"
     
     prompt = f"""
-    You are a medical librarian. I will give you a list of filenames containing medical quiz questions.
-    Classify each file into ONE of these exact subjects: {json.dumps(SUBJECTS)}.
-    
+    Classify these medical quiz filenames into ONE of these subjects: {json.dumps(SUBJECTS)}.
+    Return strictly JSON key-value pairs.
     Rules:
-    1. If it mentions "Labor", "Pregnancy", "Uterus", it is "Obstetrics & Gynaecology".
-    2. If it mentions "Fracture", "Bone", it is "Orthopedics".
-    3. If it mentions "Diabetes" check context: if pregnancy -> OBG, if drug -> Pharma, else Medicine.
-    4. If it mentions "NEET", "INICET", "Recall", "PYQ", it is "Previous Year Papers".
-    5. If uncertain, use "General Medicine".
+    - 'GT', 'Grand Test' -> Grand Tests
+    - 'PYQ', 'Recall', '2023', '2024' -> Previous Year Papers
+    - 'Labor', 'Pregnancy' -> Obstetrics & Gynaecology
+    - 'Fracture', 'Bone' -> Orthopedics
     
-    Input Files:
-    {json.dumps(filenames)}
-    
-    Output format: JSON object where key is filename and value is the Category.
-    Example: {{ "diabetes_pregnancy.json": "Obstetrics & Gynaecology" }}
-    Do not use Markdown formatting. Just raw JSON.
+    Filenames: {json.dumps(filenames)}
     """
     
-    payload = {
-        "contents": [{ "parts": [{ "text": prompt }] }]
-    }
+    payload = { "contents": [{ "parts": [{ "text": prompt }] }] }
     
     try:
         response = requests.post(url, json=payload)
         if response.status_code == 200:
-            raw_text = response.json()['candidates'][0]['content']['parts'][0]['text']
-            # Clean up markdown if AI adds it
-            raw_text = raw_text.replace('```json', '').replace('```', '').strip()
-            return json.loads(raw_text)
+            raw = response.json()['candidates'][0]['content']['parts'][0]['text']
+            
+            # 2.0 Flash often adds markdown, strip it out to prevent crash
+            raw = raw.replace('```json', '').replace('```', '').strip()
+            
+            # Extra Safety: Find the first { and last }
+            start = raw.find('{')
+            end = raw.rfind('}') + 1
+            if start != -1 and end != -1:
+                raw = raw[start:end]
+                
+            return json.loads(raw)
         else:
-            print(f"  ⚠️ AI Error {response.status_code}: {response.text}")
+            print(f"  ⚠️ API Error: {response.status_code}")
             return {}
     except Exception as e:
-        print(f"  ⚠️ Connection Error: {e}")
+        print(f"  ⚠️ Parse Error: {e}")
         return {}
 
 def main():
-    print("🚀 Starting AI Sort... This handles the logic you asked for.")
-    
+    if not API_KEY or len(API_KEY) < 10:
+        print("❌ Invalid Key. Exiting.")
+        return
+
+    print("🚀 Starting AI Indexer (Gemini 2.0 Flash)...")
     all_files = []
     files_to_process = []
     
-    # 1. Scan Files
     if os.path.exists(FOLDER_PATH):
         for root, dirs, filenames in os.walk(FOLDER_PATH):
             for filename in filenames:
                 if filename.lower().endswith('.json'):
-                    # Quick Pre-Check (Save AI tokens for obvious ones)
+                    # Fast Keyword Check (Save AI tokens)
                     cat = "Unknown"
                     lower = filename.lower()
-                    
-                    # Simple keywords to skip AI if obvious
                     if "anat" in lower: cat = "Anatomy"
-                    elif "surg" in lower and "neuro" not in lower: cat = "Surgery"
+                    elif "surg" in lower: cat = "Surgery"
                     elif "patho" in lower: cat = "Pathology"
                     elif "pharm" in lower: cat = "Pharmacology"
-                    elif "psm" in lower: cat = "Community Medicine"
                     elif "ent" in lower: cat = "ENT"
                     elif "opthal" in lower or "eye" in lower: cat = "Ophthalmology"
-                    elif "forensic" in lower or "fmt" in lower: cat = "Forensic Medicine"
+                    elif "forensic" in lower: cat = "Forensic Medicine"
+                    elif "psm" in lower: cat = "Community Medicine"
+                    elif "med" in lower and "for" not in lower: cat = "Medicine"
                     
                     full_path = os.path.join(root, filename)
-                    
-                    # Get Question Count
                     count = 0
                     try:
                         with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
@@ -104,50 +107,38 @@ def main():
                             elif isinstance(data, dict) and 'questions' in data: count = len(data['questions'])
                     except: pass
 
-                    file_obj = {
-                        "file": filename,
-                        "title": format_title(filename),
-                        "count": count,
-                        "category": cat
-                    }
-                    
-                    all_files.append(file_obj)
-                    
-                    # If simple check failed, add to AI queue
-                    if cat == "Unknown":
-                        files_to_process.append(filename)
+                    obj = { "file": filename, "title": format_title(filename), "count": count, "category": cat }
+                    all_files.append(obj)
+                    if cat == "Unknown": files_to_process.append(filename)
     
-    # 2. Process with AI in Batches
-    total_batches = (len(files_to_process) // BATCH_SIZE) + 1
-    print(f"🧠 AI Analysis: {len(files_to_process)} tricky files found. Processing in {total_batches} batches...")
-    
-    ai_results = {}
-    
-    for i in range(0, len(files_to_process), BATCH_SIZE):
-        batch = files_to_process[i:i+BATCH_SIZE]
-        print(f"  - Batch {i//BATCH_SIZE + 1}/{total_batches} ({len(batch)} files)...", end="\r")
+    # AI Batch Processing
+    if files_to_process:
+        print(f"🧠 AI Analyzing {len(files_to_process)} tricky filenames...")
+        ai_results = {}
         
-        results = get_ai_classification(batch)
-        ai_results.update(results)
-        time.sleep(1) # Respect API limits
-        
-    print("\n✅ AI Processing Complete.")
+        # Process in chunks
+        for i in range(0, len(files_to_process), BATCH_SIZE):
+            batch = files_to_process[i:i+BATCH_SIZE]
+            print(f"  - Processing Batch {i//BATCH_SIZE + 1}...", end="\r")
+            
+            results = get_ai_classification(batch)
+            ai_results.update(results)
+            time.sleep(1) # Be nice to the API
 
-    # 3. Merge Results
-    final_data = []
-    for item in all_files:
-        if item["category"] == "Unknown":
-            # Use AI result, default to Medicine if AI failed
-            item["category"] = ai_results.get(item["file"], "General Medicine")
-        final_data.append(item)
+        print("\n  ✅ AI Analysis Complete.")
 
-    # 4. Sort & Save
-    final_data.sort(key=lambda x: (x['category'], x['title']))
-    
+        # Merge Results
+        for item in all_files:
+            if item["category"] == "Unknown":
+                # Fallback to Medicine if AI failed specifically for this file
+                item["category"] = ai_results.get(item["file"], "Medicine")
+
+    # Save
+    all_files.sort(key=lambda x: (x['category'], x['title']))
     with open(OUTPUT_FILE, 'w') as f:
-        json.dump(final_data, f)
+        json.dump(all_files, f, indent=2)
         
-    print(f"🎉 Database Updated! {len(final_data)} tests organized into subjects.")
+    print(f"🎉 Manifest updated! Saved {len(all_files)} files to {OUTPUT_FILE}")
 
 if __name__ == "__main__":
     main()
