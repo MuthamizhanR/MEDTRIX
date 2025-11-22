@@ -1,22 +1,30 @@
 import os
 import json
 
-# Path to your data folder
 folder_path = 'quiz_data'
 output_file = 'quiz_manifest.json'
+files_data = []
 
-files = []
+print("Scanning library...")
 
-# Scan the directory
 if os.path.exists(folder_path):
-    for filename in os.listdir(folder_path):
-        if filename.endswith('.json'):
-            files.append(filename)
-            
-    # Save the list to a JSON file
+    for root, dirs, filenames in os.walk(folder_path):
+        for filename in filenames:
+            if filename.endswith('.json'):
+                full_path = os.path.join(root, filename)
+                try:
+                    with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        data = json.load(f)
+                        count = 0
+                        if isinstance(data, list): count = len(data)
+                        elif isinstance(data, dict) and 'questions' in data: count = len(data['questions'])
+                        
+                        files_data.append({ "file": filename, "count": count })
+                except: pass
+
     with open(output_file, 'w') as f:
-        json.dump(files, f)
+        json.dump(files_data, f)
         
-    print(f"Success! Found {len(files)} files. Saved list to {output_file}")
+    print(f"✅ Indexed {len(files_data)} Q-Banks successfully.")
 else:
-    print(f"Error: Folder '{folder_path}' not found.")
+    print(f"❌ Error: '{folder_path}' folder not found.")
