@@ -339,5 +339,128 @@
     }
 
 </script>
+
+<!-- MEDTRIX LIVE DATA SYNC START -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("MEDTRIX Analytics: Attempting Sync...");
+        
+        // 1. Read Global Stats from Shared Storage (localStorage)
+        let globalStats = { totalAnswered: 0, totalCorrect: 0, quizzesTaken: 0 };
+        
+        try {
+            const rawData = localStorage.getItem('MEDTRIX_GLOBAL_STATS');
+            if (rawData) {
+                globalStats = JSON.parse(rawData);
+            }
+        } catch (e) {
+            console.warn("Analytics: No live data found, defaulting to zero.");
+        }
+
+        // 2. Calculate Metrics
+        const totalAnswered = globalStats.totalAnswered || 0;
+        const totalCorrect = globalStats.totalCorrect || 0;
+        const quizzesTaken = globalStats.quizzesTaken || 0;
+        
+        // Calculate Accuracy
+        const accuracy = totalAnswered > 0 
+            ? ((totalCorrect / totalAnswered) * 100).toFixed(1) 
+            : "0.0";
+
+        // 3. Update DOM Elements (Overwriting dummy data)
+        
+        // Target: Strike Rate (Accuracy)
+        const strikeRateEl = document.getElementById('strike-rate');
+        if (strikeRateEl) strikeRateEl.innerText = accuracy + "%";
+
+        // Target: Tests Taken
+        const testsTakenEl = document.getElementById('tests-taken');
+        if (testsTakenEl) testsTakenEl.innerText = quizzesTaken;
+
+        // Target: Content Read (Mapped to Questions Answered)
+        const contentReadEl = document.getElementById('content-read');
+        if (contentReadEl) contentReadEl.innerText = totalAnswered;
+
+        console.log("MEDTRIX Analytics Synced:", globalStats);
+    });
+</script>
+<!-- MEDTRIX LIVE DATA SYNC END -->
+
+
+    <!-- REAL CHART DATA SYNC -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        setTimeout(() => {
+            console.log("📊 Updating Charts with Real Data...");
+
+            // 1. GET DATA
+            const raw = localStorage.getItem('MEDTRIX_GLOBAL_STATS');
+            const stats = raw ? JSON.parse(raw) : { totalAnswered: 0, totalCorrect: 0, quizzesTaken: 0 };
+            const correct = stats.totalCorrect || 0;
+            const total = stats.totalAnswered || 0;
+            const wrong = (total - correct) > 0 ? (total - correct) : 0;
+
+            // 2. FIND CANVASES
+            const canvases = document.querySelectorAll('canvas');
+            if(canvases.length < 2) return; // We need at least 2 canvases (Pie & Graph)
+
+            // Assume: Canvas[0] is Performance (Line/Bar), Canvas[1] is Accuracy (Pie/Doughnut)
+            const perfCanvas = canvases[0];
+            const accCanvas = canvases[1];
+
+            // 3. OVERRIDE PIE CHART (Accuracy)
+            const existingPie = Chart.getChart(accCanvas);
+            if (existingPie) existingPie.destroy();
+
+            new Chart(accCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Correct', 'Wrong'],
+                    datasets: [{
+                        data: [correct, wrong],
+                        backgroundColor: ['#00e676', '#ff1744'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: 'white' } },
+                        title: { display: true, text: 'Accuracy', color: 'white' }
+                    }
+                }
+            });
+
+            // 4. OVERRIDE PERFORMANCE CHART (Simple Bar for now since we lack history)
+            const existingPerf = Chart.getChart(perfCanvas);
+            if (existingPerf) existingPerf.destroy();
+
+            new Chart(perfCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Quizzes Taken', 'Questions Answered'],
+                    datasets: [{
+                        label: 'Activity',
+                        data: [stats.quizzesTaken, total],
+                        backgroundColor: ['#2979ff', '#ff9100'],
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.7)' } },
+                        x: { ticks: { color: 'white' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+            
+            console.log("✅ Charts Synced Successfully");
+        }, 1000); // 1 second delay to ensure DOM is ready
+    });
+    </script>
+    
 </body>
 </html>
