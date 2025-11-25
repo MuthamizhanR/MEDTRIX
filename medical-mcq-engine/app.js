@@ -224,7 +224,7 @@ const App = {
         const html = `
             <div style="max-width:800px; margin:0 auto;">
                 <div class="quiz-header">
-                    <button onclick="history.back()" style="background:none; border:none; color:var(--text-sub); cursor:pointer;">EXIT</button>
+                    <button onclick="history.back()" style="background:none; border:none; color:var(--text-sub); cursor:pointer;"></button>
                     <span style="font-weight:bold; color:var(--accent);">${current} / ${total}</span>
                 </div>
 
