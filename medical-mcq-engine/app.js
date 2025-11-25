@@ -100,12 +100,34 @@ const App = {
         localStorage.setItem('medtrix-theme', next);
     },
 
-    cleanText(text) {
-        if (!text) return "";
-        const map = { '≡':'→', '->':'→', 'â€“':'-', 'â€”':'—', 'â€™':"'", 'ï»¿':'', '':'•', '':'•', '':'≥', '':'≤', '':'×', '':'µ', '':'°' };
-        let clean = text.replace(/≡|->|â€“|â€”|â€™|ï»¿|||||||/g, m => map[m]);
-        return clean.replace(//g,"α").replace(//g,"β").replace(//g,"γ").replace(//g,"δ").replace(//g,"Δ").replace(//g,"θ");
-    },
+   cleanText(text) {
+    if (!text) return "";
+    
+    // 1. Update the map to turn that 'degree-like' blob into an arrow or hyphen
+    const map = { 
+        '≡': '→', '->': '→', 'â€“': '-', 'â€”': '—', 'â€™': "'", 
+        'ï»¿': '', '': '•', '': '•', '': '≥', '': '≤', 
+        '': '×', '': 'µ', 
+        '': '→', // CHANGED: Map this to an arrow (or use '-' if preferred)
+        '°': '→'  // ADDED: Catch actual degree symbols and turn them into arrows too
+    };
+
+    let clean = text.replace(/≡|->|â€“|â€”|â€™|ï»¿||||||||°/g, m => map[m]);
+
+    // 2. Handle Greek letters
+    clean = clean.replace(//g, "α")
+                 .replace(//g, "β")
+                 .replace(//g, "γ")
+                 .replace(//g, "δ")
+                 .replace(//g, "Δ")
+                 .replace(//g, "θ");
+
+    // 3. (Optional) Force "a (" to "α (" ONLY when it looks like a bond
+    // This is safer than replacing all 'a's.
+    clean = clean.replace(/\ba\s?\((1)/g, "α($1"); 
+
+    return clean;
+},
 
     // --- RENDERERS ---
 
