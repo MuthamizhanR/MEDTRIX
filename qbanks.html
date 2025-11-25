@@ -20,6 +20,25 @@
 
     <style>
         /* --- PREMIUM THEME VARIABLES --- */
+        :root {<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MEDTRIX | Q-Bank Pro</title>
+    
+    <script src="config.js"></script> 
+
+    <script src="medtrix_core.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- PREMIUM THEME VARIABLES --- */
         :root {
             --bg-body: #f0f4f8;
             --bg-gradient: radial-gradient(circle at top left, #e0f7fa, #f0f4f8);
@@ -45,10 +64,15 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; transition: background 0.3s ease, color 0.3s ease; }
         
+        /* FIX 1: Locked horizontal scroll on body */
         body { 
             background: var(--bg-body); background-image: var(--bg-gradient);
             background-attachment: fixed; color: var(--text-main);
-            min-height: 100vh; overflow: hidden; 
+            min-height: 100vh; 
+            width: 100%;
+            overflow-x: hidden;      /* Prevents page wobble */
+            overscroll-behavior-x: none; /* Disables browser back-swipe */
+            position: relative;
         }
 
         /* --- HEADER --- */
@@ -107,7 +131,7 @@
             position: fixed; inset: 0; background: var(--bg-body); 
             z-index: 100; display: flex; flex-direction: column; 
             transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overscroll-behavior: none; /* Prevents swipe-to-back on mobile browsers */
+            overscroll-behavior: none; 
         }
         #view-quiz.active { transform: translateX(0); }
 
@@ -171,7 +195,26 @@
             font-weight: 800; color: var(--accent); margin-bottom: 15px; font-family: 'Orbitron', sans-serif;
             display: flex; justify-content: space-between; align-items: center; 
         }
-        .exp-content { font-size: 0.95rem; line-height: 1.7; color: var(--text-main); opacity: 0.9; white-space: pre-wrap; }
+        
+        /* FIX 2: Enable horizontal scrolling inside explanation box for tables */
+        .exp-content { 
+            font-size: 0.95rem; line-height: 1.7; color: var(--text-main); opacity: 0.9; 
+            white-space: pre-wrap;
+            overflow-x: auto; /* Allows tables to scroll horizontally */
+            max-width: 100%;  /* Ensures it stays within the card */
+        }
+        /* Style tables to look good */
+        .exp-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            min-width: 400px; /* Forces scroll on small phones if table is complex */
+        }
+        .exp-content th, .exp-content td {
+            border: 1px solid var(--glass-border);
+            padding: 8px;
+            text-align: left;
+        }
         
         /* AI Button */
         .ai-btn { 
@@ -217,7 +260,6 @@
     </a>
 </header>
 
-<!-- DASHBOARD -->
 <div id="view-dashboard">
     <div class="search-wrapper">
         <i class="fas fa-search search-icon"></i>
@@ -226,7 +268,6 @@
     <div id="index-container"></div>
 </div>
 
-<!-- QUIZ OVERLAY -->
 <div id="view-quiz">
     <div class="quiz-header">
         <button class="back-btn" onclick="closeQuiz()"><i class="fas fa-arrow-left"></i> Back</button>
@@ -279,10 +320,6 @@
     let curIdx = 0;
     let currentFilename = "";
     
-    // --- GESTURE STATE ---
-    let touchStartX = 0;
-    let touchStartY = 0;
-
     // --- LOAD DATA ---
     document.addEventListener('DOMContentLoaded', async () => {
         // Fetch from Core (Fast & Pre-Categorized)
@@ -295,17 +332,8 @@
         renderIndex(manifest);
     });
 
-    // --- GESTURES (With Scroll Lock) ---
-    const quizArea = document.getElementById('view-quiz');
-    quizArea.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; });
-    quizArea.addEventListener('touchend', e => {
-        const diffX = e.changedTouches[0].screenX - touchStartX;
-        const diffY = e.changedTouches[0].screenY - touchStartY;
-        // Only swipe if horizontal movement > vertical (user isn't reading down)
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-            if (diffX < 0) move(1); else move(-1);
-        }
-    });
+    // FIX 3: GESTURE CODE COMPLETELY REMOVED HERE
+    // The previous swipe logic has been deleted.
 
     // --- RENDER DASHBOARD ---
     function renderIndex(list) {
