@@ -1,6 +1,5 @@
 /**
- * MEDTRIX ENGINE V4.0 - PREMIUM UI UPGRADE
- * Logic preserved. Visuals remastered.
+ * MEDTRIX ENGINE V4.1 - ICON & SEARCH FIX
  */
 
 const App = {
@@ -24,7 +23,7 @@ const App = {
         header: document.getElementById('main-header')
     },
 
-    // --- INITIALIZATION (Unchanged logic) ---
+    // --- INITIALIZATION ---
     async init() {
         const savedTheme = localStorage.getItem('medtrix-theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
@@ -51,7 +50,7 @@ const App = {
         }
     },
 
-    // --- ROUTER (Unchanged logic) ---
+    // --- ROUTER ---
     async router() {
         const hash = window.location.hash.slice(1) || '/';
         const segments = hash.split('/');
@@ -84,7 +83,7 @@ const App = {
     async loadSubjectData(name) {
         if (this.data.cache[name]) return;
         this.elements.main.innerHTML = `<div style="text-align:center; padding:50px; color:var(--accent);">
-            <i class="fa-solid fa-dna fa-spin fa-3x"></i><br><br>INITIALIZING...
+            <i class="fa-solid fa-spinner fa-spin fa-3x"></i><br><br>Loading Question Bank...
         </div>`;
         const subjectObj = this.data.subjects.find(s => s.name === name);
         const fileName = subjectObj ? subjectObj.file : `${name}.json`;
@@ -108,7 +107,7 @@ const App = {
         return clean.replace(//g,"α").replace(//g,"β").replace(//g,"γ").replace(//g,"δ").replace(//g,"Δ").replace(//g,"θ");
     },
 
-    // --- RENDERERS (VISUALLY UPGRADED) ---
+    // --- RENDERERS ---
 
     // 1. Home Grid
     renderHome() {
@@ -128,12 +127,10 @@ const App = {
     renderChapterList(subName) {
         this.elements.main.className = 'list-view';
 
-        // --- PEDIATRICS FIX PRESERVED ---
         let chapters = this.data.syllabus[subName];
         if (!chapters && subName === 'Paediatrics') chapters = this.data.syllabus['Pediatrics'];
         if (!chapters && subName === 'Pediatrics') chapters = this.data.syllabus['Paediatrics'];
         chapters = chapters || [];
-        // --------------------------------
 
         const allQuestions = this.data.cache[subName] || [];
 
@@ -245,7 +242,6 @@ const App = {
         const selectedChar = String.fromCharCode(97 + index); 
         const correctIndex = correctChar.toLowerCase().charCodeAt(0) - 97;
 
-        // Stats
         this.data.sessionStats.total++;
         if (selectedChar === correctChar.toLowerCase()) {
             el.classList.add('correct');
@@ -258,6 +254,19 @@ const App = {
 
         Array.from(options).forEach(opt => opt.classList.add('disabled'));
         document.getElementById('explanation').classList.add('show');
+        
+        // Save to Core Engine
+        try {
+            if(MEDTRIX && MEDTRIX.db) {
+                MEDTRIX.db.saveResult({
+                    uid: this.data.activeSubject + "_" + this.data.currentQIndex,
+                    text: this.data.activeQuestions[this.data.currentQIndex].question_text,
+                    explanation: this.data.activeQuestions[this.data.currentQIndex].explanation,
+                    options: this.data.activeQuestions[this.data.currentQIndex].options,
+                    source: this.data.activeSubject
+                }, (selectedChar === correctChar.toLowerCase()), "Q-Bank Engine");
+            }
+        } catch(e) {}
     },
 
     navQuestion(dir) {
@@ -268,14 +277,13 @@ const App = {
         }
     },
 
-    // --- 4. ANALYSIS (MAJOR UPGRADE: NOW WITH CHARTS) ---
     finishQuiz() {
         const s = this.data.sessionStats;
         const totalQs = this.data.activeQuestions.length;
         const skipped = totalQs - s.total;
         const accuracy = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
 
-        // Save Global Stats
+        // Sync Global Stats
         try {
             const globalStats = JSON.parse(localStorage.getItem('MEDTRIX_GLOBAL_STATS') || '{"totalAnswered":0, "totalCorrect":0, "quizzesTaken":0}');
             globalStats.totalAnswered += s.total;
@@ -324,7 +332,6 @@ const App = {
 
         this.elements.main.innerHTML = html;
 
-        // INITIALIZE CHART.JS
         setTimeout(() => {
             const ctx = document.getElementById('resultChart').getContext('2d');
             new Chart(ctx, {
@@ -342,7 +349,6 @@ const App = {
         }, 100);
     },
 
-    // --- UTILS ---
     handleSearch(query) {
         if(window.location.hash !== '' && window.location.hash !== '#/') return;
         if(query.length < 2) { this.renderHome(); return; }
@@ -361,17 +367,38 @@ const App = {
         this.elements.lightbox.classList.remove('hidden');
     },
 
+    // --- REVISED ICON MAP (Safe & Complete) ---
     getIcon(name) {
         const n = name.toLowerCase().trim();
         const map = {
-            'anaesthesia': 'fa-syringe', 'anatomy': 'fa-bone', 'biochemistry': 'fa-flask',
-            'dermatology': 'fa-hand-dots', 'ent': 'fa-ear-listen', 'fmt': 'fa-skull-crossbones',
-            'medicine': 'fa-user-doctor', 'microbiology': 'fa-virus', 'obgyn': 'fa-person-pregnant',
-            'ophthalmology': 'fa-eye', 'orthopaedics': 'fa-crutch', 'psm': 'fa-users', 
-            'pathology': 'fa-microscope', 'pediatrics': 'fa-baby', 'paediatrics': 'fa-baby',
-            'pharmacology': 'fa-pills', 'physiology': 'fa-heart-pulse', 'psychiatry': 'fa-brain', 
-            'radiology': 'fa-x-ray', 'surgery': 'fa-scalpel'
+            'anatomy': 'fa-bone',
+            'physiology': 'fa-heart-pulse',
+            'biochemistry': 'fa-dna',
+            'pathology': 'fa-disease',
+            'microbiology': 'fa-bacterium', 
+            'pharmacology': 'fa-pills', 
+            'forensic medicine': 'fa-skull-crossbones',
+            'fmt': 'fa-skull-crossbones',
+            'psm': 'fa-people-roof', 
+            'community medicine': 'fa-people-roof',
+            'ent': 'fa-ear-listen',
+            'ophthalmology': 'fa-eye',
+            'medicine': 'fa-user-doctor', 
+            'surgery': 'fa-user-doctor', // Fallback if scalpel issues
+            'general surgery': 'fa-user-doctor',
+            'obstetrics & gynaecology': 'fa-person-pregnant',
+            'obg': 'fa-person-pregnant',
+            'pediatrics': 'fa-baby', 
+            'paediatrics': 'fa-baby',
+            'orthopedics': 'fa-crutch',
+            'orthopaedics': 'fa-crutch',
+            'dermatology': 'fa-hand-dots',
+            'psychiatry': 'fa-brain', 
+            'radiology': 'fa-x-ray', 
+            'anesthesia': 'fa-syringe',
+            'anaesthesia': 'fa-syringe'
         };
+        // Standard Fallback
         return map[n] || 'fa-book-medical';
     }
 };
