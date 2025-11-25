@@ -1,5 +1,5 @@
 /**
- * MEDTRIX ENGINE V4.1 - ICON & SEARCH FIX
+ * MEDTRIX ENGINE V4.2 - FIXED EXPLANATION & SYMBOLS
  */
 
 const App = {
@@ -100,34 +100,34 @@ const App = {
         localStorage.setItem('medtrix-theme', next);
     },
 
-   cleanText(text) {
-    if (!text) return "";
-    
-    // 1. Update the map to turn that 'degree-like' blob into an arrow or hyphen
-    const map = { 
-        '≡': '→', '->': '→', 'â€“': '-', 'â€”': '—', 'â€™': "'", 
-        'ï»¿': '', '': '•', '': '•', '': '≥', '': '≤', 
-        '': '×', '': 'µ', 
-        '': '→', // CHANGED: Map this to an arrow (or use '-' if preferred)
-        '°': '→'  // ADDED: Catch actual degree symbols and turn them into arrows too
-    };
+    // --- FIXED CLEAN TEXT FUNCTION ---
+    cleanText(text) {
+        if (!text) return "";
+        
+        // 1. Updated map: '' and '°' now become '→' for bonds
+        const map = { 
+            '≡': '→', '->': '→', 'â€“': '-', 'â€”': '—', 'â€™': "'", 
+            'ï»¿': '', '': '•', '': '•', '': '≥', '': '≤', 
+            '': '×', '': 'µ', 
+            '': '→', 
+            '°': '→' 
+        };
 
-    let clean = text.replace(/≡|->|â€“|â€”|â€™|ï»¿||||||||°/g, m => map[m]);
+        let clean = text.replace(/≡|->|â€“|â€”|â€™|ï»¿||||||||°/g, m => map[m]);
 
-    // 2. Handle Greek letters
-    clean = clean.replace(//g, "α")
-                 .replace(//g, "β")
-                 .replace(//g, "γ")
-                 .replace(//g, "δ")
-                 .replace(//g, "Δ")
-                 .replace(//g, "θ");
+        // 2. Handle Greek letters
+        clean = clean.replace(//g, "α")
+                     .replace(//g, "β")
+                     .replace(//g, "γ")
+                     .replace(//g, "δ")
+                     .replace(//g, "Δ")
+                     .replace(//g, "θ");
 
-    // 3. (Optional) Force "a (" to "α (" ONLY when it looks like a bond
-    // This is safer than replacing all 'a's.
-    clean = clean.replace(/\ba\s?\((1)/g, "α($1"); 
+        // 3. Fix "a (1" to "α (1" for bonds
+        clean = clean.replace(/\ba\s?\((1)/g, "α($1"); 
 
-    return clean;
-},
+        return clean;
+    },
 
     // --- RENDERERS ---
 
@@ -220,6 +220,7 @@ const App = {
         const nextAction = isLast ? 'App.finishQuiz()' : 'App.navQuestion(1)';
         const nextText = isLast ? 'FINISH' : 'NEXT';
 
+        // --- FIX 1: Added style="display:none" to #explanation ---
         const html = `
             <div style="max-width:800px; margin:0 auto;">
                 <div class="quiz-header">
@@ -240,7 +241,7 @@ const App = {
                         `).join('')}
                     </div>
 
-                    <div id="explanation" class="exp-box">
+                    <div id="explanation" class="exp-box" style="display:none">
                         <div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">EXPLANATION</div>
                         ${this.cleanText(q.explanation)}
                     </div>
@@ -275,7 +276,9 @@ const App = {
         }
 
         Array.from(options).forEach(opt => opt.classList.add('disabled'));
-        document.getElementById('explanation').classList.add('show');
+        
+        // --- FIX 2: Force display:block ---
+        document.getElementById('explanation').style.display = 'block';
         
         // Save to Core Engine
         try {
