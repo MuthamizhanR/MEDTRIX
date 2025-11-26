@@ -131,3 +131,13 @@ function hardReset() {
         location.reload();
     }
 }
+
+
+// --- NEW: GLOBAL FACTORY RESET FUNCTION ---
+function hardReset() {
+    if(confirm("⚠️ FACTORY RESET\n\nThis will delete ALL progress, history, and bookmarks.\nAre you sure?")) {
+        localStorage.clear();
+        alert("System Reset Complete. Refreshing...");
+        location.reload();
+    }
+}
