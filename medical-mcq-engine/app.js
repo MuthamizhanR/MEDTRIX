@@ -1,5 +1,5 @@
 /**
- * MEDTRIX ENGINE V4.2 - FIXED EXPLANATION & SYMBOLS
+ * MEDTRIX ENGINE V4.2 - OPTIMIZED
  */
 
 const App = {
@@ -100,22 +100,18 @@ const App = {
         localStorage.setItem('medtrix-theme', next);
     },
 
-    // --- FIXED CLEAN TEXT FUNCTION ---
+    // --- TEXT CLEANER ---
     cleanText(text) {
         if (!text) return "";
         
-        // 1. Updated map: '' and '°' now become '→' for bonds
         const map = { 
             '≡': '→', '->': '→', 'â€“': '-', 'â€”': '—', 'â€™': "'", 
             'ï»¿': '', '': '•', '': '•', '': '≥', '': '≤', 
-            '': '×', '': 'µ', 
-            '': '→', 
-            '°': '→' 
+            '': '×', '': 'µ', '': '→', '°': '→' 
         };
 
         let clean = text.replace(/≡|->|â€“|â€”|â€™|ï»¿||||||||°/g, m => map[m]);
 
-        // 2. Handle Greek letters
         clean = clean.replace(//g, "α")
                      .replace(//g, "β")
                      .replace(//g, "γ")
@@ -123,7 +119,6 @@ const App = {
                      .replace(//g, "Δ")
                      .replace(//g, "θ");
 
-        // 3. Fix "a (1" to "α (1" for bonds
         clean = clean.replace(/\ba\s?\((1)/g, "α($1"); 
 
         return clean;
@@ -150,6 +145,7 @@ const App = {
         this.elements.main.className = 'list-view';
 
         let chapters = this.data.syllabus[subName];
+        // Handle spelling variations
         if (!chapters && subName === 'Paediatrics') chapters = this.data.syllabus['Pediatrics'];
         if (!chapters && subName === 'Pediatrics') chapters = this.data.syllabus['Paediatrics'];
         chapters = chapters || [];
@@ -220,17 +216,16 @@ const App = {
         const nextAction = isLast ? 'App.finishQuiz()' : 'App.navQuestion(1)';
         const nextText = isLast ? 'FINISH' : 'NEXT';
 
-        // --- FIX 1: Added style="display:none" to #explanation ---
         const html = `
             <div style="max-width:800px; margin:0 auto;">
                 <div class="quiz-header">
-                    <button onclick="history.back()" style="background:none; border:none; color:var(--text-sub); cursor:pointer;"></button>
+                    <button onclick="history.back()" style="background:none; border:none; color:var(--text-sub); cursor:pointer;"><i class="fa-solid fa-arrow-left"></i> Exit</button>
                     <span style="font-weight:bold; color:var(--accent);">${current} / ${total}</span>
                 </div>
 
                 <div class="q-box">
                     <div class="q-text">${this.cleanText(q.question_text)}</div>
-                    <div style="text-align:center">${imgHtml}</div>
+                    <div style="text-align:center; margin-bottom:15px;">${imgHtml}</div>
                     
                     <div style="margin-top:20px;">
                         ${q.options.map((opt, i) => `
@@ -241,6 +236,7 @@ const App = {
                         `).join('')}
                     </div>
 
+                    <!-- Explanation Box (Initially Hidden) -->
                     <div id="explanation" class="exp-box" style="display:none">
                         <div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">EXPLANATION</div>
                         ${this.cleanText(q.explanation)}
@@ -277,13 +273,13 @@ const App = {
 
         Array.from(options).forEach(opt => opt.classList.add('disabled'));
         
-        // --- FIX 2: Force display:block ---
+        // Show Explanation
         document.getElementById('explanation').style.display = 'block';
         
-        // Save to Core Engine
+        // Optional: Medtrix Core Integration
         try {
-            if(MEDTRIX && MEDTRIX.db) {
-                MEDTRIX.db.saveResult({
+            if(window.MEDTRIX && window.MEDTRIX.db) {
+                window.MEDTRIX.db.saveResult({
                     uid: this.data.activeSubject + "_" + this.data.currentQIndex,
                     text: this.data.activeQuestions[this.data.currentQIndex].question_text,
                     explanation: this.data.activeQuestions[this.data.currentQIndex].explanation,
@@ -392,7 +388,6 @@ const App = {
         this.elements.lightbox.classList.remove('hidden');
     },
 
-    // --- REVISED ICON MAP (Safe & Complete) ---
     getIcon(name) {
         const n = name.toLowerCase().trim();
         const map = {
@@ -409,7 +404,7 @@ const App = {
             'ent': 'fa-ear-listen',
             'ophthalmology': 'fa-eye',
             'medicine': 'fa-user-doctor', 
-            'surgery': 'fa-user-doctor', // Fallback if scalpel issues
+            'surgery': 'fa-user-doctor',
             'general surgery': 'fa-user-doctor',
             'obstetrics & gynaecology': 'fa-person-pregnant',
             'obg': 'fa-person-pregnant',
@@ -423,7 +418,6 @@ const App = {
             'anesthesia': 'fa-syringe',
             'anaesthesia': 'fa-syringe'
         };
-        // Standard Fallback
         return map[n] || 'fa-book-medical';
     }
 };
