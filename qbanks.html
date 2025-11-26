@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MEDTRIX | Q-Bank Pro</title>
+    
     <!-- 1. Key loads first -->
-<script src="config.js"></script> 
-
-<!-- 2. Engine loads second, using the key -->
-<script src="medtrix_core.js"></script>
+    <script src="config.js"></script> 
+    <!-- 2. Engine loads second -->
+    <script src="medtrix_core.js"></script>
 
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <!-- Optional: Marked for Markdown parsing if needed later -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
      
     <!-- Fonts & Icons -->
@@ -19,7 +20,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- PREMIUM THEME VARIABLES --- */
+        /* --- PREMIUM THEME VARIABLES (UNCHANGED) --- */
         :root {
             --bg-body: #f0f4f8;
             --bg-gradient: radial-gradient(circle at top left, #e0f7fa, #f0f4f8);
@@ -64,6 +65,7 @@
         #view-dashboard { 
             padding: 80px 20px 20px; height: 100vh; overflow-y: auto; 
             max-width: 1000px; margin: 0 auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .search-wrapper { position: relative; margin-bottom: 20px; }
@@ -86,6 +88,7 @@
             padding: 18px 20px; cursor: pointer; font-weight: 600; font-size: 1rem; 
             display: flex; justify-content: space-between; align-items: center;
             background: rgba(255,255,255,0.02);
+            -webkit-tap-highlight-color: transparent;
         }
         .group-header:hover { background: rgba(0, 229, 255, 0.05); }
         
@@ -98,8 +101,10 @@
             padding: 15px 20px; border-bottom: 1px solid var(--glass-border); 
             cursor: pointer; display: flex; justify-content: space-between; align-items: center; 
             font-size: 0.9rem; transition: 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
         .test-item:last-child { border-bottom: none; }
+        .test-item:active { background: rgba(0, 229, 255, 0.1); }
         .test-item:hover { padding-left: 25px; color: var(--accent); background: rgba(0, 229, 255, 0.05); }
 
         /* --- QUIZ VIEW (Overlay) --- */
@@ -107,8 +112,8 @@
             position: fixed; inset: 0; background: var(--bg-body); 
             z-index: 100; display: flex; flex-direction: column; 
             transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overscroll-behavior: none; /* Prevents swipe-to-back on mobile browsers */
-            width: 100vw; height: 100dvh; /* Ensure full viewport */
+            overscroll-behavior: none; 
+            width: 100vw; height: 100dvh; 
         }
         #view-quiz.active { transform: translateX(0); }
 
@@ -127,16 +132,17 @@
 
         /* Quiz Content */
         .quiz-content { 
-            flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; 
-            overscroll-behavior-y: contain; /* Smart Scroll */
-            overflow-x: hidden; /* FIX: Prevents page-wide horizontal scroll */
+            flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 120px; /* More padding for mobile footer */
+            overscroll-behavior-y: contain; 
+            overflow-x: hidden; 
             width: 100%;
+            -webkit-overflow-scrolling: touch;
         }
         .q-card { 
             max-width: 800px; margin: 0 auto; background: var(--glass-bg); 
             padding: 30px; border-radius: 20px; border: 1px solid var(--glass-border);
             box-shadow: var(--glass-shadow); backdrop-filter: blur(10px);
-            width: 100%; /* Ensure it fits in parent */
+            width: 100%;
         }
         
         .q-meta-row { display: flex; justify-content: space-between; margin-bottom: 25px; align-items: center; }
@@ -148,11 +154,29 @@
             font-family: 'Orbitron', sans-serif; color: var(--text-sub); font-size: 0.75rem; opacity: 0.7; 
         }
 
-        .q-text { font-size: 1.1rem; font-weight: 600; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; }
+        .q-text { font-size: 1.1rem; font-weight: 600; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; word-wrap: break-word; }
         
-        /* Media */
-        .q-img { display: block; max-width: 100%; border-radius: 10px; margin: 15px auto; border: 1px solid var(--glass-border); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        .q-video { width: 100%; border-radius: 10px; margin-top: 10px; background: black; max-height: 400px; }
+        /* --- SMART IMAGE GALLERY (STITCH FIX) --- */
+        .image-gallery {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 2px;
+            margin: 15px auto; max-width: 100%; width: fit-content;
+            border-radius: 12px; overflow: hidden;
+            border: 1px solid var(--glass-border); background: rgba(0,0,0,0.1);
+        }
+        .q-img { 
+            display: block; margin: 0; padding: 0; border: none; border-radius: 0;
+            max-width: 100%; height: auto; max-height: 400px;
+            flex: 1 1 45%; min-width: 150px; object-fit: contain;
+            cursor: zoom-in; transition: opacity 0.2s;
+        }
+        .q-img:hover { opacity: 0.9; }
+        /* Single Image Handling */
+        .image-gallery.single-img .q-img { flex: 0 0 auto; width: auto; max-width: 100%; }
+
+        /* --- MEDIA PLAYERS --- */
+        .media-wrapper { margin: 15px 0; width: 100%; display: flex; justify-content: center; }
+        .q-video { width: 100%; border-radius: 10px; background: black; max-height: 400px; aspect-ratio: 16/9; }
+        .q-audio { width: 100%; height: 40px; border-radius: 20px; margin-top: 5px; }
 
         /* Options */
         .options { display: flex; flex-direction: column; gap: 12px; }
@@ -161,6 +185,7 @@
             border: 2px solid var(--glass-border); border-radius: 12px; 
             font-size: 1rem; color: var(--text-main); cursor: pointer; 
             display: flex; gap: 15px; align-items: flex-start; transition: all 0.2s; 
+            -webkit-tap-highlight-color: transparent;
         }
         .opt-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(0, 229, 255, 0.05); }
         .opt-char { flex-shrink: 0; font-weight: bold; width: 25px; color: var(--accent); }
@@ -177,29 +202,21 @@
             display: flex; justify-content: space-between; align-items: center; 
         }
         
-        /* FIX: Explanation Content Scrolling */
         .exp-content { 
-            font-size: 0.95rem; 
-            line-height: 1.7; 
-            color: var(--text-main); 
-            opacity: 0.9; 
-            white-space: pre-wrap; 
-            /* Added for scrolling: */
-            overflow-x: auto; 
-            max-width: 100%; 
-            display: block;
+            font-size: 0.95rem; line-height: 1.7; color: var(--text-main); 
+            opacity: 0.9; white-space: pre-wrap; overflow-x: auto; max-width: 100%; display: block;
         }
-        /* Fix for markdown tables if they exist inside exp-content */
-        .exp-content table { display: block; overflow-x: auto; max-width: 100%; border-collapse: collapse; }
-        .exp-content th, .exp-content td { padding: 8px; border: 1px solid var(--glass-border); }
+        .exp-content a { color: var(--accent); text-decoration: underline; }
         
-        /* Footer Controls */
+        /* Footer Controls (Mobile Optimized) */
         .quiz-footer { 
-            position: fixed; bottom: 0; left: 0; right: 0; height: 80px; 
+            position: fixed; bottom: 0; left: 0; right: 0; height: auto; min-height: 80px;
             background: var(--glass-bg); border-top: 1px solid var(--glass-border); 
             backdrop-filter: blur(15px);
-            display: flex; padding: 10px 20px; gap: 15px; z-index: 101; 
+            display: flex; padding: 15px 20px; gap: 15px; z-index: 101; 
             justify-content: center; align-items: center;
+            /* SAFE AREA FIX FOR MOBILE */
+            padding-bottom: calc(15px + env(safe-area-inset-bottom));
         }
         .nav-btn { 
             flex: 1; max-width: 200px; height: 50px; border-radius: 15px; 
@@ -211,7 +228,6 @@
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Mobile Tweaks */
         @media (max-width: 600px) {
             .quiz-title { font-size: 0.8rem; }
             .q-card { padding: 20px; }
@@ -255,7 +271,10 @@
             </div>
 
             <div class="q-text" id="q-text"></div>
+            
+            <!-- Updated Image Container -->
             <div id="q-media-question"></div>
+            
             <div class="options" id="q-options"></div>
 
             <div class="exp-section" id="q-exp">
@@ -293,7 +312,6 @@
 
     // --- LOAD DATA ---
     document.addEventListener('DOMContentLoaded', async () => {
-        // Fetch from Core (Fast & Pre-Categorized)
         manifest = await MEDTRIX.data.getManifest();
         
         if (!manifest || manifest.length === 0) {
@@ -303,14 +321,18 @@
         renderIndex(manifest);
     });
 
-    // --- GESTURES (With Scroll Lock) ---
+    // --- GESTURES (Improved for Mobile) ---
     const quizArea = document.getElementById('view-quiz');
-    quizArea.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; });
+    quizArea.addEventListener('touchstart', e => { 
+        touchStartX = e.changedTouches[0].screenX; 
+        touchStartY = e.changedTouches[0].screenY; 
+    }, {passive: true});
+
     quizArea.addEventListener('touchend', e => {
         const diffX = e.changedTouches[0].screenX - touchStartX;
         const diffY = e.changedTouches[0].screenY - touchStartY;
-        // Only swipe if horizontal movement > vertical (user isn't reading down)
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+        // Check for intentional horizontal swipe vs scroll
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 60) {
             if (diffX < 0) move(1); else move(-1);
         }
     });
@@ -320,7 +342,6 @@
         const container = document.getElementById('index-container');
         container.innerHTML = "";
         
-        // Group by Category (from Python)
         const groups = list.reduce((acc, item) => {
             const cat = item.category || "Uncategorized";
             if(!acc[cat]) acc[cat] = [];
@@ -364,7 +385,6 @@
         currentFilename = filename;
         curIdx = 0;
         
-        // Restore position
         if (!qId) {
             const savedPos = localStorage.getItem('pos_' + filename);
             if (savedPos) curIdx = parseInt(savedPos);
@@ -373,7 +393,6 @@
             if(found !== -1) curIdx = found;
         }
 
-        // Use Pre-Calculated Title
         const itemMeta = manifest.find(m => m.file === filename);
         document.getElementById('q-title').textContent = itemMeta ? itemMeta.title : filename;
         
@@ -383,6 +402,9 @@
 
     function closeQuiz() {
         document.getElementById('view-quiz').classList.remove('active');
+        // Stop any playing media
+        const videos = document.querySelectorAll('video, audio');
+        videos.forEach(media => media.pause());
         window.history.replaceState({}, '', window.location.pathname);
     }
 
@@ -394,13 +416,18 @@
         document.getElementById('q-id-disp').textContent = `#${q.uid || 'ID'}`;
         document.getElementById('q-text').innerHTML = q.text;
 
-        // Media
+        // --- FIXED IMAGE HANDLING (Smart Gallery) ---
         const qMediaDiv = document.getElementById('q-media-question');
         qMediaDiv.innerHTML = '';
-        if(q.question_images) {
-            q.question_images.forEach(src => {
-                qMediaDiv.innerHTML += `<img src="${src}" class="q-img">`;
-            });
+        if(q.question_images && q.question_images.length > 0) {
+            let galleryClass = 'image-gallery';
+            if (q.question_images.length === 1) galleryClass += ' single-img';
+            
+            const imgs = q.question_images.map(src => 
+                `<img src="${src}" class="q-img" onclick="window.open(this.src, '_blank')">`
+            ).join('');
+            
+            qMediaDiv.innerHTML = `<div class="${galleryClass}">${imgs}</div>`;
         }
 
         // Options
@@ -412,22 +439,40 @@
             </button>
         `).join('');
 
-        // Reset State
         document.getElementById('q-exp').classList.remove('show');
         
-        // Parse Explanation
+        // --- IMPROVED MEDIA PARSER (Audio + Video + YouTube) ---
         const expMediaDiv = document.getElementById('exp-media-container');
         expMediaDiv.innerHTML = '';
 
         let expText = q.explanation || "No explanation provided.";
-        expText = expText.replace(/(https?:\/\/\S+\.(?:mp4|m3u8|mp3))/gi, (match) => {
+        
+        // 1. Detect Audio (.mp3, .wav, .ogg)
+        expText = expText.replace(/(https?:\/\/\S+\.(?:mp3|wav|ogg))/gi, '<div class="media-wrapper"><audio controls src="$1" class="q-audio"></audio></div>');
+
+        // 2. Detect Direct Video (.mp4, .webm, .m3u8)
+        expText = expText.replace(/(https?:\/\/\S+\.(?:mp4|webm|m3u8))/gi, (match) => {
             const id = 'media-' + Math.random().toString(36).substr(2, 9);
             setTimeout(() => initVideo(id, match), 100);
-            return `<div style="margin-top:15px"><video id="${id}" controls class="q-video"></video></div>`;
+            return `<div class="media-wrapper"><video id="${id}" controls class="q-video" playsinline></video></div>`;
         });
+        
+        // 3. Detect YouTube (Embeds)
+        expText = expText.replace(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/g, '<div class="media-wrapper"><iframe src="https://www.youtube.com/embed/$1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="q-video"></iframe></div>');
+
+        // 4. Force regular links to open in new tab (if not media)
+        // Note: Simple regex to add target="_blank" to anchors that don't have it
+        expText = expText.replace(/<a\s+(?!.*?target=["']_blank["'])(.*?href=["'].*?["'].*?)>/g, '<a $1 target="_blank">');
+
         document.getElementById('exp-text').innerHTML = expText;
 
-        if(q.explanation_images) q.explanation_images.forEach(src => expMediaDiv.innerHTML += `<img src="${src}" class="q-img">`);
+        // Static Images in Explanation
+        if(q.explanation_images) {
+            let expGalleryClass = 'image-gallery';
+            if(q.explanation_images.length === 1) expGalleryClass += ' single-img';
+            const expImgs = q.explanation_images.map(src => `<img src="${src}" class="q-img" onclick="window.open(this.src, '_blank')">`).join('');
+            expMediaDiv.innerHTML = `<div class="${expGalleryClass}">${expImgs}</div>`;
+        }
 
         // Nav State
         document.getElementById('btn-prev').disabled = curIdx === 0;
@@ -450,7 +495,6 @@
         document.getElementById('q-exp').classList.add('show');
         MEDTRIX.db.saveResult(currentTest.questions[curIdx], isCorrect, currentFilename);
         
-        // Auto Scroll on Mobile
         if(window.innerWidth < 768) setTimeout(() => document.getElementById('q-exp').scrollIntoView({behavior:'smooth'}), 200);
     }
 
@@ -477,7 +521,11 @@
         url.searchParams.set('test', currentFilename);
         url.searchParams.set('q', currentTest.questions[curIdx].uid);
         navigator.clipboard.writeText(url.toString());
-        MEDTRIX.ui.toast("Link Copied!");
+        // Simple toast
+        const btn = document.querySelector('.fa-link');
+        const oldColor = btn.style.color;
+        btn.style.color = 'var(--success)';
+        setTimeout(() => btn.style.color = oldColor, 1000);
     }
 </script>
 
