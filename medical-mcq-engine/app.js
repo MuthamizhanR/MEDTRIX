@@ -225,7 +225,7 @@ const App = {
 
                 <div class="q-box">
                     <div class="q-text">${this.cleanText(q.question_text)}</div>
-                    <div style="text-align:center; margin-bottom:15px;">${imgHtml}</div>
+                  <div class="image-stitch-container">${imgHtml}</div>
                     
                     <div style="margin-top:20px;">
                         ${q.options.map((opt, i) => `
