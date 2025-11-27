@@ -29,7 +29,6 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
         
-        /* 100dvh ensures it fits perfectly on mobile screens with URL bars */
         body { 
             background: var(--bg-body); color: var(--text-main); 
             height: 100dvh; width: 100vw; overflow: hidden; 
@@ -39,7 +38,7 @@
         /* --- LAYOUT --- */
         .wrapper { display: flex; height: 100%; width: 100%; overflow: hidden; }
         
-        /* MAIN CONTENT (Left Side) */
+        /* MAIN CONTENT */
         .main-content { 
             flex: 1; display: flex; flex-direction: column; 
             position: relative; min-width: 0; height: 100%;
@@ -55,20 +54,19 @@
         .timer { font-family: 'Orbitron'; color: var(--danger); font-size: 1.1rem; background: rgba(239,68,68,0.1); padding: 4px 10px; border-radius: 6px; }
         .menu-btn { font-size: 1.4rem; cursor: pointer; color: var(--accent); display: none; }
 
-        /* New Submit Button Style */
+        /* FIXED: Submit Button Style */
         .btn-submit-top {
             background: var(--danger); color: white; border: none; 
             padding: 5px 12px; border-radius: 6px; font-weight: bold; 
             font-size: 0.9rem; cursor: pointer; margin-left: 15px;
-            /* Flex properties to ensure it's on the right of the timer */
             height: 35px; flex-shrink: 0;
         }
 
-        /* --- QUESTION AREA (Scrollable) --- */
+        /* --- QUESTION AREA --- */
         .q-container { 
             flex: 1; overflow-y: auto; padding: 20px; 
             width: 100%; max-width: 900px; margin: 0 auto;
-            padding-bottom: 20px; /* Space above footer */
+            padding-bottom: 20px; 
         }
         
         .q-box { 
@@ -91,13 +89,12 @@
         .opt.correct-ans { border-color: var(--success); background: rgba(16, 185, 129, 0.15); }
         .opt.wrong-ans { border-color: var(--danger); background: rgba(239, 68, 68, 0.15); }
 
-        /* --- BOTTOM NAV (FIXED & SAFE) --- */
+        /* --- BOTTOM NAV --- */
         .bottom-nav {
             height: 70px; flex-shrink: 0;
             background: var(--glass-bg); border-top: var(--glass-border);
             display: flex; align-items: center; justify-content: space-between; 
             padding: 0 20px; z-index: 30;
-            /* Mobile Safe Area Fix */
             padding-bottom: env(safe-area-inset-bottom); 
             box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
         }
@@ -162,7 +159,23 @@
 
         /* SCREENS */
         #start-screen, #result-screen { position: fixed; inset: 0; background: var(--bg-body); z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .big-btn { padding: 15px 40px; font-size: 1.2rem; background: var(--accent); color: white; border: none; border-radius: 30px; cursor: pointer; margin-top: 20px; font-weight: bold; }
+        
+        .big-btn { padding: 15px 40px; font-size: 1.1rem; background: var(--accent); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; min-width: 200px; }
+        
+        /* NEW: Result Button Group */
+        .result-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+            width: 100%;
+            max-width: 300px;
+        }
+        .btn-dashboard {
+            background: transparent;
+            border: 2px solid var(--text-main);
+            color: var(--text-main);
+        }
     </style>
 </head>
 <body>
@@ -181,13 +194,13 @@
         
         <div class="main-content">
             <!-- Header -->
-
             <div class="top-bar">
                 <span id="progress" style="font-weight:bold;">Q 1</span>
                 <div style="display:flex; align-items:center;">
                     <div class="timer" id="timer">03:30:00</div>
-                    <button class="btn-submit-top" onclick="submitExam()">SUBMIT</button>
-                    </div>
+                    <!-- FIXED: Added 'true' to submitExam to fix APK bug -->
+                    <button class="btn-submit-top" onclick="submitExam(true)">SUBMIT</button>
+                </div>
                 <i class="fas fa-bars menu-btn" onclick="toggleSidebar()"></i>
             </div>
 
@@ -224,13 +237,17 @@
         </div>
     </div>
 
-    <!-- RESULT -->
+    <!-- RESULT SCREEN (UPDATED) -->
     <div id="result-screen" style="display:none;">
         <h2 style="font-family:'Orbitron'">RESULT</h2>
         <div style="font-size:4rem; font-weight:bold; color:var(--accent);" id="final-score">0</div>
         <p>Correct Answers</p>
-        <button class="big-btn" onclick="reviewMode()">REVIEW</button>
-        <button onclick="location.href='index.html'" style="margin-top:20px; background:none; border:1px solid var(--text-main); padding:8px 20px; border-radius:20px; color:var(--text-main);">Exit</button>
+        
+        <!-- NEW BUTTON LAYOUT -->
+        <div class="result-actions">
+            <button class="big-btn" onclick="reviewMode()">REVIEW SOLUTIONS</button>
+            <button class="big-btn btn-dashboard" onclick="location.href='index.html'">BACK TO DASHBOARD</button>
+        </div>
     </div>
 
 <script>
@@ -321,7 +338,7 @@
         if(idx === questions.length - 1 && !isReview) {
             nextBtn.innerText = "Finish";
             nextBtn.className = "nav-btn btn-finish";
-            nextBtn.onclick = submitExam; // Direct submit
+            nextBtn.onclick = submitExam; // Passes Event object (truthy)
         } else {
             nextBtn.innerText = "Next";
             nextBtn.className = "nav-btn btn-next";
@@ -370,17 +387,19 @@
 
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
-  function tick() {
+    function tick() {
         timeLeft--;
         let h = Math.floor(timeLeft/3600);
         let m = Math.floor((timeLeft%3600)/60);
         let s = timeLeft%60;
         document.getElementById('timer').innerText = `${h}:${m<10?'0':''}${m}:${s<10?'0':''}${s}`;
-        if(timeLeft <= 0) submitExam(true); // Pass true to force submission without confirmation
+        if(timeLeft <= 0) submitExam(true);
     }
 
-  function submitExam(force = false) {
-        // If not forced (i.e., manual click on the submit button), ask for confirmation.
+    function submitExam(force = false) {
+        // If 'force' is a boolean true (from HTML click) OR an Event object (from Finish button),
+        // we skip confirmation.
+        // If force is false/undefined, we ask (though this logic is now bypassed by the HTML change).
         if(!force && !confirm("Submit Exam?")) return;
         
         clearInterval(timer);
@@ -403,13 +422,6 @@
         document.getElementById('exam-interface').style.display = 'none';
         document.getElementById('result-screen').style.display = 'flex';
         document.getElementById('final-score').innerText = correct;
-        
-        // Ensure the results screen shows correct and wrong counts
-        // NOTE: Your result-screen HTML doesn't have res-cor/res-wro elements yet,
-        // but the JS is prepared to calculate them.
-        // For completeness, I'll remove the references that are currently not in your HTML.
-        // document.getElementById('res-cor').innerText = correct;
-        // document.getElementById('res-wro').innerText = wrong;
     }
 
     function reviewMode() {
