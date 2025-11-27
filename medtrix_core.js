@@ -1,12 +1,10 @@
 /**
- * MEDTRIX CORE ENGINE v3.3 (Secure Edition)
- * Exact logic preservation. Only API Key handling modified.
+ * MEDTRIX CORE ENGINE v3.4 (Offline & Settings Edition)
  */
 
 const MEDTRIX = {
     config: {
-        version: '3.3',
-        // Security Fix: Hardcoded keys removed to prevent GitHub revocation.
+        version: '3.4',
         themeKey: 'medtrix-theme',
         dbKey: 'medtrix_analytics'
     },
@@ -15,30 +13,27 @@ const MEDTRIX = {
         _manifestCache: null,
         _fileCache: {},
 
-        // 1. GET FILE LIST (EXACT COPY)
         getManifest: async function() {
             if (this._manifestCache) return this._manifestCache;
             try {
                 const res = await fetch('quiz_manifest.json');
-                if (!res.ok) throw new Error("Run python script");
-                
+                if (!res.ok) throw new Error("Manifest load failed");
                 let rawList = await res.json();
-                
-                // If Python script ran correctly, data is already formatted.
                 this._manifestCache = rawList;
                 return rawList;
-                
             } catch (e) { console.error(e); return []; }
         },
 
-        // 2. GET SINGLE QUIZ (EXACT COPY)
         getQuiz: async function(filename) {
+            // Try Memory Cache first
             if (this._fileCache[filename]) return this._fileCache[filename];
+            
             try {
+                // Fetch (Service Worker will intercept if offline)
                 const res = await fetch(`quiz_data/${filename}`);
                 const data = await res.json();
                 
-                // Auto-Fix Data Structure (Fix [object Object])
+                // Data Normalization
                 if(data.questions) {
                     data.questions = data.questions.map(q => {
                         if(typeof q.question === 'object') q.text = q.question.text || JSON.stringify(q.question);
@@ -59,13 +54,34 @@ const MEDTRIX = {
             } catch (e) { return null; }
         },
 
-        // 3. TITLE FORMATTER (EXACT COPY)
         formatTitle: function(rawName) {
             return rawName.replace('.json', '').replace(/^\d+[_-\s]*/, '').replace(/_/g, ' ');
         }
     },
 
-    // --- 3. DATABASE (EXACT COPY) ---
+    // --- NEW: OFFLINE MANAGER (For Future Download Page) ---
+    offline: {
+        saveQuiz: async function(url) {
+            if(!('caches' in window)) return false;
+            try {
+                const cache = await caches.open('medtrix-core-v3');
+                await cache.add(url);
+                MEDTRIX.ui.toast("Downloaded for Offline!");
+                return true;
+            } catch(e) { 
+                MEDTRIX.ui.toast("Download Failed");
+                return false; 
+            }
+        },
+        deleteQuiz: async function(url) {
+            if(!('caches' in window)) return false;
+            const cache = await caches.open('medtrix-core-v3');
+            const success = await cache.delete(url);
+            if(success) MEDTRIX.ui.toast("Removed from device");
+            return success;
+        }
+    },
+
     db: {
         saveResult: function(qData, isCorrect, filename) {
             let history = JSON.parse(localStorage.getItem(MEDTRIX.config.dbKey) || '[]');
@@ -78,22 +94,18 @@ const MEDTRIX = {
         }
     },
 
-    // --- 4. AI ENGINE (SECURITY UPDATE) ---
     ai: {
-        // OLD: getKey: function() { return MEDTRIX.config.kPart1 + MEDTRIX.config.kPart2; },
-        // NEW: Checks for the variable loaded from config.js
         getKey: function() { 
             if (typeof MEDTRIX_SECRETS !== 'undefined' && MEDTRIX_SECRETS.API_KEY) {
                 return MEDTRIX_SECRETS.API_KEY;
             }
-            console.error("API Key missing! Check config.js"); 
             return ""; 
         },
 
         ask: async function(prompt, context) {
             const key = this.getKey();
+            if(!navigator.onLine) return "AI is unavailable offline.";
             try {
-                // Exact same fetch structure
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt + "\n\nContext: " + context.substring(0,1000) }] }] })
@@ -105,7 +117,6 @@ const MEDTRIX = {
         }
     },
 
-    // --- 5. UI (EXACT COPY) ---
     ui: {
         initTheme: function() {
             const theme = localStorage.getItem(MEDTRIX.config.themeKey) || 'light';
@@ -123,21 +134,27 @@ const MEDTRIX = {
 
 MEDTRIX.ui.initTheme();
 
-// --- NEW: GLOBAL FACTORY RESET FUNCTION ---
-function hardReset() {
-    if(confirm("⚠️ FACTORY RESET\n\nThis will delete ALL progress, history, and bookmarks.\nAre you sure?")) {
+// --- GLOBAL FACTORY RESET (UPDATED) ---
+async function hardReset() {
+    if(confirm("⚠️ FACTORY RESET\n\nThis will delete ALL progress, scores, and offline data.\nAre you sure?")) {
+        // 1. Clear LocalStorage
         localStorage.clear();
-        alert("System Reset Complete. Refreshing...");
-        location.reload();
-    }
-}
+        
+        // 2. Clear Service Worker Caches
+        if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(key => caches.delete(key)));
+        }
 
+        // 3. Unregister Workers
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for(let registration of registrations) {
+                await registration.unregister();
+            }
+        }
 
-// --- NEW: GLOBAL FACTORY RESET FUNCTION ---
-function hardReset() {
-    if(confirm("⚠️ FACTORY RESET\n\nThis will delete ALL progress, history, and bookmarks.\nAre you sure?")) {
-        localStorage.clear();
-        alert("System Reset Complete. Refreshing...");
-        location.reload();
+        alert("System Reset Complete. Restarting...");
+        location.href = "index.html";
     }
 }
