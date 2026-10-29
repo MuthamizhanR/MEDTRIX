@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEDTRIX | Subject Viewer</title>
+    <!-- Exact Design Tokens & CSS Variables -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&family=Fira+Mono:wght@400;700&family=Nunito:wght@700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+          /* Core Surfaces & Ink */
+          --bg: #0a0a14;
+          --card: #14141f;
+          --card-nested: #1b1b2a;
+          --table-head: #1c1c2c;
+          --table-hover: #171724;
+          --certifiable-row: #1f1a1a;
+          --line: #26263a;
+          --ink: #e6eaf0;
+          --ink-secondary: #cfd7e2;
+          --ink-hero: #c3ccd8;
+          --dim: #9aa5b4;
+          --muted-index: #6b7789;
+          --link: #8fb6d9;
+
+          /* 7-Pillar Semantic Palette */
+          --p1: #C0392B; /* Crimson Red */
+          --p2: #1A5276; /* Deep Ocean Blue */
+          --p3: #117A65; /* Emerald Teal */
+          --p4: #884EA0; /* Royal Purple */
+          --p5: #D4AC0D; /* Mustard Gold */
+          --p6: #5D7A96; /* Slate Steel Blue */
+          --p7: #D35400; /* Burnt Orange */
+
+          /* Typography Families */
+          --serif: 'Playfair Display', Georgia, serif;
+          --sans: 'Inter', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+          --mono: 'Fira Mono', ui-monospace, Consolas, monospace;
+          --disp: 'Nunito', var(--sans);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: var(--sans);
+            line-height: 1.62;
+            scroll-behavior: smooth;
+        }
+
+        .wrap {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 0 26px;
+        }
+
+        section {
+            padding: 52px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        /* --- HERO SECTION --- */
+        .hero-section {
+            background: linear-gradient(135deg, #0a0a14 0%, #1a1a2e 40%, #2c1a3e 100%);
+            padding: 70px 0 56px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .top-badge {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            background: rgba(255,255,255,0.1);
+            padding: 6px 14px;
+            border-radius: 3px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .hero-title {
+            font-family: var(--serif);
+            font-size: 52px;
+            line-height: 1.08;
+            margin-bottom: 30px;
+            background: linear-gradient(100deg, #C0392B, #884EA0 35%, #1A5276 60%, #117A65 85%, #D4AC0D);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @media (max-width: 760px) {
+            .hero-title { font-size: 34px; }
+        }
+
+        .telemetry-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 26px;
+        }
+
+        .stat-box { display: flex; flex-direction: column; }
+
+        .stat-num {
+            font-family: var(--mono);
+            font-weight: bold;
+            font-size: 28px;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 11.5px;
+            text-transform: uppercase;
+            color: var(--dim);
+            font-weight: 500;
+        }
+
+        /* --- PILLAR GRID --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 17px;
+        }
+
+        .pcard {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            padding: 19px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pcard:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .pcard h3 {
+            font-family: var(--serif);
+            font-size: 19px;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .pcard .quote {
+            font-family: var(--mono);
+            font-size: 12px;
+            font-style: italic;
+            color: var(--dim);
+            margin-bottom: 15px;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .chip {
+            font-family: var(--mono);
+            font-size: 10px;
+            background: rgba(255,255,255,0.07);
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: var(--ink-secondary);
+        }
+
+        .pcard-footer {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--dim);
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid var(--line);
+            padding-top: 12px;
+            margin-top: auto;
+        }
+
+        /* --- SVG HUB AND SPOKE --- */
+        .svg-container {
+            width: 100%;
+            overflow-x: auto;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        /* --- CROSS PILLAR TABLE --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        th {
+            background: var(--table-head);
+            font-family: var(--disp);
+            font-weight: 800;
+            font-size: 12.5px;
+            padding: 12px 15px;
+            text-align: left;
+            color: #fff;
+            border-bottom: 1px solid var(--line);
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--line);
+            font-size: 14px;
+            color: var(--ink-secondary);
+        }
+
+        tr:hover { background: var(--table-hover); }
+        tr.certifiable { background: var(--certifiable-row); }
+
+        mark {
+            background: rgba(255, 220, 90, 0.16);
+            color: #ffe9a8;
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        /* --- INTEGRATION CASE CHAINS --- */
+        .chain {
+            border-radius: 9px;
+            padding: 18px;
+            background: var(--card);
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+        }
+
+        .steps {
+            flex: 1 1 150px;
+            background: #1b1b2a;
+            border-radius: 6px;
+            padding: 12px;
+            min-width: 150px;
+        }
+
+        @media (max-width: 760px) {
+            .chain { flex-direction: column; }
+        }
+
+        .step-tag {
+            font-family: var(--mono);
+            font-size: 9.5px;
+            font-weight: bold;
+            color: var(--ink);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .step-text {
+            font-size: 13px;
+            color: var(--ink-secondary);
+        }
+
+        /* --- DRUG MAP & SPEED REFS --- */
+        .rx {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+            gap: 13px;
+        }
+
+        .rx-card {
+            background: var(--card-nested);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+        }
+
+        .rx-card h4 {
+            font-family: var(--disp);
+            font-size: 14.5px;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .rx-card p {
+            font-size: 13px;
+            color: var(--dim);
+            margin-bottom: 12px;
+        }
+
+        .pill {
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 3px;
+            color: #fff;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .speed {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .speed-card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+        }
+
+        .speed-card h4 {
+            font-family: var(--disp);
+            font-size: 14px;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .speed-card ol {
+            padding-left: 20px;
+            font-size: 13px;
+            color: var(--ink-secondary);
+            margin-bottom: 15px;
+        }
+
+        .speed-card ol li { margin-bottom: 6px; }
+
+        .op-rule {
+            background: var(--card-nested);
+            padding: 10px;
+            border-radius: 6px;
+            font-style: italic;
+            font-size: 13px;
+            border-left: 3px solid var(--dim);
+        }
+
+        /* Section headers */
+        h2 {
+            font-family: var(--serif);
+            font-size: 31px;
+            color: #fff;
+            margin-bottom: 25px;
+        }
+
+        /* Basic Nav */
+        nav {
+            padding: 15px 26px;
+            background: rgba(10, 10, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--line);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+        }
+        nav a { color: var(--link); text-decoration: none; font-size: 14px; font-weight: 500; }
+        nav a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a href="index.html"><i class="fas fa-arrow-left"></i> Back to MEDTRIX</a>
+    <div style="margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--dim);" id="nav-title">Loading...</div>
+</nav>
+
+<!-- HERO SECTION -->
+<div class="hero-section">
+    <div class="wrap" id="hero-content">
+        <!-- Rendered by JS -->
+        <div class="stat-num" style="font-size: 16px;">Loading Subject Data...</div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="wrap">
+
+    <!-- PILLARS -->
+    <section>
+        <h2>Mechanism Pillars</h2>
+        <div class="grid" id="pillars-grid"></div>
+    </section>
+
+    <!-- HUB AND SPOKE -->
+    <section>
+        <h2>Discrimination Network</h2>
+        <div class="svg-container" id="svg-hub"></div>
+    </section>
+
+    <!-- CROSS PILLAR CONNECTIONS -->
+    <section>
+        <h2>Cross-Pillar Links</h2>
+        <table id="cross-pillar-table">
+            <thead>
+                <tr>
+                    <th>Concept</th>
+                    <th>Pillar A</th>
+                    <th>↔</th>
+                    <th>Pillar B</th>
+                    <th>Why the link matters</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- CBME MATRIX -->
+    <section>
+        <h2>CBME Competency Matrix</h2>
+        <table id="cbme-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Domain</th>
+                    <th>Core</th>
+                    <th>Pillars</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- INTEGRATION CASES -->
+    <section>
+        <h2>Integration Case Chains</h2>
+        <div id="cases-container"></div>
+    </section>
+
+    <!-- DRUG MAP -->
+    <section>
+        <h2>Drug–Mechanism Map</h2>
+        <div class="rx" id="drug-map"></div>
+    </section>
+
+    <!-- SPEED REFERENCE -->
+    <section>
+        <h2>Speed Reference & Operating Rules</h2>
+        <div class="speed" id="speed-ref"></div>
+    </section>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const subjectId = params.get('subject') || 'Psychiatry'; // Default to Psychiatry if none provided
+
+    // UI Elements
+    const heroContent = document.getElementById('hero-content');
+    const pillarsGrid = document.getElementById('pillars-grid');
+    const svgHub = document.getElementById('svg-hub');
+    const crossTable = document.querySelector('#cross-pillar-table tbody');
+    const cbmeTable = document.querySelector('#cbme-table tbody');
+    const casesContainer = document.getElementById('cases-container');
+    const drugMap = document.getElementById('drug-map');
+    const speedRef = document.getElementById('speed-ref');
+
+    fetch(`data/subjects/${subjectId}.json`)
+        .then(response => {
+            if(!response.ok) throw new Error("Subject not found");
+            return response.json();
+        })
+        .then(data => {
+            if (data.pending) {
+                 renderPending(subjectId);
+                 return;
+            }
+            document.title = `MEDTRIX | ${data.title || subjectId}`;
+            document.getElementById('nav-title').innerText = data.title || subjectId;
+            renderHero(data);
+            renderPillars(data);
+            renderSVG(data);
+            renderCrossPillar(data);
+            renderCBME(data);
+            renderCases(data);
+            renderDrugs(data);
+            renderSpeed(data);
+        })
+        .catch(err => {
+            console.error(err);
+            renderPending(subjectId);
+        });
+
+    function renderPending(id) {
+        document.title = `MEDTRIX | ${id} (Pending)`;
+        document.getElementById('nav-title').innerText = id;
+        heroContent.innerHTML = `
+            <div class="top-badge" style="background: rgba(255,100,100,0.1); color: #ff8b8b;">CURATION PENDING</div>
+            <h1 class="hero-title" style="background: var(--ink); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${id}</h1>
+            <div style="color: var(--dim); margin-top: 20px; font-size: 15px;">
+                The unified knowledge map for this subject is currently undergoing expert medical curation. <br>
+                Please check back later or proceed to the Q-Bank archive.
+            </div>
+            <div style="margin-top: 30px;">
+                <a href="qbanks.html" style="color: #fff; text-decoration: none; background: var(--card-nested); padding: 10px 20px; border-radius: 5px; border: 1px solid var(--line); font-family: var(--mono); font-size: 13px;">→ Browse Raw Archive</a>
+            </div>
+        `;
+        document.querySelectorAll('.wrap').forEach((el, index) => { if (index > 0) el.innerHTML = ''; });
+    }
+
+
+    function renderHero(data) {
+        const h = data.hero;
+        const t = h.telemetry;
+        heroContent.innerHTML = `
+            <div class="top-badge">${h.badge || 'MEDTRIX SUBJECT'}</div>
+            <h1 class="hero-title">${data.title}</h1>
+            <div class="telemetry-row">
+                <div class="stat-box"><span class="stat-num">${t.pillars}</span><span class="stat-label">Pillars</span></div>
+                <div class="stat-box"><span class="stat-num">${t.sub_modules}</span><span class="stat-label">Sub-modules</span></div>
+                <div class="stat-box"><span class="stat-num">${t.questions}</span><span class="stat-label">Questions</span></div>
+                <div class="stat-box"><span class="stat-num">${t.clinical_cases}</span><span class="stat-label">Clinical Cases</span></div>
+                <div class="stat-box"><span class="stat-num">${t.cbme_competencies}</span><span class="stat-label">CBME Competencies</span></div>
+                <div class="stat-box"><span class="stat-num">${t.atomic_facts}</span><span class="stat-label">Atomic Facts</span></div>
+            </div>
+        `;
+    }
+
+    function renderPillars(data) {
+        if(!data.pillars) return;
+        pillarsGrid.innerHTML = data.pillars.map(p => `
+            <div class="pcard" style="border-top: 4px solid ${p.color}" onclick="location.href='mock_engine.html'">
+                <h3>${p.title}</h3>
+                <div class="quote">"${p.quote}"</div>
+                <div class="chips">
+                    ${p.sub_modules ? p.sub_modules.map(sm => `<span class="chip">${sm.id}: ${sm.name}</span>`).join('') : ''}
+                </div>
+                <div class="pcard-footer">
+                    <span>${p.mcq_count || 0} MCQs</span>
+                    <span>${p.chapters || ''}</span>
+                    <span>${p.cbme_codes || ''}</span>
+                    <span>${p.mastery || 0}% Mastery</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderSVG(data) {
+        if(!data.pillars || data.pillars.length === 0) return;
+        const N = data.pillars.length;
+        const cx = 470, cy = 300, radius = 200;
+
+        let nodesHtml = '';
+        let linesHtml = '';
+
+        data.pillars.forEach((p, i) => {
+            const angle = (Math.PI * 2 * i) / N - Math.PI / 2; // Start at top
+            const x = cx + radius * Math.cos(angle);
+            const y = cy + radius * Math.sin(angle);
+
+            // Line to center
+            linesHtml += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#2b2b42" stroke-width="1.3" />`;
+
+            // Node
+            nodesHtml += `
+                <circle cx="${x}" cy="${y}" r="46" fill="#14141f" stroke="${p.color}" stroke-width="2.5" />
+                <text x="${x}" y="${y+5}" font-family="var(--disp)" font-size="12" fill="#fff" text-anchor="middle">${p.id.toUpperCase()}</text>
+            `;
+        });
+
+        // Hub
+        nodesHtml += `
+            <defs>
+                <radialGradient id="hubGrad" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#3a3a5c" />
+                    <stop offset="100%" stop-color="#16162a" />
+                </radialGradient>
+            </defs>
+            <circle cx="${cx}" cy="${cy}" r="74" fill="url(#hubGrad)" stroke="#4a4a70" stroke-width="2" />
+            <text x="${cx}" y="${cy+5}" font-family="var(--serif)" font-weight="700" font-size="20" fill="#fff" text-anchor="middle">${data.subject_id.substring(0,6).toUpperCase()}</text>
+        `;
+
+        svgHub.innerHTML = `<svg viewBox="0 0 940 620" style="max-width:100%; height:auto;">${linesHtml}${nodesHtml}</svg>`;
+    }
+
+    function renderCrossPillar(data) {
+        if(!data.cross_pillar_connections) return;
+        crossTable.innerHTML = data.cross_pillar_connections.map(c => `
+            <tr>
+                <td>${c.concept}</td>
+                <td><span class="pill" style="background:var(--${c.pillar_a})">${c.pillar_a.toUpperCase()}</span></td>
+                <td style="color:var(--muted-index)">↔</td>
+                <td><span class="pill" style="background:var(--${c.pillar_b})">${c.pillar_b.toUpperCase()}</span></td>
+                <td>${c.link_matters}</td>
+            </tr>
+        `).join('');
+    }
+
+    function renderCBME(data) {
+        if(!data.cbme_competencies) return;
+        cbmeTable.innerHTML = data.cbme_competencies.map(c => `
+            <tr class="${c.certifiable ? 'certifiable' : ''}">
+                <td>${c.code}</td>
+                <td>${c.domain}</td>
+                <td>${c.core}</td>
+                <td>${c.pillars ? c.pillars.map(p => `<span class="pill" style="background:var(--${p})">${p.toUpperCase()}</span>`).join('') : ''}</td>
+                <td>${c.certifiable ? '<mark>CERTIFIABLE</mark>' : '-'}</td>
+            </tr>
+        `).join('');
+    }
+
+    function renderCases(data) {
+        if(!data.integration_cases) return;
+        casesContainer.innerHTML = data.integration_cases.map(c => `
+            <div class="chain" style="border-left: 4px solid ${c.color || 'var(--p1)'}">
+                ${c.steps.map(s => `
+                    <div class="steps">
+                        <span class="step-tag">${s.tag}</span>
+                        <div class="step-text">${s.text}</div>
+                    </div>
+                `).join('<div style="display:flex; align-items:center; color:var(--dim); font-size:20px;">→</div>')}
+            </div>
+        `).join('');
+    }
+
+    function renderDrugs(data) {
+        if(!data.drug_map) return;
+        drugMap.innerHTML = data.drug_map.map(d => `
+            <div class="rx-card">
+                <h4>${d.name}</h4>
+                <p>${d.summary}</p>
+                <div>${d.pillars ? d.pillars.map(p => `<span class="pill" style="background:var(--${p})">${p.toUpperCase()}</span>`).join('') : ''}</div>
+            </div>
+        `).join('');
+    }
+
+    function renderSpeed(data) {
+        if(!data.speed_reference) return;
+        speedRef.innerHTML = data.speed_reference.map(s => {
+            const colorVar = s.pillar_id ? `var(--${s.pillar_id})` : 'var(--line)';
+            return `
+                <div class="speed-card" style="border-top: 3px solid ${colorVar}">
+                    <h4>${s.pillar_id ? s.pillar_id.toUpperCase() + ' ' : ''}Anchors</h4>
+                    <ol>
+                        ${s.items ? s.items.map(i => `<li>${i}</li>`).join('') : ''}
+                    </ol>
+                    ${s.operating_rule ? `<div class="op-rule">${s.operating_rule}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+</script>
+</body>
+</html>
